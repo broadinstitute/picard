@@ -33,112 +33,219 @@ import picard.analysis.MergeableMetricBase;
  */
 public class IndependentReplicateMetric extends MergeableMetricBase {
 
-    // the count of sites used
+    /**
+     * The count of sites used.
+     */
     @MergeByAdding
     public Integer nSites = 0;
-    // the count of sites in which a third allele was found
+
+    /**
+     * The count of sites in which a third allele was found.
+     */
     @MergeByAdding
     public Integer nThreeAllelesSites = 0;
-    // the total number of reads over the het sites
+
+    /**
+     * The total number of reads over the het sites.
+     */
     @MergeByAdding
     public Integer nTotalReads = 0;
-    // the number of duplicate sets examined
+
+    /**
+     * The number of duplicate sets examined.
+     */
     @MergeByAdding
     public Integer nDuplicateSets = 0;
-    // the number of sets of size exactly 3 found
+
+    /**
+     * The number of sets of size exactly 3 found.
+     */
     @MergeByAdding
     public Integer nExactlyTriple = 0;
-    // the number of sets of size exactly 2 found
+
+    /**
+     * The number of sets of size exactly 2 found.
+     */
     @MergeByAdding
     public Integer nExactlyDouble = 0;
-    // the number of reads in duplicate of sizes greater than 3
+
+    /**
+     * The number of reads in duplicate of sizes greater than 3.
+     */
     @MergeByAdding
     public Integer nReadsInBigSets = 0;
-    // the number of doubletons where the two reads had different bases in the locus
+
+    /**
+     * The number of doubletons where the two reads had different bases in the locus.
+     */
     @MergeByAdding
     public Integer nDifferentAllelesBiDups = 0;
-    // the number of doubletons where the two reads matched the reference
+
+    /**
+     * The number of doubletons where the two reads matched the reference.
+     */
     @MergeByAdding
     public Integer nReferenceAllelesBiDups = 0;
-    // the number of doubletons where the two reads matched the alternate
+
+    /**
+     * The number of doubletons where the two reads matched the alternate.
+     */
     @MergeByAdding
     public Integer nAlternateAllelesBiDups = 0;
-    // the number of tripletons where at least one of the reads didn't match either allele of the het site
+
+    /**
+     * The number of tripletons where at least one of the reads didn't match either allele of the het site.
+     */
     @MergeByAdding
     public Integer nDifferentAllelesTriDups = 0;
-    // the number of tripletons where the two reads had different bases in the locus
+
+    /**
+     * The number of tripletons where the two reads had different bases in the locus.
+     */
     @MergeByAdding
     public Integer nMismatchingAllelesBiDups = 0;
-    // the number of tripletons where the two reads matched the reference
+
+    /**
+     * The number of tripletons where the two reads matched the reference.
+     */
     @MergeByAdding
     public Integer nReferenceAllelesTriDups = 0;
-    // the number of tripletons where the two reads matched the alternate
+
+    /**
+     * The number of tripletons where the two reads matched the alternate.
+     */
     @MergeByAdding
     public Integer nAlternateAllelesTriDups = 0;
-    // the number of tripletons where at least one of the reads didn't match either allele of the het site
+
+    /**
+     * The number of tripletons where at least one of the reads didn't match either allele of the het site.
+     */
     @MergeByAdding
     public Integer nMismatchingAllelesTriDups = 0;
-    // the number of reference alleles in the reads;
+
+    /**
+     * The number of reference alleles in the reads.
+     */
     @MergeByAdding
     public Integer nReferenceReads = 0;
-    // the number of alternate alleles in the reads;
+
+    /**
+     * The number of alternate alleles in the reads.
+     */
     @MergeByAdding
     public Integer nAlternateReads = 0;
-    // the number of UMIs that are different within Bi-sets that come from different Alleles
+
+    /**
+     * The number of UMIs that are different within Bi-sets that come from different alleles.
+     */
     @MergeByAdding
     public Integer nMismatchingUMIsInDiffBiDups = 0;
-    // the number of UMIs that are match within Bi-sets that come from different Alleles
+
+    /**
+     * The number of UMIs that are match within Bi-sets that come from different alleles.
+     */
     @MergeByAdding
     public Integer nMatchingUMIsInDiffBiDups = 0;
-    // the number of UMIs that are different within Bi-sets that come from the same Alleles
+
+    /**
+     * The number of UMIs that are different within Bi-sets that come from the same alleles.
+     */
     @MergeByAdding
     public Integer nMismatchingUMIsInSameBiDups = 0;
-    // the number of UMIs that are match within Bi-sets that come from the same Alleles
+
+    /**
+     * The number of UMIs that are match within Bi-sets that come from the same alleles.
+     */
     @MergeByAdding
     public Integer nMatchingUMIsInSameBiDups = 0;
-    // the number of bi-sets with mismatching UMIs and same orientation
+
+    /**
+     * The number of bi-sets with mismatching UMIs and same orientation.
+     */
     @MergeByAdding
     public Integer nMismatchingUMIsInCoOrientedBiDups = 0;
-    // the number of bi-sets with mismatching UMIs and opposite orientation
+
+    /**
+     * The number of bi-sets with mismatching UMIs and opposite orientation.
+     */
     @MergeByAdding
     public Integer nMismatchingUMIsInContraOrientedBiDups = 0;
-    // the number of sets where the UMIs had poor quality bases and were not used for any comparisons.
+
+    /**
+     * The number of sets where the UMIs had poor quality bases and were not used for any comparisons.
+     */
     @MergeByAdding
     public Integer nBadBarcodes = 0;
-    // the number of sets where the UMIs had good quality bases and were used for any comparisons.
+
+    /**
+     * the number of sets where the UMIs had good quality bases and were used for any comparisons.
+     */
     @MergeByAdding
     public Integer nGoodBarcodes = 0;
-    // the rate of heterogeneity within doubleton sets
+
+    /**
+     * the rate of heterogeneity within doubleton sets.
+     */
     @NoMergingIsDerived
     public Double biSiteHeterogeneityRate = 0.0;
-    // the rate of heterogeneity within tripleton sets
+
+    /**
+     * the rate of heterogeneity within tripleton sets
+     */
     @NoMergingIsDerived
     public Double triSiteHeterogeneityRate = 0.0;
-    // the rate of homogeneity within doubleton sets
+
+    /**
+     * the rate of homogeneity within doubleton sets.
+     */
     @NoMergingIsDerived
     public Double biSiteHomogeneityRate = 0.0;
-    // the rate of homogeneity within tripleton sets
+
+    /**
+     * the rate of homogeneity within tripleton sets.
+     */
     @NoMergingIsDerived
     public Double triSiteHomogeneityRate = 0.0;
-    //The biological duplication rate calculated from doublton sets
+
+    /*
+     * The biological duplication rate (as a fraction of the duplicates sets)
+     * calculated from doublton sets.
+    */
     @NoMergingIsDerived
     public Double independentReplicationRateFromBiDups = 0.0;
-    //The biological duplication rate calculated from tripleton sets
+
+    /**
+     * The biological duplication rate (as a fraction of the duplicates sets)
+     * calculated from tripleton sets.
+     */
     @NoMergingIsDerived
     public Double independentReplicationRateFromTriDups = 0.0;
-    // when the alleles are different, we know that this is a biological duplication, thus we expect nearly all
-    // the UMIs to be different (allowing for equality due to chance). So we expect this to be near 1.
+
+    /**
+     * When the alleles are different, we know that this is a biological duplication, thus we expect nearly all
+     * the UMIs to be different (allowing for equality due to chance). So we expect this to be near 1.
+     */
     @NoMergingIsDerived
     public Double pSameUmiInIndependentBiDup = 0.0;
-    //when the UMIs mismatch, we expect about the same number of different alleles as the same (assuming
-    //that different UMI implied biological duplicate. thus, this value should be near 0.5
+
+    /**
+     * When the UMIs mismatch, we expect about the same number of different alleles as the same
+     * (assuming that different UMI implies biological duplicate) thus, this value should be near 0.5
+     */
     @NoMergingIsDerived
     public Double pSameAlleleWhenMismatchingUmi = 0.0;
-    // given the UMIs one can estimate the rate of biological duplication directly, as this would be the
-    // rate of having different UMIs in all duplicate sets. This is only a good estimate if the assumptions hold, for example if pSameUmiInIndependentBiDup is near 1.
+
+    /**
+     * Given the UMIs one can estimate the rate of biological duplication directly, as this would be the
+     * rate of having different UMIs in all duplicate sets. This is only a good estimate if the assumptions hold,
+     * for example if pSameUmiInIndependentBiDup is near 1.
+     */
     @NoMergingIsDerived
     public Double independentReplicationRateFromUmi = 0.0;
-    //an estimate of the duplication rate that is based on the duplicate sets we observed
+
+    /**
+     * An estimate of the duplication rate that is based on the duplicate sets we observed.
+     */
     @NoMergingIsDerived
     public Double replicationRateFromReplicateSets = 0.0;
 

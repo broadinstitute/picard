@@ -24,9 +24,6 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import htsjdk.samtools.util.QualityUtil;
@@ -60,20 +57,8 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                 Arrays.asList(false, true, false, true, true), // Should it be marked as duplicate?
                 1 // Edit Distance to Join
         }, {
-                // Test basic error correction using edit distance of 1 including dashes
-                Arrays.asList("AA-AA", "--AAAA", "A-T-TA", "-AAAA----", "A-AA-T"), // Observed UMI
-                Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAA"), // Expected inferred UMI
-                Arrays.asList(false, true, false, true, true), // Should it be marked as duplicate?
-                1 // Edit Distance to Join
-        }, {
                 // Test basic error correction using edit distance of 2
                 Arrays.asList("AAAA", "AAAA", "ATTA", "AAAA", "AAAT"),
-                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
-                Arrays.asList(false, true, true, true, true),
-                2
-        }, {
-                // Test basic error correction using edit distance of 2 including dashes
-                Arrays.asList("AAA-A", "A--AAA", "A---TT-A", "----AAAA", "A-AAT"),
                 Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
                 Arrays.asList(false, true, true, true, true),
                 2
@@ -170,6 +155,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
     public void testUmi(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate, final int editDistanceToJoin) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+        tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
         final String dummyLibraryName = "A";
 
         for (int i = 0; i < umis.size(); i++) {
@@ -232,7 +218,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         3,                           // OBSERVED_UNIQUE_UMIS
                         2,                           // INFERRED_UNIQUE_UMIS
                         2,                           // OBSERVED_BASE_ERRORS (Note: This is 2 rather than 1 because we are using paired end reads)
-                        2,                           // DUPLICATE_SETS_WITHOUT_UMI
+                        2,                           // DUPLICATE_SETS_IGNORING_UMI
                         4,                           // DUPLICATE_SETS_WITH_UMI
                         effectiveLength4_1,          // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                         effectiveLength3_1_1,        // EFFECTIVE_LENGTH_OF_OBSERVED_UMIS
@@ -249,29 +235,12 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         3,                           // OBSERVED_UNIQUE_UMIS
                         1,                           // INFERRED_UNIQUE_UMIS
                         6,                           // OBSERVED_BASE_ERRORS
-                        2,                           // DUPLICATE_SETS_WITHOUT_UMI
+                        2,                           // DUPLICATE_SETS_IGNORING_UMI
                         2,                           // DUPLICATE_SETS_WITH_UMI
                         0.0,                         // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                         effectiveLength3_1_1,        // EFFECTIVE_LENGTH_OF_OBSERVED_UMIS
                         estimatedBaseQuality3_20,    // ESTIMATED_BASE_QUALITY_OF_UMIS
                         0)                           // UMI_WITH_N
-        }, {
-                // Test basic error correction using edit distance of 2 including dashes
-                Arrays.asList("AAAA", "AAA-A", "A-TTA", "--AAA-A", "AAA-T"),
-                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
-                Arrays.asList(false, true, true, true, true),
-                2,
-                new UmiMetrics("A",               // LIBRARY
-                        4.0,                      // MEAN_UMI_LENGTH
-                        3,                        // OBSERVED_UNIQUE_UMIS
-                        1,                        // INFERRED_UNIQUE_UMIS
-                        6,                        // OBSERVED_BASE_ERRORS
-                        2,                        // DUPLICATE_SETS_WITHOUT_UMI
-                        2,                        // DUPLICATE_SETS_WITH_UMI
-                        0.0,                      // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
-                        effectiveLength3_1_1,     // EFFECTIVE_LENGTH_OF_OBSERVED_UMIS
-                        estimatedBaseQuality3_20, // ESTIMATED_BASE_QUALITY_OF_UMIS
-                        0)                        // UMI_WITH_N
         }, {
                 // Test basic error correction using edit distance of 2 - Ns metrics should not include the umis with Ns
                 Arrays.asList("AAAA", "AAAA", "AANA", "ANNA", "ATTA", "AAAA", "ANAT"),
@@ -283,24 +252,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         2,                          // OBSERVED_UNIQUE_UMIS
                         1,                          // INFERRED_UNIQUE_UMIS
                         4,                          // OBSERVED_BASE_ERRORS
-                        2,                          // DUPLICATE_SETS_WITHOUT_UMI
-                        2,                          // DUPLICATE_SETS_WITH_UMI
-                        0.0,                        // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
-                        effectiveLength_N,          // EFFECTIVE_LENGTH_OF_OBSERVED_UMIS
-                        estimatedBaseQuality_N,     // ESTIMATED_BASE_QUALITY_OF_UMIS
-                        estimatedPercentWithN3_7)   // UMI_WITH_N
-        }, {
-                // Test basic error correction using edit distance of 2 including Ns and dashes
-                Arrays.asList("AAAA-", "AA-AA", "AAN-A", "ANNA", "AT-TA", "AAA-A-", "A--NAT-"),
-                Arrays.asList("AAAA", "AAAA", "AAAA", "AAAA", "AAAA", "AAAA", "AAAA"),
-                Arrays.asList(false, true, true, true, true, true, true),
-                2,
-                new UmiMetrics("A",                 // LIBRARY
-                        4.0,                        // MEAN_UMI_LENGTH
-                        2,                          // OBSERVED_UNIQUE_UMIS
-                        1,                          // INFERRED_UNIQUE_UMIS
-                        4,                          // OBSERVED_BASE_ERRORS
-                        2,                          // DUPLICATE_SETS_WITHOUT_UMI
+                        2,                          // DUPLICATE_SETS_IGNORING_UMI
                         2,                          // DUPLICATE_SETS_WITH_UMI
                         0.0,                        // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                         effectiveLength_N,          // EFFECTIVE_LENGTH_OF_OBSERVED_UMIS
@@ -317,7 +269,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                         16,            // OBSERVED_UNIQUE_UMIS
                         16,            // INFERRED_UNIQUE_UMIS
                         0,             // OBSERVED_BASE_ERRORS
-                        2,             // DUPLICATE_SETS_WITHOUT_UMI
+                        2,             // DUPLICATE_SETS_IGNORING_UMI
                         32,            // DUPLICATE_SETS_WITH_UMI
                         2.0,           // EFFECTIVE_LENGTH_OF_INFERRED_UMIS
                         2,             // EFFECTIVE_LENGTH_OF_OBSERVED_UMIS
@@ -331,6 +283,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                                final int editDistanceToJoin, final UmiMetrics expectedMetrics) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
         tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+        tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
 
         for (int i = 0; i < umis.size(); i++) {
             tester.addMatePairWithUmi("A", umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
@@ -347,7 +300,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         // and a group of 1 for a total of 3.   1_1_1 means there are 3 groups of 1 UMI each.
         final double effectiveLength2_1 = -(2. / 3.) * Math.log(2. / 3.) / Math.log(4.) - (1. / 3.) * Math.log(1. / 3.) / Math.log(4.);
         final double effectiveLength1_1_1 = -3 * (1. / 3.) * Math.log(1. / 3.) / Math.log(4.);
-        
+
         final double estimatedBaseQuality1_12 = QualityUtil.getPhredScoreFromErrorProbability(1. / 12.);
         final double estimatedBaseQuality1_9 = QualityUtil.getPhredScoreFromErrorProbability(1. / 9.);
 
@@ -364,7 +317,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                     3,                         // OBSERVED_UNIQUE_UMIS
                     2,                         // INFERRED_UNIQUE_UMIS
                     2,                         // OBSERVED_BASE_ERRORS (Note: This is 2 rather than 1 because we are using paired end reads)
-                    2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                    2,                         // DUPLICATE_SETS_IGNORING_UMI
                     4,                         // DUPLICATE_SETS_WITH_UMI
                     effectiveLength2_1,        // INFERRED_UMI_ENTROPY
                     effectiveLength1_1_1,      // OBSERVED_UMI_ENTROPY
@@ -376,7 +329,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                     1,                         // OBSERVED_UNIQUE_UMIS
                     1,                         // INFERRED_UNIQUE_UMIS
                     0,                         // OBSERVED_BASE_ERRORS
-                    2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                    2,                         // DUPLICATE_SETS_IGNORING_UMI
                     2,                         // DUPLICATE_SETS_WITH_UMI
                     0.0,                       // INFERRED_UMI_ENTROPY
                     0.0,                       // OBSERVED_UMI_ENTROPY
@@ -395,8 +348,8 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                     3.0,                       // MEAN_UMI_LENGTH
                     1,                         // OBSERVED_UNIQUE_UMIS
                     1,                         // INFERRED_UNIQUE_UMIS
-                    0,                         // OBSERVED_BASE_ERRORS (Note: This is 2 rather than 1 because we are using paired end reads)
-                    2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                    0,                         // OBSERVED_BASE_ERRORS
+                    2,                         // DUPLICATE_SETS_IGNORING_UMI
                     2,                         // DUPLICATE_SETS_WITH_UMI
                     0.0,                       // INFERRED_UMI_ENTROPY
                     0.0,                       // OBSERVED_UMI_ENTROPY
@@ -408,7 +361,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                     1,                         // OBSERVED_UNIQUE_UMIS
                     1,                         // INFERRED_UNIQUE_UMIS
                     0,                         // OBSERVED_BASE_ERRORS
-                    2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                    2,                         // DUPLICATE_SETS_IGNORING_UMI
                     2,                         // DUPLICATE_SETS_WITH_UMI
                     0.0,                       // INFERRED_UMI_ENTROPY
                     0.0,                       // OBSERVED_UMI_ENTROPY
@@ -419,8 +372,8 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
                     3.0,                       // MEAN_UMI_LENGTH
                     3,                         // OBSERVED_UNIQUE_UMIS
                     2,                         // INFERRED_UNIQUE_UMIS
-                    2,                         // OBSERVED_BASE_ERRORS
-                    2,                         // DUPLICATE_SETS_WITHOUT_UMI
+                    2,                         // OBSERVED_BASE_ERRORS  (Note: This is 2 rather than 1 because we are using paired end reads)
+                    2,                         // DUPLICATE_SETS_IGNORING_UMI
                     4,                         // DUPLICATE_SETS_WITH_UMI
                     effectiveLength2_1,        // INFERRED_UMI_ENTROPY
                     effectiveLength1_1_1,      // OBSERVED_UMI_ENTROPY
@@ -445,6 +398,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         for (final UmiMetrics expectedMetrics : expectedMetricsList) {
             final UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
             tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+            tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
             for (int i = 0; i < umis.size(); i++) {
                 if (expectedMetrics.LIBRARY.equals(libraries.get(i))) {
                     tester.addMatePairWithUmi(libraries.get(i), umis.get(i), assignedUmi.get(i), isDuplicate.get(i), isDuplicate.get(i));
@@ -457,20 +411,96 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         }
     }
 
-    @DataProvider(name = "testUmiUtilDataProvider")
-    private Object[][] testUmiUtilDataProvider() {
+    @DataProvider(name = "testDuplexUmiDataProvider")
+    private Object[][] testDuplexUmiDataProvider() {
         return new Object[][]{{
-            Arrays.asList("AAAA", "AA-AA", "-A-T-A", "AAAAA--", "---A", "---", ""), // Observed UMI
-            Arrays.asList("AAAA", "AAAA", "ATA", "AAAAA", "A", "", "")              // Sanitized UMI
+                // Test simple case where there are two fragments that include a top and bottom strand.
+                true,                                // Use duplex UMI (true), or single stranded UMI (false)
+                0,                                   // MAX_EDIT_DISTANCE_TO_JOIN
+                Arrays.asList("AAA-GGG", "GGG-AAA"), // UMIs
+                Arrays.asList("AAA-GGG", "GGG-AAA"), // Inferred UMIs
+                Arrays.asList(false, true),          // Is duplicate
+                Arrays.asList(1, 4),                 // Start Position
+                Arrays.asList(4, 1),                 // Mate Start Position
+                Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                new UmiMetrics("A",                  // LIBRARY
+                        6.0,                         // MEAN_UMI_LENGTH
+                        1,                           // OBSERVED_UNIQUE_UMIS
+                        1,                           // INFERRED_UNIQUE_UMIS
+                        0,                           // OBSERVED_BASE_ERRORS
+                        2,                           // DUPLICATE_SETS_IGNORING_UMI
+                        2,                           // DUPLICATE_SETS_WITH_UMI
+                        0.0,                         // INFERRED_UMI_ENTROPY
+                        0.0,                         // OBSERVED_UMI_ENTROPY
+                        -1,                          // ESTIMATED_BASE_QUALITY_OF_UMIS
+                        0)                           // UMI_WITH_N
+        },{
+                // Test simple case where there are two fragments with different UMIs.
+                // These UMIs will match as duplicates if they are duplex, but in this test they will be
+                // seen as non-duplicates because they are single stranded UMIs.
+                false,                               // Use duplex UMI (true), or single stranded UMI (false)
+                0,                                   // MAX_EDIT_DISTANCE_TO_JOIN
+                Arrays.asList("AAA-GGG", "GGG-AAA"), // UMIs
+                Arrays.asList("AAA-GGG", "GGG-AAA"), // Inferred UMIs
+                Arrays.asList(false, false),         // Is duplicate
+                Arrays.asList(1, 4),                 // Start Position
+                Arrays.asList(4, 1),                 // Mate Start Position
+                Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                new UmiMetrics("A",                  // LIBRARY
+                        6.0,                         // MEAN_UMI_LENGTH
+                        2,                           // OBSERVED_UNIQUE_UMIS
+                        2,                           // INFERRED_UNIQUE_UMIS
+                        0,                           // OBSERVED_BASE_ERRORS
+                        2,                           // DUPLICATE_SETS_IGNORING_UMI
+                        4,                           // DUPLICATE_SETS_WITH_UMI
+                        0.5,                         // INFERRED_UMI_ENTROPY
+                        0.5,                         // OBSERVED_UMI_ENTROPY
+                        -1,                          // ESTIMATED_BASE_QUALITY_OF_UMIS
+                        0)                           // UMI_WITH_N
+        }, {
+                // Test case where a duplex UMI has a single base error.
+                true,                                // Use duplex UMI (true), or single stranded UMI (false)
+                1,                                   // MAX_EDIT_DISTANCE_TO_JOIN
+                Arrays.asList("AAA-GGG", "GGG-ATA"), // UMIs
+                Arrays.asList("AAA-GGG", "GGG-AAA"), // Inferred UMIs
+                Arrays.asList(false, true),          // Is duplicate
+                Arrays.asList(1, 4),                 // Start Position
+                Arrays.asList(4, 1),                 // Mate Start Position
+                Arrays.asList(false, true),          // Negative Strand Flag of first in pair
+                Arrays.asList(true, false),          // Negative Strand Flag of second in pair
+                new UmiMetrics("A",                  // LIBRARY
+                        6.0,                         // MEAN_UMI_LENGTH
+                        2,                           // OBSERVED_UNIQUE_UMIS
+                        1,                           // INFERRED_UNIQUE_UMIS
+                        2,                           // OBSERVED_BASE_ERRORS
+                        2,                           // DUPLICATE_SETS_IGNORING_UMI
+                        2,                           // DUPLICATE_SETS_WITH_UMI
+                        0.0,                         // INFERRED_UMI_ENTROPY
+                        0.5,                         // OBSERVED_UMI_ENTROPY
+                        11,                          // ESTIMATED_BASE_QUALITY_OF_UMIS
+                        0)                           // UMI_WITH_N
         }};
     }
 
-    @Test(dataProvider = "testUmiUtilDataProvider")
-    public void testUmiUtil(List<String> observed, List<String> expected) {
-        for (int i = 0; i < observed.size(); i++) {
-            SAMRecord rec = new SAMRecord(new SAMFileHeader());
-            rec.setAttribute("RX", observed.get(i));
-            Assert.assertEquals(UmiUtil.getSanitizedUMI(rec, "RX"), expected.get(i));
+    @Test(dataProvider = "testDuplexUmiDataProvider")
+    public void testDuplexUmi(final boolean duplexUmi, final int editDistanceToJoin, final List<String> umis, final List<String> assignedUmis,
+                              final List<Boolean> isDuplicate, final List<Integer> startPos, final List<Integer> mateStartPos,
+                              final List<Boolean> negativeStrand1, final List<Boolean> negativeStrand2, final UmiMetrics expectedMetrics) {
+
+        final String libraryName = "A"; // For the purpose of this test, all reads come from library "A".
+        final UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
+        tester.addArg("MAX_EDIT_DISTANCE_TO_JOIN=" + editDistanceToJoin);
+        tester.addArg("DUPLEX_UMI=" + duplexUmi);
+
+        for (int i = 0; i < umis.size(); i++) {
+            tester.addMatePairWithUmi(libraryName, umis.get(i), assignedUmis.get(i), isDuplicate.get(i), isDuplicate.get(i),
+                    startPos.get(i), mateStartPos.get(i), negativeStrand1.get(i), negativeStrand2.get(i));
         }
+
+        tester.setExpectedMetrics(expectedMetrics);
+        tester.runTest();
     }
 }
+

@@ -61,6 +61,11 @@ public class DuplicationMetricsTest {
         return metric;
     }
 
+    @Test
+    public void testEmptyDuplicationMetricsDerivation(){
+        Assert.assertEquals(emptyMetrics().PERCENT_DUPLICATION, 0.0);
+    }
+
     @Test(dataProvider="testMergeDataProvider")
     public void testMerge(final DuplicationMetrics left, final DuplicationMetrics right, final DuplicationMetrics expected) {
         left.merge(right);

@@ -42,5 +42,8 @@ public class MarkDuplicatesWithMateCigarTester extends AbstractMarkDuplicatesCom
     }
 
     @Override
+    public void recordOpticalDuplicatesMarked() {}
+
+    @Override
     protected CommandLineProgram getProgram() { return new MarkDuplicatesWithMateCigar(); }
 }

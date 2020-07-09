@@ -184,7 +184,7 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(doc = "Which filter to use.")
     public Filter FILTER = null;
 
-    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=includeReadList.",
+    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=excludeReadList.",
             optional = true,
             shortName = "RLF")
     public File READ_LIST_FILE;

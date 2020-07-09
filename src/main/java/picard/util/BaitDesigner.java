@@ -363,11 +363,6 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
         return count;
     }
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new BaitDesigner().instanceMainWithExit(args);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<String>();
@@ -390,12 +385,6 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
         return Math.max(MINIMUM_BAITS_PER_TARGET, (int) (Math.ceil(length - BAIT_SIZE) / (double) BAIT_OFFSET) + 1);
     }
 
-    /**
-     * Main method that coordinates the checking of inputs, designing of baits and then
-     * the writing out of all necessary files.
-     *
-     * @return
-     */
     @Override
     protected int doWork() {
         // Input parameter munging and checking

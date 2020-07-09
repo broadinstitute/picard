@@ -171,7 +171,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public Date RUN_START_DATE;
 
     @Argument(doc = "The name of the sequencing technology that produced the read.", optional = true)
-    public String PLATFORM = "illumina";
+    public String PLATFORM = "ILLUMINA";
 
     @Argument(doc = "Whether to include the barcode information in the @RG->BC header tag. Defaults to false until included in the SAM spec.")
     public boolean INCLUDE_BC_IN_RG_TAG = false;
@@ -221,7 +221,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
 
-    @Argument(doc = "If set, process only the tile number given and append the tile number to the output file name.",
+    @Argument(doc = "If set, process only the tile number given and prepend the tile number to the output file name.",
             mutex = "FIRST_TILE",
             optional = true)
     public Integer PROCESS_SINGLE_TILE;
@@ -305,17 +305,18 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
 
+        final boolean demultiplex = readStructure.hasSampleBarcode();
         if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
             if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
             basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, true, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
+                    barcodeSamWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
                     TMP_DIR, NUM_PROCESSORS,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
                     new Codec(numOutputRecords),
                     SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
         } else {
             basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
+                    barcodeSamWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                     FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
                     bclQualityEvaluationStrategy, APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
         }
@@ -509,10 +510,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, output));
     }
 
-    public static void main(final String[] args) {
-        System.exit(new IlluminaBasecallsToSam().instanceMain(args));
-    }
-
     /**
      * Put any custom command-line validation in an override of this method.
      * clp is initialized at this point and can be used to print usage and access args.
@@ -530,13 +527,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if (!readStructure.sampleBarcodes.isEmpty() && LIBRARY_PARAMS == null) {
+        if (readStructure.hasSampleBarcode() && LIBRARY_PARAMS == null) {
             messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
                     " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
         }
 
         if (READ_GROUP_ID == null) {
-            READ_GROUP_ID = RUN_BARCODE.substring(0, 5) + "." + LANE;
+            READ_GROUP_ID = RUN_BARCODE.substring(0, Math.min(RUN_BARCODE.length(), 5)) + "." + LANE;
         }
 
         if (!TAG_PER_MOLECULAR_INDEX.isEmpty() && TAG_PER_MOLECULAR_INDEX.size() != readStructure.molecularBarcode.length()) {

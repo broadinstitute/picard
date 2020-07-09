@@ -23,7 +23,6 @@
  */
 package picard.illumina;
 
-import com.sun.xml.internal.rngom.parse.host.Base;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.BasicFastqWriter;
@@ -386,10 +385,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             molecularBarcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
         }
         return new FastqRecordsWriter(templateWriters, sampleBarcodeWriters, molecularBarcodeWriters);
-    }
-
-    public static void main(final String[] args) {
-        new IlluminaBasecallsToFastq().instanceMainWithExit(args);
     }
 
     /**

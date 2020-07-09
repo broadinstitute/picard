@@ -126,7 +126,7 @@ public class FastWgsMetricsCollector extends AbstractWgsMetricsCollector<EdgingR
         final byte[] qualities = record.getBaseQualities();
         final byte[] bases = record.getRecord().getReadBases();
         for (int i = 0; i < record.getLength(); i++) {
-            final int index = i + position;
+            final int index = i + record.getRefPos();
             if (isReferenceBaseN(index, ref)) {
                 continue;
             }

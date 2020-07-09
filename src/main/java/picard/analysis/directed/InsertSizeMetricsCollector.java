@@ -33,14 +33,19 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
     //Also, when calculating mean and stdev, only bins <= Histogram_WIDTH will be included.
     private final Integer histogramWidth;
 
+    //When not using histogramWidth, this allows the user to enforce a minimum width of the histogram if the
+    //calculated value using median + deviations is smaller.
+    private final Integer minHistogramWidth;
+
     // If set to true, then duplicates will also be included in the histogram
     private final boolean includeDuplicates;
 
     public InsertSizeMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
-                                      final double minimumPct, final Integer histogramWidth, final double deviations,
-                                      final boolean includeDuplicates) {
+                                      final double minimumPct, final Integer histogramWidth, final Integer minHistogramWidth,
+                                      final double deviations, final boolean includeDuplicates) {
         this.minimumPct = minimumPct;
         this.histogramWidth = histogramWidth;
+        this.minHistogramWidth = minHistogramWidth;
         this.deviations = deviations;
         this.includeDuplicates = includeDuplicates;
         setup(accumulationLevels, samRgRecords);
@@ -197,7 +202,8 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
          */
         private int getWidthToTrimTo(InsertSizeMetrics metrics) {
             if (histogramWidth == null) {
-                return (int) (metrics.MEDIAN_INSERT_SIZE + (deviations * metrics.MEDIAN_ABSOLUTE_DEVIATION));
+                final int calculated = (int) (metrics.MEDIAN_INSERT_SIZE + (deviations * metrics.MEDIAN_ABSOLUTE_DEVIATION));
+                return (minHistogramWidth == null) ? calculated :  Math.max(minHistogramWidth, calculated);
             } else {
                 return histogramWidth;
             }

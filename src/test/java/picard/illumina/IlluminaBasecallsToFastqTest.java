@@ -116,7 +116,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             }
 
         } finally {
-            TestUtil.recursiveDelete(outputDir);
+            IOUtil.recursiveDelete(outputDir.toPath());
         }
     }
 
@@ -222,7 +222,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                 }
             }
         } finally {
-            TestUtil.recursiveDelete(outputDir);
+            IOUtil.recursiveDelete(outputDir.toPath());
         }
     }
 

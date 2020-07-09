@@ -89,6 +89,12 @@ public abstract class CommandLineProgram {
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
 
+    /**
+     * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
+     * reasonable help output formatting.
+     */
+    public static int MAX_ALLOWABLE_ONE_LINE_SUMMARY_LENGTH = 120;
+
     @Argument(doc="One or more directories with space available to be used by this program for temporary storage of working files",
             common=true, optional=true)
     public List<File> TMP_DIR = new ArrayList<>();
@@ -142,7 +148,7 @@ public abstract class CommandLineProgram {
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
 
     static {
-      // Register custom reader factory for reading data from Google Genomics 
+      // Register custom reader factory for reading data from Google Genomics
       // implementation of GA4GH API.
       // With this it will be possible to pass these urls as INPUT params.
       // E.g. java -jar dist/picard.jar ViewSam \
@@ -150,11 +156,11 @@ public abstract class CommandLineProgram {
       //    GA4GH_CLIENT_SECRETS=../client_secrets.json
       if (System.getProperty("samjdk.custom_reader") == null) {
         System.setProperty("samjdk.custom_reader",
-            "https://www.googleapis.com/genomics," + 
+            "https://www.googleapis.com/genomics," +
             "com.google.cloud.genomics.gatk.htsjdk.GA4GHReaderFactory");
       }
     }
-    
+
     /**
     * Initialized in parseArgs.  Subclasses may want to access this to do their
     * own validation, and then print usage using commandLineParser.
@@ -194,7 +200,25 @@ public abstract class CommandLineProgram {
         String actualArgs[] = argv;
 
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
-            actualArgs = CommandLineSyntaxTranslater.translatePicardStyleToPosixStyle(argv);
+            actualArgs = CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv);
+        } else if (CommandLineSyntaxTranslater.isLegacyPicardStyle(argv)) {
+            final String[] messageLines = new String[] {
+                "", "",
+                "********** NOTE: Picard's command line syntax is changing.",
+                "**********",
+                "********** For more information, please see:",
+                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "**********",
+                "********** The command line looks like this in the new syntax:",
+                "**********",
+                "**********    %s %s",
+                "**********",
+                "", ""
+            };
+            final String message = String.join("\n", messageLines);
+            final String syntax  = String.join(" ", CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv));
+            final String info    = String.format(message, this.getClass().getSimpleName(), syntax);
+            Log.getInstance(this.getClass()).info(info);
         }
         if (!parseArgs(actualArgs)) {
             return 1;
@@ -222,11 +246,15 @@ public abstract class CommandLineProgram {
             SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         }
 
+        final boolean defaultHTSJDKIndexCreation = SAMFileWriterFactory.getDefaultCreateIndexWhileWriting();
         if (CREATE_INDEX) {
             SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true);
         }
 
-        SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
+        final boolean defaultMD5Creation = SAMFileWriterFactory.getDefaultCreateMd5File();
+        if (CREATE_MD5_FILE) {
+            SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
+        }
 
         for (final File f : TMP_DIR) {
             // Intentionally not checking the return values, because it may be that the program does not
@@ -276,6 +304,9 @@ public abstract class CommandLineProgram {
         try {
             ret = doWork();
         } finally {
+            // restore the default to eliminate problems in downstream code caused by setting CREATE_INDEX=true above
+            SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(defaultHTSJDKIndexCreation);
+            SAMFileWriterFactory.setDefaultCreateMd5File(defaultMD5Creation);
             try {
                 // Emit the time even if program throws
                 if (!QUIET) {
@@ -359,13 +390,19 @@ public abstract class CommandLineProgram {
      */
     public CommandLineParser getCommandLineParser() {
         if (commandLineParser == null) {
-            commandLineParser = useLegacyParser(getClass()) ?
-                        new LegacyCommandLineArgumentParser(this) :
-                        new CommandLineArgumentParser(this,
-                            Collections.EMPTY_LIST,
-                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
+            commandLineParser = getCommandLineParser(this);
         }
         return commandLineParser;
+    }
+    /**
+     * @return Return a newly minted command line parser for the provided object.
+     */
+    static public CommandLineParser getCommandLineParser(Object o) {
+        return useLegacyParser(o.getClass()) ?
+                        new LegacyCommandLineArgumentParser(o) :
+                        new CommandLineArgumentParser(o,
+                            Collections.EMPTY_LIST,
+                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
     }
 
     /**

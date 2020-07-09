@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -40,6 +41,9 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -97,6 +101,10 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "Also, when calculating mean and standard deviation, only bins <= Histogram_WIDTH will be included.", optional=true)
     public Integer HISTOGRAM_WIDTH = null;
 
+    @Argument(shortName="MW", doc="Minimum width of histogram plots. In the case when the histogram would otherwise be" +
+            "truncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.", optional=true)
+    public Integer MIN_HISTOGRAM_WIDTH = null;
+
     @Argument(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1).")
     public float MINIMUM_PCT = 0.05f;
@@ -109,11 +117,6 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;
-
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectInsertSizeMetrics().instanceMainWithExit(argv);
-    }
 
     /**
      * Put any custom command-line validation in an override of this method.
@@ -139,8 +142,8 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(Histogram_FILE);
 
         //Delegate actual collection to InsertSizeMetricCollector
-        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(),
-                                                        MINIMUM_PCT, HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES);
+        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT,
+                HISTOGRAM_WIDTH, MIN_HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES);
     }
 
     @Override protected void acceptRead(final SAMRecord record, final ReferenceSequence ref) {
@@ -163,23 +166,18 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         else  {
             file.write(OUTPUT);
 
-            final int rResult;
-            if(HISTOGRAM_WIDTH == null) {
-                rResult = RExecutor.executeFromClasspath(
-                    Histogram_R_SCRIPT,
-                    OUTPUT.getAbsolutePath(),
-                    Histogram_FILE.getAbsolutePath(),
-                    INPUT.getName());
-            } else {
-                rResult = RExecutor.executeFromClasspath(
-                    Histogram_R_SCRIPT,
-                    OUTPUT.getAbsolutePath(),
-                    Histogram_FILE.getAbsolutePath(),
-                    INPUT.getName(),
-                    String.valueOf(HISTOGRAM_WIDTH) ); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
-                                                         //bin that has data, which may be less than Histogram_WIDTH and confuse the user.
+            final List<String> plotArgs = new ArrayList<>();
+            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath(), INPUT.getName());
+
+            if (HISTOGRAM_WIDTH != null) {
+                plotArgs.add(String.valueOf(HISTOGRAM_WIDTH));
+            }
+            else if (MIN_HISTOGRAM_WIDTH != null) {
+                final int max = (int) file.getAllHistograms().stream().mapToDouble(Histogram::getMax).max().getAsDouble();
+                plotArgs.add(String.valueOf(Math.max(max, MIN_HISTOGRAM_WIDTH)));
             }
 
+            final int rResult = RExecutor.executeFromClasspath(Histogram_R_SCRIPT, plotArgs.toArray(new String[0]));
             if (rResult != 0) {
                 throw new PicardException("R script " + Histogram_R_SCRIPT + " failed with return code " + rResult);
             }

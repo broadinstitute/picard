@@ -95,11 +95,6 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     private final Log log = Log.getInstance(MeanQualityByCycle.class);
 
-    /** Required main method. */
-    public static void main(String[] args) {
-        System.exit(new MeanQualityByCycle().instanceMain(args));
-    }
-
     private static final class HistogramGenerator {
         final boolean useOriginalQualities;
         int maxLengthSoFar = 0;

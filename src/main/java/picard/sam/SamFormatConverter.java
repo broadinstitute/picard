@@ -33,14 +33,13 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
-import picard.illumina.parser.ReadData;
 
 import java.io.File;
 
@@ -55,29 +54,34 @@ import java.io.File;
         oneLineSummary = "Convert a BAM file to a SAM file, or a SAM to a BAM",
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
-public class
-        SamFormatConverter extends CommandLineProgram {
-
-    private static final String PROGRAM_VERSION = "1.0";
+public class SamFormatConverter extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
-
     @Argument(doc = "The BAM or SAM file to parse.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
+
     @Argument(doc = "The BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    public static void main(final String[] argv) {
-        new SamFormatConverter().instanceMainWithExit(argv);
+    protected int doWork() {
+        convert(INPUT, OUTPUT, REFERENCE_SEQUENCE, CREATE_INDEX);
+        return 0;
     }
 
-    protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
-
-        if (CREATE_INDEX && writer.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+    /**
+     * Convert a file from one of sam/bam/cram format to another based on the extension of output.
+     *
+     * @param input             input file in one of sam/bam/cram format
+     * @param output            output to write converted file to, the conversion is based on the extension of this filename
+     * @param referenceSequence the reference sequence to use, necessary when reading/writing cram
+     * @param createIndex       whether or not an index should be written alongside the output file
+     */
+    public static void convert(final File input, final File output, final File referenceSequence, final Boolean createIndex) {
+        IOUtil.assertFileIsReadable(input);
+        IOUtil.assertFileIsWritable(output);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).open(input);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, output, referenceSequence);
+        if (createIndex && writer.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             throw new PicardException("Can't CREATE_INDEX unless sort order is coordinate");
         }
 
@@ -88,6 +92,5 @@ public class
         }
         CloserUtil.close(reader);
         writer.close();
-        return 0;
     }
 }

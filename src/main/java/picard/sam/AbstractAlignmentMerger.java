@@ -28,7 +28,15 @@ import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.CigarUtil;
 import picard.PicardException;
 
 import java.io.File;
@@ -60,6 +68,11 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
+
+    // TODO: Switch to using HTSJDK tags if this gets into hts-spec and implemented
+    static final String HARD_CLIPPED_BASES_TAG = "XB";
+    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "XQ";
+
     private int crossSpeciesReads = 0;
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
@@ -84,6 +97,7 @@ public abstract class AbstractAlignmentMerger {
     private final SortOrder sortOrder;
     private MultiHitAlignedReadIterator alignedIterator = null;
     private boolean clipOverlappingReads = true;
+    private boolean hardClipOverlappingReads = false;
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
     private boolean keepAlignerProperPairFlags = false;
@@ -145,25 +159,32 @@ public abstract class AbstractAlignmentMerger {
 
     public enum UnmappingReadStrategy {
         // Leave on record, and copy to tag
-        COPY_TO_TAG(false, true),
-        // Leave on record, but do not create additional tag
-        DO_NOT_CHANGE(false, false),
+        COPY_TO_TAG(false, true, true),
+        // Leave on record (if valid), but do not create additional tag
+        DO_NOT_CHANGE(false, false, true),
+        // Leave on record (even if invalid), but do not create additional tag
+        DO_NOT_CHANGE_INVALID (false, false, false),
         // Add tag with information, and remove from standard fields in record
-        MOVE_TO_TAG(true, true);
+        MOVE_TO_TAG(true, true, true);
 
-        private final boolean resetMappingInformation, populatePATag;
+        private final boolean resetMappingInformation, populateOATag, keepValid;
 
-        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populatePATag) {
+        UnmappingReadStrategy(final boolean resetMappingInformation, final boolean populateOATag, final boolean keepValid) {
             this.resetMappingInformation = resetMappingInformation;
-            this.populatePATag = populatePATag;
+            this.populateOATag = populateOATag;
+            this.keepValid = keepValid;
+        }
+
+        public boolean isKeepValid() {
+            return keepValid;
         }
 
         public boolean isResetMappingInformation() {
             return resetMappingInformation;
         }
 
-        public boolean isPopulatePaTag() {
-            return populatePATag;
+        public boolean isPopulateOaTag() {
+            return populateOATag;
         }
     }
 
@@ -668,26 +689,26 @@ public abstract class AbstractAlignmentMerger {
 
             crossSpeciesReads++;
 
-            if (unmappingReadsStrategy.isPopulatePaTag()) {
-                unaligned.setAttribute("PA", encodeMappingInformation(aligned));
+            if (unmappingReadsStrategy.isPopulateOaTag()) {
+                unaligned.setAttribute(SAMTag.OA.name(), encodeMappingInformation(aligned));
             }
 
             if (unmappingReadsStrategy.isResetMappingInformation()) {
                 unaligned.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
                 unaligned.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-                unaligned.setCigar(null);
-                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
                 unaligned.setAttribute(SAMTag.NM.name(), null);
             }
 
             unaligned.setReadUnmappedFlag(true);
-            // Unmapped read cannot have non-zero mapping quality and remain valid
-            unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+            // Unmapped read cannot have non-zero mapping quality or non-null cigars and remain valid
+            if (unmappingReadsStrategy.isKeepValid()) {
+                unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+                unaligned.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            }
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
-            unaligned.setAttribute(optionalComment.map(s -> s + " | ").orElse("") +
-                    SAMTag.CO.name(), "Cross-species contamination");
+            unaligned.setAttribute(SAMTag.CO.name(), optionalComment.map(s -> s + " | ").orElse("")  + "Cross-species contamination");
         }
     }
 
@@ -699,7 +720,7 @@ public abstract class AbstractAlignmentMerger {
      * @param rec SAMRecord whose alignment information will be encoded
      * @return String encoding rec's alignment information according to SA tag in the SAM spec
      */
-    static private String encodeMappingInformation(SAMRecord rec) {
+    public static String encodeMappingInformation(final SAMRecord rec) {
         return String.join(",",
                 rec.getContig(),
                 ((Integer) rec.getAlignmentStart()).toString(),
@@ -709,7 +730,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     //returns the toString() of its input or an empty string if null.
-    static private String getStringOfNullable(final Object obj) {
+    private static String getStringOfNullable(final Object obj) {
         return Optional.ofNullable(obj)
                 .map(Object::toString)
                 .orElse("");
@@ -734,7 +755,7 @@ public abstract class AbstractAlignmentMerger {
             transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant, needsSafeReverseComplement);
         }
         if (isClipOverlappingReads()) {
-            clipForOverlappingReads(firstUnaligned, secondUnaligned);
+            clipForOverlappingReads(firstUnaligned, secondUnaligned, hardClipOverlappingReads);
         }
         SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, addMateCigar);
         if (!keepAlignerProperPairFlags) {
@@ -743,12 +764,11 @@ public abstract class AbstractAlignmentMerger {
     }
 
     /**
-     * Checks to see whether the ends of the reads overlap and soft clips reads
-     * them if necessary.
+     * Checks to see whether the ends of the reads overlap and clips reads
+     * if necessary.
      */
-    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
-        // If both reads are mapped, see if we need to clip the ends due to small
-        // insert size
+    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
+        // If both reads are mapped, see if we need to clip the ends due to small insert size
         if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
             if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
                 final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
@@ -756,43 +776,95 @@ public abstract class AbstractAlignmentMerger {
 
                 // Innies only -- do we need to do anything else about jumping libraries?
                 if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
-                    final int posDiff = pos.getAlignmentEnd() - neg.getAlignmentEnd();
-                    final int negDiff = pos.getAlignmentStart() - neg.getAlignmentStart();
+                    final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getUnclippedEnd() + 1);
+                    int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getUnclippedStart() - 1);
+                    negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
 
-                    if (posDiff > 0) {
-                        final List<CigarElement> elems = new ArrayList<>(pos.getCigar().getCigarElements());
-                        Collections.reverse(elems);
-                        final int clipped = lengthOfSoftClipping(elems.iterator());
-                        final int clipFrom = pos.getReadLength() - posDiff - clipped + 1;
-                        CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(), clipFrom));
-                        removeNmMdAndUqTags(pos); // these tags are now invalid!
+                    if(posClipFrom > 0) {
+                        clip3PrimeEndOfRead(pos, posClipFrom, useHardClipping);
                     }
-
-                    if (negDiff > 0) {
-                        final int clipped = lengthOfSoftClipping(neg.getCigar().getCigarElements().iterator());
-                        final int clipFrom = neg.getReadLength() - negDiff - clipped + 1;
-                        CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(), clipFrom));
-                        removeNmMdAndUqTags(neg); // these tags are now invalid!
+                    if(negClipFrom > 0) {
+                        clip3PrimeEndOfRead(neg, negClipFrom, useHardClipping);
                     }
                 }
             }
         }
     }
 
-    /** Returns the number of soft-clipped bases until a non-soft-clipping element is encountered. */
-    private static int lengthOfSoftClipping(Iterator<CigarElement> iterator) {
-        int clipped = 0;
-        while (iterator.hasNext()) {
-            final CigarElement elem = iterator.next();
-            if (elem.getOperator() != CigarOperator.SOFT_CLIP && elem.getOperator() != CigarOperator.HARD_CLIP) {
-                break;
-            }
-            if (elem.getOperator() == CigarOperator.SOFT_CLIP) {
-                clipped = elem.getLength();
+    static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
+        final int readPosition;
+        final Cigar oldCigar = rec.getCigar();
+        final int oldStart = rec.getAlignmentStart();
+        final Cigar newCigar = new Cigar();
+        final List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements());
+        int posShift = 0;
+        boolean foundNonClip = false;
+
+        for (final CigarElement cigarElement : cigarElements) {
+            final CigarOperator op = cigarElement.getOperator();
+
+            // Replace SOFT_CLIPs in the oldCigar with MATCH_OR_MISMATCH in newCigar
+            if (op == CigarOperator.SOFT_CLIP) {
+                newCigar.add(new CigarElement(cigarElement.getLength(), CigarOperator.MATCH_OR_MISMATCH));
+                if (!foundNonClip) {
+                    posShift += cigarElement.getLength();
+                }
+            } else {
+                if (!op.isClipping()) {
+                    foundNonClip = true;
+                }
+                newCigar.add(new CigarElement(cigarElement.getLength(), op));
             }
         }
 
-        return clipped;
+        // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
+        rec.setCigar(newCigar);
+        // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
+        // also to be moved forward bye posShift so that it's still querying the same base.
+        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+        rec.setCigar(oldCigar);
+
+        return readPosition;
+    }
+
+    private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
+        // If we are using hard clips, add bases and qualities to SAM tag.
+        if (useHardClipping) {
+            moveClippedBasesToTag(rec, clipFrom);
+        }
+
+        // Actually clip the read
+        CigarUtil.clip3PrimeEndOfRead(rec, clipFrom, useHardClipping ? CigarOperator.HARD_CLIP : CigarOperator.SOFT_CLIP);
+    }
+
+    private static void moveClippedBasesToTag(final SAMRecord rec, final int clipFrom) {
+        if (rec.getAttribute(HARD_CLIPPED_BASES_TAG) != null || rec.getAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG) != null) {
+            throw new PicardException("Record " + rec.getReadName() + " already contains tags for restoring hard-clipped bases.  This operation will permanently erase information if it proceeds.");
+        }
+
+        final byte[] bases = rec.getReadBases();
+        final byte[] baseQualities = rec.getBaseQualities();
+        final int readLength = rec.getReadLength();
+
+        final int clipPositionFrom, clipPositionTo;
+        if (rec.getReadNegativeStrandFlag()) {
+            clipPositionFrom = 0;
+            clipPositionTo = readLength - clipFrom + 1;
+        } else {
+            clipPositionFrom = clipFrom - 1;
+            clipPositionTo = readLength;
+        }
+
+        String basesToKeepInTag = StringUtil.bytesToString(Arrays.copyOfRange(bases, clipPositionFrom, clipPositionTo));
+        String qualitiesToKeepInTag = SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipPositionFrom, clipPositionTo));
+
+        if (rec.getReadNegativeStrandFlag()) {
+            // Ensures that the qualities and bases in the tags are stored in their original order, as produced by the sequencer
+            basesToKeepInTag = SequenceUtil.reverseComplement(basesToKeepInTag);
+            qualitiesToKeepInTag =  new StringBuilder(qualitiesToKeepInTag).reverse().toString();
+        }
+        rec.setAttribute(HARD_CLIPPED_BASES_TAG, basesToKeepInTag);
+        rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, qualitiesToKeepInTag);
     }
 
     /**
@@ -804,6 +876,9 @@ public abstract class AbstractAlignmentMerger {
      * @param alignment The alignment record
      */
     protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment, final boolean needsSafeReverseComplement) {
+        if (!rec.getReadUnmappedFlag()) {
+            throw new PicardException("UNMAPPED_BAM contains mapped reads.  If you would like to use this file as the UNMAPPED_BAM, first revert it using RevertSam.");
+        }
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
             // Copy over any non-reserved attributes.  attributesToRemove overrides attributesToRetain.
             if ((!isReservedTag(attr.tag) || this.attributesToRetain.contains(attr.tag)) && !this.attributesToRemove.contains(attr.tag)) {
@@ -914,7 +989,6 @@ public abstract class AbstractAlignmentMerger {
         // If the adapter sequence is marked and clipAdapter is true, clip it
         if (this.clipAdapters && rec.getAttribute(ReservedTagConstants.XT) != null) {
             CigarUtil.softClip3PrimeEndOfRead(rec, rec.getIntegerAttribute(ReservedTagConstants.XT));
-            removeNmMdAndUqTags(rec); // these tags are now invalid!
         }
     }
 
@@ -960,6 +1034,10 @@ public abstract class AbstractAlignmentMerger {
         this.clipOverlappingReads = clipOverlappingReads;
     }
 
+    public void setHardClipOverlappingReads(final boolean hardClipOverlappingReads) {
+        this.hardClipOverlappingReads = hardClipOverlappingReads;
+    }
+
     public boolean isKeepAlignerProperPairFlags() {
         return keepAlignerProperPairFlags;
     }
@@ -977,16 +1055,5 @@ public abstract class AbstractAlignmentMerger {
 
     public void close() {
         CloserUtil.close(this.refSeq);
-    }
-
-
-    /** Removes the NM, MD, and UQ tags.  This is useful if we modify the read and are not able to recompute these tags,
-     * for example when no reference is available.
-     * @param rec the record to modify.
-     */
-    private static void removeNmMdAndUqTags(final SAMRecord rec) {
-        rec.setAttribute(SAMTag.NM.name(), null);
-        rec.setAttribute(SAMTag.MD.name(), null);
-        rec.setAttribute(SAMTag.UQ.name(), null);
     }
 }

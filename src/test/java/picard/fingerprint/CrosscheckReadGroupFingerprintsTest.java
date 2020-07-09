@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -42,11 +43,11 @@ public class CrosscheckReadGroupFingerprintsTest {
 
     @BeforeClass
     public void setup() throws IOException {
-        NA12891_r1 = SamTestUtils.createIndexedBam(NA12891_r1_sam, NA12891_r1_sam);
-        NA12891_r2 = SamTestUtils.createIndexedBam(NA12891_r2_sam, NA12891_r2_sam);
-        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBam(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam);
-        NA12892_r1 = SamTestUtils.createIndexedBam(NA12892_r1_sam, NA12892_r1_sam);
-        NA12892_r2 = SamTestUtils.createIndexedBam(NA12892_r2_sam, NA12892_r2_sam);
+        NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12891_r2 = SamTestUtils.createIndexedBamOrCram(NA12891_r2_sam, NA12891_r2_sam, SamReader.Type.BAM_TYPE);
+        NA12891_named_NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_named_NA12892_r1_sam, NA12891_named_NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r1 = SamTestUtils.createIndexedBamOrCram(NA12892_r1_sam, NA12892_r1_sam, SamReader.Type.BAM_TYPE);
+        NA12892_r2 = SamTestUtils.createIndexedBamOrCram(NA12892_r2_sam, NA12892_r2_sam, SamReader.Type.BAM_TYPE);
 
         lookupMap.put(CrosscheckMetric.DataType.FILE, new ArrayList<>(Arrays.asList("LEFT_FILE", "RIGHT_FILE")));
 
@@ -101,7 +102,7 @@ public class CrosscheckReadGroupFingerprintsTest {
         doTest(args, metrics, expectedRetVal, expectedNMetrics * expectedNMetrics , CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
 
-    @DataProvider(name = "bamFilesLBs")
+    @DataProvider
     public Object[][] bamFilesLBs() {
 
         return new Object[][]{
@@ -250,19 +251,6 @@ public class CrosscheckReadGroupFingerprintsTest {
                 });
             }
         }
-    }
-
-    @Test
-    public void canWriteToDevNull() throws IOException {
-        File f = new File("/dev/null");
-        Assert.assertTrue(f.canRead());
-
-        final OutputStream stream = new FileOutputStream(f);
-        final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream));
-
-        writer.write("Just a test");
-        writer.close();
-
     }
 
     @DataProvider(name = "newParametersData")

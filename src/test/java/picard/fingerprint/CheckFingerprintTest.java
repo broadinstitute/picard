@@ -17,9 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 
 public class CheckFingerprintTest extends CommandLineProgramTest {
 
@@ -27,6 +25,10 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private static final File SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING =
             new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private static final File SHIFTED_HAPLOTYPE_DATABASE_FOR_TESTING =
+            new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.txt");
+    private static final File SHIFTED_REFERENCE =
+            new File(TEST_DATA_DIR, "reference.shifted.for.crams.fasta");
     private static final String TEST_INPUT_VCF1 = new File(TEST_DATA_DIR, "NA12892.vcf").getAbsolutePath();
     private static final String TEST_INPUT_VCF_EMPTY = new File(TEST_DATA_DIR, "/tempCheckFPDir/void.vcf").getAbsolutePath();
     private static final String TEST_INPUT_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.vcf").getAbsolutePath();
@@ -49,11 +51,18 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     private static final File na12891_fp = new File(TEST_DATA_DIR, "NA12891.fp.vcf");
     private static final File na12892_fp = new File(TEST_DATA_DIR, "NA12892.fp.vcf");
 
+    @Override
+    public String getCommandLineProgramName() {
+        return CheckFingerprint.class.getSimpleName();
+    }
+
     @BeforeClass
-    private void mkTemp() {
+    public void setup() throws IOException {
         if (!tempFolder.exists()) {
             tempFolder.mkdir();
         }
+        NA12891_named_NA12892_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891_named_NA12892.vcf"), "fingerprint");
+        NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.vcf"), "fingerprint");
     }
 
     @AfterClass
@@ -89,6 +98,31 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
                 RESULT_EXAMPLE_SUMMARY));
         Assert.assertTrue(MetricsFile.areMetricsEqual(new File(TEST_OUTPUT + ".fingerprinting_detail_metrics"),
                 RESULT_EXAMPLE_DETAIL));
+    }
+
+    @Test
+    public void testMismatchingSamples() {
+        String[] args = new String[]{
+                "I=" + NA12891_r1_sam,
+                "O=" + TEST_OUTPUT,
+                "G=" + TEST_GENOTYPES_VCF1,
+                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 1);
+    }
+
+    @Test
+    public void testMismatchingSamples2() {
+        String[] args = new String[]{
+                "I=" + TEST_INPUT_VCF1,
+                "O=" + TEST_OUTPUT,
+                "G=" + TEST_GENOTYPES_VCF1,
+                "EXPECTED_SAMPLE_ALIAS=TEST123",
+                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 1);
     }
 
     @Test
@@ -132,12 +166,12 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         final String sample = "NA12892";
         final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
 
-        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount, 100).get(sample);
+        checker.setLocusMaxReads(100);
+        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount).get(sample);
         Assert.assertNotNull(fpContaminant);
 
         final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant.toPath()), 1, 1, TimeUnit.DAYS)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
+                .values().stream()
                 .reduce((a, b) -> {
                     a.merge(b);
                     return a;
@@ -146,8 +180,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         Assert.assertNotNull(fpContamination);
 
         final Fingerprint fpContaminated = checker.fingerprintFiles(Collections.singleton(contaminated.toPath()), 1, 1, TimeUnit.DAYS)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
+                .values().stream()
                 .reduce((a, b) -> {
                     a.merge(b);
                     return a;
@@ -159,50 +192,81 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         Assert.assertTrue(FingerprintChecker.calculateMatchResults(fpContaminant, fpContaminated).getLOD() < -4D);
     }
 
-    @Override
-    public String getCommandLineProgramName() {
-        return CheckFingerprint.class.getSimpleName();
-    }
+    @Test
+    public void testFPToVC() throws IOException {
 
-    @BeforeClass
-    public void setup() throws IOException {
-        NA12891_named_NA12892_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891_named_NA12892.vcf"), "fingerprint");
-        NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.vcf"), "fingerprint");
+        final File Na12892 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r1.sam");
+        final File Na12891 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.shifted.for.crams.r1.sam");
+
+        final FingerprintChecker checker = new FingerprintChecker(SHIFTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+
+        checker.setLocusMaxReads(100);
+        final Fingerprint fingerprint = checker.identifyContaminant(Na12892.toPath(), 1).get("NA12892");
+        Assert.assertNotNull(fingerprint);
+
+        final File tempFile = File.createTempFile("testWriteFingerprint", ".vcf");
+        tempFile.deleteOnExit();
+
+        FingerprintUtils.writeFingerPrint(fingerprint, tempFile, SHIFTED_REFERENCE,
+                "NA12892", null);
+
+        final Fingerprint NA12892FromVCF = checker.fingerprintFiles(Collections.singleton(tempFile.toPath()), 1, 1, TimeUnit.DAYS)
+                .values().stream()
+                .reduce(Fingerprint::merge)
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminant"));
+        Assert.assertNotNull(NA12892FromVCF);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(fingerprint, NA12892FromVCF).getLOD() > 1D);
+
+        final Fingerprint NA12891_fp = checker.fingerprintFiles(Collections.singleton(Na12891.toPath()), 1, 1, TimeUnit.DAYS)
+                .values().stream()
+                .reduce(Fingerprint::merge)
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminated"));
+        Assert.assertNotNull(NA12891_fp);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(NA12891_fp, NA12892FromVCF).getLOD() < -4D);
+
+        final Fingerprint NA12892_fp = checker.fingerprintFiles(Collections.singleton(Na12892.toPath()), 1, 1, TimeUnit.DAYS)
+                .values().stream()
+                .reduce(Fingerprint::merge)
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminated"));
+        Assert.assertNotNull(NA12892_fp);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(NA12892FromVCF, NA12892_fp).getLOD() > 1D);
     }
 
     @DataProvider(name = "samsToFingerprint")
     Object[][] samsToFingerprint() {
         return new Object[][]{
-                {NA12891_r1_sam, na12891_fp},
-                {NA12892_r1_sam, na12891_fp},
+                {NA12891_r1_sam, na12891_fp, 0},
+                {NA12892_r1_sam, na12891_fp, 1},
         };
     }
 
     @DataProvider(name = "vcfsToFingerprint")
     Object[][] vcfsToFingerprint() {
         return new Object[][]{
-                {NA12891_named_NA12892_vcf, na12892_fp},
-                {NA12892_1_vcf, na12892_fp},
+                {NA12891_named_NA12892_vcf, na12892_fp, 0},
+                {NA12892_1_vcf, na12892_fp, 0},
         };
     }
 
     @Test(dataProvider = "samsToFingerprint")
-    void testCheckFingerprintSam(File file, File genotypes) throws IOException {
-        tester(false, file, genotypes);
-
+    void testCheckFingerprintSam(final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        tester(false, file, genotypes, expectedRetVal);
     }
 
     @Test(dataProvider = "vcfsToFingerprint")
-    void testCheckFingerprintVcf(File file, File genotypes) throws IOException {
-        tester(false, file, genotypes);
+    void testCheckFingerprintVcf(final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        tester(false, file, genotypes, expectedRetVal);
     }
 
     @Test(dataProvider = "samsToFingerprint")
-    void testCheckFingerprintNoRg(File file, File genotypes) throws IOException {
-        tester(true, file, genotypes);
+    void testCheckFingerprintNoRg(final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        tester(true, file, genotypes, expectedRetVal);
     }
 
-    private File tester(boolean ignoreRG, File file, File genotypes) throws IOException {
+    private File tester(boolean ignoreRG, final File file, final File genotypes, final int expectedRetVal) throws IOException {
         final List<String> args = new ArrayList<>();
         final File outputSummary = File.createTempFile("fingerprint", "summary_metrics");
         outputSummary.deleteOnExit();
@@ -211,12 +275,14 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
 
         args.add("INPUT=" + file.getAbsolutePath());
         args.add("G=" + genotypes.getAbsolutePath());
-        if (ignoreRG) args.add("IGNORE_RG=true");
+        if (ignoreRG) {
+            args.add("IGNORE_RG=true");
+        }
         args.add("H=" + HAPLOTYPE_MAP.getAbsolutePath());
         args.add("SUMMARY_OUTPUT=" + outputSummary.getAbsolutePath());
         args.add("DETAIL_OUTPUT=" + outputDetail.getAbsolutePath());
 
-        Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertEquals(runPicardCommandLine(args), expectedRetVal);
 
         Assert.assertTrue(outputSummary.exists(), "Expected output file " + outputSummary.getAbsolutePath() + " to exist.");
         Assert.assertTrue(outputDetail.exists(), "Expected output file " + outputDetail.getAbsolutePath() + " to exist.");

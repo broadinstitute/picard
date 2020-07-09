@@ -12,11 +12,11 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgramTest {
-    private final static File TEST_DIR = new File("testdata/picard/sam/");
-    private final static String SAMPLE = "TestSample1";
-    private final static String READ_GROUP_ID = "TestReadGroup1";
-    private final static String PLATFORM = "ILLUMINA";
-    private final static String LIBRARY = "TestLibrary1";
+    private static final File TEST_DIR = new File("testdata/picard/sam/");
+    private static final String SAMPLE = "TestSample1";
+    private static final String READ_GROUP_ID = "TestReadGroup1";
+    private static final String PLATFORM = "ILLUMINA";
+    private static final String LIBRARY = "TestLibrary1";
 
     public String getCommandLineProgramName() {
         return CollectWgsMetricsWithNonZeroCoverage.class.getSimpleName();
@@ -127,7 +127,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
 
     @Test
     public void testPoorQualityBases() throws IOException {
-        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File reference = CHR_M_REFERENCE;
         final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         testSamFile.deleteOnExit();
 
@@ -179,11 +179,11 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
         Assert.assertEquals(runPicardCommandLine(args), 0);
         Assert.assertTrue(chartOutFile.exists());
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
+        final MetricsFile<WgsMetrics, Integer> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
-        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
-        final CollectWgsMetrics.WgsMetrics nonZeroMetrics = output.getMetrics().get(1);
+        final WgsMetrics metrics = output.getMetrics().get(0);
+        final WgsMetrics nonZeroMetrics = output.getMetrics().get(1);
 
 
         // Some metrics should not change between with and without zero
@@ -197,7 +197,7 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
 
     @Test
     public void testNoCoverage() throws IOException {
-        final File reference = new File("testdata/picard/quality/chrM.reference.fasta");
+        final File reference = CHR_M_REFERENCE;
         final File testSamFile = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         testSamFile.deleteOnExit();
 
@@ -229,11 +229,11 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
         Assert.assertEquals(runPicardCommandLine(args), 0);
         Assert.assertTrue(chartOutFile.exists());
 
-        final MetricsFile<CollectWgsMetrics.WgsMetrics, Integer> output = new MetricsFile<>();
+        final MetricsFile<WgsMetrics, Integer> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
-        final CollectWgsMetrics.WgsMetrics metrics = output.getMetrics().get(0);
-        final CollectWgsMetrics.WgsMetrics nonZeroMetrics = output.getMetrics().get(1);
+        final WgsMetrics metrics = output.getMetrics().get(0);
+        final WgsMetrics nonZeroMetrics = output.getMetrics().get(1);
 
         // Some metrics should not change between with and without zero
         Assert.assertEquals(nonZeroMetrics.PCT_EXC_BASEQ, metrics.PCT_EXC_BASEQ);

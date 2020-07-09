@@ -9,7 +9,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.analysis.TheoreticalSensitivity;
 import picard.analysis.TheoreticalSensitivityMetrics;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
@@ -24,7 +23,7 @@ import java.util.*;
 public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
     private final String TEST_DATA_DIR = "testdata/picard/quality/";
-    private final File dict = new File(TEST_DATA_DIR+"chrM.reference.dict");
+    private final File dict = CHR_M_DICT;
     private File tempSamFile;
     private File outfile;
     private File tsOutfile; // Theoretical sensitivity file
@@ -32,9 +31,9 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
     private static final int LENGTH = 99;
     private static final int RANDOM_SEED = 51;
 
-    final String referenceFile = TEST_DATA_DIR + "chrM.reference.fasta";
-    final String emptyIntervals = TEST_DATA_DIR + "chrM.empty.interval_list";
-    final String singleIntervals = TEST_DATA_DIR + "chrM.single.interval_list";
+    private final String referenceFile = CHR_M_REFERENCE.getAbsolutePath();
+    private final String emptyIntervals = TEST_DATA_DIR + "chrM.empty.interval_list";
+    private final String singleIntervals = TEST_DATA_DIR + "chrM.single.interval_list";
 
 
     private static final String sample = "TestSample1";
@@ -167,7 +166,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 // the tests from taking too long to run.
                 {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 2000,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
-                        Arrays.asList(0.01, 0.52, 0.93,  0.99,  0.99)  // Expected sensitivity
+                        Arrays.asList(0.01, 0.54, 0.93,  0.99,  0.99)  // Expected sensitivity
                 }
         };
     }

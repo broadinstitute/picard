@@ -8,7 +8,11 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.vcf.VcfTestUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -17,15 +21,15 @@ import java.util.stream.Collectors;
 public class LiftoverUtilsTest {
 
     static final Allele A = Allele.create("A", false);
-    static final Allele C = Allele.create("C", false);
-    static final Allele RefA = Allele.create("A", true);
-    static final Allele RefC = Allele.create("C", true);
+    private static final Allele C = Allele.create("C", false);
+    private static final Allele RefA = Allele.create("A", true);
+    private static final Allele RefC = Allele.create("C", true);
 
-    static String AF = "AF";
-    static String MAX_AF = "MAX_AF";
+    private static String AF = "AF";
+    private static String MAX_AF = "MAX_AF";
 
-    static final List<String> annotationsToDrop = Collections.singletonList(MAX_AF);
-    static final List<String> annotationsToSwap = Collections.singletonList(AF);
+    private static final List<String> annotationsToDrop = Collections.singletonList(MAX_AF);
+    private static final List<String> annotationsToSwap = Collections.singletonList(AF);
 
     @DataProvider
     public Object[][] swapRefAltData() {

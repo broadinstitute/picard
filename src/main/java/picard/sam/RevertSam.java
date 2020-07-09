@@ -33,6 +33,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -154,6 +155,9 @@ public class RevertSam extends CommandLineProgram {
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
 
+    @Argument(shortName = "RHC", doc = "When true, restores reads and qualities of records with hard-clips containing XB and XQ tags.")
+    public boolean RESTORE_HARDCLIPS = true;
+
     public static enum FileType implements CommandLineParser.ClpEnum {
         sam("Generate SAM files."),
         bam("Generate BAM files."),
@@ -181,7 +185,7 @@ public class RevertSam extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME, doc = "True to restore original qualities from the OQ field to the QUAL field if available.")
     public boolean RESTORE_ORIGINAL_QUALITIES = true;
 
-    @Argument(doc = "Remove duplicate read flags from all reads.  Note that if this is true and REMOVE_ALIGNMENT_INFORMATION==false, " +
+    @Argument(doc = "Remove duplicate read flags from all reads.  Note that if this is false and REMOVE_ALIGNMENT_INFORMATION==true, " +
             " the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.")
     public boolean REMOVE_DUPLICATE_INFORMATION = true;
 
@@ -282,6 +286,10 @@ public class RevertSam extends CommandLineProgram {
         } else {
             outputMap = null;
             headerMap = null;
+        }
+
+        if (RESTORE_HARDCLIPS && !REMOVE_ALIGNMENT_INFORMATION) {
+            throw new PicardException("Cannot revert sam file when RESTORE_HARDCLIPS is true and REMOVE_ALIGNMENT_INFORMATION is false.");
         }
 
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
@@ -395,6 +403,20 @@ public class RevertSam extends CommandLineProgram {
             rec.setMateNegativeStrandFlag(false);
             rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
             rec.setMateUnmappedFlag(rec.getReadPairedFlag());
+
+            if (RESTORE_HARDCLIPS) {
+                String hardClippedBases = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG);
+                String hardClippedQualities = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG);
+                if (hardClippedBases != null && hardClippedQualities != null) {
+                    // Record has already been reverse complemented if this was on the negative strand
+                    rec.setReadString(rec.getReadString() + hardClippedBases);
+                    rec.setBaseQualities(SAMUtils.fastqToPhred(SAMUtils.phredToFastq(rec.getBaseQualities()) + hardClippedQualities));
+
+                    // Remove hard clipping storage tags
+                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG, null);
+                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG, null);
+                }
+            }
 
             // And then remove any tags that are calculated from the alignment
             ATTRIBUTE_TO_CLEAR.forEach(tag -> rec.setAttribute(tag, null));

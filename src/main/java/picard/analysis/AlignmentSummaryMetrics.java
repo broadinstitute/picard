@@ -165,8 +165,8 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double PCT_CHIMERAS;
 
     /**
-     * The fraction of PF reads that are unaligned and match to a known adapter sequence right from the
-     * start of the read.
+     * The fraction of PF reads that are unaligned or aligned with MQ0 and match to a known adapter sequence right from the
+     * start of the read (indication of adapter-dimer pairs).
      */
     public double PCT_ADAPTER;
 

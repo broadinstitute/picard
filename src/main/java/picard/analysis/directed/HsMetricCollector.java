@@ -73,9 +73,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final int minimumBaseQuality,
                              final boolean clipOverlappingReads,
                              final boolean noSideEffects,
+                             final boolean includeIndels,
                              final int coverageCap,
                              final int sampleSize) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, coverageCap, sampleSize);
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, includeIndels, coverageCap, sampleSize);
     }
 
     @Override
@@ -94,10 +95,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
         //need HSLIBRARY_SIZE
         hsMetrics.HS_PENALTY_10X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 10);
         hsMetrics.HS_PENALTY_20X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 20);
-	    hsMetrics.HS_PENALTY_30X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 30);
-	    hsMetrics.HS_PENALTY_40X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 40);
-	    hsMetrics.HS_PENALTY_50X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 50);
-	    hsMetrics.HS_PENALTY_100X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 100);
+        hsMetrics.HS_PENALTY_30X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 30);
+        hsMetrics.HS_PENALTY_40X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 40);
+        hsMetrics.HS_PENALTY_50X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 50);
+        hsMetrics.HS_PENALTY_100X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 100);
         return hsMetrics;
     }
 

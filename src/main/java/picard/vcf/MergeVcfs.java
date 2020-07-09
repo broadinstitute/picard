@@ -38,6 +38,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -123,7 +124,7 @@ public class MergeVcfs extends CommandLineProgram {
 			" <p>You can either directly specify the list of files by specifying <code>INPUT</code> multiple times, or provide a list" + 
 			"     in a file with name ending in \".list\" to <code>INPUT</code>.</p>" + 
 			" <h3>Outputs</h3>" + 
-			" <p>A VCF sorted (i) according to the dictionary and (ii) by coordiante.</p>" + 
+			" <p>A VCF sorted (i) according to the dictionary and (ii) by coordinate.</p>" +
 			" <h3>Usage examples</h3>" + 
 			" <h4>Example 1:</h4>" + 
 			" <p>We combine several variant files in different formats, where at least one of them contains the contig list in its header.</p>" + 
@@ -147,11 +148,12 @@ public class MergeVcfs extends CommandLineProgram {
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input files", optional = true)
     public File SEQUENCE_DICTIONARY;
 
-    private final Log log = Log.getInstance(MergeVcfs.class);
+    @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
+    public List<String>  COMMENT = new ArrayList<>();
 
-    public static void main(final String[] argv) {
-        new MergeVcfs().instanceMainWithExit(argv);
-    }
+    private final static String SEQ_DICT_REQUIRED = "A sequence dictionary must be available (either through the input file or by setting it explicitly).";
+
+    private final Log log = Log.getInstance(MergeVcfs.class);
 
     public MergeVcfs() {
         this.CREATE_INDEX = true;
@@ -175,6 +177,13 @@ public class MergeVcfs extends CommandLineProgram {
             IOUtil.assertFileIsReadable(file);
             final VCFFileReader fileReader = new VCFFileReader(file, false);
             final VCFHeader fileHeader = fileReader.getFileHeader();
+            if (fileHeader.getContigLines().isEmpty()) {
+                if (sequenceDictionary == null) {
+                    throw new IllegalArgumentException(SEQ_DICT_REQUIRED);
+                } else {
+                    fileHeader.setSequenceDictionary(sequenceDictionary);
+                }
+            }
 
             if (variantContextComparator == null) {
                 variantContextComparator = fileHeader.getVCFRecordComparator();
@@ -194,13 +203,18 @@ public class MergeVcfs extends CommandLineProgram {
                     throw new IllegalArgumentException("Input file " + file.getAbsolutePath() + " has sample entries that don't match the other files.");
                 }
             }
+            
+            // add comments in the first header
+            if (headers.isEmpty()) {
+                COMMENT.stream().forEach(C -> fileHeader.addMetaDataLine(new VCFHeaderLine("MergeVcfs.comment", C)));
+            }
 
             headers.add(fileHeader);
             iteratorCollection.add(fileReader.iterator());
         }
 
         if (CREATE_INDEX && sequenceDictionary == null) {
-            throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
+            throw new PicardException(String.format("Index creation failed. %s", SEQ_DICT_REQUIRED));
         }
 
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()

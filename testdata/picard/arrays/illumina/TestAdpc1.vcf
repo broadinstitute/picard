@@ -1,0 +1,200 @@
+##fileformat=VCFv4.2
+##Biotin(Bgnd)=Biotin(Bgnd)|Staining|488|97
+##Biotin(High)=Biotin(High)|Staining|1367|12751
+##DNP(Bgnd)=DNP(Bgnd)|Staining|591|348
+##DNP(High)=DNP(High)|Staining|39060|309
+##Extension(A)=Extension(A)|Extension|40282|630
+##Extension(C)=Extension(C)|Extension|2503|18619
+##Extension(G)=Extension(G)|Extension|2937|17960
+##Extension(T)=Extension(T)|Extension|41073|496
+##FILTER=<ID=DUPE,Description="Duplicate assays position.">
+##FILTER=<ID=FAIL_REF,Description="Assay failed to map to reference.">
+##FILTER=<ID=TRIALLELIC,Description="Tri-allelic assay.">
+##FILTER=<ID=ZEROED_OUT_ASSAY,Description="Assay Zeroed out (marked as uncallable) in the Illumina Cluster File">
+##FORMAT=<ID=BAF,Number=1,Type=Float,Description="B Allele Frequency">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=IGC,Number=1,Type=Float,Description="Illumina GenCall Confidence Score">
+##FORMAT=<ID=LRR,Number=1,Type=Float,Description="Log R Ratio">
+##FORMAT=<ID=NORMX,Number=1,Type=Float,Description="Normalized X intensity">
+##FORMAT=<ID=NORMY,Number=1,Type=Float,Description="Normalized Y intensity">
+##FORMAT=<ID=R,Number=1,Type=Float,Description="Normalized R value">
+##FORMAT=<ID=THETA,Number=1,Type=Float,Description="Normalized Theta value">
+##FORMAT=<ID=X,Number=1,Type=Integer,Description="Raw X intensity">
+##FORMAT=<ID=Y,Number=1,Type=Integer,Description="Raw Y intensity">
+##Hyb(High)=Hyb(High)|Hybridization|2841|16054
+##Hyb(Low)=Hyb(Low)|Hybridization|2820|3996
+##Hyb(Medium)=Hyb(Medium)|Hybridization|966|10518
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=ALLELE_A,Number=1,Type=String,Description="A allele">
+##INFO=<ID=ALLELE_B,Number=1,Type=String,Description="B allele">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=BEADSET_ID,Number=1,Type=Integer,Description="Bead set ID for normalization">
+##INFO=<ID=GC_SCORE,Number=1,Type=Float,Description="Gentrain Score">
+##INFO=<ID=ILLUMINA_BUILD,Number=1,Type=String,Description="Genome Build in Illumina manifest">
+##INFO=<ID=ILLUMINA_CHR,Number=1,Type=String,Description="Chromosome in Illumina manifest">
+##INFO=<ID=ILLUMINA_POS,Number=1,Type=Integer,Description="Position in Illumina manifest">
+##INFO=<ID=ILLUMINA_STRAND,Number=1,Type=String,Description="Probe strand">
+##INFO=<ID=N_AA,Number=1,Type=Integer,Description="Number of AA calls in training set">
+##INFO=<ID=N_AB,Number=1,Type=Integer,Description="Number of AB calls in training set">
+##INFO=<ID=N_BB,Number=1,Type=Integer,Description="Number of BB calls in training set">
+##INFO=<ID=PROBE_A,Number=1,Type=String,Description="Probe base pair sequence">
+##INFO=<ID=PROBE_B,Number=1,Type=String,Description="Probe base pair sequence; not missing for strand-ambiguous SNPs">
+##INFO=<ID=SOURCE,Number=1,Type=String,Description="Probe source">
+##INFO=<ID=devR_AA,Number=1,Type=Float,Description="Standard deviation of normalized R for AA cluster">
+##INFO=<ID=devR_AB,Number=1,Type=Float,Description="Standard deviation of normalized R for AB cluster">
+##INFO=<ID=devR_BB,Number=1,Type=Float,Description="Standard deviation of normalized R for BB cluster">
+##INFO=<ID=devTHETA_AA,Number=1,Type=Float,Description="Standard deviation of normalized THETA for AA cluster">
+##INFO=<ID=devTHETA_AB,Number=1,Type=Float,Description="Standard deviation of normalized THETA for AB cluster">
+##INFO=<ID=devTHETA_BB,Number=1,Type=Float,Description="Standard deviation of normalized THETA for BB cluster">
+##INFO=<ID=devX_AA,Number=1,Type=Float,Description="Standard deviation of normalized X for AA cluster">
+##INFO=<ID=devX_AB,Number=1,Type=Float,Description="Standard deviation of normalized X for AB cluster">
+##INFO=<ID=devX_BB,Number=1,Type=Float,Description="Standard deviation of normalized X for BB cluster">
+##INFO=<ID=devY_AA,Number=1,Type=Float,Description="Standard deviation of normalized Y for AA cluster">
+##INFO=<ID=devY_AB,Number=1,Type=Float,Description="Standard deviation of normalized Y for AB cluster">
+##INFO=<ID=devY_BB,Number=1,Type=Float,Description="Standard deviation of normalized Y for BB cluster">
+##INFO=<ID=meanR_AA,Number=1,Type=Float,Description="Mean of normalized R for AA cluster">
+##INFO=<ID=meanR_AB,Number=1,Type=Float,Description="Mean of normalized R for AB cluster">
+##INFO=<ID=meanR_BB,Number=1,Type=Float,Description="Mean of normalized R for BB cluster">
+##INFO=<ID=meanTHETA_AA,Number=1,Type=Float,Description="Mean of normalized THETA for AA cluster">
+##INFO=<ID=meanTHETA_AB,Number=1,Type=Float,Description="Mean of normalized THETA for AB cluster">
+##INFO=<ID=meanTHETA_BB,Number=1,Type=Float,Description="Mean of normalized THETA for BB cluster">
+##INFO=<ID=meanX_AA,Number=1,Type=Float,Description="Mean of normalized X for AA cluster">
+##INFO=<ID=meanX_AB,Number=1,Type=Float,Description="Mean of normalized X for AB cluster">
+##INFO=<ID=meanX_BB,Number=1,Type=Float,Description="Mean of normalized X for BB cluster">
+##INFO=<ID=meanY_AA,Number=1,Type=Float,Description="Mean of normalized Y for AA cluster">
+##INFO=<ID=meanY_AB,Number=1,Type=Float,Description="Mean of normalized Y for AB cluster">
+##INFO=<ID=meanY_BB,Number=1,Type=Float,Description="Mean of normalized Y for BB cluster">
+##INFO=<ID=refSNP,Number=1,Type=String,Description="dbSNP rsID">
+##NP(A)=NP(A)|Non-Polymorphic|12697|441
+##NP(C)=NP(C)|Non-Polymorphic|1083|9309
+##NP(G)=NP(G)|Non-Polymorphic|1041|7455
+##NP(T)=NP(T)|Non-Polymorphic|15318|408
+##NSB(Bgnd)Blue=NSB(Bgnd)Blue|Non-SpecificBinding|706|395
+##NSB(Bgnd)Green=NSB(Bgnd)Green|Non-SpecificBinding|638|335
+##NSB(Bgnd)Purple=NSB(Bgnd)Purple|Non-SpecificBinding|588|324
+##NSB(Bgnd)Red=NSB(Bgnd)Red|Non-SpecificBinding|635|388
+##Restore=Restore|Restoration|700|427
+##String(MM)=String(MM)|Stringency|4134|355
+##String(PM)=String(PM)|Stringency|25371|644
+##TargetRemoval=TargetRemoval|TargetRemoval|1696|337
+##analysisVersionNumber=6
+##arrayType=MEG_AllofUs_20002558X351448_A2
+##autocallDate=12/16/2019 3:48 PM
+##autocallGender=F
+##autocallVersion=3.0.0
+##chipWellBarcode=203469020115_R01C01
+##clusterFile=MEG_AllofUs_A1_Gentrain_1299_edited_prevalidation_081419update.egt
+##content=MEG_AllofUs_20002558X351448_A2.1.4.extended.csv
+##contig=<ID=1,length=249250621,assembly=GRCh37>
+##contig=<ID=2,length=243199373,assembly=GRCh37>
+##contig=<ID=3,length=198022430,assembly=GRCh37>
+##contig=<ID=4,length=191154276,assembly=GRCh37>
+##contig=<ID=5,length=180915260,assembly=GRCh37>
+##contig=<ID=6,length=171115067,assembly=GRCh37>
+##contig=<ID=7,length=159138663,assembly=GRCh37>
+##contig=<ID=8,length=146364022,assembly=GRCh37>
+##contig=<ID=9,length=141213431,assembly=GRCh37>
+##contig=<ID=10,length=135534747,assembly=GRCh37>
+##contig=<ID=11,length=135006516,assembly=GRCh37>
+##contig=<ID=12,length=133851895,assembly=GRCh37>
+##contig=<ID=13,length=115169878,assembly=GRCh37>
+##contig=<ID=14,length=107349540,assembly=GRCh37>
+##contig=<ID=15,length=102531392,assembly=GRCh37>
+##contig=<ID=16,length=90354753,assembly=GRCh37>
+##contig=<ID=17,length=81195210,assembly=GRCh37>
+##contig=<ID=18,length=78077248,assembly=GRCh37>
+##contig=<ID=19,length=59128983,assembly=GRCh37>
+##contig=<ID=20,length=63025520,assembly=GRCh37>
+##contig=<ID=21,length=48129895,assembly=GRCh37>
+##contig=<ID=22,length=51304566,assembly=GRCh37>
+##contig=<ID=X,length=155270560,assembly=GRCh37>
+##contig=<ID=Y,length=59373566,assembly=GRCh37>
+##contig=<ID=MT,length=16569,assembly=GRCh37>
+##contig=<ID=GL000207.1,length=4262,assembly=GRCh37>
+##contig=<ID=GL000226.1,length=15008,assembly=GRCh37>
+##contig=<ID=GL000229.1,length=19913,assembly=GRCh37>
+##contig=<ID=GL000231.1,length=27386,assembly=GRCh37>
+##contig=<ID=GL000210.1,length=27682,assembly=GRCh37>
+##contig=<ID=GL000239.1,length=33824,assembly=GRCh37>
+##contig=<ID=GL000235.1,length=34474,assembly=GRCh37>
+##contig=<ID=GL000201.1,length=36148,assembly=GRCh37>
+##contig=<ID=GL000247.1,length=36422,assembly=GRCh37>
+##contig=<ID=GL000245.1,length=36651,assembly=GRCh37>
+##contig=<ID=GL000197.1,length=37175,assembly=GRCh37>
+##contig=<ID=GL000203.1,length=37498,assembly=GRCh37>
+##contig=<ID=GL000246.1,length=38154,assembly=GRCh37>
+##contig=<ID=GL000249.1,length=38502,assembly=GRCh37>
+##contig=<ID=GL000196.1,length=38914,assembly=GRCh37>
+##contig=<ID=GL000248.1,length=39786,assembly=GRCh37>
+##contig=<ID=GL000244.1,length=39929,assembly=GRCh37>
+##contig=<ID=GL000238.1,length=39939,assembly=GRCh37>
+##contig=<ID=GL000202.1,length=40103,assembly=GRCh37>
+##contig=<ID=GL000234.1,length=40531,assembly=GRCh37>
+##contig=<ID=GL000232.1,length=40652,assembly=GRCh37>
+##contig=<ID=GL000206.1,length=41001,assembly=GRCh37>
+##contig=<ID=GL000240.1,length=41933,assembly=GRCh37>
+##contig=<ID=GL000236.1,length=41934,assembly=GRCh37>
+##contig=<ID=GL000241.1,length=42152,assembly=GRCh37>
+##contig=<ID=GL000243.1,length=43341,assembly=GRCh37>
+##contig=<ID=GL000242.1,length=43523,assembly=GRCh37>
+##contig=<ID=GL000230.1,length=43691,assembly=GRCh37>
+##contig=<ID=GL000237.1,length=45867,assembly=GRCh37>
+##contig=<ID=GL000233.1,length=45941,assembly=GRCh37>
+##contig=<ID=GL000204.1,length=81310,assembly=GRCh37>
+##contig=<ID=GL000198.1,length=90085,assembly=GRCh37>
+##contig=<ID=GL000208.1,length=92689,assembly=GRCh37>
+##contig=<ID=GL000191.1,length=106433,assembly=GRCh37>
+##contig=<ID=GL000227.1,length=128374,assembly=GRCh37>
+##contig=<ID=GL000228.1,length=129120,assembly=GRCh37>
+##contig=<ID=GL000214.1,length=137718,assembly=GRCh37>
+##contig=<ID=GL000221.1,length=155397,assembly=GRCh37>
+##contig=<ID=GL000209.1,length=159169,assembly=GRCh37>
+##contig=<ID=GL000218.1,length=161147,assembly=GRCh37>
+##contig=<ID=GL000220.1,length=161802,assembly=GRCh37>
+##contig=<ID=GL000213.1,length=164239,assembly=GRCh37>
+##contig=<ID=GL000211.1,length=166566,assembly=GRCh37>
+##contig=<ID=GL000199.1,length=169874,assembly=GRCh37>
+##contig=<ID=GL000217.1,length=172149,assembly=GRCh37>
+##contig=<ID=GL000216.1,length=172294,assembly=GRCh37>
+##contig=<ID=GL000215.1,length=172545,assembly=GRCh37>
+##contig=<ID=GL000205.1,length=174588,assembly=GRCh37>
+##contig=<ID=GL000219.1,length=179198,assembly=GRCh37>
+##contig=<ID=GL000224.1,length=179693,assembly=GRCh37>
+##contig=<ID=GL000223.1,length=180455,assembly=GRCh37>
+##contig=<ID=GL000195.1,length=182896,assembly=GRCh37>
+##contig=<ID=GL000212.1,length=186858,assembly=GRCh37>
+##contig=<ID=GL000222.1,length=186861,assembly=GRCh37>
+##contig=<ID=GL000200.1,length=187035,assembly=GRCh37>
+##contig=<ID=GL000193.1,length=189789,assembly=GRCh37>
+##contig=<ID=GL000194.1,length=191469,assembly=GRCh37>
+##contig=<ID=GL000225.1,length=211173,assembly=GRCh37>
+##contig=<ID=GL000192.1,length=547496,assembly=GRCh37>
+##contig=<ID=NC_007605,length=171823,assembly=NC_007605.1>
+##expectedGender=Unknown
+##extendedIlluminaManifestVersion=1.4
+##extendedManifestFile=MEG_AllofUs_20002558X351448_A2.1.4.extended.csv
+##fileDate=Mon Dec 16 15:51:50 UTC 2019
+##fingerprintGender=Unknown
+##imagingDate=10/3/2019 6:06:48 PM
+##manifestFile=MEG_AllofUs_20002558X351448_A2.bpm
+##p95Green=10073
+##p95Red=17625
+##picardVersion=Version:2.21.2-SNAPSHOT
+##reference=/cromwell_root/broad-references/hg19/v0/Homo_sapiens_assembly19.fasta
+##sampleAlias=NA12891_2_NA12892_98_A
+##scannerName=N1052
+##source=GtcToVcf
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	203469020115_R01C01
+1	49554	1:49554-G-A	A	G	.	.	AC=0;AF=0.00;ALLELE_A=A*;ALLELE_B=G;AN=2;BEADSET_ID=1165;GC_SCORE=0.705;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=49554;ILLUMINA_STRAND=TOP;N_AA=1159;N_AB=140;N_BB=0;PROBE_A=AAAGTCAAAAAGAAAAAGAAAAAAAGAAAAATCCATGCATATGATACATC;PROBE_B=.;SOURCE=PAGE;devR_AA=0.156;devR_AB=0.178;devR_BB=0.128;devTHETA_AA=0.007;devTHETA_AB=0.037;devTHETA_BB=0.022;devX_AA=0.147;devX_AB=0.139;devX_BB=0.047;devY_AA=0.019;devY_AB=0.087;devY_BB=0.129;meanR_AA=1.615;meanR_AB=2.007;meanR_BB=1.462;meanTHETA_AA=0.043;meanTHETA_AB=0.273;meanTHETA_BB=0.964;meanX_AA=1.512;meanX_AB=1.378;meanX_BB=0.079;meanY_AA=0.103;meanY_AB=0.629;meanY_BB=1.383	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0:0.581:-0.343:1.201:0.046:1.247:0.024:14733:519
+1	115746	JHU_1.115745	C	T	.	.	AC=0;AF=0.00;ALLELE_A=T;ALLELE_B=C*;AN=2;BEADSET_ID=1040;GC_SCORE=0.641;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=115746;ILLUMINA_STRAND=BOT;N_AA=0;N_AB=52;N_BB=1245;PROBE_A=TCTATAAACTCACAAGAAATTTCTGCCCACCCAGCACACAGTTTGTCCAG;PROBE_B=.;SOURCE=1;devR_AA=0.141;devR_AB=0.172;devR_BB=0.126;devTHETA_AA=0.022;devTHETA_AB=0.018;devTHETA_BB=0.009;devX_AA=0.14;devX_AB=0.054;devX_BB=0.026;devY_AA=0.047;devY_AB=0.137;devY_BB=0.117;meanR_AA=1.481;meanR_AB=2.048;meanR_BB=1.875;meanTHETA_AA=0.041;meanTHETA_AB=0.816;meanTHETA_BB=0.937;meanX_AA=1.392;meanX_AB=0.469;meanX_BB=0.168;meanY_AA=0.089;meanY_AB=1.579;meanY_BB=1.706;refSNP=rs147538909	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:1:0.469:0.183:0.177:1.944:2.121:0.942:2413:12648
+1	534238	JHU_1.534237	A	C	.	.	AC=0;AF=0.00;ALLELE_A=A*;ALLELE_B=C;AN=2;BEADSET_ID=1040;GC_SCORE=0.838;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=534238;ILLUMINA_STRAND=TOP;N_AA=1299;N_AB=0;N_BB=0;PROBE_A=TTCGCTTCACCGCCTTGACAGCTTTGCAGAGTGCTGCTCAGGTATTCTGC;PROBE_B=.;SOURCE=1;devR_AA=0.131;devR_AB=0.182;devR_BB=0.107;devTHETA_AA=0.014;devTHETA_AB=0.022;devTHETA_BB=0.022;devX_AA=0.128;devX_AB=0.095;devX_BB=0.04;devY_AA=0.027;devY_AB=0.096;devY_BB=0.111;meanR_AA=1.299;meanR_AB=1.611;meanR_BB=1.226;meanTHETA_AA=0.03;meanTHETA_AB=0.503;meanTHETA_BB=0.976;meanX_AA=1.241;meanX_AB=0.802;meanX_BB=0.045;meanY_AA=0.059;meanY_AB=0.809;meanY_BB=1.181	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0:0.43:0.195:1.436:0.043:1.479:0.019:15799:487
+1	565433	rs9701055	C	T	.	ZEROED_OUT_ASSAY	AC=0;AF=0.00;ALLELE_A=T;ALLELE_B=C*;AN=0;BEADSET_ID=1618;GC_SCORE=0;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=565433;ILLUMINA_STRAND=TOP;N_AA=21;N_AB=103;N_BB=1172;PROBE_A=AGGAGAAGGCTTACGTTTAATGAGGGAGAAATTTGGTATATGATTGAGAT;PROBE_B=.;SOURCE=dbSNP;devR_AA=0.248;devR_AB=0.196;devR_BB=0.146;devTHETA_AA=0.019;devTHETA_AB=0.059;devTHETA_BB=0.016;devX_AA=0.213;devX_AB=0.142;devX_BB=0.032;devY_AA=0.049;devY_AB=0.113;devY_BB=0.128;meanR_AA=1.366;meanR_AB=1.669;meanR_BB=1.274;meanTHETA_AA=0.113;meanTHETA_AB=0.381;meanTHETA_BB=0.893;meanX_AA=1.158;meanX_AB=0.992;meanX_BB=0.185;meanY_AA=0.208;meanY_AB=0.677;meanY_BB=1.089;refSNP=rs9701055	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	./.:1:0:-0.056:0.169:1.053:1.222:0.899:2336:6427
+1	565476	JHU_1.565475	C	G	.	.	AC=0;AF=0.00;ALLELE_A=G;ALLELE_B=C*;AN=2;BEADSET_ID=1040;GC_SCORE=0.683;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=565476;ILLUMINA_STRAND=BOT;N_AA=0;N_AB=0;N_BB=1289;PROBE_A=AGCCCCCATCTCAATCATATACCAAATTTCTCCCTCATTAAACGTAAGCG;PROBE_B=AGCCCCCATCTCAATCATATACCAAATTTCTCCCTCATTAAACGTAAGCC;SOURCE=1;devR_AA=0.1;devR_AB=0.1;devR_BB=0.125;devTHETA_AA=0.022;devTHETA_AB=0.014;devTHETA_BB=0.014;devX_AA=0.101;devX_AB=0.027;devX_BB=0.02;devY_AA=0.032;devY_AB=0.08;devY_BB=0.12;meanR_AA=0.976;meanR_AB=1.07;meanR_BB=0.959;meanTHETA_AA=0.024;meanTHETA_AB=0.83;meanTHETA_BB=0.965;meanX_AA=0.94;meanX_AB=0.23;meanX_BB=0.05;meanY_AA=0.036;meanY_AB=0.84;meanY_BB=0.908	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0.984:0.272:0.523:0.081:1.302:1.383:0.96:1182:13568
+1	566140	M:5591-G-A	G	A	.	.	AC=0;AF=0.00;ALLELE_A=A;ALLELE_B=G*;AN=2;BEADSET_ID=1080;GC_SCORE=0.728;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=566140;ILLUMINA_STRAND=TOP;N_AA=0;N_AB=0;N_BB=1273;PROBE_A=GCCTTCAAAGCCCTCAGTAAGTTGCAATACTTAATTTCTGCAACAGCTAA;PROBE_B=.;SOURCE=PAGE;devR_AA=0.152;devR_AB=0.229;devR_BB=0.113;devTHETA_AA=0.022;devTHETA_AB=0.022;devTHETA_BB=0.013;devX_AA=0.156;devX_AB=0.126;devX_BB=0.027;devY_AA=0.053;devY_AB=0.114;devY_BB=0.102;meanR_AA=1.604;meanR_AB=2.03;meanR_BB=1.5;meanTHETA_AA=0.023;meanTHETA_AB=0.466;meanTHETA_BB=0.909;meanX_AA=1.548;meanX_AB=1.069;meanX_BB=0.189;meanY_AA=0.055;meanY_AB=0.961;meanY_BB=1.312	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0.985:0.312:0.163:0.24:1.457:1.697:0.896:3424:10417
+1	568208	ilmnseq_rs9701872	T	C	.	.	AC=0;AF=0.00;ALLELE_A=T*;ALLELE_B=C;AN=2;BEADSET_ID=1710;GC_SCORE=0.714;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=568208;ILLUMINA_STRAND=TOP;N_AA=1287;N_AB=12;N_BB=0;PROBE_A=GCGTACAGGACTAGGAAGCAGATAAGGAAAATGATTATGAGGGCGTGATC;PROBE_B=.;SOURCE=dbSNP;devR_AA=0.445;devR_AB=0.284;devR_BB=0.274;devTHETA_AA=0.01;devTHETA_AB=0.025;devTHETA_BB=0.022;devX_AA=0.386;devX_AB=0.122;devX_BB=0.105;devY_AA=0.071;devY_AB=0.19;devY_BB=0.285;meanR_AA=2.991;meanR_AB=2.994;meanR_BB=3.174;meanTHETA_AA=0.1;meanTHETA_AB=0.665;meanTHETA_BB=0.978;meanX_AA=2.583;meanX_AB=1.101;meanX_BB=0.105;meanY_AA=0.409;meanY_AB=1.893;meanY_BB=3.069	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0:0.599:0.195:2.971:0.453:3.425:0.096:30460:3049
+1	568208	ilmnseq_rs9701872_ilmndup1	T	C	.	DUPE	AC=0;AF=0.00;ALLELE_A=T*;ALLELE_B=C;AN=2;BEADSET_ID=1710;GC_SCORE=0.711;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=568208;ILLUMINA_STRAND=TOP;N_AA=1288;N_AB=11;N_BB=0;PROBE_A=GCGTACAGGACTAGGAAGCAGATAAGGAAAATGATTATGAGGGCGTGATC;PROBE_B=.;SOURCE=dbSNP;devR_AA=0.455;devR_AB=0.347;devR_BB=0.167;devTHETA_AA=0.01;devTHETA_AB=0.037;devTHETA_BB=0.022;devX_AA=0.395;devX_AB=0.162;devX_BB=0.064;devY_AA=0.072;devY_AB=0.237;devY_BB=0.175;meanR_AA=3.021;meanR_AB=3.13;meanR_BB=1.917;meanTHETA_AA=0.099;meanTHETA_AB=0.655;meanTHETA_BB=0.983;meanX_AA=2.611;meanX_AB=1.177;meanX_BB=0.051;meanY_AA=0.41;meanY_AB=1.953;meanY_BB=1.867	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0.003:0.593:0.232:3.054:0.495:3.549:0.102:31297:3294
+1	568527	ilmnseq_rs11497407	G	A	.	.	AC=0;AF=0.00;ALLELE_A=A;ALLELE_B=G*;AN=2;BEADSET_ID=1621;GC_SCORE=0.672;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=568527;ILLUMINA_STRAND=BOT;N_AA=0;N_AB=0;N_BB=1292;PROBE_A=TTCAACCGGGAGTACTACTCGATTGTCAACGTCAAGGAGTCGCAGGTCGC;PROBE_B=.;SOURCE=dbSNP;devR_AA=0.218;devR_AB=0.337;devR_BB=0.204;devTHETA_AA=0.022;devTHETA_AB=0.022;devTHETA_BB=0.019;devX_AA=0.224;devX_AB=0.191;devX_BB=0.057;devY_AA=0.076;devY_AB=0.162;devY_BB=0.173;meanR_AA=2.3;meanR_AB=2.983;meanR_BB=2.076;meanTHETA_AA=0.022;meanTHETA_AB=0.441;meanTHETA_BB=0.861;meanX_AA=2.225;meanX_AB=1.629;meanX_BB=0.377;meanY_AA=0.075;meanY_AB=1.354;meanY_BB=1.7	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0.975:0.264:0.349:0.552:2.152:2.703:0.84:5585:11443
+1	569418	MitoA8870G	A	G	.	.	AC=0;AF=0.00;ALLELE_A=A*;ALLELE_B=G;AN=2;BEADSET_ID=1124;GC_SCORE=0.639;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=569418;ILLUMINA_STRAND=TOP;N_AA=1296;N_AB=0;N_BB=2;PROBE_A=TATCTATAAACCTAGCCATGGCCATCCCCTTATGAGCGGGCGCAGTGATT;PROBE_B=.;SOURCE=1000genomes;devR_AA=0.305;devR_AB=0.36;devR_BB=0.182;devTHETA_AA=0.01;devTHETA_AB=0.022;devTHETA_BB=0.021;devX_AA=0.272;devX_AB=0.194;devX_BB=0.06;devY_AA=0.047;devY_AB=0.183;devY_BB=0.161;meanR_AA=2.51;meanR_AB=3.188;meanR_BB=2.135;meanTHETA_AA=0.081;meanTHETA_AB=0.479;meanTHETA_BB=0.877;meanX_AA=2.225;meanX_AB=1.646;meanX_BB=0.348;meanY_AA=0.285;meanY_AB=1.542;meanY_BB=1.786	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0:0.466:0.298:2.755:0.31:3.065:0.071:39610:2910
+1	721124	JHU_1.721123	A	G	.	.	AC=0;AF=0.00;ALLELE_A=A*;ALLELE_B=G;AN=2;BEADSET_ID=1040;GC_SCORE=0.517;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=721124;ILLUMINA_STRAND=BOT;N_AA=1299;N_AB=0;N_BB=0;PROBE_A=AATTGGTCTTGAGAGCTAGAAACTCTGAGGTCAAGTTTTATTGTGATATA;PROBE_B=.;SOURCE=1;devR_AA=0.127;devR_AB=0.216;devR_BB=0.123;devTHETA_AA=0.037;devTHETA_AB=0.022;devTHETA_BB=0.022;devX_AA=0.083;devX_AB=0.08;devX_BB=0.048;devY_AA=0.073;devY_AB=0.15;devY_BB=0.129;meanR_AA=1.533;meanR_AB=1.913;meanR_BB=1.41;meanTHETA_AA=0.435;meanTHETA_AB=0.711;meanTHETA_BB=0.986;meanX_AA=0.845;meanX_AB=0.628;meanX_BB=0.031;meanY_AA=0.688;meanY_AB=1.285;meanY_BB=1.38;refSNP=rs3131983	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0.021:0.161:-0.168:0.747:0.631:1.379:0.447:8380:4215
+1	737263	JHU_1.737262	G	A	.	.	AC=0;AF=0.00;ALLELE_A=A;ALLELE_B=G*;AN=2;BEADSET_ID=1065;GC_SCORE=0.732;ILLUMINA_BUILD=37;ILLUMINA_CHR=1;ILLUMINA_POS=737263;ILLUMINA_STRAND=TOP;N_AA=0;N_AB=92;N_BB=1207;PROBE_A=GCCCAGGGACACAGAAACTTTTGAATAAAGACAAGAGAGACCGACTCTTC;PROBE_B=.;SOURCE=1;devR_AA=0.13;devR_AB=0.138;devR_BB=0.1;devTHETA_AA=0.022;devTHETA_AB=0.036;devTHETA_BB=0.009;devX_AA=0.131;devX_AB=0.072;devX_BB=0.021;devY_AA=0.044;devY_AB=0.111;devY_BB=0.093;meanR_AA=1.373;meanR_AB=1.815;meanR_BB=1.545;meanTHETA_AA=0.036;meanTHETA_AB=0.723;meanTHETA_BB=0.94;meanX_AA=1.299;meanX_AB=0.575;meanX_BB=0.134;meanY_AA=0.074;meanY_AB=1.24;meanY_BB=1.411;refSNP=rs369986014	GT:BAF:IGC:LRR:NORMX:NORMY:R:THETA:X:Y	0/0:0.998:0.63:0.012:0.137:1.422:1.559:0.939:2183:10041

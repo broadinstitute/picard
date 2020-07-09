@@ -18,6 +18,7 @@ import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -102,12 +103,13 @@ public class BedToIntervalList extends CommandLineProgram {
     @Argument(doc="If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).")
     public boolean UNIQUE = false;
 
-    final Log LOG = Log.getInstance(getClass());
+    @Hidden
+    @Argument(doc = "If true, entries that are on contig-names that are missing from the provided dictionary will be dropped.")
+    public boolean DROP_MISSING_CONTIGS = false;
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new BedToIntervalList().instanceMainWithExit(args);
-    }
+    private final Log LOG = Log.getInstance(getClass());
+    private int missingIntervals = 0;
+    private int missingRegion = 0;
 
     @Override
     protected int doWork() {
@@ -124,40 +126,40 @@ public class BedToIntervalList extends CommandLineProgram {
             header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
             final IntervalList intervalList = new IntervalList(header);
 
-            /**
-             * NB: BED is zero-based, but a BEDCodec by default (since it is returns tribble Features) has an offset of one,
-             * so it returns 1-based starts.  Ugh.  Set to zero.
-             */
-            final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(INPUT.getAbsolutePath(), new BEDCodec(BEDCodec.StartOffset.ZERO), false);
+            final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(INPUT.getAbsolutePath(), new BEDCodec(), false);
             final CloseableTribbleIterator<BEDFeature> iterator = bedReader.iterator();
             final ProgressLogger progressLogger = new ProgressLogger(LOG, (int) 1e6);
 
             while (iterator.hasNext()) {
                 final BEDFeature bedFeature = iterator.next();
                 final String sequenceName = bedFeature.getContig();
-                /**
-                 * NB: BED is zero-based, so we need to add one here to make it one-based.  Please observe we set the start
-                 * offset to zero when creating the BEDCodec.
-                 */
-                final int start = bedFeature.getStart() + 1;
-                /**
-                 * NB: BED is 0-based OPEN (which, for the end is equivalent to 1-based closed).
-                 */
+                final int start = bedFeature.getStart();
                 final int end = bedFeature.getEnd();
                 // NB: do not use an empty name within an interval
-                String name = bedFeature.getName();
-                if (name.isEmpty()) name = null;
+                final String name;
+                if (bedFeature.getName().isEmpty()) {
+                    name = null;
+                } else {
+                    name = bedFeature.getName();
+                }
 
                 final SAMSequenceRecord sequenceRecord = header.getSequenceDictionary().getSequence(sequenceName);
 
                 // Do some validation
                 if (null == sequenceRecord) {
+                    if (DROP_MISSING_CONTIGS) {
+                        LOG.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, bedFeature.getStart(), bedFeature.getEnd()));
+                        missingIntervals++;
+                        missingRegion += bedFeature.getEnd() - bedFeature.getStart();
+                        continue;
+                    }
                     throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
                 } else if (start < 1) {
                     throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
                 } else if (sequenceRecord.getSequenceLength() < start) {
                     throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-                } else if (end < 1) {
+                } else if ((end == 0 && start != 1 ) //special case for 0-length interval at the start of a contig
+                        || end < 0 ) {
                     throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
                 } else if (sequenceRecord.getSequenceLength() < end) {
                     throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
@@ -173,11 +175,23 @@ public class BedToIntervalList extends CommandLineProgram {
             }
             CloserUtil.close(bedReader);
 
+            if (DROP_MISSING_CONTIGS) {
+                if (missingRegion == 0) {
+                    LOG.info("There were no missing regions.");
+                } else {
+                    LOG.warn(String.format("There were %d missing regions with a total of %d bases", missingIntervals, missingRegion));
+                }
+            }
             // Sort and write the output
             IntervalList out = intervalList;
-            if (SORT) out = out.sorted();
-            if (UNIQUE) out = out.uniqued();
+            if (SORT) {
+                out = out.sorted();
+            }
+            if (UNIQUE) {
+                out = out.uniqued();
+            }
             out.write(OUTPUT);
+            LOG.info(String.format("Wrote %d intervals spanning a total of %d bases", out.getIntervals().size(),out.getBaseCount()));
 
         } catch (final IOException e) {
             throw new RuntimeException(e);

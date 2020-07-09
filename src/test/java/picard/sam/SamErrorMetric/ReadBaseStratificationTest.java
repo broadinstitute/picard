@@ -2,12 +2,22 @@ package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.AbstractAlignmentMerger;
 import picard.sam.util.Pair;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A slew of unit tests for the various stratifiers
@@ -437,5 +447,92 @@ public class ReadBaseStratificationTest {
         final SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, refString.getBytes()[2]);
 
         Assert.assertEquals(ReadBaseStratification.homoPolymerLengthStratifier.stratify(recordAndOffset, locusAndReference), (Integer) 2);
+    }
+
+    @DataProvider
+    public Iterator<Object[]> readsForChimericTest() {
+
+        SAMRecordSetBuilder records = new SAMRecordSetBuilder();
+
+        records.addPair("PROPER_1", 0, 100, 400);
+        records.addPair("PROPER_2", 1, 600, 400);
+        records.addPair("PROPER_3", 0, 100, 400, false, false, "36M", "36M", false, true, 30);
+        records.addPair("PROPER_4", 0, 600, 400, false, false, "36M", "36M", true, true, 30);
+
+        records.addPair("DISCORDANT_1", 0, 1, 100, 100, false, false, "36M", "36M", true, true, false, false, 30);
+        records.addPair("DISCORDANT_2", 1, 0, 1000, 100, false, false, "36M", "36M", false, true, false, false, 30);
+        records.addPair("DISCORDANT_3", 0, 6, 2000, 100, false, false, "36M", "36M", true, false, false, false, 30);
+        records.addPair("DISCORDANT_4", 5, 2, 10000, 100, false, false, "36M", "36M", false, false, false, false, 30);
+
+        records.addPair("IMPROPER_1", 0, 100, 400, false, false, "36M", "36M", true, false, 30).forEach(s -> s.setProperPairFlag(false));
+        records.addPair("IMPROPER_2", 1, 600, 400, false, false, "36M", "36M", true, false, 30).forEach(s -> s.setProperPairFlag(false));
+        records.addPair("IMPROPER_3", 0, 100, 400, false, false, "36M", "36M", false, true, 30).forEach(s -> s.setProperPairFlag(false));
+        records.addPair("IMPROPER_4", 0, 600, 400, false, false, "36M", "36M", true, false, 30).forEach(s -> s.setProperPairFlag(false));
+
+        records.addPair("UNKNOWN_1", 0, -1, 100, 0, false, true, "36M", "36M", true, true, false, false, 30);
+        records.addPair("UNKNOWN_2", 1, -1, 1000, 0, false, true, "36M", "36M", false, true, false, false, 30);
+        records.addPair("UNKNOWN_3", -1, 6, 0, 100, true, false, "36M", "36M", true, false, false, false, 30);
+        records.addPair("UNKNOWN_4", -1, 2, 0, 100, true, false, "36M", "36M", false, false, false, false, 30);
+
+        addChimericRead(records, "CHIMERIC_1", 0, 2, 100, 200, 400, 300, true, false, true, true);
+        addChimericRead(records, "CHIMERIC_2", 0, 2, 300, 100, 100, 100, true, true, true, true);
+        addChimericRead(records, "CHIMERIC_3", 0, 2, 500, 100, 100, 100, true, false, true, false);
+        addChimericRead(records, "CHIMERIC_4", 0, 2, 100, 700, 100, 100, false, true, true, false);
+
+        return records.getRecords()
+                .stream()
+                .filter(r -> !r.isSecondaryOrSupplementary())
+                .map(r -> new Object[]{r, ReadBaseStratification.ProperPaired.valueOf(r.getReadName().replaceAll("_.*", ""))})
+                .collect(Collectors.toList())
+                .iterator();
+    }
+
+    private List<SAMRecord> addChimericRead(final SAMRecordSetBuilder records, final String name, final int contig, final int contig_sup, final int start1, final int start2, final int start_sup1, final int start_sup2, final boolean strand1, final boolean strand2, final boolean strand_sup1, final boolean strand_sup2) {
+        final List<SAMRecord> chimeric = records.addPair(name, contig, contig, start1, start2, false, false, "20M16S", "15S21M", strand1, strand2, false, false, 30);
+        final List<SAMRecord> chimeric_sup = records.addPair(name, contig_sup, start_sup1, start_sup2, false, false, "16S20M", "21M15S", strand_sup1, strand_sup2, false, false, 30);
+        chimeric_sup.forEach(s -> s.setSupplementaryAlignmentFlag(true));
+        IntStream.range(0, 2).forEach(i -> chimeric.get(i).setAttribute(SAMTag.SA.toString(), AbstractAlignmentMerger.encodeMappingInformation(chimeric_sup.get(i))));
+        return chimeric_sup;
+    }
+
+    @Test(dataProvider = "readsForChimericTest")
+    public void testChimericStratifier(final SAMRecord sam, final ReadBaseStratification.ProperPaired type) {
+        Assert.assertEquals(ReadBaseStratification.ProperPaired.of(sam), type);
+    }
+
+    private SAMRecord createRecordFromCigar(final String cigar) {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.addFrag("", 0, 100, false, false, "", null, 30);
+        return builder.getRecords().stream().findFirst().get();
+    }
+
+    @DataProvider
+    public Object[][] provideForTestGetIndelElement() {
+        return new Object[][]{
+                {"", 0, AbstractRecordAndOffset.AlignmentType.Insertion, null},
+                {"1M1I", 1, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1I", 0, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1I1M", 0, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1D1M", -1, AbstractRecordAndOffset.AlignmentType.Deletion, CigarOperator.D},
+                {"1S1I1D", 1, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1S1D1M1I", 0, AbstractRecordAndOffset.AlignmentType.Deletion, CigarOperator.D},
+                {"2D2I1M", 0, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"2I2D1M", 1, AbstractRecordAndOffset.AlignmentType.Deletion, CigarOperator.D},
+        };
+    }
+
+    @Test(dataProvider = "provideForTestGetIndelElement")
+    public void testGetIndelElement(final String cigar, final int offset, final AbstractRecordAndOffset.AlignmentType operation, final CigarOperator expected) {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.addFrag("", 0, 100, false, false, cigar, null, 30);
+        SAMRecord record = builder.getRecords().stream().findFirst().get();
+        SamLocusIterator.RecordAndOffset rao = new SamLocusIterator.RecordAndOffset(record, offset, operation);
+
+        if (expected == null) {
+            Assert.assertNull(ReadBaseStratification.getIndelElement(rao));
+        }
+        else {
+            Assert.assertEquals(ReadBaseStratification.getIndelElement(rao).getOperator(), expected);
+        }
     }
 }

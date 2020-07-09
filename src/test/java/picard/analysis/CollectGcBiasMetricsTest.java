@@ -69,7 +69,6 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
     private final static File TEST_DIR = new File("testdata/picard/sam/CollectGcBiasMetrics/");
     private final File dict = new File(TEST_DIR, "MNOheader.dict");
     private final String REFERENCE_FILE_1 = "testdata/picard/metrics/chrMNO.reference.fasta";
-    private final String REFERENCE_FILE_2 = "testdata/picard/metrics/chrM.reference.fasta";
 
     File tempSamFileChrM_O;
     File tempSamFileAllChr;
@@ -325,7 +324,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         detailsOutfile.deleteOnExit();
         summaryOutfile.deleteOnExit();
 
-        runGcBias(inputFileWithDuplicates, REFERENCE_FILE_2, summaryOutfile, detailsOutfile, true);
+        runGcBias(inputFileWithDuplicates, CHR_M_REFERENCE.getAbsolutePath(), summaryOutfile, detailsOutfile, true);
 
         final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> outputSummary = new MetricsFile<>();
         outputSummary.read(new FileReader(summaryOutfile));
@@ -367,7 +366,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         summaryOutfile.deleteOnExit();
         detailsOutfile.deleteOnExit();
 
-        runGcBias(input, REFERENCE_FILE_2, summaryOutfile, detailsOutfile, false);
+        runGcBias(input, CHR_M_REFERENCE.getAbsolutePath(), summaryOutfile, detailsOutfile, false);
 
         final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(summaryOutfile));

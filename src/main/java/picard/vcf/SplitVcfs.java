@@ -67,10 +67,6 @@ public class SplitVcfs extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SplitVcfs.class);
 
-    public static void main(final String[] argv) {
-        new SplitVcfs().instanceMainWithExit(argv);
-    }
-
     public SplitVcfs() {
         this.CREATE_INDEX = true;
     }
@@ -80,7 +76,7 @@ public class SplitVcfs extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         final ProgressLogger progress = new ProgressLogger(log, 10000);
 
-        final VCFFileReader fileReader = new VCFFileReader(INPUT);
+        final VCFFileReader fileReader = new VCFFileReader(INPUT, false);
         final VCFHeader fileHeader = fileReader.getFileHeader();
 
         final SAMSequenceDictionary sequenceDictionary =

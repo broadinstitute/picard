@@ -39,6 +39,7 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.utils.ValidationUtils;
 import picard.PicardException;
 
 import java.io.File;
@@ -304,7 +305,8 @@ public class BamToBfqWriter {
             // adjust to a shorter length iff clipping tag exists
             Integer trimPoint = rec.getIntegerAttribute(ReservedTagConstants.XT);
             if (trimPoint != null) {
-                assert (rec.getReadLength() == seqs.length);
+                ValidationUtils.validateArg(rec.getReadLength() == seqs.length, () -> "length of read and seqs differ. Found " + rec.getReadLength() + " and '" + seqs.length + ".");
+
                 retainedLength = Math.min(seqs.length, Math.max(SEED_REGION_LENGTH, trimPoint -1));
             }
         }

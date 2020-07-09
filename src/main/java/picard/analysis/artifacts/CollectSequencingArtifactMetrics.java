@@ -293,6 +293,10 @@ static final String USAGE_DETAILS = "<p>This tool examines two sources of sequen
                 final String context = getRefContext(ref, contextStartIndex, contextFullLength);
                 if (context.contains("N")) continue;
 
+                // skip non-ACGT bases
+                if (!SequenceUtil.isUpperACGTN((byte)readBase))
+                    continue;
+
                 // count the base!
                 counter.countRecord(context, readBase, rec);
             }

@@ -112,11 +112,6 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
     private boolean warnedNullProgramRecords = false;
     private boolean warnedMissingProgramRecords = false;
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new MarkDuplicatesWithMateCigar().instanceMainWithExit(args);
-    }
-
     /**
      * Main work method.
      */
@@ -192,7 +187,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         log.info("Found " + ((long) opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters."); // cast as long due to returning a double
 
         // Write out the metrics
-        finalizeAndWriteMetrics(iterator.getLibraryIdGenerator());
+        finalizeAndWriteMetrics(iterator.getLibraryIdGenerator(), getMetricsFile(), METRICS_FILE);
 
         return 0;
     }

@@ -44,9 +44,9 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.pedigree.PedFile;
@@ -209,24 +209,22 @@ public class FindMendelianViolations extends CommandLineProgram {
         }
         return intervals;
     }
-     /**
+
+    /**
      * Validates that the sex chromosomes don't overlap and parses the pseudo-autosomal regions into usable
      * objects to ensure their parsability
-     *
-     * @return
      */
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<>();
 
         // Check that the sex chromosomes are not overlapping
-        final Set<String> sexChroms = new HashSet<>();
-        sexChroms.addAll(FEMALE_CHROMS);
+        final Set<String> sexChroms = new HashSet<>(FEMALE_CHROMS);
         sexChroms.retainAll(MALE_CHROMS);
         if (!sexChroms.isEmpty()) errors.add("The following chromosomes were listed as both male and female sex chromosomes: " + sexChroms);
 
         if (errors.isEmpty()) return null;
-        else return errors.toArray(new String[errors.size()]);
+        else return errors.toArray(new String[0]);
     }
 
     @Override
