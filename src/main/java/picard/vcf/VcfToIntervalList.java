@@ -90,8 +90,7 @@ public class VcfToIntervalList extends CommandLineProgram {
     @Argument(doc="Controls the naming of the resulting intervals. When set to CONCAT_ALL (the default), each resulting " +
             "interval will be named the concatenation of the variant ID fields (if present), or 'interval-<number>' " +
             "(if not) with a pipe '|' separator. If set to USE_FIRST, only the first name will be used.")
-    public VARIANT_ID_TYPES VARIANT_ID_METHOD = VARIANT_ID_TYPES.CONCAT_ALL;
-    public final boolean concatenate_ids = (VARIANT_ID_METHOD == VARIANT_ID_TYPES.CONCAT_ALL);
+    public static VARIANT_ID_TYPES VARIANT_ID_METHOD = VARIANT_ID_TYPES.CONCAT_ALL;
 
     @Argument(shortName = INCLUDE_FILTERED_SHORT_NAME,
             doc = "Include variants that were filtered in the output interval list.",
@@ -102,6 +101,7 @@ public class VcfToIntervalList extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
+        final boolean concatenate_ids = (VARIANT_ID_METHOD == VARIANT_ID_TYPES.CONCAT_ALL); // TODO: move to doWork() section
 
         try (VCFFileReader vcfReader = new VCFFileReader(INPUT.toPath(), false)) {
             final Iterator<Interval> samFileIterator = VCFFileReader.toIntervals(vcfReader, INCLUDE_FILTERED);
