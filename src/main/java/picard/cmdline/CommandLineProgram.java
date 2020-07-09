@@ -111,7 +111,7 @@ public abstract class CommandLineProgram {
     public ValidationStringency VALIDATION_STRINGENCY = ValidationStringency.DEFAULT_STRINGENCY;
 
     @Argument(doc = "Compression level for all compressed files created (e.g. BAM and VCF).", common=true)
-    public int COMPRESSION_LEVEL = Defaults.COMPRESSION_LEVEL;
+    public int COMPRESSION_LEVEL = 2;  // Use GATK default level of 2 for much improved writing speed.
 
     @Argument(doc = "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. " +
             "Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", optional=true, common=true)
