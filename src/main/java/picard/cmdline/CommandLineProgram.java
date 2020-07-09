@@ -23,8 +23,6 @@
  */
 package picard.cmdline;
 
-import com.intel.gkl.compression.IntelDeflaterFactory;
-import com.intel.gkl.compression.IntelInflaterFactory;
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
@@ -35,7 +33,6 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.metrics.StringHeader;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
-import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.variant.variantcontext.writer.Options;
@@ -139,11 +136,11 @@ public abstract class CommandLineProgram {
             new Object() : // legacy parser does not require these
             new SpecialArgumentsCollection();
 
-    @Argument(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the Intel Deflater for writing compressed output", common = true)
-    public Boolean USE_JDK_DEFLATER = false;
+    @Argument(shortName = "use_jdk_deflater", doc = "DEPRECATED: the JDK deflater is always used", common = true)
+    public Boolean USE_JDK_DEFLATER = true;
 
-    @Argument(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the Intel Inflater for reading compressed input", common = true)
-    public Boolean USE_JDK_INFLATER = false;
+    @Argument(shortName = "use_jdk_inflater", doc = "DEPRECATED: the JDK inflater is always used", common = true)
+    public Boolean USE_JDK_INFLATER = true;
 
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
 
@@ -265,14 +262,6 @@ public abstract class CommandLineProgram {
             System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
         }
 
-        if (!USE_JDK_DEFLATER) {
-            BlockCompressedOutputStream.setDefaultDeflaterFactory(new IntelDeflaterFactory());
-        }
-
-        if (!USE_JDK_INFLATER) {
-            BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
-        }
-
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
 
@@ -283,16 +272,11 @@ public abstract class CommandLineProgram {
                                 .map(provider -> String.format("Provider %s is%s available;", provider.name(), provider.isAvailable ? "" : " not"))
                                 .collect(Collectors.joining(" "));
 
-                final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
-                        ((IntelDeflaterFactory)BlockCompressedOutputStream.getDefaultDeflaterFactory()).usingIntelDeflater());
-                final boolean usingIntelInflater = (BlockGunzipper.getDefaultInflaterFactory() instanceof IntelInflaterFactory &&
-                        ((IntelInflaterFactory)BlockGunzipper.getDefaultInflaterFactory()).usingIntelInflater());
                 final String msg = String.format(
-                    "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: %s; Inflater: %s; %s Picard version: %s",
+                    "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: Jdk; Inflater: Jdk; %s Picard version: %s",
                     new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
-                    usingIntelDeflater ? "Intel" : "Jdk", usingIntelInflater ? "Intel" : "Jdk",
                         pathProvidersMessage,
                     getCommandLineParser().getVersion());
                 System.err.println(msg);

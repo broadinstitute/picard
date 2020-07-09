@@ -83,12 +83,10 @@ configurations {
 }
 
 dependencies {
-    compile('com.intel.gkl:gkl:0.8.5') {
-        exclude module: 'htsjdk'
-    }
     compile 'com.google.guava:guava:15.0'
     compile 'org.apache.commons:commons-math3:3.5'
     compile 'org.apache.commons:commons-collections4:4.3'
+    compile 'commons-io:commons-io:2.6'
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
     compile 'org.broadinstitute:barclay:3.0.0'
