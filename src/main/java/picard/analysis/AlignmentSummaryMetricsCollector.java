@@ -85,7 +85,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
     @Override
     public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
-        if (!rec.isSecondaryOrSupplementary()) {
+        if (!rec.getNotPrimaryAlignmentFlag()){
             super.acceptRecord(rec, ref);
         }
     }
@@ -274,10 +274,12 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                 // If the read isn't an aligned PF read then look at the read for no-calls
                 if (record.getReadUnmappedFlag() || record.getReadFailsVendorQualityCheckFlag() || !doRefMetrics) {
-                    final byte[] readBases = record.getReadBases();
-                    for (int i = 0; i < readBases.length; i++) {
-                        if (SequenceUtil.isNoCall(readBases[i])) {
-                            badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
+                    if (!record.getSupplementaryAlignmentFlag()) {
+                        final byte[] readBases = record.getReadBases();
+                        for (int i = 0; i < readBases.length; i++) {
+                            if (SequenceUtil.isNoCall(readBases[i])) {
+                                badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
+                            }
                         }
                     }
                 } else if (!record.getReadFailsVendorQualityCheckFlag()) {
@@ -327,7 +329,8 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                                 }
                             }
 
-                            if (mismatch || SequenceUtil.isNoCall(readBases[readBaseIndex])) {
+                            if (!record.getSupplementaryAlignmentFlag()
+                                    && (mismatch || SequenceUtil.isNoCall(readBases[readBaseIndex]))) {
                                 badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
                             }
                         }
