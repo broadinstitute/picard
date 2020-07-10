@@ -713,7 +713,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             // The "how many target bases at at-least X" calculations.
             // downstream code relies on this array being sorted in ascending order
-            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000};
+            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000};
 
             // counts for how many target bases are at at least X coverage,
             // where X corresponds to the value at the same offset in targetBasesDepth

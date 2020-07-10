@@ -129,42 +129,24 @@ public class PanelMetricsBase extends MultilevelMetrics {
     public double PCT_TARGET_BASES_50X;
     /** The fraction of all target bases achieving 100X or greater coverage. */
     public double PCT_TARGET_BASES_100X;
-    /** The fraction of all target bases achieving 150X or greater coverage. */
-    public double PCT_TARGET_BASES_150X;
-    /** The fraction of all target bases achieving 200X or greater coverage. */
-    public double PCT_TARGET_BASES_200X;
     /** The fraction of all target bases achieving 250X or greater coverage. */
     public double PCT_TARGET_BASES_250X;
-    /** The fraction of all target bases achieving 300X or greater coverage. */
-    public double PCT_TARGET_BASES_300X;
-    /** The fraction of all target bases achieving 350X or greater coverage. */
-    public double PCT_TARGET_BASES_350X;
-    /** The fraction of all target bases achieving 400X or greater coverage. */
-    public double PCT_TARGET_BASES_400X;
-    /** The fraction of all target bases achieving 450X or greater coverage. */
-    public double PCT_TARGET_BASES_450X;
     /** The fraction of all target bases achieving 500X or greater coverage. */
     public double PCT_TARGET_BASES_500X;
-    /** The fraction of all target bases achieving 550X or greater coverage. */
-    public double PCT_TARGET_BASES_550X;
-    /** The fraction of all target bases achieving 600X or greater coverage. */
-    public double PCT_TARGET_BASES_600X;
-    /** The fraction of all target bases achieving 650X or greater coverage. */
-    public double PCT_TARGET_BASES_650X;
-    /** The fraction of all target bases achieving 700X or greater coverage. */
-    public double PCT_TARGET_BASES_700X;
-    /** The fraction of all target bases achieving 750X or greater coverage. */
-    public double PCT_TARGET_BASES_750X;
-    /** The fraction of all target bases achieving 800X or greater coverage. */
-    public double PCT_TARGET_BASES_800X;
-    /** The fraction of all target bases achieving 850X or greater coverage. */
-    public double PCT_TARGET_BASES_850X;
-    /** The fraction of all target bases achieving 900X or greater coverage. */
-    public double PCT_TARGET_BASES_900X;
-    /** The fraction of all target bases achieving 950X or greater coverage. */
-    public double PCT_TARGET_BASES_950X;
     /** The fraction of all target bases achieving 1000X or greater coverage. */
     public double PCT_TARGET_BASES_1000X;
+    /** The fraction of all target bases achieving 2500X or greater coverage. */
+    public double PCT_TARGET_BASES_2500X;
+    /** The fraction of all target bases achieving 5000X or greater coverage. */
+    public double PCT_TARGET_BASES_5000X;
+    /** The fraction of all target bases achieving 10000X or greater coverage. */
+    public double PCT_TARGET_BASES_10000X;
+    /** The fraction of all target bases achieving 25000X or greater coverage. */
+    public double PCT_TARGET_BASES_25000X;
+    /** The fraction of all target bases achieving 50000X or greater coverage. */
+    public double PCT_TARGET_BASES_50000X;
+    /** The fraction of all target bases achieving 100000X or greater coverage. */
+    public double PCT_TARGET_BASES_100000X;
 
     /**
      * A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
