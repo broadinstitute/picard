@@ -23,13 +23,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <h3> Summary </h3>
@@ -91,6 +89,9 @@ public class SortGff extends CommandLineProgram {
     @Argument(doc = "Dictionary to sort contigs by.  If dictionary is not provided, contigs are sorted lexicographically.", shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true)
     public File SEQUENCE_DICTIONARY;
 
+    @Argument(doc = "Number of records to hold in memory before spilling to disk", optional = true)
+    public int nRecordsInMemory = 50000;
+
     private final Log log = Log.getInstance(SortGff.class);
 
     private final Map<String, Integer> latestStartMap = new HashMap<>();
@@ -123,7 +124,7 @@ public class SortGff extends CommandLineProgram {
 
         final SAMSequenceDictionary dict = SEQUENCE_DICTIONARY == null? null : SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
         SortingCollection<Gff3Feature> sorter = SortingCollection.newInstance(
-                Gff3Feature.class, new Gff3SortingCollectionCodec(), new FeatureComparator(dict), 500000
+                Gff3Feature.class, new Gff3SortingCollectionCodec(), new FeatureComparator(dict), nRecordsInMemory
         );
 
         final ProgressLogger progressRead = new ProgressLogger(log, (int) 1e4, "Read");
@@ -159,7 +160,7 @@ public class SortGff extends CommandLineProgram {
         final ProgressLogger progressWrite = new ProgressLogger(log, (int) 1e4, "Wrote");
         try(final Gff3Writer writer = new Gff3Writer(OUTPUT.toPath())) {
             //add comments and sequence regions
-            for (final String comment : inputCodec.getComments()) {
+            for (final String comment : inputCodec.getCommentTexts()) {
                 writer.addComment(comment);
             }
 
@@ -192,15 +193,22 @@ public class SortGff extends CommandLineProgram {
     }
 
     private void updateLatestStart(final Gff3Feature feature) {
+        if (latestChrom== null || !latestChrom.equals(feature.getContig())) {
+            latestChrom = feature.getContig();
+            latestStart = 0;
+        }
         final String featureID = feature.getID();
         if (featureID != null) {
+            if (!latestStartMap.containsKey(featureID)) {
+                System.out.println("hi");
+            }
             latestStart = Math.max(latestStart, latestStartMap.get(feature.getID()));
         }
         //check for parents which may have been found after this feature
         final List<String> parentIDs = feature.getAttribute("Parent");
         latestStart = Math.max(latestStart, parentIDs.stream().map(latestStartMap::get).max(Integer::compareTo).orElse(feature.getStart()));
 
-        latestChrom = feature.getContig();
+
     }
 
     //a sorting collection to sort gff3 features.  Iterator returns SHALLOW decoded features; these features are not linked to any parents, children, or co-features, so any linking required must be handled elsewhere
@@ -221,7 +229,7 @@ public class SortGff extends CommandLineProgram {
 
         @Override
         public void setOutputStream(final OutputStream os) {
-            gff3Writer = new Gff3Writer(new PrintStream(os));
+            gff3Writer = new Gff3Writer(os);
         }
 
         @Override
@@ -248,7 +256,14 @@ public class SortGff extends CommandLineProgram {
 
         @Override
         public void encode(final Gff3Feature val) {
-            gff3Writer.addFeature(val);
+            try {
+                if (val.getStart() == 113982) {
+                    System.out.println("hi");
+                }
+                gff3Writer.addFeature(val);
+            } catch (final IOException ex) {
+                throw new PicardException("Error encoding feature in Gff3SortCollectionCodec", ex);
+            }
         }
     }
 }

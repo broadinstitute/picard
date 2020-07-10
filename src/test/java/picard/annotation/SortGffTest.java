@@ -34,7 +34,8 @@ public class SortGffTest extends CommandLineProgramTest {
 
         final String[] args = {
                 "I=" + inputGff.getAbsolutePath(),
-                "O=" + outGff.getAbsolutePath()
+                "O=" + outGff.getAbsolutePath(),
+                "nRecordsInMemory=1"
         };
 
         new SortGff().instanceMain(args);
@@ -58,7 +59,8 @@ public class SortGffTest extends CommandLineProgramTest {
         final String[] args = {
                 "I=" + inputGff.getAbsolutePath(),
                 "O=" + outGff.getAbsolutePath(),
-                "SD=" + dict.getAbsolutePath()
+                "SD=" + dict.getAbsolutePath(),
+                "nRecordsInMemory=1"
         };
 
         new SortGff().instanceMain(args);
