@@ -1,7 +1,7 @@
 ***User Support:***
 
 
-For user questions please look for answers and ask first in the GATK forum: https://gatk.broadinstitute.org/hc/en-us
+For user questions please look for answers and ask first in the [GATK forum](https://gatk.broadinstitute.org/hc/en-us/community/topics).
 
 
 ----
