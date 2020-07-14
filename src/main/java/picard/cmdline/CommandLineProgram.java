@@ -117,7 +117,7 @@ public abstract class CommandLineProgram {
             "Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
 
-    @Argument(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.", common=true)
+    @Argument(doc = "Whether to create an index when writing VCF or coordinate sorted BAM output.", common=true)
     public Boolean CREATE_INDEX = Defaults.CREATE_INDEX;
 
     @Argument(doc="Whether to create an MD5 digest for any BAM or FASTQ files created.  ", common=true)
