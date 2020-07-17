@@ -73,9 +73,5 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
 
         }
 
-
-
     }
 }
-
-// USE_FIRST
