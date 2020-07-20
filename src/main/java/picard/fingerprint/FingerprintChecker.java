@@ -620,13 +620,13 @@ public class FingerprintChecker {
      * Data is aggregated by sample, not read-group.
      * @param samFile file to extract contaminant from
      * @param contamination contamination fraction
-     * @param backgroundSamFile file containing a normal sample from the same individual as the contaminated sample
-     * @param sampleCorrespondenceMap map from sample names in backgroundSamFile to sample names from same individual in samFile
+     * @param backgroundFPFile sam/bam or vcf file containing a normal sample from the same individual as the contaminated sample
+     * @param sampleCorrespondenceMap map from sample names in backgroundFPFile to sample names from same individual in samFile
      * @param contaminatedIsTumor whether the contaminated sample is a tumor sample for which the backgrdoundSamFile
      * @return
      */
-    public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination, final Path backgroundSamFile, final Map<String, String> sampleCorrespondenceMap, final boolean contaminatedIsTumor) {
-        if (contaminatedIsTumor && backgroundSamFile == null) {
+    public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination, final Path backgroundFPFile, final Map<String, String> sampleCorrespondenceMap, final boolean contaminatedIsTumor) {
+        if (contaminatedIsTumor && backgroundFPFile == null) {
             throw new IllegalArgumentException("contaminatedIsTumor cannot be true if no background sample is provided");
         }
         final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
@@ -634,14 +634,13 @@ public class FingerprintChecker {
                 Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE)).entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
 
-        if (backgroundSamFile != null) {
-
-            final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMapBackground = this.fingerprintSamFile(backgroundSamFile, h -> new HaplotypeProbabilitiesFromSequence(h));
+        if (backgroundFPFile != null) {
+            final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMapBackground = this.fingerprintFiles(Collections.singleton(backgroundFPFile), 1, 1, TimeUnit.DAYS);
             final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMapBackgroundCorrespondingSample = new HashMap<>();
             for(final FingerprintIdDetails fingerprintIdDetails : fpIdDetailsMapBackground.keySet()) {
                 final String correspondingSample = sampleCorrespondenceMap.get(fingerprintIdDetails.sample);
                 if (correspondingSample != null) {
-                    final FingerprintIdDetails fingerprintIdDetailsCorrespondingSample = new FingerprintIdDetails(fingerprintIdDetails.platformUnit, backgroundSamFile.toUri().toString());
+                    final FingerprintIdDetails fingerprintIdDetailsCorrespondingSample = new FingerprintIdDetails(fingerprintIdDetails.platformUnit, backgroundFPFile.toUri().toString());
                     fingerprintIdDetailsCorrespondingSample.sample = correspondingSample;
                     fingerprintIdDetailsCorrespondingSample.library = fingerprintIdDetails.library;
 

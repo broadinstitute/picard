@@ -71,7 +71,7 @@ public class IdentifyContaminant extends CommandLineProgram {
             "It names the sample in the VCF <SAMPLE>, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
 
-    @Argument(doc = "SAM or BAM file of uncontaminated sample of the same individual whose information we are trying to remove.  If we are extracting the fingerprint of the contaminating sample," +
+    @Argument(doc = "SAM/BAM or VCF file of uncontaminated sample of the same individual whose information we are trying to remove.  If we are extracting the fingerprint of the contaminating sample," +
             " this should be a sample from the same individual as the contaminated sample.  If we are extracting the fingerprint of the contaminated sample, this should be a sample from the same " +
             "individual as the contaminating sample.  If the sample being removed is a tumor sample, this sample should optimally be a normal sample from the same individual, and REMOVED_IS_TUMOR" +
             " should be set to true.", optional = true)
