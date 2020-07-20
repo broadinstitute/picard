@@ -1,6 +1,5 @@
 package picard.fingerprint;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -497,10 +496,11 @@ public class FingerprintCheckerTest {
     }
 
     @Test(dataProvider = "identifyContaminantTestDataProvider")
-    public void identifyContaminantTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
-
+    public void identifyContaminantWithBackgroundTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
+        final Fingerprint extractedContaminatingFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF, false);
         final Fingerprint extractedContaminatingFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination);
 
+        final Fingerprint extractedContaminatedFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination, contaminatingSampleVCF, false);
         final Fingerprint extractedContaminatedFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination);
 
         final Fingerprint trueContaminatedSampleFP = getSingleFingerprintFromVCF(contaminatedSampleVCF, HAPLOTYPE_DATABASE_CHR1);
@@ -508,38 +508,48 @@ public class FingerprintCheckerTest {
         final Fingerprint trueContaminatingSampleFP = getSingleFingerprintFromVCF(contaminatingSampleVCF, HAPLOTYPE_DATABASE_CHR1);
 
         assertExtractionIsCorrect(extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
-
         assertExtractionIsCorrect(extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
+
+        assertFirstExtractionBetterThanSecond(extractedContaminatedFPWithBackground, extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
+        assertFirstExtractionBetterThanSecond(extractedContaminatingFPWithBackground, extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
     }
 
-    @Test(dataProvider = "identifyContaminantTestDataProvider")
-    public void identifyContaminantWithBackgroundTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
-        final Fingerprint extractedContaminatingFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF);
+    @DataProvider(name = "identifyContaminantWithBackgroundLoHTestDataProvider")
+    public Object[][] identifyContaminantWithBackgroundLoHTestDataProvider() {
+        final Path NA12878_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_chr1_fingerprint.vcf");
+        final Path NA24385_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA24385_chr1_fingerprint.vcf");
+
+        final Path NA12878_with_LoH_contaminated_by_NA24358 = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_fake_LoH_contaminated_with_NA24385_at_11_percent_chr1_fingeprint_sites.bam");
+
+        return new Object[][] {
+                {NA12878_with_LoH_contaminated_by_NA24358, NA12878_fingerprint, NA24385_fingerprint, .11}
+        };
+    }
+
+    @Test(dataProvider = "identifyContaminantWithBackgroundLoHTestDataProvider")
+    public void identifyContaminantWithBackgroundLoHTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
+        final Fingerprint extractedContaminatingFPWithBackgroundConsiderLoH = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF, true);
+        final Fingerprint extractedContaminatingFPWithBackgroundIgnoreLoH = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF, false);
         final Fingerprint extractedContaminatingFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination);
 
-        final Fingerprint extractedContaminatedFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination, contaminatingSampleVCF);
-        final Fingerprint extractedContaminatedFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination);
-
+        final Fingerprint trueContaminatingSampleFP = getSingleFingerprintFromVCF(contaminatingSampleVCF, HAPLOTYPE_DATABASE_CHR1);
         final Fingerprint trueContaminatedSampleFP = getSingleFingerprintFromVCF(contaminatedSampleVCF, HAPLOTYPE_DATABASE_CHR1);
 
-        final Fingerprint trueContaminatingSampleFP = getSingleFingerprintFromVCF(contaminatingSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+        assertExtractionIsCorrect(extractedContaminatingFPWithBackgroundConsiderLoH, trueContaminatingSampleFP, trueContaminatedSampleFP);
+        assertFirstExtractionBetterThanSecond(extractedContaminatingFPWithBackgroundConsiderLoH, extractedContaminatingFP, trueContaminatingSampleFP);
+        assertFirstExtractionBetterThanSecond(extractedContaminatingFPWithBackgroundConsiderLoH, extractedContaminatingFPWithBackgroundIgnoreLoH, trueContaminatingSampleFP);
 
-        assertExtractionIsCorrect(extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
-        assertExtractionIsCorrect(extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
-
-        assertBackgroundImprovesExtraction(extractedContaminatedFPWithBackground, extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
-        assertBackgroundImprovesExtraction(extractedContaminatingFPWithBackground, extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
     }
 
     private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination) {
-        return getSingleExtractedFingerprint(bam, hapDatabase, contamination, null);
+        return getSingleExtractedFingerprint(bam, hapDatabase, contamination, null, false);
     }
 
-    private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination, final Path background) {
+    private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination, final Path background, final boolean contaminatedIsTumor) {
         final Map<String, String> correspondingSampleMap = background == null ? null : ExtractFingerprint.getCorrespondingSampleMap(bam.toFile(), background.toFile());
 
         final FingerprintChecker fpChecker = new FingerprintChecker(hapDatabase);
-        final Map<String, Fingerprint> extractedFPMap = fpChecker.identifyContaminant(bam, contamination, background, correspondingSampleMap, false);
+        final Map<String, Fingerprint> extractedFPMap = fpChecker.identifyContaminant(bam, contamination, background, correspondingSampleMap, contaminatedIsTumor);
         assertEquals(extractedFPMap.size(), 1);
         return extractedFPMap.values().iterator().next();
     }
@@ -560,13 +570,18 @@ public class FingerprintCheckerTest {
         assertTrue(matchResultsShouldNotMatch.getLOD() < 0);
     }
 
-    private void assertBackgroundImprovesExtraction(final Fingerprint extractedWithBackgroundFP, final Fingerprint extractedWithoutBackgroundFP, final Fingerprint fpShouldMatch, final Fingerprint fpShouldNotMatch) {
-        final MatchResults matchResultsShouldMatchWithBackground = FingerprintChecker.calculateMatchResults(extractedWithBackgroundFP, fpShouldMatch);
-        final MatchResults matchResultsShouldMatchWithoutBackground = FingerprintChecker.calculateMatchResults(extractedWithoutBackgroundFP, fpShouldMatch);
-        assertTrue(matchResultsShouldMatchWithBackground.getLOD() > matchResultsShouldMatchWithoutBackground.getLOD());
+    private void assertFirstExtractionBetterThanSecond(final Fingerprint firstExtractedFP, final Fingerprint secondExtractedFP, final Fingerprint fpShouldMatch) {
+        assertFirstExtractionBetterThanSecond(firstExtractedFP, secondExtractedFP, fpShouldMatch, null);
+    }
+    private void assertFirstExtractionBetterThanSecond(final Fingerprint firstExtractedFP, final Fingerprint secondExtractedFP, final Fingerprint fpShouldMatch, final Fingerprint fpShouldNotMatch) {
+        final MatchResults matchResultsShouldMatchFirst = FingerprintChecker.calculateMatchResults(firstExtractedFP, fpShouldMatch);
+        final MatchResults matchResultsShouldMatchSecond = FingerprintChecker.calculateMatchResults(secondExtractedFP, fpShouldMatch);
+        assertTrue(matchResultsShouldMatchFirst.getLOD() > matchResultsShouldMatchSecond.getLOD());
 
-        final MatchResults matchResultsShouldNotMatchWithBackground = FingerprintChecker.calculateMatchResults(extractedWithBackgroundFP, fpShouldNotMatch);
-        final MatchResults matchResultsShouldNotMatchWithoutBackground = FingerprintChecker.calculateMatchResults(extractedWithoutBackgroundFP, fpShouldNotMatch);
-        assertTrue(matchResultsShouldNotMatchWithBackground.getLOD() < matchResultsShouldNotMatchWithoutBackground.getLOD());
+        if (fpShouldNotMatch != null) {
+            final MatchResults matchResultsShouldNotMatchFirst = FingerprintChecker.calculateMatchResults(firstExtractedFP, fpShouldNotMatch);
+            final MatchResults matchResultsShouldNotMatchSecond = FingerprintChecker.calculateMatchResults(secondExtractedFP, fpShouldNotMatch);
+            assertTrue(matchResultsShouldNotMatchFirst.getLOD() < matchResultsShouldNotMatchSecond.getLOD());
+        }
     }
 }
