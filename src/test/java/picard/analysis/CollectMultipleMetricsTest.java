@@ -126,7 +126,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 List<Object[]> tests = new ArrayList<>();
 
                 // this is actually legal after conversion to the non-legacy parser
-                if (CommandLineProgram.useLegacyParser(getClass())) {
+                if (CommandLineProgram.useLegacyParser()) {
                     tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"});
                 }
 

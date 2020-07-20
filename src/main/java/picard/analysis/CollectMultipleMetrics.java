@@ -580,8 +580,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                     INCLUDE_UNPAIRED);
 
             if (additionalArguments.containsKey(program)) {
-                final CommandLineParser commandLineParser = getCommandLineParser(instance);
-                final boolean success = commandLineParser.parseArguments(System.err, additionalArguments.get(program).toArray(new String[0]));
+                final String[] argv = additionalArguments.get(program).toArray(new String[0]);
+                final CommandLineParser commandLineParser = instance.getCommandLineParserForArgs(argv);
+                final boolean success = commandLineParser.parseArguments(System.err, argv);
                 if (!success) {
                     throw new CommandLineException("Failed to parse arguments ["+ String.join(",", additionalArguments.get(program))+ "] for " + program);
                 }
