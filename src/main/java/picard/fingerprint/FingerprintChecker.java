@@ -612,14 +612,74 @@ public class FingerprintChecker {
      * Data is aggregated by sample, not read-group.
      */
     public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination) {
+        return identifyContaminant(samFile, contamination, null, null, false);
+    }
 
+    /**
+     * Generates a per-sample Fingerprint for the contaminant in the supplied SAM file.
+     * Data is aggregated by sample, not read-group.
+     * @param samFile file to extract contaminant from
+     * @param contamination contamination fraction
+     * @param backgroundSamFile file containing a normal sample from the same individual as the contaminated sample
+     * @param sampleCorrespondenceMap map from sample names in backgroundSamFile to sample names from same individual in samFile
+     * @param contaminatedIsTumor whether the contaminated sample is a tumor sample for which the backgrdoundSamFile
+     * @return
+     */
+    public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination, final Path backgroundSamFile, final Map<String, String> sampleCorrespondenceMap, final boolean contaminatedIsTumor) {
+        if (contaminatedIsTumor && backgroundSamFile == null) {
+            throw new IllegalArgumentException("contaminatedIsTumor cannot be true if no background sample is provided");
+        }
         final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
-
-        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
-                Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
-
-        return fpIdDetailsBySample.entrySet().stream()
+        final Map<String, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
+                Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE)).entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
+
+        if (backgroundSamFile != null) {
+
+            final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMapBackground = this.fingerprintSamFile(backgroundSamFile, h -> new HaplotypeProbabilitiesFromSequence(h));
+            final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMapBackgroundCorrespondingSample = new HashMap<>();
+            for(final FingerprintIdDetails fingerprintIdDetails : fpIdDetailsMapBackground.keySet()) {
+                final String correspondingSample = sampleCorrespondenceMap.get(fingerprintIdDetails.sample);
+                if (correspondingSample != null) {
+                    final FingerprintIdDetails fingerprintIdDetailsCorrespondingSample = new FingerprintIdDetails(fingerprintIdDetails.platformUnit, backgroundSamFile.toUri().toString());
+                    fingerprintIdDetailsCorrespondingSample.sample = correspondingSample;
+                    fingerprintIdDetailsCorrespondingSample.library = fingerprintIdDetails.library;
+
+                    fpIdDetailsMapBackgroundCorrespondingSample.put(fingerprintIdDetailsCorrespondingSample, fpIdDetailsMapBackground.get(fingerprintIdDetails));
+                }
+            }
+            final Map<String, Fingerprint> fpIdDetailsBySampleBackground = Fingerprint.mergeFingerprintsBy(fpIdDetailsMapBackgroundCorrespondingSample,
+                    Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE)).entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
+
+            //if contaminated sample is tumor, remove het haplotype blocks to avoid LoH confusion, and merge homs into contaminanted samples
+            for (final Map.Entry<String, Fingerprint> entry : fpIdDetailsBySampleBackground.entrySet()) {
+                final String sample = entry.getKey();
+                final Fingerprint backgroundFingerprint = entry.getValue();
+                final Fingerprint contaminatedFingerprint = fpIdDetailsBySample.get(sample);
+                for (final Map.Entry<HaplotypeBlock, HaplotypeProbabilities> fingerprintEntry : backgroundFingerprint.entrySet()) {
+                    if (contaminatedIsTumor && !isConfidentlyHom(fingerprintEntry.getValue())) {
+                        //remove hets
+                        contaminatedFingerprint.remove(fingerprintEntry.getKey());
+                    } else {
+                        //merge homs
+                        final HaplotypeProbabilities backgroundHaplotypeProbabilities = fingerprintEntry.getValue();
+                        final HaplotypeProbabilitiesFromContaminatorSequence contaminatedHaplotypeProbabilities = (HaplotypeProbabilitiesFromContaminatorSequence) contaminatedFingerprint.get(fingerprintEntry.getKey());
+                        contaminatedHaplotypeProbabilities.mergeBackground(backgroundHaplotypeProbabilities);
+                    }
+                }
+            }
+        }
+
+        return fpIdDetailsBySample;
+    }
+
+    private boolean isConfidentlyHom(final HaplotypeProbabilities hapProb) {
+        final double[] posteriors = hapProb.getPosteriorProbabilities();
+        final double hetPosteriorProb = posteriors[DiploidHaplotype.Aa.ordinal()];
+
+        //require posterior prob of het to be less than 1%
+        return hetPosteriorProb < 0.01;
     }
 
     /**
