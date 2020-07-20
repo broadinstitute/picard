@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -482,11 +484,11 @@ public class FingerprintCheckerTest {
 
     @DataProvider(name = "identifyContaminantTestDataProvider")
     public Object[][] identifyContaminantTestDataProvider() {
-        final File NA12878_fingerprint = new File(TEST_DATA_DIR, "NA12878_chr1_fingerprint.vcf");
-        final File NA24385_fingerprint = new File(TEST_DATA_DIR, "NA24385_chr1_fingerprint.vcf");
+        final Path NA12878_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_chr1_fingerprint.vcf");
+        final Path NA24385_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA24385_chr1_fingerprint.vcf");
 
-        final File NA12878_contaminated_by_NA24358 = new File(TEST_DATA_DIR, "NA12878_contaminated_with_NA24385_at_10_pct_chr1_fingerprint_sites.bam");
-        final File NA24385_contaminated_by_NA12878 = new File(TEST_DATA_DIR, "NA24385_contaminated_with_NA12878_at_8_percent_chr1_fingerprint_sites.bam");
+        final Path NA12878_contaminated_by_NA24358 = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_contaminated_with_NA24385_at_10_pct_chr1_fingerprint_sites.bam");
+        final Path NA24385_contaminated_by_NA12878 = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA24385_contaminated_with_NA12878_at_8_percent_chr1_fingerprint_sites.bam");
 
         return new Object[][] {
                 {NA12878_contaminated_by_NA24358, NA12878_fingerprint, NA24385_fingerprint, .1},
@@ -495,7 +497,7 @@ public class FingerprintCheckerTest {
     }
 
     @Test(dataProvider = "identifyContaminantTestDataProvider")
-    public void identifyContaminantTest(final File contaminatedBam, final File contaminatedSampleVCF, final File contaminatingSampleVCF, final double contamination) throws IOException {
+    public void identifyContaminantTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
 
         final Fingerprint extractedContaminatingFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination);
 
@@ -510,16 +512,41 @@ public class FingerprintCheckerTest {
         assertExtractionIsCorrect(extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
     }
 
-    private Fingerprint getSingleExtractedFingerprint(final File bam, final File hapDatabase, final double contamination) {
+    @Test(dataProvider = "identifyContaminantTestDataProvider")
+    public void identifyContaminantWithBackgroundTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
+        final Fingerprint extractedContaminatingFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF);
+        final Fingerprint extractedContaminatingFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination);
+
+        final Fingerprint extractedContaminatedFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination, contaminatingSampleVCF);
+        final Fingerprint extractedContaminatedFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination);
+
+        final Fingerprint trueContaminatedSampleFP = getSingleFingerprintFromVCF(contaminatedSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+
+        final Fingerprint trueContaminatingSampleFP = getSingleFingerprintFromVCF(contaminatingSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+
+        assertExtractionIsCorrect(extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
+        assertExtractionIsCorrect(extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
+
+        assertBackgroundImprovesExtraction(extractedContaminatedFPWithBackground, extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
+        assertBackgroundImprovesExtraction(extractedContaminatingFPWithBackground, extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
+    }
+
+    private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination) {
+        return getSingleExtractedFingerprint(bam, hapDatabase, contamination, null);
+    }
+
+    private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination, final Path background) {
+        final Map<String, String> correspondingSampleMap = background == null ? null : ExtractFingerprint.getCorrespondingSampleMap(bam.toFile(), background.toFile());
+
         final FingerprintChecker fpChecker = new FingerprintChecker(hapDatabase);
-        final Map<String, Fingerprint> extractedFPMap = fpChecker.identifyContaminant(bam.toPath(), contamination);
+        final Map<String, Fingerprint> extractedFPMap = fpChecker.identifyContaminant(bam, contamination, background, correspondingSampleMap, false);
         assertEquals(extractedFPMap.size(), 1);
         return extractedFPMap.values().iterator().next();
     }
 
-    private Fingerprint getSingleFingerprintFromVCF(final File vcf, final File hapDatabase) {
+    private Fingerprint getSingleFingerprintFromVCF(final Path vcf, final File hapDatabase) {
         final FingerprintChecker fpChecker = new FingerprintChecker(hapDatabase);
-        final Map<FingerprintIdDetails, Fingerprint> fpMap = Fingerprint.mergeFingerprintsBy(fpChecker.fingerprintVcf(vcf.toPath()),
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = Fingerprint.mergeFingerprintsBy(fpChecker.fingerprintVcf(vcf),
                 Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
         assertEquals(fpMap.size(), 1);
         return fpMap.values().iterator().next();
@@ -531,5 +558,15 @@ public class FingerprintCheckerTest {
 
         final MatchResults matchResultsShouldNotMatch = FingerprintChecker.calculateMatchResults(extractedFP, fpShouldNotMatch);
         assertTrue(matchResultsShouldNotMatch.getLOD() < 0);
+    }
+
+    private void assertBackgroundImprovesExtraction(final Fingerprint extractedWithBackgroundFP, final Fingerprint extractedWithoutBackgroundFP, final Fingerprint fpShouldMatch, final Fingerprint fpShouldNotMatch) {
+        final MatchResults matchResultsShouldMatchWithBackground = FingerprintChecker.calculateMatchResults(extractedWithBackgroundFP, fpShouldMatch);
+        final MatchResults matchResultsShouldMatchWithoutBackground = FingerprintChecker.calculateMatchResults(extractedWithoutBackgroundFP, fpShouldMatch);
+        assertTrue(matchResultsShouldMatchWithBackground.getLOD() > matchResultsShouldMatchWithoutBackground.getLOD());
+
+        final MatchResults matchResultsShouldNotMatchWithBackground = FingerprintChecker.calculateMatchResults(extractedWithBackgroundFP, fpShouldNotMatch);
+        final MatchResults matchResultsShouldNotMatchWithoutBackground = FingerprintChecker.calculateMatchResults(extractedWithoutBackgroundFP, fpShouldNotMatch);
+        assertTrue(matchResultsShouldNotMatchWithBackground.getLOD() < matchResultsShouldNotMatchWithoutBackground.getLOD());
     }
 }
