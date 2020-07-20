@@ -71,6 +71,17 @@ public class IdentifyContaminant extends CommandLineProgram {
             "It names the sample in the VCF <SAMPLE>, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
 
+    @Argument(doc = "SAM or BAM file of uncontaminated sample of the same individual whose information we are trying to remove.  If we are extracting the fingerprint of the contaminating sample," +
+            " this should be a sample from the same individual as the contaminated sample.  If we are extracting the fingerprint of the contaminated sample, this should be a sample from the same " +
+            "individual as the contaminating sample.  If the sample being removed is a tumor sample, this sample should optimally be a normal sample from the same individual, and REMOVED_IS_TUMOR" +
+            " should be set to true.", optional = true)
+    public File BACKGROUND = null;
+
+    @Argument(doc = "Whether the sample being removed (not the sample whose fingerprint is being extracted) is a tumor sample.  This argument can only be set to true if a BACKGROUND sample is included." +
+            "  In this case, the BACKGROUND sample will be assumed to be a normal sample from the same individual.  In order to avoid potential confounding due to LoH, all fingerprinting sites which genotype " +
+            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to tru and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
+    public boolean REMOVED_IS_TUMOR = false;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -91,6 +102,8 @@ public class IdentifyContaminant extends CommandLineProgram {
         extractFingerprint.VALIDATION_STRINGENCY = VALIDATION_STRINGENCY;
         extractFingerprint.VERBOSITY = VERBOSITY;
         extractFingerprint.referenceSequence = referenceSequence;
+        extractFingerprint.BACKGROUND = BACKGROUND;
+        extractFingerprint.REMOVED_IS_TUMOR = REMOVED_IS_TUMOR;
 
         extractFingerprint.doWork();
         return 0;

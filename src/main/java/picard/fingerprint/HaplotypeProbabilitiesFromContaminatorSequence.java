@@ -142,6 +142,24 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         return this;
     }
 
+    public HaplotypeProbabilitiesFromContaminatorSequence mergeBackground(final HaplotypeProbabilities other) {
+        if (!this.getHaplotype().equals(other.getHaplotype())) {
+            throw new IllegalArgumentException("Mismatched haplotypes in call to HaplotypeProbabilities.merge(): " +
+                    getHaplotype() + ", " + other.getHaplotype());
+        }
+
+        final double[] backgroundLikelihoods = other.getLikelihoods();
+        for (final Genotype backgroundGenotype : Genotype.values()) {
+            final double backgroundLikelihood = backgroundLikelihoods[backgroundGenotype.v];
+            for (final Genotype contGeno : Genotype.values()) {
+                this.likelihoodMap[contGeno.v][backgroundGenotype.v] *= backgroundLikelihood;
+            }
+        }
+
+        valuesNeedUpdating = true;
+        return this;
+    }
+
     @Override
     public double[] getLikelihoods() {
         updateLikelihoods();

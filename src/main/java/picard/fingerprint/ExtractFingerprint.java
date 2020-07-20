@@ -24,6 +24,9 @@
 
 package picard.fingerprint;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -33,7 +36,10 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Program to create a fingerprint for the <b>contaminating</b> sample when the level of contamination is both known and
@@ -66,6 +72,16 @@ public class ExtractFingerprint extends CommandLineProgram {
     @Argument(doc = "The sample alias to associate with the resulting fingerprint. When null, <SAMPLE> is extracted from the input file and \"<SAMPLE>\" is used. " +
             "If argument EXTRACT_CONTAMINATION=true the resulting samplename will be \"<SAMPLE>-contamination\" (if not provided).", optional = true)
     public String SAMPLE_ALIAS = null;
+
+    @Argument(doc = "SAM or BAM file of uncontaminated sample of the same individual whose information we are trying to remove.  If we are extracting the fingerprint of the contaminating sample," +
+            " this should be a sample from the same individual as the contaminated sample.  If we are extracting the fingerprint of the contaminated sample, this should be a sample from the same " +
+            "individual as the contaminating sample.  If the sample being removed is a tumor sample, this sample should optimally be a normal sample from the same individual.", optional = true)
+    public File BACKGROUND = null;
+
+    @Argument(doc = "Whether the sample being removed (not the sample whose fingerprint is being extracted) is a tumor sample.  This argument can only be set to true if a BACKGROUND sample is included." +
+            "  In this case, the BACKGROUND sample will be assumed to be a normal sample from the same individual.  In order to avoid potential confounding due to LoH, all fingerprinting sites which genotype " +
+            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to tru and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
+    public boolean REMOVED_IS_TUMOR = false;
 
     @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
             "effect that any given locus may have.")
@@ -103,7 +119,33 @@ public class ExtractFingerprint extends CommandLineProgram {
             checker.setDefaultSampleID(SAMPLE_ALIAS);
         }
 
-        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION);
+        final Map<String, String> correspondingSamplesMap = new HashMap<>();
+        if (BACKGROUND != null || REMOVED_IS_TUMOR) {
+            if (BACKGROUND == null) {
+                throw new IllegalArgumentException("Cannot have REMOVED_IS_TUMOR true without providing a BACKGROUND sample.");
+            }
+            IOUtil.assertFileIsReadable(BACKGROUND);
+            final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
+
+            final Set<String> samples = in.getFileHeader().getReadGroups().stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
+            if (samples.size() != 1) {
+                throw new IllegalArgumentException("must have only one readgroup in input file " + INPUT);
+            }
+
+            final SamReader inBackground = SamReaderFactory.makeDefault().open(BACKGROUND);
+
+            final Set<String> backgroundSamples = inBackground.getFileHeader().getReadGroups().stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
+            if (backgroundSamples.size() != 1) {
+                throw new IllegalArgumentException("must have only one readgroup in background file " + BACKGROUND);
+            }
+
+            final String sample = samples.iterator().next();
+            final String backgroundSample = backgroundSamples.iterator().next();
+
+            correspondingSamplesMap.put(backgroundSample, sample);
+        }
+
+        final Map<String, Fingerprint> fingerprintMap = BACKGROUND == null ? checker.identifyContaminant(INPUT.toPath(), CONTAMINATION) : checker.identifyContaminant(INPUT.toPath(), CONTAMINATION, BACKGROUND.toPath(), correspondingSamplesMap, REMOVED_IS_TUMOR);
 
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());
