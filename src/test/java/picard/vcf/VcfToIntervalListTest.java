@@ -69,8 +69,6 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
         } else {
             // make sure the one where two sites that should be concatenated into one interval were actually concatenated
             Assert.assertTrue(intervals.get(5).getName().contains("|"));
-
-
         }
 
     }

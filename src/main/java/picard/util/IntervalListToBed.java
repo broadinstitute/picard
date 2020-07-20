@@ -79,14 +79,11 @@ public class IntervalListToBed extends CommandLineProgram {
              CloseableIterator<Interval> intervalsToUse = getSortedIntervals(intervalsReader);
              final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT)) {
             intervalsToUse.stream().forEach(i -> generateOutput(i, out));
-
-            out.close();
             return 0;
         } catch (Exception e) {
             throw new RuntimeIOException(e);
         }
     }
-
 
     private CloseableIterator<Interval> getSortedIntervals(AbstractFeatureReader<Interval, LineIterator> intervalsReader)  throws IOException {
         if (SORT) {
@@ -98,7 +95,6 @@ public class IntervalListToBed extends CommandLineProgram {
             for (final Interval i: intervalsReader.iterator()) {
                 sortedIntervals.add(i);
             }
-
             return sortedIntervals.iterator();
         } else {
             return intervalsReader.iterator();
@@ -113,7 +109,6 @@ public class IntervalListToBed extends CommandLineProgram {
             outputWriter.newLine();
         } catch (IOException e) {
             throw new RuntimeIOException(e);
-
         }
     }
 }

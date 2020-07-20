@@ -101,7 +101,7 @@ public class VcfToIntervalList extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
-        final boolean concatenate_ids = (VARIANT_ID_METHOD == VARIANT_ID_TYPES.CONCAT_ALL); // TODO: move to doWork() section
+        final boolean concatenate_ids = (VARIANT_ID_METHOD == VARIANT_ID_TYPES.CONCAT_ALL);
 
         try (VCFFileReader vcfReader = new VCFFileReader(INPUT.toPath(), false)) {
             final Iterator<Interval> samFileIterator = VCFFileReader.toIntervals(vcfReader, INCLUDE_FILTERED);
@@ -114,8 +114,7 @@ public class VcfToIntervalList extends CommandLineProgram {
             } catch (IOException e) {
                 if(!OUTPUT.renameTo(new File(OUTPUT.getAbsolutePath() + ".incomplete"))){
                     OUTPUT.delete();
-                };
-
+                }
                 throw new PicardException("Trouble writing IntervalList. Renamed <OUTPUT> to <OUTPUT>.incomplete to avoid misuse.", e);
             }
         }
