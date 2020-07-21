@@ -135,6 +135,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         //Create Sam Files
         tempSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
+        tempSamFile.deleteOnExit();
         final File tempSamFileUnsorted = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
         tempSamFileUnsorted.deleteOnExit();
 
@@ -196,7 +197,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         sorter.instanceMain(args);
 
         //create output files for tests
-        outfile = File.createTempFile("testWgsMetrics", ".txt", TEST_DIR);
+        outfile = File.createTempFile("testWgsMetricsDeleteMe", ".txt", TEST_DIR);
         outfile.deleteOnExit();
     }
 
@@ -239,6 +240,38 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
     }
 
+    @Test(dataProvider = "wgsDataProvider")
+    public void testSmallIntervals(final File input, final File unused, final String refence_name,
+                                   final String useFastAlgorithm) throws IOException {
+        final File outfile = File.createTempFile("test", ".wgs_metrics");
+        outfile.deleteOnExit();
+        final File ref = new File(refence_name);
+        final File intervals = new File(TEST_DIR, "smallIntervals.interval_list");
+        final int sampleSize = 1000;
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize,
+                "USE_FAST_ALGORITHM=" + useFastAlgorithm
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        for (final WgsMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 404);
+            Assert.assertEquals(metrics.PCT_EXC_ADAPTER, 0D);
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
+            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
+        }
+    }
+
+
     @Test(dataProvider = "wgsAlgorithm")
     public void testExclusions(final String useFastAlgorithm) throws IOException {
         final File reference = new File("testdata/picard/sam/merger.fasta");
@@ -276,7 +309,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
 
         // create output files for tests
-        final File outfile = File.createTempFile("testWgsMetrics", ".txt");
+        final File outfile = File.createTempFile("testWgsMetricsPleaseDelete", ".txt");
         outfile.deleteOnExit();
 
         final String[] args = new String[]{
