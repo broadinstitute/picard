@@ -25,6 +25,7 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -41,7 +42,7 @@ import java.text.NumberFormat;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/AlignmentSummaryMetrics");
 
     public String getCommandLineProgramName() {
         return CollectAlignmentSummaryMetrics.class.getSimpleName();
@@ -642,4 +643,48 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
             }
         }
     }
+
+
+    @Test
+    public void testReadLengthHistogram() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test3.sam");
+        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
+        outfile.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "COLLECT_ALIGNMENT_INFORMATION=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<AlignmentSummaryMetrics, Integer> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            // test that it doesn't blow up
+        }
+        for (final Histogram<Integer> histogram : output.getAllHistograms()) {
+            if (histogram.getValueLabel().equals("PAIRED_TOTAL_LENGTH_COUNT")) {
+                for (int i = 0; i < histogram.getMax(); i++){
+                    switch(i) {
+                        case 1:
+                        case 2:
+                        case 10:
+                        case 11:
+                        case 42:
+                            Assert.assertEquals(histogram.get(i).getValue(), 1D);
+                            break;
+                        default:
+                            Assert.assertTrue(
+                                    histogram.get(i) == null ||
+                                    histogram.get(i).getValue() == 9D);
+                            break;
+                    }
+                }
+            }
+        }
+
+    }
+
 }

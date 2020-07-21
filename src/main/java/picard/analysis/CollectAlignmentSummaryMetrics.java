@@ -31,6 +31,7 @@ import htsjdk.samtools.SamPairUtil.PairOrientation;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -149,8 +150,30 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Override protected void finish() {
         collector.finish();
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> file = getMetricsFile();
+        final MetricsFile<AlignmentSummaryMetrics, Integer> file = getMetricsFile();
         collector.addAllLevelsToFile(file);
+
+        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector = (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
+
+        final Histogram<Integer> pairTotalReadHistogram = allReadsGroupCollector.pairCollector.getReadHistogram();
+        pairTotalReadHistogram.setBinLabel("READ_LENGTH");
+        pairTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
+        file.addHistogram(pairTotalReadHistogram);
+
+        final Histogram<Integer> pairClippedReadHistogram = allReadsGroupCollector.pairCollector.getAlignedReadHistogram();
+        pairClippedReadHistogram.setBinLabel("READ_LENGTH");
+        pairClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
+        file.addHistogram(pairClippedReadHistogram);
+
+        final Histogram<Integer> unpairedTotalReadHistogram = allReadsGroupCollector.unpairedCollector.getReadHistogram();
+        unpairedTotalReadHistogram.setBinLabel("READ_LENGTH");
+        unpairedTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
+        file.addHistogram(unpairedTotalReadHistogram);
+
+        final Histogram<Integer> unpairedClippedReadHistogram = allReadsGroupCollector.unpairedCollector.getAlignedReadHistogram();
+        unpairedClippedReadHistogram.setBinLabel("READ_LENGTH");
+        unpairedClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
+        file.addHistogram(unpairedClippedReadHistogram);
 
         file.write(OUTPUT);
     }
