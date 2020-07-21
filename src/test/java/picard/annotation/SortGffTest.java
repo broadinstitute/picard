@@ -23,7 +23,16 @@ public class SortGffTest extends CommandLineProgramTest {
                 {new File(TEST_DATA_DIR, "child.before.parent.belongs.after.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.after.parent.sorted.gff3")},
                 {new File(TEST_DATA_DIR, "child.after.parent.belongs.after.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.after.parent.sorted.gff3")},
                 {new File(TEST_DATA_DIR, "child.before.parent.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")},
-                {new File(TEST_DATA_DIR, "child.after.parent.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")}
+                {new File(TEST_DATA_DIR, "child.after.parent.belongs.before.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.belongs.before.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "parent.parent.child.should.be.parent.parent.child.unsorted.gff3"), new File(TEST_DATA_DIR, "parent.parent.child.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "parent.child.parent.should.be.parent.parent.child.unsorted.gff3"), new File(TEST_DATA_DIR, "parent.parent.child.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.parent.parent.should.be.parent.parent.child.unsorted.gff3"), new File(TEST_DATA_DIR, "parent.parent.child.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "parent.parent.child.should.be.parent.child.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "parent.child.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "parent.child.parent.should.be.parent.child.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "parent.child.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.parent.parent.should.be.parent.child.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "parent.child.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "parent.parent.child.should.be.child.parent.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.parent.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "parent.child.parent.should.be.child.parent.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.parent.parent.sorted.gff3")},
+                {new File(TEST_DATA_DIR, "child.parent.parent.should.be.child.parent.parent.unsorted.gff3"), new File(TEST_DATA_DIR, "child.parent.parent.sorted.gff3")}
         };
     }
 
