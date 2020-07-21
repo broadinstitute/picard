@@ -622,7 +622,7 @@ public class FingerprintChecker {
      * @param contamination contamination fraction
      * @param backgroundFPFile sam/bam or vcf file containing a normal sample from the same individual as the contaminated sample
      * @param sampleCorrespondenceMap map from sample names in backgroundFPFile to sample names from same individual in samFile
-     * @param contaminatedIsTumor whether the contaminated sample is a tumor sample for which the backgrdoundSamFile
+     * @param contaminatedIsTumor whether the contaminated sample is a tumor sample for which the backgrdoundFPFile provides a fingerprint of a corresponding normal
      * @return
      */
     public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination, final Path backgroundFPFile, final Map<String, String> sampleCorrespondenceMap, final boolean contaminatedIsTumor) {
@@ -651,17 +651,17 @@ public class FingerprintChecker {
                     Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE)).entrySet().stream()
                     .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
 
-            //if contaminated sample is tumor, remove het haplotype blocks to avoid LoH confusion, and merge homs into contaminanted samples
+            //merge background fingerprint into contaminated fingerprint
             for (final Map.Entry<String, Fingerprint> entry : fpIdDetailsBySampleBackground.entrySet()) {
                 final String sample = entry.getKey();
                 final Fingerprint backgroundFingerprint = entry.getValue();
                 final Fingerprint contaminatedFingerprint = fpIdDetailsBySample.get(sample);
                 for (final Map.Entry<HaplotypeBlock, HaplotypeProbabilities> fingerprintEntry : backgroundFingerprint.entrySet()) {
                     if (contaminatedIsTumor && !isConfidentlyHom(fingerprintEntry.getValue())) {
-                        //remove hets
+                        //if contaminated sample is tumor, remove het haplotype blocks to avoid LoH confusion
                         contaminatedFingerprint.remove(fingerprintEntry.getKey());
                     } else {
-                        //merge homs
+                        //merge homs, or all if contaminated sample is not tumor
                         final HaplotypeProbabilities backgroundHaplotypeProbabilities = fingerprintEntry.getValue();
                         final HaplotypeProbabilitiesFromContaminatorSequence contaminatedHaplotypeProbabilities = (HaplotypeProbabilitiesFromContaminatorSequence) contaminatedFingerprint.get(fingerprintEntry.getKey());
                         contaminatedHaplotypeProbabilities.mergeBackground(backgroundHaplotypeProbabilities);
