@@ -79,7 +79,7 @@ public class IdentifyContaminant extends CommandLineProgram {
 
     @Argument(doc = "Whether the sample being removed (not the sample whose fingerprint is being extracted) is a tumor sample.  This argument can only be set to true if a BACKGROUND sample is included." +
             "  In this case, the BACKGROUND sample will be assumed to be a normal sample from the same individual.  In order to avoid potential confounding due to LoH, all fingerprinting sites which genotype " +
-            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to tru and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
+            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to true and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
     public boolean REMOVED_IS_TUMOR = false;
 
     @Override

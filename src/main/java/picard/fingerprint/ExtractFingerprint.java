@@ -27,14 +27,10 @@ package picard.fingerprint;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.tribble.FeatureReader;
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
@@ -42,9 +38,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -89,7 +83,7 @@ public class ExtractFingerprint extends CommandLineProgram {
 
     @Argument(doc = "Whether the sample being removed (not the sample whose fingerprint is being extracted) is a tumor sample.  This argument can only be set to true if a BACKGROUND sample is included." +
             "  In this case, the BACKGROUND sample will be assumed to be a normal sample from the same individual.  In order to avoid potential confounding due to LoH, all fingerprinting sites which genotype " +
-            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to tru and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
+            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to true and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
     public boolean REMOVED_IS_TUMOR = false;
 
     @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
@@ -114,6 +108,10 @@ public class ExtractFingerprint extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(referenceSequence.getReferenceFile());
 
+        if (BACKGROUND == null && REMOVED_IS_TUMOR) {
+            throw new IllegalArgumentException("Cannot have REMOVED_IS_TUMOR true without providing a BACKGROUND sample.");
+        }
+
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
         // if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
@@ -128,13 +126,9 @@ public class ExtractFingerprint extends CommandLineProgram {
             checker.setDefaultSampleID(SAMPLE_ALIAS);
         }
 
-        if (BACKGROUND == null && REMOVED_IS_TUMOR) {
-                throw new IllegalArgumentException("Cannot have REMOVED_IS_TUMOR true without providing a BACKGROUND sample.");
-        }
 
-        final Map<String, Fingerprint> fingerprintMap = BACKGROUND == null ?
-                checker.identifyContaminant(INPUT.toPath(), CONTAMINATION) :
-                checker.identifyContaminant(INPUT.toPath(), CONTAMINATION, BACKGROUND.toPath(), getCorrespondingSampleMap(INPUT, BACKGROUND), REMOVED_IS_TUMOR);
+        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION, BACKGROUND == null ? null : BACKGROUND.toPath(),
+                BACKGROUND == null ? null : getCorrespondingSampleMap(INPUT, BACKGROUND), REMOVED_IS_TUMOR);
 
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());
