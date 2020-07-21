@@ -38,43 +38,22 @@ import java.util.Map;
 /**
  * Basic test for HaplotypeMap liftover
  */
-public class LiftoverHaplotypeMapTest {
+public class LiftOverHaplotypeMapTest {
 
     private static final String TEST_DATA_DIR="testdata/picard/fingerprint/";
     private static final String HG18_HAPLOTYPE_MAP = TEST_DATA_DIR + "haplotypeMapHg18.txt";
-    private static final String CHAIN = TEST_DATA_DIR + "hg18ToHg19.broad.over.chain";
+    private static final String CHAIN = TEST_DATA_DIR + "hg18ToHg19.clipped.over.chain";
     private static final String HG_19_SD = TEST_DATA_DIR + "Homo_sapiens_assembly19.dict";
 
     @Test
     public void testHaplotypeMapLiftover() throws Exception {
 
-        Map<String, Interval> hg19 = new HashMap<String, Interval>();
+        Map<String, Interval> hg19 = new HashMap<>();
         hg19.put("rs1210110", new Interval("1", 14096821, 14096821));
         hg19.put("rs7555566", new Interval("1", 14804874, 14804874));
         hg19.put("rs1364054", new Interval("2", 8178735, 8178735));
         hg19.put("rs6734275", new Interval("2", 67241174, 67241174));
         hg19.put("rs7584993", new Interval("2", 223845942, 223845942));
-        hg19.put("rs17272796", new Interval("3", 17077268, 17077268));
-        hg19.put("rs1155741", new Interval("3", 37627112, 37627112));
-        hg19.put("rs1155744", new Interval("3", 37627598, 37627598));
-        hg19.put("rs161792", new Interval("3", 151899704, 151899704));
-        hg19.put("rs11940551", new Interval("4", 27162478, 27162478));
-        hg19.put("rs9293511", new Interval("5", 88416354, 88416354));
-        hg19.put("rs10943567", new Interval("6", 79402451, 79402451));
-        hg19.put("rs9343786", new Interval("6", 79414728, 79414728));
-        hg19.put("rs9352613", new Interval("6", 79424433, 79424433));
-        hg19.put("rs685449", new Interval("6", 153344531, 153344531));
-        hg19.put("rs7808249", new Interval("7", 86983715, 86983715));
-        hg19.put("rs1106334", new Interval("8", 71012811, 71012811));
-        hg19.put("rs11017876", new Interval("10", 129200964, 129200964));
-        hg19.put("rs9572094", new Interval("13", 35252882, 35252882));
-        hg19.put("rs4905366", new Interval("14", 96103099, 96103099));
-        hg19.put("rs4775699", new Interval("15", 47873549, 47873549));
-        hg19.put("rs1528601", new Interval("16", 51098427, 51098427));
-        hg19.put("rs11655512", new Interval("17", 20851735, 20851735));
-        hg19.put("rs4793172", new Interval("17", 43131480, 43131480));
-        hg19.put("rs242076", new Interval("22", 33229830, 33229830));
-        hg19.put("rs6603251", new Interval("X", 320580, 320580));
 
 
         final File tmp = File.createTempFile("hg19Map", ".txt");
