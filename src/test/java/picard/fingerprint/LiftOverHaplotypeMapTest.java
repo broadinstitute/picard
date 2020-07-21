@@ -25,7 +25,6 @@ package picard.fingerprint;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SequenceUtil;
 import org.testng.Assert;
@@ -40,7 +39,7 @@ import java.util.Map;
  */
 public class LiftOverHaplotypeMapTest {
 
-    private static final String TEST_DATA_DIR="testdata/picard/fingerprint/";
+    private static final String TEST_DATA_DIR = "testdata/picard/fingerprint/";
     private static final String HG18_HAPLOTYPE_MAP = TEST_DATA_DIR + "haplotypeMapHg18.txt";
     private static final String CHAIN = TEST_DATA_DIR + "hg18ToHg19.clipped.over.chain";
     private static final String HG_19_SD = TEST_DATA_DIR + "Homo_sapiens_assembly19.dict";
@@ -55,26 +54,25 @@ public class LiftOverHaplotypeMapTest {
         hg19.put("rs6734275", new Interval("2", 67241174, 67241174));
         hg19.put("rs7584993", new Interval("2", 223845942, 223845942));
 
-
         final File tmp = File.createTempFile("hg19Map", ".txt");
         tmp.deleteOnExit();
 
-        new LiftOverHaplotypeMap().instanceMain(new String[] {"INPUT=" + HG18_HAPLOTYPE_MAP,
+        new LiftOverHaplotypeMap().instanceMain(new String[]{"INPUT=" + HG18_HAPLOTYPE_MAP,
                 "OUTPUT=" + tmp.getAbsolutePath(), "SEQUENCE_DICTIONARY=" + HG_19_SD,
-                "CHAIN=" + CHAIN });
+                "CHAIN=" + CHAIN});
         final HaplotypeMap results = new HaplotypeMap(tmp);
-        final SamReader samReader = SamReaderFactory.makeDefault().open(new File(HG_19_SD));
-        SequenceUtil.assertSequenceDictionariesEqual(
-                results.getHeader().getSequenceDictionary(),
-                samReader.getFileHeader().getSequenceDictionary());
+        try(final SamReader samReader = SamReaderFactory.makeDefault().open(new File(HG_19_SD))) {
+            SequenceUtil.assertSequenceDictionariesEqual(
+                    results.getHeader().getSequenceDictionary(),
+                    samReader.getFileHeader().getSequenceDictionary());
 
-        for (Snp snp : results.getAllSnps()) {
-            Interval i = hg19.remove(snp.getName());
-            Assert.assertNotNull(i, "No lifted-over interval found for Snp: " + snp.getName());
-            Assert.assertEquals(snp.getChrom(), i.getContig(), "Sequence doesn't match for " + snp.getName());
-            Assert.assertEquals(snp.getPos(), i.getStart(), "Start position doesn't match for " + snp.getName());
+            for (Snp snp : results.getAllSnps()) {
+                Interval i = hg19.remove(snp.getName());
+                Assert.assertNotNull(i, "No lifted-over interval found for Snp: " + snp.getName());
+                Assert.assertEquals(snp.getChrom(), i.getContig(), "Sequence doesn't match for " + snp.getName());
+                Assert.assertEquals(snp.getPos(), i.getStart(), "Start position doesn't match for " + snp.getName());
+            }
+            Assert.assertEquals(hg19.size(), 0, "Extra intervals remain after liftover: " + hg19);
         }
-        Assert.assertEquals(hg19.size(), 0, "Extra intervals remain after liftover: " + hg19);
-        CloserUtil.close(samReader);
     }
 }
