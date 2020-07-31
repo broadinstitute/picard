@@ -1,6 +1,11 @@
 package picard.cmdline;
 
+import org.apache.commons.io.FileUtils;
+import org.testng.annotations.AfterClass;
+import picard.PicardException;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +19,24 @@ public abstract class CommandLineProgramTest {
     public static final File REFERENCE_TEST_DIR = new File("testdata/picard/reference");
     public static final File CHR_M_REFERENCE = new File(REFERENCE_TEST_DIR,"chrM.reference.fasta");
     public static final File CHR_M_DICT = new File(REFERENCE_TEST_DIR,"chrM.reference.dict");
+
+
+    // A per-test-class directory that will be deleted after the tests are complete.
+    final protected File TEMP_OUTPUT_DIR;
+    {
+        try {
+            TEMP_OUTPUT_DIR = File.createTempFile(FileUtils.getTempDirectory().getAbsolutePath(),this.getClass().getSimpleName());
+            TEMP_OUTPUT_DIR.delete();
+            TEMP_OUTPUT_DIR.mkdir();
+        } catch (IOException e) {
+            throw new PicardException("Couldn't create temp directory") ;
+        }
+    }
+
+    @AfterClass
+    final void cleanup_temp_dir() throws IOException {
+        FileUtils.deleteDirectory(TEMP_OUTPUT_DIR);
+    }
 
     public abstract String getCommandLineProgramName();
 

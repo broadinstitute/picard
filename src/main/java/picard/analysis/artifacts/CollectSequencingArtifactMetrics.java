@@ -51,7 +51,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
 )
 @DocumentedFeature
 public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
-static final String USAGE_SUMMARY = "Collect metrics to quantify single-base sequencing artifacts.  ";
+public static final String USAGE_SUMMARY = "Collect metrics to quantify single-base sequencing artifacts.  ";
 static final String USAGE_DETAILS = "<p>This tool examines two sources of sequencing errors associated with hybrid selection "+
 "protocols.  These errors are divided into two broad categories, pre-adapter and bait-bias.  Pre-adapter errors can arise from "+
 "laboratory manipulations of a nucleic acid sample e.g. shearing and occur prior to the ligation of adapters for PCR "+

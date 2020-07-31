@@ -26,7 +26,6 @@ package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineException;
@@ -35,6 +34,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.analysis.artifacts.CollectSequencingArtifactMetrics;
+import picard.analysis.artifacts.SequencingArtifactMetrics;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -76,20 +76,19 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * Includes a method for determining whether or not a Program explicitly needs a reference sequence (i.e. cannot be null)
      */
 
-    static final String USAGE_SUMMARY = "Collect multiple classes of metrics.";
+    static final String USAGE_SUMMARY = "Collect multiple classes of metrics. ";
     static final String USAGE_DETAILS = "This 'meta-metrics' tool runs one or more of the metrics collection modules at the same" +
             " time to cut down on the time spent reading in data from input files. Available modules include " +
             "CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, " +
             "CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics, CollectSequencingArtifactMetrics" +
             " and CollectQualityYieldMetrics. " +
-            "The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
-            "CollectAlignmentSummaryMetrics module, which outputs only a '.txt' file." +
+            "The tool produces outputs of '.pdf' and '.txt' files for each module." +
             " Output files are named by specifying a base name (without any file extensions).<br /><br />" +
             "" +
             "<p>Currently all programs are run with default options and fixed output extensions, " +
             "but this may become more flexible in future. Specifying a reference sequence file is required.</p>" +
 
-            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
+            "<p>Note: Metrics labeled as percentages (PCT_*) are actually expressed as fractions!</p>" +
             "" +
             "<h4>Usage example (all modules on by default):</h4>" +
             "<pre>" +
@@ -157,11 +156,26 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         }
     }
 
-    public enum Program implements ProgramInterface {
+    public enum Program implements ProgramInterface, CommandLineParser.ClpEnum {
+
         CollectAlignmentSummaryMetrics {
+
             @Override
             public boolean supportsMetricAccumulationLevel() {
                 return true;
+            }
+
+            final String METRICS_EXTENSION = ".alignment_summary_metrics";
+            final String PDF_EXTENSION = ".read_length_histogram.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.CollectInsertSizeMetrics.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT.";
             }
 
             @Override
@@ -175,13 +189,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
-                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".alignment_summary_metrics" + outext));
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
 
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
                 program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.INPUT = input;
+                program.HISTOGRAM_FILE = new File(outbase + PDF_EXTENSION);
                 program.setReferenceSequence(reference);
 
                 return program;
@@ -192,6 +207,19 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             @Override
             public boolean supportsMetricAccumulationLevel() {
                 return true;
+            }
+
+            final String METRICS_EXTENSION = ".insert_size_metrics";
+            final String PDF_EXTENSION = ".insert_size_histogram.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.CollectInsertSizeMetrics.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT.";
             }
 
             @Override
@@ -205,8 +233,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
-                program.output = new RequiredOutputArgumentCollection( new File(outbase + ".insert_size_metrics" + outext));
-                program.Histogram_FILE = new File(outbase + ".insert_size_histogram.pdf");
+                program.output = new RequiredOutputArgumentCollection( new File(outbase + METRICS_EXTENSION + outext));
+                program.Histogram_FILE = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -219,6 +247,20 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         },
 
         QualityScoreDistribution {
+
+            final String METRICS_EXTENSION = ".quality_distribution_metrics";
+            final String PDF_EXTENSION = ".quality_distribution.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.QualityScoreDistribution.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            }
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input,
                                                      final File reference,
@@ -228,8 +270,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
-                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".quality_distribution_metrics" + outext));
-                program.CHART_OUTPUT = new File(outbase + ".quality_distribution.pdf");
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
+                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -241,6 +283,20 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         },
 
         MeanQualityByCycle {
+
+            final String METRICS_EXTENSION = ".quality_by_cycle_metrics";
+            final String PDF_EXTENSION = ".quality_by_cycle.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.MeanQualityByCycle.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            }
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
                                                      final String outext,
@@ -252,8 +308,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
-                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".quality_by_cycle_metrics" + outext));
-                program.CHART_OUTPUT = new File(outbase + ".quality_by_cycle.pdf");
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
+                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -265,6 +321,21 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         },
 
         CollectBaseDistributionByCycle {
+
+            final String METRICS_EXTENSION = ".base_distribution_by_cycle_metrics";
+            final String PDF_EXTENSION = ".base_distribution_by_cycle.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.CollectBaseDistributionByCycle.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            }
+
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
                                                      final String outext,
@@ -276,8 +347,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
-                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".base_distribution_by_cycle_metrics" + outext));
-                program.CHART_OUTPUT = new File(outbase + ".base_distribution_by_cycle.pdf");
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
+                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -298,6 +369,22 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             public boolean supportsMetricAccumulationLevel() {
                 return true;
             }
+
+            final String METRICS_DETAIL_EXTENSION=".gc_bias.detail_metrics";
+            final String METRICS_SUMMARY_EXTENSION = ".gc_bias.summary_metrics";
+            final String PDF_EXTENSION = ".gc_bias.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_DETAIL_EXTENSION,
+                    METRICS_SUMMARY_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.CollectGcBiasMetrics.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            }
+
 
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
@@ -339,6 +426,19 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
 
+            final String METRICS_EXTENSION=".rna_metrics";
+            final String PDF_EXTENSION = ".rna_coverage.pdf";
+
+            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
+                    METRICS_EXTENSION,
+                    PDF_EXTENSION);
+
+            @Override
+            public String getHelpDoc() {
+                return CollectRnaSeqMetrics.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT.";
+            }
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
                                                      final String outext,
@@ -350,8 +450,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectRnaSeqMetrics program = new CollectRnaSeqMetrics();
-                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".rna_metrics" + outext));
-                program.CHART_OUTPUT = new File(outbase + ".rna_coverage.pdf");
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
+                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -372,6 +472,20 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
 
+            final List<String> METRIC_EXTENSIONS = CollectionUtil.makeList(
+                SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT,
+                SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT,
+                SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT,
+                SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT,
+                SequencingArtifactMetrics.ERROR_SUMMARY_EXT);
+
+
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.artifacts.CollectSequencingArtifactMetrics.USAGE_SUMMARY +
+                        "Creates output with \"" + String.join("\", \"",METRIC_EXTENSIONS) + "\" appended to OUTPUT.";
+            }
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
                                                      final String outext,
@@ -421,6 +535,15 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         },
 
         CollectQualityYieldMetrics {
+
+            final String METRIC_EXTENSION=".quality_yield_metrics";
+
+            @Override
+            public String getHelpDoc() {
+                return picard.analysis.CollectQualityYieldMetrics.USAGE_SUMMARY +
+                        "Creates output with \"" + METRIC_EXTENSION + "\" appended to OUTPUT.";
+            }
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
                                                      final String outext,
@@ -432,7 +555,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File refflat,
                                                      final Set<String> ignoreSequence) {
                 final CollectQualityYieldMetrics program = new CollectQualityYieldMetrics();
-                program.output = new RequiredOutputArgumentCollection(new File(outbase + ".quality_yield_metrics" + outext));
+                program.output = new RequiredOutputArgumentCollection(new File(outbase + METRIC_EXTENSION + outext));
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -440,8 +563,10 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
                 return program;
             }
-        }
+        };
     }
+
+
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Input SAM or BAM file.")

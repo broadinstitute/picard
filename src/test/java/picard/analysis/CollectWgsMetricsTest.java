@@ -24,7 +24,14 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
@@ -72,16 +79,16 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final String referenceFile = CHR_M_REFERENCE.getAbsolutePath();
 
         return new Object[][]{
-                {tempSamFile, outfile, referenceFile, "false"},
-                {tempSamFile, outfile, referenceFile, "true"},
+                {tempSamFile, referenceFile, "false"},
+                {tempSamFile, referenceFile, "true"},
         };
     }
 
     @Test(dataProvider = "wgsDataProvider")
-    public void testMetricsFromWGS(final File input, final File outfile, final String referenceFile,
+    public void testMetricsFromWGS(final File input, final String referenceFile,
                                    final String useFastAlgorithm) throws IOException {
-        outfile.deleteOnExit();
         final int sampleSize = 1000;
+        final File outfile = File.createTempFile("testMetricsFromWGS", ".wgs_metrics", TEMP_OUTPUT_DIR);
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -124,7 +131,6 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.PCT_100X, 0.056062, .0001);
             Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.056362, .02);
             Assert.assertEquals(metrics.HET_SNP_Q, 0.0);
-
         }
     }
 
@@ -134,10 +140,8 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final String readName = "TESTBARCODE";
 
         //Create Sam Files
-        tempSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
-        tempSamFile.deleteOnExit();
-        final File tempSamFileUnsorted = File.createTempFile("CollectWgsMetrics", ".bam", TEST_DIR);
-        tempSamFileUnsorted.deleteOnExit();
+        tempSamFile = VcfTestUtils.createTemporaryIndexedFile("setupBuilder", ".bam",TEMP_OUTPUT_DIR);
+        final File tempSamFileUnsorted = File.createTempFile("setupBuilder", ".bam", TEMP_OUTPUT_DIR);
 
         final SAMFileHeader header = new SAMFileHeader();
 
@@ -177,7 +181,6 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
 
         //Write SAM file
-
         try (SAMFileWriter writer = new SAMFileWriterFactory()
                 .setCreateIndex(true).makeBAMWriter(header, false, tempSamFileUnsorted)) {
 
@@ -197,10 +200,12 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         sorter.instanceMain(args);
 
         //create output files for tests
-        outfile = File.createTempFile("testWgsMetricsDeleteMe", ".txt", TEST_DIR);
-        outfile.deleteOnExit();
+        outfile = File.createTempFile("setupBuilder", ".txt", TEMP_OUTPUT_DIR);
     }
 
+    // NOTA BENE: The fast and regular algorithms differ in how the cap coverage, so if
+    // one writes the same test for both algos, make sure that the coverage cap isn't hit in either
+    // case as that could lead to different results and concerns about bugs...
     @DataProvider(name = "wgsAlgorithm")
     public Object[][] wgsAlgorithm() {
         return new Object[][]{
@@ -210,10 +215,65 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "wgsAlgorithm")
+    public void testIntervalOneRead(final String useFastAlgorithm) throws IOException {
+
+        final File ref = CHR_M_REFERENCE;
+        final File tempSamFile = VcfTestUtils.createTemporaryIndexedFile("testIntervalOneRead", ".bam", TEMP_OUTPUT_DIR);
+
+        final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(ref, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
+
+        setBuilder.setReadLength(100);
+
+        setBuilder.addPair("all_in",0,200,200,false,false,"100M","100M",true,false,30);
+        setBuilder.addPair("half_in",0,950,950,false,false,"100M","100M",true,false,30);
+        setBuilder.addPair("just_out",0,1001,1001,false,false,"100M","100M",true,false,30);
+        setBuilder.addPair("one_base_in",0,1000,1000,false,false,"100M","100M",true,false,30);
+
+        final SamReader samReader = setBuilder.getSamReader();
+
+        // Write SAM file
+        try (SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(true)
+                .makeBAMWriter(samReader.getFileHeader(), false, tempSamFile)) {
+            for (final SAMRecord record : samReader) {
+                writer.addAlignment(record);
+            }
+        }
+
+        final File outfile = File.createTempFile("testIntervalOneRead", ".wgs_metrics", TEMP_OUTPUT_DIR);
+        final File intervals = new File(TEST_DIR, "smallIntervals.interval_list");
+        final int sampleSize = 1000;
+        final String[] args = new String[]{
+                "INPUT=" + tempSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize,
+                "USE_FAST_ALGORITHM=" + useFastAlgorithm
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<WgsMetrics, Comparable<?>> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+        for (final WgsMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 1000);
+            Assert.assertEquals(metrics.PCT_EXC_ADAPTER, 0D);
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0D);
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0D);
+            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0D);
+            Assert.assertEquals(metrics.MEAN_COVERAGE, .152);
+            Assert.assertEquals(metrics.SD_COVERAGE, .361977);
+            Assert.assertEquals(metrics.PCT_1X, .151);
+        }
+    }
+
+
+    @Test(dataProvider = "wgsAlgorithm")
     public void testLargeIntervals(final String useFastAlgorithm) throws IOException {
         final File input = new File(TEST_DIR, "forMetrics.sam");
-        final File outfile = File.createTempFile("test", ".wgs_metrics");
-        outfile.deleteOnExit();
+        final File outfile = File.createTempFile("test", ".wgs_metrics",TEMP_OUTPUT_DIR);
         final File ref = new File(TEST_DIR, "merger.fasta");
         final File intervals = new File(TEST_DIR, "largeIntervals.interval_list");
         final int sampleSize = 1000;
@@ -241,19 +301,21 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "wgsDataProvider")
-    public void testSmallIntervals(final File input, final File unused, final String refence_name,
+    public void testSmallIntervals(final File input, final String reference_name,
                                    final String useFastAlgorithm) throws IOException {
-        final File outfile = File.createTempFile("test", ".wgs_metrics");
-        outfile.deleteOnExit();
-        final File ref = new File(refence_name);
+        final File outfile = File.createTempFile("testSmallIntervals", ".wgs_metrics",TEMP_OUTPUT_DIR);
+        final File ref = new File(reference_name);
         final File intervals = new File(TEST_DIR, "smallIntervals.interval_list");
         final int sampleSize = 1000;
-        final String[] args = new String[]{
+        final String[] args = new String[] {
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
                 "INTERVALS=" + intervals.getAbsolutePath(),
                 "SAMPLE_SIZE=" + sampleSize,
+                // the fast and regular algorithms differ in how the cap coverage, so in order to avoid getting different result
+                // due to that, the coverage cap is raise high for this test.
+                "COVERAGE_CAP=" + 40000,
                 "USE_FAST_ALGORITHM=" + useFastAlgorithm
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -263,19 +325,24 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             output.read(reader);
         }
         for (final WgsMetrics metrics : output.getMetrics()) {
-            Assert.assertEquals(metrics.GENOME_TERRITORY, 404);
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 1000);
             Assert.assertEquals(metrics.PCT_EXC_ADAPTER, 0D);
-            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
-            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
-            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.0);
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.0);
+            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.0);
+            Assert.assertEquals(metrics.MEAN_COVERAGE, 1727.6, .1);
+            Assert.assertEquals(metrics.SD_COVERAGE, 695.68, 0.1);
+            Assert.assertEquals(metrics.FOLD_80_BASE_PENALTY, 1.59, 0.01);
+            Assert.assertEquals(metrics.FOLD_90_BASE_PENALTY, 3.36, 0.01);
+            Assert.assertTrue(Double.isNaN(metrics.FOLD_95_BASE_PENALTY));
         }
     }
 
 
     @Test(dataProvider = "wgsAlgorithm")
     public void testExclusions(final String useFastAlgorithm) throws IOException {
-        final File reference = new File("testdata/picard/sam/merger.fasta");
-        final File tempSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
+        final File reference = new File(TEST_DIR, "merger.fasta");
+        final File tempSamFile = VcfTestUtils.createTemporaryIndexedFile("testExclusions", ".bam", TEMP_OUTPUT_DIR);
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
 
@@ -309,8 +376,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
 
         // create output files for tests
-        final File outfile = File.createTempFile("testWgsMetricsPleaseDelete", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = File.createTempFile("testExclusions", ".txt", TEMP_OUTPUT_DIR);
 
         final String[] args = new String[]{
                 "INPUT=" + tempSamFile.getAbsolutePath(),
@@ -341,7 +407,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         final File reference = CHR_M_REFERENCE;
         final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
 
-        /**
+        /*
          *  Our test SAM looks as follows:
          *
          *   ----------   <- reads with great base qualities (60) ->  ----------
@@ -372,8 +438,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             }
         }
 
-        final File outfile = File.createTempFile("testExcludedBases-metrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = File.createTempFile("testPoorQualityBases", ".txt",TEMP_OUTPUT_DIR);
 
         final String[] args = new String[]{
                 "INPUT=" + testSamFile.getAbsolutePath(),
@@ -399,7 +464,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     @Test(dataProvider = "wgsAlgorithm")
     public void testGiantDeletion(final String useFastAlgorithm) throws IOException {
         final File reference = CHR_M_REFERENCE;
-        final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("CollectWgsMetrics", ".bam");
+        final File testSamFile = VcfTestUtils.createTemporaryIndexedFile("testGiantDeletion", ".bam", TEMP_OUTPUT_DIR);
 
         final SAMRecordSetBuilder setBuilder = CollectWgsMetricsTestUtils.createTestSAMBuilder(reference, READ_GROUP_ID, SAMPLE, PLATFORM, LIBRARY);
         setBuilder.setReadLength(10);
@@ -412,8 +477,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
                 writer.addAlignment(record);
             }
         }
-        final File outfile = File.createTempFile("testGiantDeletion", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = File.createTempFile("testGiantDeletion", ".txt", TEMP_OUTPUT_DIR);
 
         final String[] args = new String[]{
                 "INPUT=" + testSamFile.getAbsolutePath(),
@@ -440,8 +504,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     public void testAdapterReads(final String useFastAlgorithm) throws IOException {
         final File metricsTestDir = new File(TEST_DIR.getParentFile(), "metrics");
         final File input = new File(metricsTestDir, "AlignedAdapterReads.sam");
-        final File outfile = File.createTempFile("test", ".wgs_metrics");
-        outfile.deleteOnExit();
+        final File outfile = File.createTempFile("testAdapterReads", ".wgs_metrics", TEMP_OUTPUT_DIR);
         final String[] args = {
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),

@@ -168,6 +168,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         private long adapterReads;
         private long indels;
 
+        private long numSoftClipped;
+        private long numHardClipped;
+
         private long nonBisulfiteAlignedBases = 0;
         private long hqNonBisulfiteAlignedBases = 0;
         private final Histogram<Long> mismatchHistogram = new Histogram<>();
@@ -225,6 +228,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.PF_MISMATCH_RATE = MathUtil.divide(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
                     metrics.PF_HQ_ERROR_RATE = MathUtil.divide(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
 
+                    metrics.PCT_HARDCLIP = this.numHardClipped / (double) metrics.PF_ALIGNED_BASES;
+                    metrics.PCT_SOFTCLIP = this.numSoftClipped / (double) metrics.PF_ALIGNED_BASES;
+
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                 }
             }
@@ -241,10 +247,24 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
          * @param cigar The input Cigar of the read
          * @return Number of read bases that are not clipped
          */
-        private int getUnclippedBasCount(final Cigar cigar) {
+        private int getUnclippedBaseCount(final Cigar cigar) {
             return cigar.getCigarElements().stream()
                     .filter(e -> e.getOperator().consumesReadBases())
                     .filter(e -> !e.getOperator().isClipping())
+                    .mapToInt(CigarElement::getLength)
+                    .reduce(Integer::sum).orElse(0);
+        }
+
+        /**
+         * returns The sum of lengths of a particular cigar operator in the provided cigar
+         *
+         * @param cigar The input Cigar of the read
+         * @param op The operator that is being looked for
+         * @return Sum of lengths of the Cigar elements in cigar that are of the operator op
+         */
+        private int getTotalCigarOperatorCount(final Cigar cigar, final CigarOperator op) {
+            return cigar.getCigarElements().stream()
+                    .filter(e -> e.getOperator().equals(op))
                     .mapToInt(CigarElement::getLength)
                     .reduce(Integer::sum).orElse(0);
         }
@@ -256,8 +276,6 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             }
 
             metrics.TOTAL_READS++;
-            readLengthHistogram.increment(record.getReadBases().length);
-            alignedReadLengthHistogram.increment(getUnclippedBasCount(record.getCigar()));
 
             if (!record.getReadFailsVendorQualityCheckFlag()) {
                 metrics.PF_READS++;
@@ -265,38 +283,47 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.PF_NOISE_READS++;
                 }
 
+                readLengthHistogram.increment(record.getReadBases().length);
+                alignedReadLengthHistogram.increment(getUnclippedBaseCount(record.getCigar()));
+
                 // See if the read is an adapter sequence
                 if (adapterUtility.isAdapter(record)) {
                     this.adapterReads++;
                 }
+                // count clipped bases
+                numHardClipped += getTotalCigarOperatorCount(record.getCigar(), CigarOperator.HARD_CLIP);
 
-                if (!record.getReadUnmappedFlag() && doRefMetrics) {
-                    metrics.PF_READS_ALIGNED++;
-                    if (record.getReadPairedFlag() && !record.getProperPairFlag()) {
-                        metrics.PF_READS_IMPROPER_PAIRS++;
-                    }
-                    if (!record.getReadNegativeStrandFlag()) {
-                        numPositiveStrand++;
-                    }
-                    if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
-                        metrics.READS_ALIGNED_IN_PAIRS++;
+                if (!record.getReadUnmappedFlag()) {
+                    numSoftClipped += getTotalCigarOperatorCount(record.getCigar(), CigarOperator.SOFT_CLIP);
+                    if (doRefMetrics) {
 
-                        // Check that both ends have mapq > minimum
-                        final Integer mateMq = record.getIntegerAttribute(SAMTag.MQ.toString());
-                        if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
-                            ++this.chimerasDenominator;
-
-                            // With both reads mapped we can see if this pair is chimeric
-                            if (ChimeraUtil.isChimeric(record, maxInsertSize, expectedOrientations)) {
-                                ++this.chimeras;
-                            }
+                        metrics.PF_READS_ALIGNED++;
+                        if (record.getReadPairedFlag() && !record.getProperPairFlag()) {
+                            metrics.PF_READS_IMPROPER_PAIRS++;
                         }
-                    } else { // fragment reads or read pairs with one end that maps
-                        // Consider chimeras that occur *within* the read using the SA tag
-                        if (record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
-                            ++this.chimerasDenominator;
-                            if (record.getAttribute(SAMTag.SA.toString()) != null) {
-                                ++this.chimeras;
+                        if (!record.getReadNegativeStrandFlag()) {
+                            numPositiveStrand++;
+                        }
+                        if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
+                            metrics.READS_ALIGNED_IN_PAIRS++;
+
+                            // Check that both ends have mapq > minimum
+                            final Integer mateMq = record.getIntegerAttribute(SAMTag.MQ.toString());
+                            if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
+                                ++this.chimerasDenominator;
+
+                                // With both reads mapped we can see if this pair is chimeric
+                                if (ChimeraUtil.isChimeric(record, maxInsertSize, expectedOrientations)) {
+                                    ++this.chimeras;
+                                }
+                            }
+                        } else { // fragment reads or read pairs with one end that maps
+                            // Consider chimeras that occur *within* the read using the SA tag
+                            if (record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
+                                ++this.chimerasDenominator;
+                                if (record.getAttribute(SAMTag.SA.toString()) != null) {
+                                    ++this.chimeras;
+                                }
                             }
                         }
                     }
@@ -373,6 +400,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 mismatchHistogram.increment(mismatchCount);
                 hqMismatchHistogram.increment(hqMismatchCount);
 
+
                 // Add any insertions and/or deletions to the global count
                 for (final CigarElement elem : record.getCigar().getCigarElements()) {
                     final CigarOperator op = elem.getOperator();
@@ -382,6 +410,8 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 }
             }
         }
+
+
 
         private boolean isNoiseRead(final SAMRecord record) {
             final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
