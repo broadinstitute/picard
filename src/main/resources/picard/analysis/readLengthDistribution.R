@@ -1,7 +1,7 @@
 # Script to generate a chart of quality score distribution in a file
 # @author Yossi Farjoun
 
-library(ggplot2)
+# library(ggplot2)
 library(reshape2)
 
 # Parse the arguments
@@ -53,7 +53,7 @@ pdf(outputFile)
 
 title=paste("Read Length Distribution\nin file ",bamFile," ",ifelse(subtitle == "","",paste("(",subtitle,")",sep="")),sep="")
 
-ggplot(melted)+theme(legend.position="bottom")+geom_line(stat="identity",aes(x=READ_LENGTH,y=value,color=variable))+labs(y="Count",title=title)
+# ggplot(melted)+theme(legend.position="bottom")+geom_line(stat="identity",aes(x=READ_LENGTH,y=value,color=variable))+labs(y="Count",title=title)
 
 dev.off()
 
