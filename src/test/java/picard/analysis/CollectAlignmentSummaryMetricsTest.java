@@ -45,7 +45,7 @@ import java.util.List;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/AlignmentSummaryMetrics");
+    public static final File TEST_DATA_DIR = new File("testdata/picard/sam/AlignmentSummaryMetrics");
 
     public String getCommandLineProgramName() {
         return CollectAlignmentSummaryMetrics.class.getSimpleName();

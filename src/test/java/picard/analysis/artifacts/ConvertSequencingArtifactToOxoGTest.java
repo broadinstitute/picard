@@ -6,6 +6,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.analysis.CollectAlignmentSummaryMetricsTest;
 import picard.analysis.CollectOxoGMetrics;
 
 import java.io.File;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public class ConvertSequencingArtifactToOxoGTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
-    private static final File SAM_FILE = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+    private static final File SAM_FILE = new File(CollectAlignmentSummaryMetricsTest.TEST_DATA_DIR, "summary_alignment_stats_test.sam");
     private static final File REFERENCE_SEQUENCE = new File(TEST_DATA_DIR, "merger.fasta");
 
     public static final String[] COLUMNS_TO_COMPARE = {

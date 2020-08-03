@@ -319,9 +319,15 @@ public class WgsMetrics extends MergeableMetricBase {
 
 
         // This roughly measures by how much we must over-sequence so that xx% of bases have coverage at least as deep as the current mean coverage:
-        FOLD_80_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
-        FOLD_90_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.1);
-        FOLD_95_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.05);
+        if (highQualityDepthHistogram.getCount() > 0) {
+            FOLD_80_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
+            FOLD_90_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.1);
+            FOLD_95_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.05);
+        } else {
+            FOLD_80_BASE_PENALTY = 0;
+            FOLD_90_BASE_PENALTY = 0;
+            FOLD_95_BASE_PENALTY = 0;
+        }
 
         // Get Theoretical Het SNP Sensitivity
         if (unfilteredBaseQHistogram != null) {
