@@ -36,6 +36,12 @@ public class RExecutorTest {
     }
 
     @Test
+    public void testPassingRScriptWithLibrary() {
+        Assert.assertTrue(
+                RExecutor.executeFromClasspath("r_packages.R") == 0);
+    }
+
+    @Test
     public void testFailingRScript() {
         Assert.assertTrue(
                 RExecutor.executeFromClasspath("failing.R") != 0);
