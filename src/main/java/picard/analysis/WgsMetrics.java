@@ -330,7 +330,7 @@ public class WgsMetrics extends MergeableMetricBase {
         }
 
         // Get Theoretical Het SNP Sensitivity
-        if (unfilteredBaseQHistogram != null) {
+        if (unfilteredBaseQHistogram != null && unfilteredDepthHistogram != null) {
             final double[] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredDepthHistogram);
             final double[] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredBaseQHistogram);
             HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, theoreticalHetSensitivitySampleSize, LOG_ODDS_THRESHOLD);

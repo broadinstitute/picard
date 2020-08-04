@@ -6,6 +6,7 @@ import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,20 +23,37 @@ public abstract class CommandLineProgramTest {
 
 
     // A per-test-class directory that will be deleted after the tests are complete.
-    final protected File TEMP_OUTPUT_DIR;
-    {
-        try {
-            TEMP_OUTPUT_DIR = File.createTempFile(FileUtils.getTempDirectory().getAbsolutePath(),this.getClass().getSimpleName());
-            TEMP_OUTPUT_DIR.delete();
-            TEMP_OUTPUT_DIR.mkdir();
-        } catch (IOException e) {
-            throw new PicardException("Couldn't create temp directory") ;
+    private File tempOutputDir;
+
+
+    /**
+     * returns an directory designated for output which will be deleted after the test class is tested
+     */
+    public File getTempOutputDir() {
+        if (tempOutputDir == null) {
+            try {
+                tempOutputDir = Files.createTempDirectory(this.getClass().getName()).toFile();
+            } catch (IOException e) {
+                throw new PicardException("Couldn't create temp directory");
+            }
         }
+        return tempOutputDir;
     }
 
+    /**
+     * returns an file designated for output which will be deleted (together with the entire subdirectory)
+     * after the test class is tested
+     * @throws IOException when there's a problem creating the file
+     */
+
+    public File getTempOutputFile(final String prefix,final String extension) throws IOException {
+        return File.createTempFile(prefix, extension, getTempOutputDir());
+    }
     @AfterClass
     final void cleanup_temp_dir() throws IOException {
-        FileUtils.deleteDirectory(TEMP_OUTPUT_DIR);
+        if (tempOutputDir != null) {
+            FileUtils.deleteDirectory(tempOutputDir);
+        }
     }
 
     public abstract String getCommandLineProgramName();

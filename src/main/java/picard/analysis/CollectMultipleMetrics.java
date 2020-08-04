@@ -45,6 +45,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -168,14 +169,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_EXTENSION = ".alignment_summary_metrics";
             final String PDF_EXTENSION = ".read_length_histogram.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_EXTENSION,
-                    PDF_EXTENSION);
+            @Override
+            String getSummary() {
+                return picard.analysis.CollectAlignmentSummaryMetrics.USAGE_SUMMARY;
+            }
 
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.CollectInsertSizeMetrics.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT.";
+            List<String> getExtensions() {
+                return Arrays.asList(METRICS_EXTENSION, PDF_EXTENSION);
             }
 
             @Override
@@ -212,14 +213,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_EXTENSION = ".insert_size_metrics";
             final String PDF_EXTENSION = ".insert_size_histogram.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_EXTENSION,
-                    PDF_EXTENSION);
+            @Override
+            String getSummary() {
+                return picard.analysis.CollectInsertSizeMetrics.USAGE_SUMMARY;
+            }
 
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.CollectInsertSizeMetrics.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT.";
+            List<String> getExtensions() {
+                return Arrays.asList(METRICS_EXTENSION, PDF_EXTENSION);
             }
 
             @Override
@@ -251,14 +252,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_EXTENSION = ".quality_distribution_metrics";
             final String PDF_EXTENSION = ".quality_distribution.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_EXTENSION,
-                    PDF_EXTENSION);
+            @Override
+            String getSummary() {
+                return picard.analysis.QualityScoreDistribution.USAGE_SUMMARY;
+            }
 
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.QualityScoreDistribution.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            List<String> getExtensions() {
+                return  Arrays.asList(METRICS_EXTENSION, PDF_EXTENSION);
             }
 
             @Override
@@ -287,14 +288,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_EXTENSION = ".quality_by_cycle_metrics";
             final String PDF_EXTENSION = ".quality_by_cycle.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_EXTENSION,
-                    PDF_EXTENSION);
+            @Override
+            String getSummary() {
+                return picard.analysis.MeanQualityByCycle.USAGE_SUMMARY;
+            }
 
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.MeanQualityByCycle.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            List<String> getExtensions() {
+                return Arrays.asList(METRICS_EXTENSION, PDF_EXTENSION);
             }
 
             @Override
@@ -325,16 +326,15 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_EXTENSION = ".base_distribution_by_cycle_metrics";
             final String PDF_EXTENSION = ".base_distribution_by_cycle.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_EXTENSION,
-                    PDF_EXTENSION);
-
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.CollectBaseDistributionByCycle.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            String getSummary() {
+                return picard.analysis.CollectBaseDistributionByCycle.USAGE_SUMMARY;
             }
 
+            @Override
+            List<String> getExtensions() {
+                return Arrays.asList(METRICS_EXTENSION, PDF_EXTENSION);
+            }
 
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
@@ -374,17 +374,15 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_SUMMARY_EXTENSION = ".gc_bias.summary_metrics";
             final String PDF_EXTENSION = ".gc_bias.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_DETAIL_EXTENSION,
-                    METRICS_SUMMARY_EXTENSION,
-                    PDF_EXTENSION);
-
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.CollectGcBiasMetrics.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT";
+            String getSummary() {
+                return picard.analysis.CollectGcBiasMetrics.USAGE_SUMMARY;
             }
 
+            @Override
+            List<String> getExtensions() {
+                return Arrays.asList(METRICS_DETAIL_EXTENSION, METRICS_SUMMARY_EXTENSION, PDF_EXTENSION);
+            }
 
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
@@ -429,14 +427,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRICS_EXTENSION=".rna_metrics";
             final String PDF_EXTENSION = ".rna_coverage.pdf";
 
-            final List<String> OUTPUT_EXTENSIONS = CollectionUtil.makeList(
-                    METRICS_EXTENSION,
-                    PDF_EXTENSION);
+            @Override
+            String getSummary() {
+                return picard.analysis.CollectRnaSeqMetrics.USAGE_SUMMARY;
+            }
 
             @Override
-            public String getHelpDoc() {
-                return CollectRnaSeqMetrics.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"", OUTPUT_EXTENSIONS) + "\" appended to OUTPUT.";
+            List<String> getExtensions() {
+                return Arrays.asList(METRICS_EXTENSION, PDF_EXTENSION);
             }
 
             @Override
@@ -472,20 +470,21 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
 
-            final List<String> METRIC_EXTENSIONS = CollectionUtil.makeList(
-                SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT,
-                SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT,
-                SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT,
-                SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT,
-                SequencingArtifactMetrics.ERROR_SUMMARY_EXT);
-
-
+            @Override
+            List<String> getExtensions() {
+                return Arrays.asList(
+                        SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT,
+                        SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT,
+                        SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT,
+                        SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT,
+                        SequencingArtifactMetrics.ERROR_SUMMARY_EXT);
+            }
 
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.artifacts.CollectSequencingArtifactMetrics.USAGE_SUMMARY +
-                        "Creates output with \"" + String.join("\", \"",METRIC_EXTENSIONS) + "\" appended to OUTPUT.";
+            String getSummary() {
+                return picard.analysis.artifacts.CollectSequencingArtifactMetrics.USAGE_SUMMARY;
             }
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase,
                                                      final String outext,
@@ -539,9 +538,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             final String METRIC_EXTENSION=".quality_yield_metrics";
 
             @Override
-            public String getHelpDoc() {
-                return picard.analysis.CollectQualityYieldMetrics.USAGE_SUMMARY +
-                        "Creates output with \"" + METRIC_EXTENSION + "\" appended to OUTPUT.";
+            String getSummary() {
+               return picard.analysis.CollectQualityYieldMetrics.USAGE_SUMMARY;
+            }
+
+            @Override
+            List<String> getExtensions() {
+                return Collections.singletonList(METRIC_EXTENSION);
             }
 
             @Override
@@ -563,7 +566,17 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
                 return program;
             }
+
         };
+
+        @Override
+        public String getHelpDoc() {
+            return getSummary() +
+                    "Creates output with \"" + String.join(", ",getExtensions()) + "\" appended to OUTPUT.";
+        }
+
+        abstract String getSummary();
+        abstract List<String> getExtensions();
     }
 
 

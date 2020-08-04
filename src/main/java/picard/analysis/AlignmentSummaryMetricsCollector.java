@@ -158,11 +158,11 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
      * Class that counts reads that match various conditions
      */
     public class IndividualAlignmentSummaryMetricsCollector implements PerUnitMetricCollector<AlignmentSummaryMetrics, Integer, SAMRecordAndReference> {
-        private long numPositiveStrand = 0;
+        private long numPositiveStrand;
         private final Histogram<Integer> readLengthHistogram = new Histogram<>("count", "readLength");
         private final Histogram<Integer> alignedReadLengthHistogram = new Histogram<>("count", "alignedReadLength");
 
-        private AlignmentSummaryMetrics metrics;
+        private final AlignmentSummaryMetrics metrics;
         private long chimeras;
         private long chimerasDenominator;
         private long adapterReads;
@@ -171,8 +171,8 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         private long numSoftClipped;
         private long numHardClipped;
 
-        private long nonBisulfiteAlignedBases = 0;
-        private long hqNonBisulfiteAlignedBases = 0;
+        private long nonBisulfiteAlignedBases;
+        private long hqNonBisulfiteAlignedBases;
         private final Histogram<Long> mismatchHistogram = new Histogram<>();
         private final Histogram<Long> hqMismatchHistogram = new Histogram<>();
         private final Histogram<Integer> badCycleHistogram = new Histogram<>();
@@ -206,7 +206,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             //summarize read data
             if (metrics.TOTAL_READS > 0) {
                 metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
-                metrics.PCT_ADAPTER = this.adapterReads / (double) metrics.PF_READS;
+                metrics.PCT_ADAPTER = adapterReads / (double) metrics.PF_READS;
                 metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
 
                 //Calculate BAD_CYCLES
@@ -223,13 +223,13 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.PCT_READS_ALIGNED_IN_PAIRS = MathUtil.divide((double) metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
                     metrics.PCT_PF_READS_IMPROPER_PAIRS = MathUtil.divide((double) metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
                     metrics.STRAND_BALANCE = MathUtil.divide(numPositiveStrand, (double) metrics.PF_READS_ALIGNED);
-                    metrics.PCT_CHIMERAS = MathUtil.divide(this.chimeras, (double) this.chimerasDenominator);
-                    metrics.PF_INDEL_RATE = MathUtil.divide(this.indels, (double) metrics.PF_ALIGNED_BASES);
+                    metrics.PCT_CHIMERAS = MathUtil.divide(chimeras, (double) chimerasDenominator);
+                    metrics.PF_INDEL_RATE = MathUtil.divide(indels, (double) metrics.PF_ALIGNED_BASES);
                     metrics.PF_MISMATCH_RATE = MathUtil.divide(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
                     metrics.PF_HQ_ERROR_RATE = MathUtil.divide(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
 
-                    metrics.PCT_HARDCLIP = this.numHardClipped / (double) metrics.PF_ALIGNED_BASES;
-                    metrics.PCT_SOFTCLIP = this.numSoftClipped / (double) metrics.PF_ALIGNED_BASES;
+                    metrics.PCT_HARDCLIP = numHardClipped / (double) metrics.PF_ALIGNED_BASES;
+                    metrics.PCT_SOFTCLIP = numSoftClipped / (double) metrics.PF_ALIGNED_BASES;
 
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                 }
@@ -288,7 +288,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                 // See if the read is an adapter sequence
                 if (adapterUtility.isAdapter(record)) {
-                    this.adapterReads++;
+                    adapterReads++;
                 }
                 // count clipped bases
                 numHardClipped += getTotalCigarOperatorCount(record.getCigar(), CigarOperator.HARD_CLIP);
@@ -310,19 +310,19 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                             // Check that both ends have mapq > minimum
                             final Integer mateMq = record.getIntegerAttribute(SAMTag.MQ.toString());
                             if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
-                                ++this.chimerasDenominator;
+                                ++chimerasDenominator;
 
                                 // With both reads mapped we can see if this pair is chimeric
                                 if (ChimeraUtil.isChimeric(record, maxInsertSize, expectedOrientations)) {
-                                    ++this.chimeras;
+                                    ++chimeras;
                                 }
                             }
                         } else { // fragment reads or read pairs with one end that maps
                             // Consider chimeras that occur *within* the read using the SA tag
                             if (record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
-                                ++this.chimerasDenominator;
+                                ++chimerasDenominator;
                                 if (record.getAttribute(SAMTag.SA.toString()) != null) {
-                                    ++this.chimeras;
+                                    ++chimeras;
                                 }
                             }
                         }
@@ -405,7 +405,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 for (final CigarElement elem : record.getCigar().getCigarElements()) {
                     final CigarOperator op = elem.getOperator();
                     if (op == CigarOperator.INSERTION || op == CigarOperator.DELETION) {
-                        ++this.indels;
+                        ++indels;
                     }
                 }
             }
@@ -424,15 +424,15 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         }
 
         public AlignmentSummaryMetrics getMetrics() {
-            return this.metrics;
+            return metrics;
         }
 
         public Histogram<Integer> getReadHistogram() {
-            return this.readLengthHistogram;
+            return readLengthHistogram;
         }
 
         public Histogram<Integer> getAlignedReadHistogram() {
-            return this.alignedReadLengthHistogram;
+            return alignedReadLengthHistogram;
         }
     }
 }

@@ -55,7 +55,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void test() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("test", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("test", ".txt");
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -126,7 +126,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void testBisulfite() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("testBisulfite", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testBisulfite", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -190,7 +190,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void testBisulfiteButNot() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("testBisulfiteButNot", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testBisulfiteButNot", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -253,7 +253,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testNoReference() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
-        final File outfile = File.createTempFile("testNoReference", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testNoReference", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -313,7 +313,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testZeroLengthReads() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
-        final File outfile = File.createTempFile("testZeroLengthReads", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testZeroLengthReads", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -334,7 +334,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testMultipleLevelsOfMetrics() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_multiple.sam");
-        final File outfile = File.createTempFile("testMultipleLevelsOfMetrics", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testMultipleLevelsOfMetrics", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -591,7 +591,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void testChimeras() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_chimeras.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("testChimeras", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testChimeras", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -619,7 +619,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testAdapterReads() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_adapter_reads.sam");
-        final File outfile = File.createTempFile("testAdapterReads", ".txt", TEMP_OUTPUT_DIR);
+        final File outfile = getTempOutputFile("testAdapterReads", ".txt");
 
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
@@ -649,15 +649,15 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @DataProvider()
     Object[][] TrueFalse() {
         return new Object[][]{
-                new Object[]{true},
-                new Object[]{false},
+                {true},
+                {false},
         };
     }
 
     @Test(dataProvider = "TrueFalse")
     public void testReadLengthHistogram(final boolean plotChart) throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test3.sam");
-        final File outFile = File.createTempFile("testReadLengthHistogram", ".txt", TEMP_OUTPUT_DIR);
+        final File outFile = getTempOutputFile("testReadLengthHistogram", ".txt");
 
         final List<String> argsList = new ArrayList<>();
         argsList.add("INPUT=" + input.getAbsolutePath());
@@ -665,7 +665,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final File outHist;
 
         if (plotChart) {
-            outHist = File.createTempFile("testReadLengthHistogram", ".pdf", TEMP_OUTPUT_DIR);
+            outHist = getTempOutputFile("testReadLengthHistogram", ".pdf");
             argsList.add("HISTOGRAM_FILE=" + outHist);
         } else {
             outHist = null;
