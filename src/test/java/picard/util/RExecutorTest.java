@@ -52,5 +52,4 @@ public class RExecutorTest {
         RExecutor.executeFromClasspath("asdlfjasl");
         Assert.fail();
     }
-
 }

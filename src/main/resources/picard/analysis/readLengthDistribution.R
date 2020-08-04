@@ -1,9 +1,6 @@
 # Script to generate a chart of quality score distribution in a file
 # @author Yossi Farjoun
 
-# library(ggplot2)
-library(reshape2)
-
 # Parse the arguments
 args <- commandArgs(trailing=T)
 metricsFile  <- args[1]
@@ -40,8 +37,8 @@ M=max(histogram$READ_LENGTH)
 histogram=merge(histogram,data.frame(y=seq(0,M)),by.x = "READ_LENGTH",by.y="y",all.y = T)
 
 #melt the histogram
-melted=melt(histogram,id.vars = "READ_LENGTH")
-
+melted=reshape(histogram,idvar="READ_LENGTH", varying = list(2:ncol(histogram)),direction = "long", timevar = "variable", v.names="value",  times=names(histogram)[2:ncol(histogram)],new.row.names = NULL)
+rownames(melted) <- c()
 #complete the missing values to zero
 melted[!complete.cases(melted),"value"]=0
 
@@ -53,7 +50,19 @@ pdf(outputFile)
 
 title=paste("Read Length Distribution\nin file ",bamFile," ",ifelse(subtitle == "","",paste("(",subtitle,")",sep="")),sep="")
 
-# ggplot(melted)+theme(legend.position="bottom")+geom_line(stat="identity",aes(x=READ_LENGTH,y=value,color=variable))+labs(y="Count",title=title)
+histograms=factor(unique(melted$variable))
+plot(melted$READ_LENGTH,
+     melted$value,
+     type="n",
+     xlab="Read-Length",
+     ylab="Count",
+     main=title)
+
+cols=rainbow(length(histograms))
+for (v in histograms){
+    lines(melted$READ_LENGTH[melted$variable==v],melted$value[melted$variable==v],type='l',col=cols[match(v,histograms)],lwd=3)
+}
+legend("topleft", legend=histograms, col=cols,lwd = 3)
 
 dev.off()
 
