@@ -151,11 +151,26 @@ public class FingerprintCheckerTest {
         }
     }
 
-    @Test(expectedExceptions = PicardException.class)
-    public void testTerminateOnBadFile() {
+    @DataProvider
+    Object[][] samFilesforFingerprinting() {
+        return new Object[][]{
+                new Object[]{"NA12891.over.fingerprints.r1.sam", true},
+                new Object[]{"aligned_queryname_sorted.sam", false},
+                new Object[]{"aligned_unsorted.sam", false},
+        };
+    }
+
+    @Test(dataProvider = "samFilesforFingerprinting")
+    public void testTerminateOnBadFile(final String fileName, final boolean shouldSucceed) throws Throwable {
         final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
-        final File badSam = new File(TEST_DATA_DIR, "aligned_queryname_sorted.sam");
-        fpChecker.fingerprintFiles(Collections.singletonList(badSam.toPath()), 1, 1, TimeUnit.DAYS);
+        final File samFile = new File(TEST_DATA_DIR, fileName);
+
+        final Assert.ThrowingRunnable runnable = () -> fpChecker.fingerprintFiles(Collections.singletonList(samFile.toPath()), 1, 2, TimeUnit.MINUTES);
+        if (shouldSucceed) {
+            runnable.run();
+        } else {
+            Assert.assertThrows(PicardException.class, runnable);
+        }
     }
 
     @DataProvider(name = "checkFingerprintsSamDataProvider")

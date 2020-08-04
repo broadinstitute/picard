@@ -480,6 +480,12 @@ public class FingerprintChecker {
 
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
+        if(!in.hasIndex()){
+            log.warn(String.format("Operating without an index! We could be here for a while. (%s)", samFile));
+        } else {
+            log.info(String.format("Reading an indexed file (%s)", samFile));
+        }
+
         final SamLocusIterator iterator = new SamLocusIterator(in, this.haplotypes.getIntervalList(), in.hasIndex());
         iterator.setEmitUncoveredLoci(true);
         iterator.setMappingQualityScoreCutoff(this.minimumMappingQuality);
@@ -519,8 +525,8 @@ public class FingerprintChecker {
         final Set<String> usedReadNames = new HashSet<>(10000);
 
         // Now go through the data at each locus and figure stuff out!
+        boolean foundALocus = false;
         for (final SamLocusIterator.LocusInfo info : iterator) {
-
             log.debug(() -> "At locus " + info);
 
             // TODO: Filter out the locus if the allele balance doesn't make sense for either a
@@ -556,6 +562,7 @@ public class FingerprintChecker {
                 }
 
                 if (fingerprintIdDetailsMap.containsKey(rg)) {
+                    foundALocus=true;
                     details = fingerprintIdDetailsMap.get(rg);
 
                     final String readName = rec.getRecord().getReadName();
@@ -573,6 +580,12 @@ public class FingerprintChecker {
                     throw e;
                 }
             }
+        }
+
+        if (!foundALocus && in.getFileHeader().getSortOrder()!= SAMFileHeader.SortOrder.coordinate) {
+            final PicardException noReadsFound = new PicardException(String.format("Couldn't even find one locus with reads to fingerprint in file %s, which in addition isn't coordinate-sorted. Please sort the file and try again.", samFile));
+            log.error(noReadsFound);
+            throw noReadsFound;
         }
 
         return fingerprintsByReadGroup;
