@@ -480,7 +480,7 @@ public class FingerprintChecker {
 
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
-        if(!in.hasIndex()){
+        if (!in.hasIndex()) {
             log.warn(String.format("Operating without an index! We could be here for a while. (%s)", samFile));
         } else {
             log.info(String.format("Reading an indexed file (%s)", samFile));
@@ -562,7 +562,7 @@ public class FingerprintChecker {
                 }
 
                 if (fingerprintIdDetailsMap.containsKey(rg)) {
-                    foundALocus=true;
+                    foundALocus = true;
                     details = fingerprintIdDetailsMap.get(rg);
 
                     final String readName = rec.getRecord().getReadName();
@@ -575,17 +575,13 @@ public class FingerprintChecker {
                         usedReadNames.add(readName);
                     }
                 } else {
-                    final PicardException e = new PicardException("Unknown read group: " + rg + " in file: " + samFile);
-                    log.error(e);
-                    throw e;
+                    throw new PicardException("Unknown read group: " + rg + " in file: " + samFile);
                 }
             }
         }
 
-        if (!foundALocus && in.getFileHeader().getSortOrder()!= SAMFileHeader.SortOrder.coordinate) {
-            final PicardException noReadsFound = new PicardException(String.format("Couldn't even find one locus with reads to fingerprint in file %s, which in addition isn't coordinate-sorted. Please sort the file and try again.", samFile));
-            log.error(noReadsFound);
-            throw noReadsFound;
+        if (!foundALocus && in.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new PicardException(String.format("Couldn't even find one locus with reads to fingerprint in file %s, which in addition isn't coordinate-sorted. Please sort the file and try again.", samFile));
         }
 
         return fingerprintsByReadGroup;

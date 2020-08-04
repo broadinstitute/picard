@@ -154,9 +154,9 @@ public class FingerprintCheckerTest {
     @DataProvider
     Object[][] samFilesforFingerprinting() {
         return new Object[][]{
-                new Object[]{"NA12891.over.fingerprints.r1.sam", true},
-                new Object[]{"aligned_queryname_sorted.sam", false},
-                new Object[]{"aligned_unsorted.sam", false},
+                {"NA12891.over.fingerprints.r1.sam", true},
+                {"aligned_queryname_sorted.sam", false},
+                {"aligned_unsorted.sam", false},
         };
     }
 
@@ -335,14 +335,14 @@ public class FingerprintCheckerTest {
         addObservation(hpcs2, hb, 1, hb.getFirstSnp().getAllele1());
 
         return new Object[][]{
-                new Object[]{new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D)},
-                new Object[]{
+                {new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D)},
+                {
                         new HaplotypeProbabilityOfNormalGivenTumor(
                                 new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), .05),
                         new HaplotypeProbabilityOfNormalGivenTumor(
                                 new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D), 0.05)},
-                new Object[]{hp1, hp2},
-                new Object[]{hpcs1, hpcs2},
+                {hp1, hp2},
+                {hpcs1, hpcs2},
         };
     }
 
