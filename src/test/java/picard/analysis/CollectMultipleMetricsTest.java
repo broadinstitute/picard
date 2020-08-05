@@ -48,8 +48,8 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
 
     @Test
     public void testAlignmentSummaryViaMultipleMetrics() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
-        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File input = new File(CollectAlignmentSummaryMetricsTest.TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+        final File reference = new File(CollectAlignmentSummaryMetricsTest.TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
         final File outfile = File.createTempFile("alignmentMetrics", "");
         outfile.deleteOnExit();
         final String[] args = new String[]{
@@ -126,7 +126,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 List<Object[]> tests = new ArrayList<>();
 
                 // this is actually legal after conversion to the non-legacy parser
-                if (CommandLineProgram.useLegacyParser(getClass())) {
+                if (CommandLineProgram.useLegacyParser()) {
                     tests.add(new Object[]{"CollectInsertSizeMetrics::OUTPUT =hi.out"});
                 }
 
@@ -167,7 +167,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     public void testInsertSize() throws IOException {
         final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
         final File outfile = File.createTempFile("test", "");
-        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File reference = new File(CollectAlignmentSummaryMetricsTest.TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
         final File pdf = File.createTempFile("test", ".pdf");
         outfile.deleteOnExit();
         pdf.deleteOnExit();
@@ -181,7 +181,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "PROGRAM=" + CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name()
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile + ".insert_size_metrics"));
         for (final InsertSizeMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.PAIR_ORIENTATION.name(), "FR");
@@ -334,7 +334,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile + ".rna_metrics"));
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
 
@@ -375,7 +375,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<GcBiasSummaryMetrics, Comparable<?>>();
+        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(outfile + ".gc_bias.summary_metrics"));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {

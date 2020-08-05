@@ -170,4 +170,15 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      */
     public double PCT_ADAPTER;
 
+    /**
+     * the fraction of PF bases that are on (primary) aligned reads and are soft-cliped, as a fraction of the
+     * PF_ALIGNED_BASES (even though these are not aligned!)
+     */
+    public double PCT_SOFTCLIP;
+
+    /**
+     * The fraction of PF bases that are (on primary, aligned reads and) hard-clipped, as a fraction of the
+     * PF_ALIGNED_BASES (even though these are not aligned!)
+     */
+    public double PCT_HARDCLIP;
 }
