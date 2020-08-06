@@ -499,10 +499,10 @@ public class FingerprintCheckerTest {
     @DataProvider(name = "identifyContaminantTestDataProvider")
     public Object[][] identifyContaminantTestDataProvider() {
         final Path NA12878_fingerprint = TEST_DATA_DIR.toPath().resolve("NA12878_chr1_fingerprint.vcf");
-        final Path NA24385_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA24385_chr1_fingerprint.vcf");
+        final Path NA24385_fingerprint = TEST_DATA_DIR.toPath().resolve("NA24385_chr1_fingerprint.vcf");
 
-        final Path NA12878_contaminated_by_NA24358 = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_contaminated_with_NA24385_at_10_pct_chr1_fingerprint_sites.bam");
-        final Path NA24385_contaminated_by_NA12878 = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA24385_contaminated_with_NA12878_at_8_percent_chr1_fingerprint_sites.bam");
+        final Path NA12878_contaminated_by_NA24358 = TEST_DATA_DIR.toPath().resolve("NA12878_contaminated_with_NA24385_at_10_pct_chr1_fingerprint_sites.bam");
+        final Path NA24385_contaminated_by_NA12878 = TEST_DATA_DIR.toPath().resolve("NA24385_contaminated_with_NA12878_at_8_percent_chr1_fingerprint_sites.bam");
 
         return new Object[][] {
                 {NA12878_contaminated_by_NA24358, NA12878_fingerprint, NA24385_fingerprint, .1},
