@@ -128,12 +128,12 @@ public class DuplicationMetrics extends MergeableMetricBase {
      * Based on the Lander-Waterman equation that states:
      * C/X = 1 - exp( -N/X )
      * where
-     * X = number of distinct molecules in library
-     * N = number of read pairs
-     * C = number of distinct fragments observed in read pairs
-     */
+     * X = number of distinct molecules in library.
+     * N = number of read pairs. ts: N/X is like how many times do we observe each distinct molecule.
+     * C = number of distinct fragments observed in read pairs. ts: Note: C < X. So C/X < 1. Good.
+     */ // ts: readPairs = read_examined - read_optical. uniqudReadPairs = reads_examined - (all duplicates).
     public static Long estimateLibrarySize(final long readPairs, final long uniqueReadPairs) {
-        final long readPairDuplicates = readPairs - uniqueReadPairs;
+        final long readPairDuplicates = readPairs - uniqueReadPairs; // ts: readPairDuplicates = num PCR duplicates.
 
         if (readPairs > 0 && readPairDuplicates > 0) {
 
