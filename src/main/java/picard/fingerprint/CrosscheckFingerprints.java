@@ -355,6 +355,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When all LOD score are zero, exit with this value.")
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
+    @Argument(doc = "Maximal effect of any single haplotype block on outcome (-log10 of maximal likelihood difference between the different values for the three possible genotypes).", minValue = 0)
+    public double MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK = 3.0;
+
     @Hidden
     @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
     public boolean TEST_INPUT_READABILITY = true;
@@ -367,8 +370,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        if (GENOTYPING_ERROR_RATE <= 0 || GENOTYPING_ERROR_RATE >= 1) {
-            return new String[]{"Genotyping error must be strictly greater than 0 and less than 1, found " + GENOTYPING_ERROR_RATE};
+        if (GENOTYPING_ERROR_RATE <= 0) {
+            return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
+        }
+        if (GENOTYPING_ERROR_RATE >= 1) {
+            return new String[]{"GENOTYPING_ERROR_RATE must be strictly less than 1, found " + GENOTYPING_ERROR_RATE};
         }
         if (SECOND_INPUT == null && INPUT_SAMPLE_MAP != null) {
             return new String[]{"INPUT_SAMPLE_MAP can only be used when also using SECOND_INPUT"};
@@ -376,9 +382,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (SECOND_INPUT == null && SECOND_INPUT_SAMPLE_MAP != null) {
             return new String[]{"SECOND_INPUT_SAMPLE_MAP can only be used when also using SECOND_INPUT"};
         }
-        if (GENOTYPING_ERROR_RATE <= 0) {
-            return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
-        }
+
 
         //check that reference is provided if using crams as input
         if (REFERENCE_SEQUENCE == null) {
@@ -459,7 +463,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
-        final Map<FingerprintIdDetails, Fingerprint> fpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+
+        final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = capFingerprints(uncappedFpMap);
 
         if (INPUT_SAMPLE_MAP != null) {
             remapFingerprints(fpMap, INPUT_SAMPLE_MAP, "INPUT_SAMPLE_MAP");
@@ -469,6 +475,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             remapFingerprintsFromFiles(fpMap, INPUT_SAMPLE_FILE_MAP);
         }
 
+
         final List<CrosscheckMetric> metrics = new ArrayList<>();
         final int numUnexpected;
 
@@ -477,7 +484,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             numUnexpected = crossCheckGrouped(fpMap, fpMap, metrics, Fingerprint.getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
-            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = capFingerprints(uncappedFpMap2);
+
 
             if (SECOND_INPUT_SAMPLE_MAP != null) {
                 remapFingerprints(fpMap2, SECOND_INPUT_SAMPLE_MAP, "SECOND_INPUT_SAMPLE_MAP");
@@ -520,6 +529,19 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             log.info("All " + CROSSCHECK_BY + "s are related as expected.");
             return 0;
         }
+    }
+
+    private Map<FingerprintIdDetails, Fingerprint> capFingerprints(final Map<FingerprintIdDetails, Fingerprint> fpMap) {
+        return fpMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    final Fingerprint value = entry.getValue();
+                    final Fingerprint cappedFp = new Fingerprint(value.getSample(), value.getSource(), value.getInfo());
+
+                    value.values().stream()
+                            .map(probabilities -> new CappedHaplotypeProbabilities(probabilities, -MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK))
+                            .forEach(cappedFp::add);
+                    return cappedFp;
+                }));
     }
 
     /**

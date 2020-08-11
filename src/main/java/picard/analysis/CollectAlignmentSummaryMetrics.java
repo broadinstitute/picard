@@ -31,16 +31,21 @@ import htsjdk.samtools.SamPairUtil.PairOrientation;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.util.RExecutor;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -103,6 +108,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             "<hr />";
 
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
+    private static final String HISTOGRAM_R_SCRIPT = "picard/analysis/readLengthDistribution.R";
+
+    @Argument(shortName="H", doc="If Provided, file to write read-length chart pdf.", optional = true)
+    public File HISTOGRAM_FILE;
 
     @Argument(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = ChimeraUtil.DEFAULT_INSERT_SIZE_LIMIT;
@@ -128,6 +137,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
+        if (HISTOGRAM_FILE != null) {
+            IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
+        }
 
         if (header.getSequenceDictionary().isEmpty()) {
             log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +
@@ -149,10 +161,43 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Override protected void finish() {
         collector.finish();
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> file = getMetricsFile();
+        final MetricsFile<AlignmentSummaryMetrics, Integer> file = getMetricsFile();
         collector.addAllLevelsToFile(file);
 
+        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector = (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
+
+        final Histogram<Integer> pairTotalReadHistogram = allReadsGroupCollector.pairCollector.getReadHistogram();
+        pairTotalReadHistogram.setBinLabel("READ_LENGTH");
+        pairTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
+        file.addHistogram(pairTotalReadHistogram);
+
+        final Histogram<Integer> pairClippedReadHistogram = allReadsGroupCollector.pairCollector.getAlignedReadHistogram();
+        pairClippedReadHistogram.setBinLabel("READ_LENGTH");
+        pairClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
+        file.addHistogram(pairClippedReadHistogram);
+
+        final Histogram<Integer> unpairedTotalReadHistogram = allReadsGroupCollector.unpairedCollector.getReadHistogram();
+        unpairedTotalReadHistogram.setBinLabel("READ_LENGTH");
+        unpairedTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
+        file.addHistogram(unpairedTotalReadHistogram);
+
+        final Histogram<Integer> unpairedClippedReadHistogram = allReadsGroupCollector.unpairedCollector.getAlignedReadHistogram();
+        unpairedClippedReadHistogram.setBinLabel("READ_LENGTH");
+        unpairedClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
+        file.addHistogram(unpairedClippedReadHistogram);
+
         file.write(OUTPUT);
+
+        if (HISTOGRAM_FILE != null) {
+            final List<String> plotArgs = new ArrayList<>();
+            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), HISTOGRAM_FILE.getAbsolutePath(), INPUT.getName());
+
+            final int rResult = RExecutor.executeFromClasspath(HISTOGRAM_R_SCRIPT, plotArgs.toArray(new String[0]));
+            if (rResult != 0) {
+                throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
+            }
+        }
+
     }
 
     // overridden to make it visible on the commandline and to change the doc.

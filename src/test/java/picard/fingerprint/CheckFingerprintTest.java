@@ -19,13 +19,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
 public class CheckFingerprintTest extends CommandLineProgramTest {
 
     private final File tempFolder = new File(TEST_DATA_DIR + "/tempCheckFPDir/");
     private static final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private static final File SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING =
             new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private static final File SHIFTED_HAPLOTYPE_DATABASE_FOR_TESTING =
+            new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.txt");
+    private static final File SHIFTED_REFERENCE =
+            new File(TEST_DATA_DIR, "reference.shifted.for.crams.fasta");
     private static final String TEST_INPUT_VCF1 = new File(TEST_DATA_DIR, "NA12892.vcf").getAbsolutePath();
     private static final String TEST_INPUT_VCF_EMPTY = new File(TEST_DATA_DIR, "/tempCheckFPDir/void.vcf").getAbsolutePath();
     private static final String TEST_INPUT_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.vcf").getAbsolutePath();
@@ -48,11 +51,18 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     private static final File na12891_fp = new File(TEST_DATA_DIR, "NA12891.fp.vcf");
     private static final File na12892_fp = new File(TEST_DATA_DIR, "NA12892.fp.vcf");
 
+    @Override
+    public String getCommandLineProgramName() {
+        return CheckFingerprint.class.getSimpleName();
+    }
+
     @BeforeClass
-    private void mkTemp() {
+    public void setup() throws IOException {
         if (!tempFolder.exists()) {
             tempFolder.mkdir();
         }
+        NA12891_named_NA12892_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891_named_NA12892.vcf"), "fingerprint");
+        NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.vcf"), "fingerprint");
     }
 
     @AfterClass
@@ -156,7 +166,8 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         final String sample = "NA12892";
         final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
 
-        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount, 100).get(sample);
+        checker.setLocusMaxReads(100);
+        final Fingerprint fpContaminant = checker.identifyContaminant(mixture.toPath(), contamAmount).get(sample);
         Assert.assertNotNull(fpContaminant);
 
         final Fingerprint fpContamination = checker.fingerprintFiles(Collections.singleton(contaminant.toPath()), 1, 1, TimeUnit.DAYS)
@@ -181,15 +192,47 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         Assert.assertTrue(FingerprintChecker.calculateMatchResults(fpContaminant, fpContaminated).getLOD() < -4D);
     }
 
-    @Override
-    public String getCommandLineProgramName() {
-        return CheckFingerprint.class.getSimpleName();
-    }
+    @Test
+    public void testFPToVC() throws IOException {
 
-    @BeforeClass
-    public void setup() throws IOException {
-        NA12891_named_NA12892_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12891_named_NA12892.vcf"), "fingerprint");
-        NA12892_1_vcf = VcfTestUtils.createTemporaryIndexedVcfFromInput(new File(TEST_DATA_DIR, "NA12892.vcf"), "fingerprint");
+        final File Na12892 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r1.sam");
+        final File Na12891 = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.shifted.for.crams.r1.sam");
+
+        final FingerprintChecker checker = new FingerprintChecker(SHIFTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+
+        checker.setLocusMaxReads(100);
+        final Fingerprint fingerprint = checker.identifyContaminant(Na12892.toPath(), 1).get("NA12892");
+        Assert.assertNotNull(fingerprint);
+
+        final File tempFile = File.createTempFile("testWriteFingerprint", ".vcf");
+        tempFile.deleteOnExit();
+
+        FingerprintUtils.writeFingerPrint(fingerprint, tempFile, SHIFTED_REFERENCE,
+                "NA12892", null);
+
+        final Fingerprint NA12892FromVCF = checker.fingerprintFiles(Collections.singleton(tempFile.toPath()), 1, 1, TimeUnit.DAYS)
+                .values().stream()
+                .reduce(Fingerprint::merge)
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminant"));
+        Assert.assertNotNull(NA12892FromVCF);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(fingerprint, NA12892FromVCF).getLOD() > 1D);
+
+        final Fingerprint NA12891_fp = checker.fingerprintFiles(Collections.singleton(Na12891.toPath()), 1, 1, TimeUnit.DAYS)
+                .values().stream()
+                .reduce(Fingerprint::merge)
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminated"));
+        Assert.assertNotNull(NA12891_fp);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(NA12891_fp, NA12892FromVCF).getLOD() < -4D);
+
+        final Fingerprint NA12892_fp = checker.fingerprintFiles(Collections.singleton(Na12892.toPath()), 1, 1, TimeUnit.DAYS)
+                .values().stream()
+                .reduce(Fingerprint::merge)
+                .orElseThrow(() -> new IllegalArgumentException("Did not find any data for contaminated"));
+        Assert.assertNotNull(NA12892_fp);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(NA12892FromVCF, NA12892_fp).getLOD() > 1D);
     }
 
     @DataProvider(name = "samsToFingerprint")
@@ -232,7 +275,9 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
 
         args.add("INPUT=" + file.getAbsolutePath());
         args.add("G=" + genotypes.getAbsolutePath());
-        if (ignoreRG) args.add("IGNORE_RG=true");
+        if (ignoreRG) {
+            args.add("IGNORE_RG=true");
+        }
         args.add("H=" + HAPLOTYPE_MAP.getAbsolutePath());
         args.add("SUMMARY_OUTPUT=" + outputSummary.getAbsolutePath());
         args.add("DETAIL_OUTPUT=" + outputDetail.getAbsolutePath());

@@ -169,6 +169,17 @@ final public class MathUtil {
     }
 
     /**
+     * Returns the array capped (from below) by the value of floor
+     */
+    public static double[] capFromBelow(final double[] nums, final double floor) {
+        final double[] floored = new double[nums.length];
+        for (int i = 0; i < nums.length; ++i) {
+            floored[i] = Math.max(nums[i], floor);
+        }
+        return floored;
+    }
+
+    /**
      * Returns the index of the largest element in the array.  If there are multiple equal maxima then
      * the earliest one in the array is returned.
      */
@@ -208,6 +219,15 @@ final public class MathUtil {
 
         return index;
     }
+
+    /* Find the maximal value of the array and return a new array
+    consisting of that value subtracted from the original array
+     */
+    public static double[] subtractMax(final double[] logLikelihoods) {
+        final double max = MathUtil.max(logLikelihoods);
+        return MathUtil.sum(logLikelihoods, -max);
+    }
+
 
     /**
      * Returns the smallest value stored in the array.
@@ -249,6 +269,18 @@ final public class MathUtil {
         }
 
         return min;
+    }
+
+    /**
+     * Returns the array capped (from above) by the value of top
+     */
+    public static double[] capFromAbove(final double[] nums, final double top) {
+        final double[] capped = new double[nums.length];
+        for (int i = 0; i < nums.length; ++i) {
+            capped[i] = Math.min(nums[i], top);
+        }
+
+        return capped;
     }
 
     /**
@@ -536,7 +568,6 @@ final public class MathUtil {
      */
     public static double klDivergance(double[] measured, double[] distribution) {
         ValidationUtils.validateArg(measured.length == distribution.length, () -> "length of measuered and distribution differ. Found " + measured.length + " and " + distribution.length + ".");
-
 
         final double[] normalizedMeasured = pNormalizeVector(measured);
         final double[] normalizedDistribution = pNormalizeVector(distribution);
