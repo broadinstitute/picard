@@ -205,6 +205,18 @@ public class WgsMetrics extends MergeableMetricBase {
     @NoMergingIsDerived
     public double PCT_100X;
 
+    /** The fold over-coverage necessary to raise 80% of bases to the mean coverage level. */
+    @NoMergingIsDerived
+    public double FOLD_80_BASE_PENALTY;
+
+    /** The fold over-coverage necessary to raise 90% of bases to the mean coverage level. */
+    @NoMergingIsDerived
+    public double FOLD_90_BASE_PENALTY;
+
+    /** The fold over-coverage necessary to raise 95% of bases to the mean coverage level. */
+    @NoMergingIsDerived
+    public double FOLD_95_BASE_PENALTY;
+
     /** The theoretical HET SNP sensitivity. */
     @NoMergingIsDerived
     public double HET_SNP_SENSITIVITY;
@@ -277,7 +289,7 @@ public class WgsMetrics extends MergeableMetricBase {
             throw new PicardException("Sample size is required when a baseQ histogram is given when deriving metrics.");
         }
 
-        final long[] depthHistogramArray = new long[coverageCap+1];
+        final long[] depthHistogramArray = new long[coverageCap + 1];
 
         for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
             final int depth = Math.min((int) bin.getIdValue(), coverageCap);
@@ -290,20 +302,32 @@ public class WgsMetrics extends MergeableMetricBase {
         MEDIAN_COVERAGE  = highQualityDepthHistogram.getMedian();
         MAD_COVERAGE     = highQualityDepthHistogram.getMedianAbsoluteDeviation();
 
-        PCT_1X    = MathUtil.sum(depthHistogramArray, 1, depthHistogramArray.length)   / (double) GENOME_TERRITORY;
-        PCT_5X    = MathUtil.sum(depthHistogramArray, 5, depthHistogramArray.length)   / (double) GENOME_TERRITORY;
-        PCT_10X   = MathUtil.sum(depthHistogramArray, 10, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_15X   = MathUtil.sum(depthHistogramArray, 15, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_20X   = MathUtil.sum(depthHistogramArray, 20, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_25X   = MathUtil.sum(depthHistogramArray, 25, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_30X   = MathUtil.sum(depthHistogramArray, 30, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_40X   = MathUtil.sum(depthHistogramArray, 40, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_50X   = MathUtil.sum(depthHistogramArray, 50, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_60X   = MathUtil.sum(depthHistogramArray, 60, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_70X   = MathUtil.sum(depthHistogramArray, 70, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_80X   = MathUtil.sum(depthHistogramArray, 80, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_90X   = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
-        PCT_100X  = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
+        PCT_1X   = MathUtil.sum(depthHistogramArray, 1, depthHistogramArray.length)   / (double) GENOME_TERRITORY;
+        PCT_5X   = MathUtil.sum(depthHistogramArray, 5, depthHistogramArray.length)   / (double) GENOME_TERRITORY;
+        PCT_10X  = MathUtil.sum(depthHistogramArray, 10, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_15X  = MathUtil.sum(depthHistogramArray, 15, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_20X  = MathUtil.sum(depthHistogramArray, 20, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_25X  = MathUtil.sum(depthHistogramArray, 25, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_30X  = MathUtil.sum(depthHistogramArray, 30, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_40X  = MathUtil.sum(depthHistogramArray, 40, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_50X  = MathUtil.sum(depthHistogramArray, 50, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_60X  = MathUtil.sum(depthHistogramArray, 60, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_70X  = MathUtil.sum(depthHistogramArray, 70, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_80X  = MathUtil.sum(depthHistogramArray, 80, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_90X  = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
+        PCT_100X = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
+
+
+        // This roughly measures by how much we must over-sequence so that xx% of bases have coverage at least as deep as the current mean coverage:
+        if (highQualityDepthHistogram.getCount() > 0) {
+            FOLD_80_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
+            FOLD_90_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.1);
+            FOLD_95_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.05);
+        } else {
+            FOLD_80_BASE_PENALTY = 0;
+            FOLD_90_BASE_PENALTY = 0;
+            FOLD_95_BASE_PENALTY = 0;
+        }
 
         // Get Theoretical Het SNP Sensitivity
         if (unfilteredBaseQHistogram != null && unfilteredDepthHistogram != null) {

@@ -53,14 +53,14 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        summary = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_BRIEF,
-        oneLineSummary = CollectInsertSizeMetrics.USAGE_BRIEF,
+        summary = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_DETAILED,
+        oneLineSummary = CollectInsertSizeMetrics.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
-    static final String USAGE_BRIEF = "Collect metrics about the insert size distribution of a paired-end library.";
-    static final String USAGE_SUMMARY = "<p>This tool provides useful metrics for validating library construction including " +
+    static final String USAGE_SUMMARY = "Collect metrics about the insert size distribution of a paired-end library. ";
+    static final String USAGE_DETAILED = "This tool provides useful metrics for validating library construction including " +
             "the insert size distribution and read orientation of paired-end libraries.</p>" +
             "" +
             "The expected proportions of these metrics vary depending on the type of library preparation used, resulting from " +

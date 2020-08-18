@@ -123,7 +123,7 @@ group = 'com.github.broadinstitute'
 
 defaultTasks 'all'
 
-task all(dependsOn: ['jar', 'distZip', 'javadoc', 'shadowJar', 'barclayShadowJar', 'currentJar'])
+task all(dependsOn: ['jar', 'distZip', 'javadoc', 'shadowJar', 'currentJar', 'picardDoc'])
 
 // Source file names for the picard command line properties file. We select and include only one of
 // these two files in each jar, renamed to "picardCmdLine.properties", depending on which parser we
@@ -136,32 +136,12 @@ final String barclaySourcePropertyFile = 'barclayParserProperties.properties'
 final String picardTargetPropertiesPath = 'picard'
 final String picardTargetPropertyFile = 'picardCmdLine.properties'
 
-sourceSets {
-    // no need to include these in the jar files; the correct one is selected by the build to control Barclay
-    main {
-        resources {
-            exclude ('properties.templates/**')
-        }
-    }
-}
-
 tasks.withType(Jar){
     manifest {
         attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
                 'Implementation-Title': 'Picard',
                 'Implementation-Vendor': 'Broad Institute',
                 'Implementation-Version': version
-    }
-}
-
-jar {
-    from('src/main/resources/properties.templates') {
-        // for the default jar, we want the properties file that enables the picard parser
-        include legacySourcePropertyFile
-        into picardTargetPropertiesPath
-        rename { String fileName ->
-            fileName.replace(legacySourcePropertyFile, picardTargetPropertyFile)
-        }
     }
 }
 
@@ -192,9 +172,11 @@ task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
     }
     source = sourceSets.main.allJava
 
-    // The gatkDoc process instantiates any documented feature classes, so to run it we need the entire
+    // The picardDoc process instantiates any documented feature classes, so to run it we need the entire
     // runtime classpath, as well as jdk javadoc files such as tools.jar, where com.sun.javadoc lives.
-    classpath = sourceSets.main.runtimeClasspath + javadocJDKFiles
+    // The compileClasspath is required in order for the picarDoc doclet process to resolve the googleNio
+    // classes, which are compile-time only.
+    classpath = sourceSets.main.compileClasspath + sourceSets.main.runtimeClasspath + javadocJDKFiles
     options.docletpath = classpath.asType(List)
     options.doclet = "picard.util.help.PicardHelpDoclet"
 
@@ -216,14 +198,6 @@ task currentJar(type: Copy){
 
 shadowJar {
     finalizedBy currentJar
-    from('src/main/resources/properties.templates') {
-        // for the default jar, we want the properties file that enables the picard parser
-        include legacySourcePropertyFile
-        into picardTargetPropertiesPath
-        rename { String fileName ->
-            fileName.replace(legacySourcePropertyFile, picardTargetPropertyFile)
-        }
-    }
 }
 
 
@@ -234,34 +208,16 @@ task cloudJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) 
     archiveName 'picardcloud.jar'
 }
 
-
-// Create picardBarclay.jar, which is a identical to picard.jar, but contains a .properties
-// file that tells Picard to use the Barclay command line parser instead of the Picard
-// command line parser.
-//
-task barclayShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)  {
-    configurations = [project.configurations.runtime]
-    from project.sourceSets.main.output
-    from('src/main/resources/properties.templates') {
-        // for the default jar, we want the properties file that enables the picard parser
-        include barclaySourcePropertyFile
-        into picardTargetPropertiesPath
-        rename { String fileName ->
-            fileName.replace(barclaySourcePropertyFile, picardTargetPropertyFile)
-        }
-    }
-    archiveName 'picardBarclay.jar'
-}
-
 // Run the tests using the legacy parser only. Assumes that test code is written using
 // legacy command line parser syntax.
-task legacyTest(type: Test)
+task legacyTest(type: Test) {
+    systemProperty 'picard.useLegacyParser', 'true'
+}
 
 // Run the tests using the Barclay command line parser (useLegacyParser=false), which requires
 // conversion of test command lines from Picard-style command line syntax to Barclay-style syntax.
 task barclayTest(type: Test) {
     systemProperty 'picard.convertCommandLine', 'true'
-    systemProperty 'picard.useLegacyParser', 'false'
 }
 
 // Run tests using both the legacy and barclay command line parsers.
