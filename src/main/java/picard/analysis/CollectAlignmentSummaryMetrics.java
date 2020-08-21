@@ -159,6 +159,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     }
 
     @Override protected void finish() {
+        final String READ_LENGTH = "READ_LENGTH";
+
         collector.finish();
 
         final MetricsFile<AlignmentSummaryMetrics, Integer> file = getMetricsFile();
@@ -167,23 +169,23 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector = (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
 
         final Histogram<Integer> pairTotalReadHistogram = allReadsGroupCollector.pairCollector.getReadHistogram();
-        pairTotalReadHistogram.setBinLabel("READ_LENGTH");
+        pairTotalReadHistogram.setBinLabel(READ_LENGTH);
         pairTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
         file.addHistogram(pairTotalReadHistogram);
 
         final Histogram<Integer> pairClippedReadHistogram = allReadsGroupCollector.pairCollector.getAlignedReadHistogram();
-        pairClippedReadHistogram.setBinLabel("READ_LENGTH");
+        pairClippedReadHistogram.setBinLabel(READ_LENGTH);
         pairClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
         file.addHistogram(pairClippedReadHistogram);
 
         final Histogram<Integer> unpairedTotalReadHistogram = allReadsGroupCollector.unpairedCollector.getReadHistogram();
-        unpairedTotalReadHistogram.setBinLabel("READ_LENGTH");
-        unpairedTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
+        unpairedTotalReadHistogram.setBinLabel(READ_LENGTH);
+        unpairedTotalReadHistogram.setValueLabel("UNPAIRED_TOTAL_LENGTH_COUNT");
         file.addHistogram(unpairedTotalReadHistogram);
 
         final Histogram<Integer> unpairedClippedReadHistogram = allReadsGroupCollector.unpairedCollector.getAlignedReadHistogram();
-        unpairedClippedReadHistogram.setBinLabel("READ_LENGTH");
-        unpairedClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
+        unpairedClippedReadHistogram.setBinLabel(READ_LENGTH);
+        unpairedClippedReadHistogram.setValueLabel("UNPAIRED_ALIGNED_LENGTH_COUNT");
         file.addHistogram(unpairedClippedReadHistogram);
 
         file.write(OUTPUT);
