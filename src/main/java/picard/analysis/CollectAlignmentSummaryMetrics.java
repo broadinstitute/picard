@@ -159,34 +159,18 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     }
 
     @Override protected void finish() {
-        final String READ_LENGTH = "READ_LENGTH";
-
         collector.finish();
 
         final MetricsFile<AlignmentSummaryMetrics, Integer> file = getMetricsFile();
         collector.addAllLevelsToFile(file);
 
-        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector = (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
+        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector =
+                (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
 
-        final Histogram<Integer> pairTotalReadHistogram = allReadsGroupCollector.pairCollector.getReadHistogram();
-        pairTotalReadHistogram.setBinLabel(READ_LENGTH);
-        pairTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
-        file.addHistogram(pairTotalReadHistogram);
-
-        final Histogram<Integer> pairClippedReadHistogram = allReadsGroupCollector.pairCollector.getAlignedReadHistogram();
-        pairClippedReadHistogram.setBinLabel(READ_LENGTH);
-        pairClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
-        file.addHistogram(pairClippedReadHistogram);
-
-        final Histogram<Integer> unpairedTotalReadHistogram = allReadsGroupCollector.unpairedCollector.getReadHistogram();
-        unpairedTotalReadHistogram.setBinLabel(READ_LENGTH);
-        unpairedTotalReadHistogram.setValueLabel("UNPAIRED_TOTAL_LENGTH_COUNT");
-        file.addHistogram(unpairedTotalReadHistogram);
-
-        final Histogram<Integer> unpairedClippedReadHistogram = allReadsGroupCollector.unpairedCollector.getAlignedReadHistogram();
-        unpairedClippedReadHistogram.setBinLabel(READ_LENGTH);
-        unpairedClippedReadHistogram.setValueLabel("UNPAIRED_ALIGNED_LENGTH_COUNT");
-        file.addHistogram(unpairedClippedReadHistogram);
+        addHistogramToMetrics(file, "PAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.pairCollector.getReadHistogram());
+        addHistogramToMetrics(file, "PAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.pairCollector.getAlignedReadHistogram());
+        addHistogramToMetrics(file, "UNPAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector.getReadHistogram());
+        addHistogramToMetrics(file, "UNPAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector.getAlignedReadHistogram());
 
         file.write(OUTPUT);
 
@@ -200,6 +184,12 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             }
         }
 
+    }
+
+    private static void addHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final Histogram<Integer> readHistogram) {
+        readHistogram.setBinLabel("READ_LENGTH");
+        readHistogram.setValueLabel(label);
+        file.addHistogram(readHistogram);
     }
 
     // overridden to make it visible on the commandline and to change the doc.
