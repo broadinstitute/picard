@@ -90,7 +90,15 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {120, 100, 95, "95M25S", "15S105M", false, true, 100, 100, "95M5S20H", "20H100M", true,
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
-                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20}
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
+
+                {110, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M17S", "15S88M7S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Already soft clipped at 5' end
+
+                {110, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M7S10H", "10H5S88M7S", true,
+                        default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
         };
     }
