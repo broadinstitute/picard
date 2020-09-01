@@ -805,34 +805,29 @@ public abstract class AbstractAlignmentMerger {
                 // Innies only -- do we need to do anything else about jumping libraries?
                 if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
                     // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
-                    int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getEnd() + 1);
-                    int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getStart() - 1);
-                    negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
-
-                    if(posClipFrom > 0) {
-                        CigarUtil.clip3PrimeEndOfRead(pos, posClipFrom, CigarOperator.SOFT_CLIP);
-                    }
-                    if(negClipFrom > 0) {
-                        CigarUtil.clip3PrimeEndOfRead(neg, negClipFrom, CigarOperator.SOFT_CLIP);
-                    }
+                    clip3primeEndsTo5primeEnds(pos, neg, false, false);
 
                     if (useHardClipping) {
-                        // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' end (considering softclips as matches) does not extend past the 5' start (considering softclips as matches)
-                        posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getUnclippedEnd() + 1);
-                        negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getUnclippedStart() - 1);
-                        negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
-
-                        if(posClipFrom > 0) {
-                            moveClippedBasesToTag(pos, posClipFrom);
-                            CigarUtil.clip3PrimeEndOfRead(pos, posClipFrom, CigarOperator.HARD_CLIP);
-                        }
-                        if(negClipFrom > 0) {
-                            moveClippedBasesToTag(neg, negClipFrom);
-                            CigarUtil.clip3PrimeEndOfRead(neg, negClipFrom, CigarOperator.HARD_CLIP);
-                        }
+                        // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
+                        clip3primeEndsTo5primeEnds(pos, neg, true, true);
                     }
                 }
             }
+        }
+    }
+
+    private static void clip3primeEndsTo5primeEnds(final SAMRecord pos, final SAMRecord neg, final boolean hardClipReads, final boolean useUnclippedEnds) {
+        final int negEnd = useUnclippedEnds? neg.getUnclippedEnd() : neg.getEnd();
+        final int posStart = useUnclippedEnds? pos.getUnclippedStart() : pos.getStart();
+        final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd + 1);
+        int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
+        negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
+
+        if(posClipFrom > 0) {
+            clip3PrimeEndOfRead(pos, posClipFrom, hardClipReads);
+        }
+        if(negClipFrom > 0) {
+            clip3PrimeEndOfRead(neg, negClipFrom, hardClipReads);
         }
     }
 
