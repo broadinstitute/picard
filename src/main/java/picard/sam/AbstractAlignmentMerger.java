@@ -765,7 +765,35 @@ public abstract class AbstractAlignmentMerger {
 
     /**
      * Checks to see whether the ends of the reads overlap and clips reads
-     * if necessary.
+     * if necessary.  For inward facing read pairs, this method will soft clip the 5'
+     * end of each read so that the 5' aligned end of each read does not extend past
+     * the 3' aligned end of its mate.  If useHardClipping is true, this method will
+     * additionally hard clip the 5' end of each read if necessary so that the 5' end of
+     * each read (including soft clipped bases) does not extend past the 3' end of its
+     * mate (including soft clipped bases).  Some examples are illustrative:
+     *
+     *              <-MMMMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMMMM->
+     * will be soft-clipped to
+     *              <-SSSMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMSSS->
+     * and with useHardClip true, this would then be hard-clipped to
+     *              <-HHHMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMHHH->
+     *
+     * A more complicated example
+     *              <-MMMMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMMMMMM->
+     * will be soft-clipped to
+     *              <-SSSMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMSSSSS->
+     * and with useHardClip true, this would then be hard-clipped to
+     *              <-HHHMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMSSHHH->
+     *
+     * Note that the soft-clipping is done such that the clipped starts and ends
+     * of each read are the same, and hard-clipping is done such that the unclipped
+     * starts and ends of each read are the same.
      */
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
         // If both reads are mapped, see if we need to clip the ends due to small insert size
