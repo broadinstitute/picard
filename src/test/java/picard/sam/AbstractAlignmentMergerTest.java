@@ -146,7 +146,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                                 SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSS->
                                      <-SSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
 
-                                hard clipping leaves as from soft clipping
+                                hard-clipping results in the same as with soft-clipping in this case.
 
                  */
 
@@ -166,7 +166,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                                 SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSSSSSS->
                                      <-SSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSSSSSSSSSSSSSS
 
-                                hard clipping leaves as from soft clipping
+                                hard-clipping results in the same as with soft-clipping in this case.
 
                  */
                 {110, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S", false,
