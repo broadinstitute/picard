@@ -1,6 +1,21 @@
 {
-  "summary": "Subsets intervals from a reference sequence to a new FASTA file.",
+  "summary": "Subsets intervals from a reference sequence to a new FASTA file.This tool takes a list of intervals, reads the corresponding subsquences from a reference FASTA file and writes them to a new FASTA file as separate records. Note that the reference FASTA file must be accompanied by an index file and the interval list must be provided in Picard list format. The names provided for the intervals will be used to name the corresponding records in the output file.\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar ExtractSequences \\\u003cbr /\u003e      INTERVAL_LIST\u003dregions_of_interest.interval_list \\\u003cbr /\u003e      R\u003dreference.fasta \\\u003cbr /\u003e      O\u003dextracted_IL_sequences.fasta\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -149,6 +179,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -255,6 +300,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Simple command line program that allows sub-sequences represented by an interval\n list to be extracted from a reference sequence file.",

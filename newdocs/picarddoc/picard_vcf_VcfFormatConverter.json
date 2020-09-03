@@ -1,6 +1,21 @@
 {
-  "summary": "Converts VCF to BCF or BCF to VCF.  ",
+  "summary": "Converts VCF to BCF or BCF to VCF.  This tool converts files between the plain-text VCF format and its binary compressed equivalent, BCF. Input and output formats are determined by file extensions specified in the file names. For best results, it is recommended to ensure that an index file is present and set the REQUIRE_INDEX option to true.\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar VcfFormatConverter \\\u003cbr /\u003e      I\u003dinput.vcf \\\u003cbr /\u003e      O\u003doutput.bcf \\\u003cbr /\u003e      REQUIRE_INDEX\u003dtrue\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -149,6 +179,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -255,6 +300,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Converts an ASCII VCF file to a binary BCF or vice versa.",

@@ -1,5 +1,5 @@
 {
-  "summary": "Checks that all data in the input files appear to have come from the same individual",
+  "summary": "Checks that all data in the set of input files appear to come from the same individual. Can be used to cross-check readgroups, libraries, samples, or files. Operates on SAM/BAM/CRAM and VCF (including gVCF and gzipped-VCF). \n\u003ch3\u003eSummary\u003c/h3\u003e\nChecks if all the genetic data within a set of files appear to come from the same individual. It quickly determines whether a group\u0027s genotype matches that of an input file by selective sampling, and has been designed to work well for low-depth SAM (as well as high depth ones and VCFs.) The tool collects fingerprints (essentially, genotype information from different parts of the genome) at the finest level available in the data (readgroup for read-data files and sample for variant-data files) and then optionally aggregates it by library, sample or file, to increase power and provide results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are emitted into a CrosscheckMetric metric file. In this format the output will include the LOD score and also tumor-aware LOD score which can help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could cause it to otherwise fail to notice that samples are from the same individual.) A matrix output is also available to facilitate visual inspection of crosscheck results.\n \nSince there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics as a follow-up step to running CrosscheckFingerprints.\n \nThere are cases where one would like to identify a few groups out of a collection of many possible groups (say to link a SAM to its correct sample in a multi-sample VCF. In this case one would not case for the cross-checking of the various samples in the VCF against each other, but only in checking the identity of the SAM against the various samples in the VCF. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints does the following:\n - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. \n - aggregation of data happens at the SAMPLE level \n - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n - MATRIX_OUTPUT is disabled. \nIn some cases, the groups collected may not have any observations (calls for a VCF, reads for a SAM) at fingerprinting sites, or a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least one comparison where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.\n\u003chr/\u003e\u003ch3\u003eExamples\u003c/h3\u003e\u003ch4\u003eCheck that all the readgroups from a sample match each other:\u003c/h4\u003e\u003cpre\u003e    java -jar picard.jar CrosscheckFingerprints \\\n          INPUT\u003dsample.with.many.readgroups.bam \\\n          HAPLOTYPE_MAP\u003dfingerprinting_haplotype_database.txt \\\n          LOD_THRESHOLD\u003d-5 \\\n          OUTPUT\u003dsample.crosscheck_metrics \u003c/pre\u003e\n \u003ch4\u003eCheck that all the readgroups match as expected when providing reads from two samples from the same individual:\u003c/h4\u003e \u003cpre\u003e     java -jar picard.jar CrosscheckFingerprints \\\n           INPUT\u003dsample.one.with.many.readgroups.bam \\\n           INPUT\u003dsample.two.with.many.readgroups.bam \\\n           HAPLOTYPE_MAP\u003dfingerprinting_haplotype_database.txt \\\n           LOD_THRESHOLD\u003d-5 \\\n           EXPECT_ALL_GROUPS_TO_MATCH\u003dtrue \\\n           OUTPUT\u003dsample.crosscheck_metrics \u003c/pre\u003e\n\n\u003ch4\u003eDetailed Explanation\u003c/h4\u003e\nThis tool calculates the LOD score for identity check between \"groups\" of data in the INPUT files as defined by the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates that the data do not match. A score that is near zero is inconclusive and can result from low coverage or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in the appropriate readgroup header line, for VCF this is taken from the column label in the file-header. After combining all the data from the same group together, an all-against-all comparison is performed. Results are categorized as one of EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH, or AMBIGUOUS depending on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are less than LOD_THRESHOLD are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous). If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise. \n\nThe identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).\n \nWhen provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that it finds. ",
   "arguments": [
     {
       "summary": "Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate marking has been overly aggressive and coverage is low.",
@@ -9,6 +9,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -223,6 +238,21 @@
       "options": []
     },
     {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "One or more input files (or lists of files) with which to compare fingerprints.",
       "name": "--INPUT",
       "synonyms": "-I",
@@ -238,7 +268,7 @@
       "options": []
     },
     {
-      "summary": "A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. ",
+      "summary": "A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample VCF) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. ",
       "name": "--INPUT_SAMPLE_FILE_MAP",
       "synonyms": "NA",
       "type": "File",
@@ -448,6 +478,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -551,6 +596,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Checks that all data in the set of input files appear to come from the same\n individual. Can be used to compare according to readgroups, libraries, samples, or files.\n Operates on bams/sams and vcfs (including gvcfs).\n\n \u003ch3\u003eSummary\u003c/h3\u003e\n Checks if all the genetic data within a set of files appear to come from the same individual.\n It quickly determines whether a \"group\u0027s\" genotype matches that of an input SAM/BAM/VCF by selective sampling,\n and has been designed to work well even for low-depth SAM/BAMs.\n \u003cbr/\u003e\n The tool collects \"fingerprints\" (essentially genotype information from different parts of the genome)\n at the finest level available in the data (readgroup for SAM files\n and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide\n results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results will\n be emitted into a metric file for the class CrosscheckMetric.\n In this format the output will include the LOD score and also tumor-aware LOD score which can\n help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could\n otherwise fail to notice that samples are from the same individual.)\n A matrix output is also available to facilitate visual inspection of crosscheck results.\n \u003cbr/\u003e\n Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics\n as a follow-up step to running CrosscheckFingerprints.\n \u003cbr/\u003e\n There are cases where one would like to identify a few groups out of a collection of many possible groups (say\n to link a bam to it\u0027s correct sample in a multi-sample vcf. In this case one would not case for the cross-checking\n of the various samples in the VCF against each other, but only in checking the identity of the bam against the various\n samples in the vcf. The #SECOND_INPUT is provided for this use-case. With #SECOND_INPUT provided, CrosscheckFingerprints\n does the following:\n \u003cil\u003e\n \u003cli\u003eaggregation of data happens independently for the input files in #INPUT and #SECOND_INPUT.\u003c/li\u003e\n \u003cli\u003eaggregation of data happens at the SAMPLE level.\u003c/li\u003e\n \u003cli\u003eeach samples from #INPUT will only be compared to that same sample in #INPUT.\u003c/li\u003e\n \u003cli\u003e#MATRIX_OUTPUT is disabled.\u003c/li\u003e\n \u003c/il\u003e\n \u003cbr/\u003e\n In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or a sample in INPUT may be missing from the SECOND_INPUT.\n These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample\n not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH.\n In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least\n one comparison where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations\n at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.\n \u003ch3\u003eExamples\u003c/h3\u003e\n \u003ch4\u003eCheck that all the readgroups from a sample match each other:\u003c/h4\u003e\n \u003cpre\u003e\n     java -jar picard.jar CrosscheckFingerprints \\\n          INPUT\u003dsample.with.many.readgroups.bam \\\n          HAPLOTYPE_MAP\u003dfingerprinting_haplotype_database.txt \\\n          LOD_THRESHOLD\u003d-5 \\\n          OUTPUT\u003dsample.crosscheck_metrics\n \u003c/pre\u003e\n\n\n \u003ch4\u003eCheck that all the readgroups match as expected when providing reads from two samples from the same individual:\u003c/h4\u003e\n \u003cpre\u003e\n     java -jar picard.jar CrosscheckFingerprints \\\n          INPUT\u003dsample.one.with.many.readgroups.bam \\\n          INPUT\u003dsample.two.with.many.readgroups.bam \\\n          HAPLOTYPE_MAP\u003dfingerprinting_haplotype_database.txt \\\n          LOD_THRESHOLD\u003d-5 \\\n          EXPECT_ALL_GROUPS_TO_MATCH\u003dtrue \\\n          OUTPUT\u003dsample.crosscheck_metrics\n \u003c/pre\u003e\n\n\n \u003ch3\u003e Detailed Explanation\u003c/h3\u003e\n\n This tool calculates the LOD score for identity check between \"groups\" of data in the INPUT files as defined by\n the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual\n or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates\n that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates\n that the data do not match. A score that is near zero is inconclusive and can result from low coverage\n or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in\n the appropriate readgroup header line, for VCF this is taken from the column label in the file-header.\n After combining all the data from the same \"group\" together, an all-against-all comparison is performed. Results are\n categorized a FingerprintResult enum: EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH,\n or AMBIGUOUS depending on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are\n less than LOD_THRESHOLD are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous).\n If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise.\n \u003cbr/\u003e\n\n The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher\n statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This\n enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).\n \u003cbr/\u003e\n When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that\n it finds.",

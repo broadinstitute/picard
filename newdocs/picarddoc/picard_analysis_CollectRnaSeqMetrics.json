@@ -1,6 +1,21 @@
 {
-  "summary": "Produces RNA alignment metrics for a SAM or BAM file.  ",
+  "summary": "Produces RNA alignment metrics for a SAM or BAM file.  \u003cp\u003eThis tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment and produces metrics describing the distribution of the bases within the transcripts.  It calculates the total numbers and the fractions of nucleotides within specific genomic regions including untranslated regions (UTRs), introns, intergenic sequences (between discrete genes), and peptide-coding sequences (exons). This tool also determines the numbers of bases that pass quality filters that are specific to Illumina data (PF_BASES).  For more information please see the corresponding GATK \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6329\u0027\u003eDictionary\u003c/a\u003e entry.\u003c/p\u003e\u003cp\u003eOther metrics include the median coverage (depth), the ratios of 5 prime /3 prime-biases, and the numbers of reads with the correct/incorrect strand designation. The 5 prime /3 prime-bias results from errors introduced by reverse transcriptase enzymes during library construction, ultimately leading to the over-representation of either the 5 prime or 3 prime ends of transcripts.  Please see the CollectRnaSeqMetrics \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics\u0027\u003edefinitions\u003c/a\u003e for details on how these biases are calculated. \u003c/p\u003e\u003cp\u003eThe sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a \u003ca href\u003d\u0027http://github.com/alexdobin/STAR\u0027\u003eSTAR\u003c/a\u003e or \u003ca href\u003d\u0027http://ccb.jhu.edu/software/tophat/index.shtml\u0027\u003eTopHat\u003c/a\u003e. The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at \u003ca href\u003d\u0027http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database\u0027\u003ehttp://hgdownload.cse.ucsc.edu/goldenPath/hg38/database\u003c/a\u003e.  The first five lines of the tab-limited text file appear as follows.\u003c/p\u003e\u003cpre\u003eDDX11L1\tNR_046018\tchr1\t+\t11873\t14409\t14409\t14409\t3\t11873,12612,13220,\t12227,12721,14409,WASH7P\tNR_024540\tchr1\t-\t14361\t29370\t29370\t29370\t11\t14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,\t14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370,DLGAP2-AS1\tNR_103863\tchr8_KI270926v1_alt\t-\t33083\t35050\t35050\t35050\t3\t33083,33761,35028,\t33281,33899,35050,MIR570\tNR_030296\tchr3\t+\t195699400\t195699497\t195699497\t195699497\t1\t195699400,\t195699497,MIR548A3\tNR_030330\tchr8\t-\t104484368\t104484465\t104484465\t104484465\t1\t104484368,\t104484465,\u003c/pre\u003e\u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectRnaSeqMetrics \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003doutput.RNA_Metrics \\\u003cbr /\u003e      REF_FLAT\u003dref_flat.txt \\\u003cbr /\u003e      STRAND\u003dSECOND_READ_TRANSCRIPTION_STRAND \\\u003cbr /\u003e      RIBOSOMAL_INTERVALS\u003dribosomal.interval_list\u003c/pre\u003ePlease see the CollectRnaSeqMetrics \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics\u0027\u003edefinitions\u003c/a\u003e for a complete description of the metrics produced by this tool.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "If true (default), then the sort order in the header file will be ignored.",
       "name": "--ASSUME_SORTED",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -89,6 +104,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -257,6 +287,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "Stop after processing N reads, mainly for debugging.",
       "name": "--STOP_AFTER",
       "synonyms": "NA",
@@ -403,6 +448,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "",

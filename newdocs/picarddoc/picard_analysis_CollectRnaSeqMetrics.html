@@ -429,7 +429,7 @@
 
 		<h1>CollectRnaSeqMetrics</h1>
 
-		<p class="lead">Produces RNA alignment metrics for a SAM or BAM file.  </p>
+		<p class="lead">Produces RNA alignment metrics for a SAM or BAM file.  <p>This tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment and produces metrics describing the distribution of the bases within the transcripts.  It calculates the total numbers and the fractions of nucleotides within specific genomic regions including untranslated regions (UTRs), introns, intergenic sequences (between discrete genes), and peptide-coding sequences (exons). This tool also determines the numbers of bases that pass quality filters that are specific to Illumina data (PF_BASES).  For more information please see the corresponding GATK <a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>Dictionary</a> entry.</p><p>Other metrics include the median coverage (depth), the ratios of 5 prime /3 prime-biases, and the numbers of reads with the correct/incorrect strand designation. The 5 prime /3 prime-bias results from errors introduced by reverse transcriptase enzymes during library construction, ultimately leading to the over-representation of either the 5 prime or 3 prime ends of transcripts.  Please see the CollectRnaSeqMetrics <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> for details on how these biases are calculated. </p><p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a <a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at <a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  The first five lines of the tab-limited text file appear as follows.</p><pre>DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409,WASH7P	NR_024540	chr1	-	14361	29370	29370	29370	11	14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,	14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370,DLGAP2-AS1	NR_103863	chr8_KI270926v1_alt	-	33083	35050	35050	35050	3	33083,33761,35028,	33281,33899,35050,MIR570	NR_030296	chr3	+	195699400	195699497	195699497	195699497	1	195699400,	195699497,MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465,</pre><p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage example:</h4><pre>java -jar picard.jar CollectRnaSeqMetrics \<br />      I=input.bam \<br />      O=output.RNA_Metrics \<br />      REF_FLAT=ref_flat.txt \<br />      STRAND=SECOND_READ_TRANSCRIPTION_STRAND \<br />      RIBOSOMAL_INTERVALS=ribosomal.interval_list</pre>Please see the CollectRnaSeqMetrics <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> for a complete description of the metrics produced by this tool.<hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -488,6 +488,13 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--ASSUME_SORTED">--ASSUME_SORTED</a><br />
 								&nbsp;<em>-AS</em>
 					</td>
@@ -502,6 +509,14 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>The PDF file to write out a plot of normalized position vs. coverage.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--IGNORE_SEQUENCE">--IGNORE_SEQUENCE</a><br />
@@ -546,6 +561,13 @@
 					<td>0</td>
 					<td>Stop after processing N reads, mainly for debugging.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -561,7 +583,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -636,11 +658,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ASSUME_SORTED">--ASSUME_SORTED </a>
 			 / <small>-AS</small>
@@ -684,7 +728,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -714,6 +758,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--IGNORE_SEQUENCE">--IGNORE_SEQUENCE </a>
@@ -857,6 +913,18 @@
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--STOP_AFTER">--STOP_AFTER </a>
 			 / <small>NA</small>
 		</h3>
@@ -978,6 +1046,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -988,7 +1068,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

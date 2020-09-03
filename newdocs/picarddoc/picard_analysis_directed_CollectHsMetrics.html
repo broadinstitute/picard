@@ -429,7 +429,7 @@
 
 		<h1>CollectHsMetrics</h1>
 
-		<p class="lead">Collects hybrid-selection (HS) metrics for a SAM or BAM file.  </p>
+		<p class="lead">Collects hybrid-selection (HS) metrics for a SAM or BAM file.  <p>This tool takes a SAM/BAM file input and collects metrics that are specific for sequence datasets generated through hybrid-selection. Hybrid-selection (HS) is the most commonly used technique to capture exon-specific sequences for targeted sequencing experiments such as exome sequencing; for more information, please see the corresponding <a href='http://www.broadinstitute.org/gatk/guide/article?id=6331'>GATK Dictionary entry</a>. </p> <p>This tool requires an aligned SAM or BAM file as well as bait and target interval files in Picard interval_list format. You should use the bait and interval files that correspond to the capture kit that was used to generate the capture libraries for sequencing, which can generally be obtained from the kit manufacturer. If the baits and target intervals are provided in BED format, you can convert them to the Picard interval_list format using Picard's <a href='http://broadinstitute.github.io/picard/command-line-overview.html#BedToIntervalList'>BedToInterval</a> tool. </p><p>If a reference sequence is provided, this program will calculate both AT_DROPOUT and GC_DROPOUT metrics. Dropout metrics are an attempt to measure the reduced representation of reads, in regions that deviate from 50% G/C content. This reduction in the number of aligned reads is due to the increased numbers of errors associated with sequencing regions with excessive or deficient numbers of G/C bases, ultimately leading to poor mapping efficiencies and lowcoverage in the affected regions. </p><p>If you are interested in getting G/C content and mean sequence depth information for every target interval, use the PER_TARGET_COVERAGE option. </p><p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>  <h4>Usage Example:</h4><pre>java -jar picard.jar CollectHsMetrics \<br />      I=input_reads.bam \<br />      O=output_hs_metrics.txt \<br />      R=reference.fasta \<br />      BAIT_INTERVALS=bait.interval_list \<br />      TARGET_INTERVALS=target.interval_list</pre> <p>Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#HsMetrics'>CollectHsMetrics</a> for detailed descriptions of the output metrics produced by this tool.</p><hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -532,6 +532,13 @@
 					<td>Allele fraction for which to calculate theoretical sensitivity.</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--BAIT_SET_NAME">--BAIT_SET_NAME</a><br />
 								&nbsp;<em>-N</em>
 					</td>
@@ -553,6 +560,14 @@
 					<!--<td>int</td> -->
 					<td>200</td>
 					<td>Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is 200.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_INDELS">--INCLUDE_INDELS</a><br />
@@ -620,6 +635,13 @@
 					<td>null</td>
 					<td>Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -635,7 +657,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -710,6 +732,16 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
@@ -726,6 +758,18 @@
 		<p>
 		<span class="label label-info ">List[Double]</span>
 			&nbsp;<span class="label">[0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BAIT_INTERVALS">--BAIT_INTERVALS </a>
@@ -797,7 +841,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -827,6 +871,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INCLUDE_INDELS">--INCLUDE_INDELS </a>
@@ -997,6 +1053,18 @@
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TARGET_INTERVALS">--TARGET_INTERVALS </a>
 			 / <small>-TI</small>
 		</h3>
@@ -1105,6 +1173,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1115,7 +1195,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

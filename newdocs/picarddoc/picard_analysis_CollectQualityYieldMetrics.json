@@ -1,6 +1,21 @@
 {
-  "summary": "Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  ",
+  "summary": "Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  This tool evaluates the overall quality of reads within a bam file containing one read group. The output indicates the total numbers of bases within a read group that pass a minimum base quality score threshold and (in the case of Illumina data) pass Illumina quality filters as described in the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6329\u0027\u003eGATK Dictionary entry\u003c/a\u003e. \u003cbr /\u003e\u003ch4\u003eNote on base quality score options\u003c/h4\u003eIf the quality score of read bases has been modified in a previous data processing step such as \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d44\u0027\u003eGATK Base Recalibration\u003c/a\u003e and an OQ tag is available, this tool can be set to use the OQ value instead of the primary quality value for the evaluation. \u003cbr /\u003e\u003cbr /\u003eNote that the default behaviour of this program changed as of November 6th 2015 to no longer include secondary and supplemental alignments in the computation. \u003cbr /\u003e\u003ch4\u003eUsage Example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectQualityYieldMetrics \\\u003cbr /\u003e       I\u003dinput.bam \\\u003cbr /\u003e       O\u003dquality_yield_metrics.txt \\\u003cbr /\u003e\u003c/pre\u003ePlease see \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectQualityYieldMetrics.QualityYieldMetrics\u0027\u003ethe QualityYieldMetrics documentation\u003c/a\u003e for details and explanations of the output metrics.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "If true (default), then the sort order in the header file will be ignored.",
       "name": "--ASSUME_SORTED",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -179,6 +209,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -315,6 +360,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Command line program to calibrate quality yield metrics",

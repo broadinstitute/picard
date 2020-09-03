@@ -1,5 +1,5 @@
 {
-  "summary": "Calculate PCR-related metrics from targeted sequencing data. ",
+  "summary": "Calculate PCR-related metrics from targeted sequencing data. \u003cp\u003eThis tool calculates a set of PCR-related metrics from an aligned SAM or BAM file containing targeted sequencing data. It is appropriate for data produced with multiple small-target technologies including exome sequencing an custom amplicon panels such as the Illumina \u003ca href\u003d\u0027http://www.illumina.com/content/dam/illumina-marketing/documents/products/datasheets/datasheet_truseq_custom_amplicon.pdf\u0027\u003eTruSeq Custom Amplicon (TSCA)\u003c/a\u003e kit.\u003c/p\u003e\u003cp\u003eIf a reference sequence is provided, AT/GC dropout metrics will be calculated and the PER_TARGET_COVERAGE  option can be used to output GC content and mean coverage information for each target. The AT/GC dropout metrics indicate the degree of inadequate coverage of a particular region based on its AT or GC content. The PER_TARGET_COVERAGE option can be used to output GC content and mean sequence depth information for every target interval. \u003c/p\u003e\u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage Example\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectTargetedPcrMetrics \\\u003cbr /\u003e       I\u003dinput.bam \\\u003cbr /\u003e       O\u003doutput_pcr_metrics.txt \\\u003cbr /\u003e       R\u003dreference.fasta \\\u003cbr /\u003e       AMPLICON_INTERVALS\u003damplicon.interval_list \\\u003cbr /\u003e       TARGET_INTERVALS\u003dtargets.interval_list \u003c/pre\u003ePlease see the metrics definitions page on \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#TargetedPcrMetrics\u0027\u003eTargetedPcrMetrics\u003c/a\u003e for detailed explanations of the output metrics produced by this tool.\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Allele fraction for which to calculate theoretical sensitivity.",
@@ -29,6 +29,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -77,7 +92,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -134,6 +149,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -332,6 +362,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "An interval list file that contains the locations of the targets.",
       "name": "--TARGET_INTERVALS",
       "synonyms": "-TI",
@@ -465,6 +510,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003cp\u003eThis tool calculates a set of PCR-related metrics from an aligned SAM or\n BAM file containing targeted sequencing data. It is appropriate for data produced with multiple small-target technologies\n including exome sequencing an custom amplicon panels such as the Illumina \" +\n \u003ca href\u003d\u0027http://www.illumina.com/content/dam/illumina-marketing/documents/products/datasheets/datasheet_truseq_custom_amplicon.pdf\u0027\u003e\n TruSeq Custom Amplicon (TSCA)\u003c/a\u003e kit.\u003c/p\u003e\n\n \u003cp\u003eIf a reference sequence is provided, AT/GC dropout metrics will be calculated and the PER_TARGET_COVERAGE  option can be\n used to output GC content and mean coverage information for each target. The AT/GC dropout metrics indicate the degree of\n inadequate coverage of a particular region based on its AT or GC content. The PER_TARGET_COVERAGE option can be used to\n output GC content and mean sequence depth information for every target interval. \u003c/p\u003e\n\n \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\n \u003ch4\u003eUsage Example\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar CollectTargetedPcrMetrics \\\\\u003cbr /\u003e\n      I\u003dinput.bam \\\\\u003cbr /\u003e\n      O\u003doutput_pcr_metrics.txt \\\\\u003cbr /\u003e\n      R\u003dreference.fasta \\\\\u003cbr /\u003e\n      AMPLICON_INTERVALS\u003damplicon.interval_list \\\\\u003cbr /\u003e\n      TARGET_INTERVALS\u003dtargets.interval_list\n \u003c/pre\u003e\n Please see the metrics definitions page on\n \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#TargetedPcrMetrics\u0027\u003eTargetedPcrMetrics \u003c/a\u003e\n for detailed explanations of the output metrics produced by this tool.\n \u003chr /\u003e\n\n Collect metric information for target pcr metrics runs.  See CollectTargetedMetrics and TargetedPcrMetricsCollector for\n more information",

@@ -1,5 +1,5 @@
 {
-  "summary": "Chart the nucleotide distribution per cycle in a SAM or BAM file",
+  "summary": "Chart the nucleotide distribution per cycle in a SAM or BAM fileThis tool produces a chart of the nucleotide distribution per cycle in a SAM or BAM file in order to enable assessment of systematic errors at specific positions in the reads.\u003cbr /\u003e\u003cbr /\u003e\u003ch4\u003eInterpretation notes\u003c/h4\u003eIncreased numbers of miscalled bases will be reflected in base distribution changes and increases in the number of Ns.  In general, we expect that for any given cycle, or position within reads, the relative proportions of A, T, C and G should reflect the AT:GC content of the organism\u0027s genome.  Thus, for all four nucleotides, flattish lines would be expected.  Deviations from this expectation, for example a spike of A at a particular cycle (position within reads), would suggest a systematic sequencing error.\u003ch4\u003eNote on quality trimming\u003c/h4\u003eIn the past, many sequencing data processing workflows included discarding the low-quality tails of reads by applying hard-clipping at some arbitrary base quality threshold value. This is no longer useful because most sophisticated analysis tools (such as the GATK variant discovery tools) are quality-aware, meaning that they are able to take base quality into account when weighing evidence provided by sequencing reads. Unnecessary clipping may interfere with other quality control evaluations and may lower the quality of analysis results. For example, trimming reduces the effectiveness of the Base Recalibration (BQSR) pre-processing step of the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/best-practices\u0027\u003eGATK Best Practices for Variant Discovery\u003c/a\u003e, which aims to correct some types of systematic biases that affect the accuracy of base quality scores.\u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectBaseDistributionByCycle \\\u003cbr /\u003e      CHART\u003dcollect_base_dist_by_cycle.pdf \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003doutput.txt\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "If set to true, calculate the base distribution over aligned reads only.",
@@ -9,6 +9,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -62,7 +77,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -104,6 +119,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -194,6 +224,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -315,6 +360,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "",

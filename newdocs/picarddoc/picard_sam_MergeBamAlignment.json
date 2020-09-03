@@ -1,5 +1,5 @@
 {
-  "summary": "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  ",
+  "summary": "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  \u003ch3\u003eSummary\u003c/h3\u003e\nA command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining data from the unmapped BAM.\n\nQuick note: this is \u003cb\u003enot\u003c/b\u003e a tool for taking multiple sam files and creating a bigger file by merging them. For that use-case, see {@link MergeSamFiles}.\n\n\u003ch3\u003eDetails\u003c/h3\u003e\nMany alignment tools (still!) require fastq format input. The unmapped bam may contain useful information that will be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)\n\nThis tool takes an unaligned bam with meta-data, and the aligned bam produced by calling {@link SamToFastq} and then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.\n\nThe output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or query-name sorted, in which case the tags will not be calculated or populated.\n\n\u003ch3\u003eUsage example:\u003c/h3\u003e\n\njava -jar picard.jar MergeBamAlignment \\\n     ALIGNED\u003daligned.bam \\\n     UNMAPPED\u003dunmapped.bam \\\n     O\u003dmerge_alignments.bam \\\n     R\u003dreference_sequence.fasta\n\n\u003ch3\u003eCaveats\u003c/h3\u003e\nThis tool has been developing for a while and many arguments have been added to it over the years. You may be particularly interested in the following (partial) list:\n\u003cul\u003e\n\u003cli\u003eCLIP_ADAPTERS -- Whether to (soft-)clip the ends of the reads that are identified as belonging to adapters\u003c/li\u003e\n\u003cli\u003eIS_BISULFITE_SEQUENCE -- Whether the sequencing originated from bisulfite sequencing, in which case NM will be calculated differently\u003c/li\u003e\n\u003cli\u003eALIGNER_PROPER_PAIR_FLAGS -- Use if the aligner that was used cannot be trusted to set the \"Proper pair\" flag and then the tool will set this flag based on orientation and distance between pairs.\u003c/li\u003e\n\u003cli\u003eADD_MATE_CIGAR -- Whether to use this opportunity to add the MC tag to each read.\u003c/li\u003e\n\u003cli\u003eUNMAP_CONTAMINANT_READS (and MIN_UNCLIPPED_BASES) -- Whether to identify extremely short alignments (with clipping on both sides) as cross-species contamination and unmap the reads.\u003c/li\u003e\n\u003c/ul\u003e\n",
   "arguments": [
     {
       "summary": "Adds the mate CIGAR tag (MC) if true, does not if false.",
@@ -69,6 +69,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -152,7 +167,7 @@
       "options": []
     },
     {
-      "summary": "For paired reads, clip the 3\u0027 end of each read if necessary so that it does not extend past the 5\u0027 end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.",
+      "summary": "For paired reads, clip the 3\u0027 end of each read if necessary so that it does not extend past the 5\u0027 end of its mate.  Reads are first soft clipped so that the 3\u0027 aligned end of each read does not extend past the 5\u0027 aligned end of its mate.  If HARD_CLIP_OVERLAPPING_READS is also true, then reads are additionally hard clipped so that the 3\u0027 unclipped end of each read does not extend past the 5\u0027 unclipped end of its mate.  Hard clipped bases and their qualities are stored in the XB and XQ tags, respectively.",
       "name": "--CLIP_OVERLAPPING_READS",
       "synonyms": "NA",
       "type": "boolean",
@@ -182,7 +197,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -245,6 +260,21 @@
       "summary": "If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.",
       "name": "--HARD_CLIP_OVERLAPPING_READS",
       "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
       "type": "boolean",
       "required": "no",
       "fulltext": "",
@@ -574,6 +604,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "The order in which the merged reads should be output.",
       "name": "--SORT_ORDER",
       "synonyms": "-SO",
@@ -775,6 +820,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an\n unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining\n data from the unmapped BAM.\n\n Quick note: this is \u003cb\u003enot\u003c/b\u003e a tool for taking multiple sam files and creating a bigger file by merging them. For\n that use-case, see MergeSamFiles.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n Many alignment tools (still!) require fastq format input. The unmapped bam may contain useful information that will\n be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)\n\n This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling SamToFastq and\n then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads\n and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the\n process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.\n\n The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or\n query-name sorted, in which case the tags will not be calculated or populated.\n\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar MergeBamAlignment \\\\\n      ALIGNED\u003daligned.bam \\\\\n      UNMAPPED\u003dunmapped.bam \\\\\n      O\u003dmerge_alignments.bam \\\\\n      R\u003dreference_sequence.fasta\n \u003c/pre\u003e\n\n\n \u003ch3\u003eCaveats\u003c/h3\u003e\n This tool has been developing for a while and many arguments have been added to it over the years.\n You may be particularly interested in the following (partial) list:\n \u003cul\u003e\n     \u003cli\u003eCLIP_ADAPTERS -- Whether to (soft-)clip the ends of the reads that are identified as belonging to adapters\u003c/li\u003e\n     \u003cli\u003eIS_BISULFITE_SEQUENCE -- Whether the sequencing originated from bisulfite sequencing, in which case NM will be\n     calculated differently\u003c/li\u003e\n     \u003cli\u003eALIGNER_PROPER_PAIR_FLAGS -- Use if the aligner that was used cannot be trusted to set the \"Proper pair\" flag\n     and then the tool will set this flag based on orientation and distance between pairs.\u003c/li\u003e\n     \u003cli\u003eADD_MATE_CIGAR -- Whether to use this opportunity to add the MC tag to each read.\u003c/li\u003e\n     \u003cli\u003eUNMAP_CONTAMINANT_READS (and MIN_UNCLIPPED_BASES) -- Whether to identify extremely short alignments (with\n     clipping on both sides) as cross-species contamination and unmap the reads.\u003c/li\u003e\n \u003c/ul\u003e",

@@ -1,6 +1,21 @@
 {
-  "summary": "Program to collect error metrics on bases stratified in various ways.",
+  "summary": "Program to collect error metrics on bases stratified in various ways.\n\u003cp\u003eSequencing errors come in different \u0027flavors\u0027. For example, some occur during sequencing while others happen during library construction, prior to the sequencing. They may be correlated with various aspect of the sequencing experiment: position in the read, base context, length of insert and so on.\n \u003cp\u003eThis program collects two different kinds of error metrics (one which attempts to distinguish between pre- and post- sequencer errors, and on which doesn\u0027t) and a collation of \u0027stratifiers\u0027 each of which assigns bases into various bins. The stratifiers can be used together to generate a composite stratification. \u003cp\u003eFor example:\u003cp\u003eThe BASE_QUALITY stratifier will place bases in bins according to their declared base quality. The READ_ORDINALITY stratifier will place bases in one of two bins depending on whether their read is \u0027first\u0027 or \u0027second\u0027. One could generate a composite stratifier BASE_QUALITY:READ_ORDINALITY which will do both stratifications as the same time. \n\u003cp\u003eThe resulting metric file will be named according to a provided prefix and a suffix which is generated  automatically according to the error metric. The tool can collect multiple metrics in a single pass and there should be hardly any performance loss when specifying multiple metrics at the same time; the default includes a large collection of metrics. \n\u003cp\u003eTo estimate the error rate the tool assumes that all differences from the reference are errors. For this to be a reasonable assumption the tool needs to know the sites at which the sample is actually polymorphic and a confidence interval where the user is relatively certain that the polymorphic sites are known and accurate. These two inputs are provided as a VCF and INTERVALS. The program will only process sites that are in the intersection of the interval lists in the INTERVALS argument as long as they are not polymorphic in the VCF.\n\n",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -102,6 +117,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -312,6 +342,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -569,6 +614,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Program to collect error metrics on bases stratified in various ways.",

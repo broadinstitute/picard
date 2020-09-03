@@ -1,6 +1,21 @@
 {
-  "summary": "\u003cb\u003eCollects metrics from reduced representation bisulfite sequencing (Rrbs) data.\u003c/b\u003e  ",
+  "summary": "\u003cb\u003eCollects metrics from reduced representation bisulfite sequencing (Rrbs) data.\u003c/b\u003e  \u003cp\u003eThis tool uses reduced representation bisulfite sequencing (Rrbs) data to determine cytosine methylation status across all reads of a genomic DNA sequence.  For a primer on bisulfite sequencing and cytosine methylation, please see the corresponding \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6330\u0027\u003eGATK Dictionary entry\u003c/a\u003e. \u003c/p\u003e\u003cp\u003eBriefly, bisulfite reduction converts un-methylated cytosine (C) to uracil (U) bases.  Methylated sites are not converted because they are resistant to bisulfite reduction.  Subsequent to PCR amplification of the reaction products, bisulfite reduction manifests as [C -\u003e T (+ strand) or G -\u003e A (- strand)] base conversions.  Thus, conversion rates can be calculated from the reads as follows: [CR \u003d converted/(converted + unconverted)]. Since methylated cytosines are protected against Rrbs-mediated conversion, the methylation rate (MR) is as follows:[MR \u003d unconverted/(converted + unconverted) \u003d (1 - CR)].\u003c/p\u003e\u003cp\u003eThe CpG CollectRrbsMetrics tool outputs three files including summary and detail metrics tables as well as a PDF file containing four graphs. These graphs are derived from the summary table and include a comparison of conversion rates for both CpG and non-CpG sites, the distribution of total numbers of CpG sites as a function of the CpG conversion rates, the distribution of CpG sites by the level of read coverage (depth), and the numbers of reads discarded resulting from either exceeding the mismatch rate or size (too short).  The detailed metrics table includes the coordinates of all of the CpG sites for the experiment as well as the conversion rates observed for each site.\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectRrbsMetrics \\\u003cbr /\u003e      R\u003dreference_sequence.fasta \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      M\u003dbasename_for_metrics_files\u003c/pre\u003e\u003cp\u003ePlease see the CollectRrbsMetrics \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#RrbsCpgDetailMetrics\u0027\u003edefinitions\u003c/a\u003e for a complete description of both the detail and summary metrics produced by this tool.\u003c/p\u003e\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "If true, assume that the input file is coordinate sorted even if the header says otherwise.",
       "name": "--ASSUME_SORTED",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -89,6 +104,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -242,6 +272,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -345,6 +390,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Calculates and reports QC metrics for RRBS data based on the methylation status at individual C/G bases as well\n as CpG sites across all reads in the input BAM/SAM file.",

@@ -1,6 +1,21 @@
 {
-  "summary": "Sorts a SAM or BAM file",
+  "summary": "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  \u003cp\u003e For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.\u003c/p\u003e\u003cp\u003e For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary alignment flag. This ordering may change in future versions. \u003c/p\u003e\u003chr /\u003e\u003chr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar SortSam \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003dsorted.bam \\\u003cbr /\u003e      SORT_ORDER\u003dcoordinate\u003c/pre\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -134,6 +164,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -268,6 +313,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Sorts a SAM or BAM file.\n\n \u003ch3\u003e Summary \u003c/h3\u003e\n This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM\n record. The SortOrder of a SAM/BAM file is found in the SAM file header tag labeled SO.\n \u003cp\u003e For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME)\n field using the reference sequence dictionary tag labeled SQ.\n Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).\n Subsequent to this sorting scheme, alignments are listed arbitrarily.\u003c/p\u003e For queryname-sorted alignments, the tool\n orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary\n alignment flag. (See htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)} for details).\n This ordering may change in the future.\n\n \u003ch3\u003e Inputs\u003c/h3\u003e\n \u003cul\u003e\n     \u003cli\u003e Input BAM or SAM file to sort \u003c/li\u003e\n     \u003cli\u003e Sorted BAM or SAM output file \u003c/li\u003e\n     \u003cli\u003e Sort order of output file \u003c/li\u003e\n \u003c/ul\u003e\n\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar SortSam \\\n     INPUT\u003dinput.bam \\\n     OUTPUT\u003dsorted.bam \\\n     SORT_ORDER\u003dcoordinate\n \u003c/pre\u003e",

@@ -1,6 +1,21 @@
 {
-  "summary": "Asserts the validity for specified Illumina basecalling data.  ",
+  "summary": "Asserts the validity for specified Illumina basecalling data.  \u003cp\u003eThis tool will check that the basecall directory and the internal files are available, exist, and are reasonably sized for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle or per tile. If DATA_TYPES {Position, BaseCalls, QualityScores, PF, or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed. If there are errors, the number of errors is written in a file called \u0027errors.count\u0027 in the working directory\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e \u003cpre\u003ejava -jar picard.jar CheckIlluminaDirectory \\\u003cbr /\u003e      BASECALLS_DIR\u003d/BaseCalls/  \\\u003cbr /\u003e      READ_STRUCTURE\u003d25T8B25T \\\u003cbr /\u003e      LANES\u003d1 \\\u003cbr /\u003e      DATA_TYPES\u003dBaseCalls \u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "The basecalls output directory. ",
       "name": "--BASECALLS_DIR",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -104,6 +119,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -194,6 +224,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -315,6 +360,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and\n specified data type.  If NO data type is specified then the default data types used by IlluminaBasecallsToSam are used.",

@@ -429,7 +429,7 @@
 
 		<h1>ConvertSequencingArtifactToOxoG</h1>
 
-		<p class="lead">Extract OxoG metrics from generalized artifacts metrics.  </p>
+		<p class="lead">Extract OxoG metrics from generalized artifacts metrics.  <p>This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of CollectSequencingArtifactsMetrics (a tool that provides detailed information on a variety of artifacts found in sequencing libraries) and converts them to the CollectOxoGMetrics tool's output format. This conveniently eliminates the need to run CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for <a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectSequencingArtifactsMetrics'>CollectSequencingArtifactsMetrics</a> and <a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectOxoGMetrics'>CollectOxoGMetrics</a> for additional information on these tools. <p>Note that only the base of the CollectSequencingArtifactsMetrics output file name is required for the (INPUT_BASE) parameter. For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics or artifact_metrics.txt.pre_adapter_detail_metrics, only the file name base 'artifact_metrics' is required on the command line for this parameter.  An output file called 'artifact_metrics.oxog_metrics' will be generated automatically.  Finally, to run this tool successfully, the REFERENCE_SEQUENCE must be provided.<p>This command also lets you specify the detail metrics files by name, if files are not in the usual location or have different names. For example, the arguments PRE_ADAPTER_IN and BAIT_BIAS_IN specify the file location of the  pre adapter detail metrics and the bait bias detail metrics respectively. If these arguments are provided then the value of INPUT_BASE is ignored. <h4>Usage example:</h4><pre>java -jar picard.jar ConvertSequencingArtifactToOxoG \<br />     I=artifact_metrics \<br />     R=reference.fasta</pre>Please see the metrics definitions page at <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectOxoGMetrics.CpcgMetrics'>ConvertSequencingArtifactToOxoG</a> for detailed descriptions of the output metrics produced by this tool.<hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -454,11 +454,26 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--BAIT_BIAS_IN">--BAIT_BIAS_IN</a><br />
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>The bait bias input file. Defaults to a filename based on the input basename</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT_BASE">--INPUT_BASE</a><br />
@@ -490,6 +505,13 @@
 					<td>null</td>
 					<td>The pre adapter details input file. Defaults to a filename based on the input basename</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -505,7 +527,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -580,11 +602,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BAIT_BIAS_IN">--BAIT_BIAS_IN </a>
 			 / <small>NA</small>
@@ -616,7 +660,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -646,6 +690,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT_BASE">--INPUT_BASE </a>
@@ -734,6 +790,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>NA</small>
 		</h3>
@@ -817,6 +885,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -827,7 +907,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

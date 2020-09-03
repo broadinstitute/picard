@@ -1,6 +1,21 @@
 {
-  "summary": "Reverts SAM or BAM files to a previous state.  ",
+  "summary": "Reverts SAM or BAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.\n\u003ch3\u003eExamples\u003c/h3\u003e\n\u003ch4\u003eExample with single output:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     O\u003dreverted.bam\n\n\u003ch4\u003eExample outputting by read group with output map:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     OUTPUT_BY_READGROUP\u003dtrue \\\n     OUTPUT_MAP\u003dreverted_bam_paths.tsv\n\nWill output a BAM/SAM file per read group.\n\u003ch4\u003eExample outputting by read group without output map:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     OUTPUT_BY_READGROUP\u003dtrue \\\n     O\u003d/write/reverted/read/group/bams/in/this/dir\n\nWill output a BAM file per read group. Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.\nNote: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to LENIENT or SILENT if the failures are expected to be obviated by the reversion process (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "When removing alignment information, the set of optional tags to remove.",
       "name": "--ATTRIBUTE_TO_CLEAR",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -349,6 +379,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "The sort order to create the reverted output file with.",
       "name": "--SORT_ORDER",
       "synonyms": "-SO",
@@ -488,6 +533,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Reverts a SAM file by optionally restoring original quality scores and by removing\n all alignment information.\n \u003cp\u003e\n \u003cp\u003e\n This tool removes or restores certain properties of the SAM records, including alignment information.\n It can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of\n restoring the original quality scores of a BAM file that has already undergone base quality score recalibration\n (BQSR) if the original qualities were retained during the calibration (in the OQ tag).\n \u003cp\u003e\n \u003ch3\u003eUsage Examples\u003c/h3\u003e\n \u003ch4\u003eOutput to a single file\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar RevertSam \\\\\n      I\u003dinput.bam \\\\\n      O\u003dreverted.bam\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003eOutput by read group into multiple files with sample map\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar RevertSam \\\\\n      I\u003dinput.bam \\\\\n      OUTPUT_BY_READGROUP\u003dtrue \\\\\n      OUTPUT_MAP\u003dreverted_bam_paths.tsv\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003eOutput by read group with no output map\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar RevertSam \\\\\n      I\u003dinput.bam \\\\\n      OUTPUT_BY_READGROUP\u003dtrue \\\\\n      O\u003d/write/reverted/read/group/bams/in/this/dir\n \u003c/pre\u003e\n This will output a BAM (Can be overridden with OUTPUT_BY_READGROUP_FILE_FORMAT option.)\n \u003cbr/\u003e\n Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to\n LENIENT or SILENT if the failures are expected to be obviated by the reversion process\n (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).",

@@ -429,7 +429,15 @@
 
 		<h1>FifoBuffer</h1>
 
-		<p class="lead">Provides a large, FIFO buffer that can be used to buffer input and output streams between programs.</p>
+		<p class="lead">Acts as a large memory buffer between processes that are connected with unix pipes for the case that one or more processes produces or consumes their input or output in bursts.  By inserting a large memory buffer between such processes each process can run at full speed and the bursts can be smoothed out by the memory buffer.
+ 
+<h3>Example</h3>
+  java -jar SamToFastq.jar \
+     F=my.fastq \
+     INTERLEAVE=true |
+  java -jar FifoBuffer |
+  bwa mem -t 8 \dev\stdin output.bam
+</p>
 
 			<h3>Category
 				<small> Other</small>
@@ -467,6 +475,13 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--BUFFER_SIZE">--BUFFER_SIZE</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -481,6 +496,14 @@
 					<td>How frequently, in seconds, to report debugging statistics. Set to zero for never.</td>
 				</tr>
 				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
+				</tr>
+				<tr>
 					<td><a href="#--IO_SIZE">--IO_SIZE</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -493,6 +516,13 @@
 					<!--<td>String</td> -->
 					<td>null</td>
 					<td>Name to use for Fifo in debugging statements.</td>
+				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -509,7 +539,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -584,11 +614,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BUFFER_SIZE">--BUFFER_SIZE </a>
 			 / <small>NA</small>
@@ -622,7 +674,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -666,6 +718,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--IO_SIZE">--IO_SIZE </a>
@@ -730,6 +794,18 @@
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
@@ -815,6 +891,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -825,7 +913,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

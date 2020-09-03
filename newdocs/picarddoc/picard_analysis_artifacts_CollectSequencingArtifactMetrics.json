@@ -1,6 +1,21 @@
 {
-  "summary": "Collect metrics to quantify single-base sequencing artifacts.  ",
+  "summary": "Collect metrics to quantify single-base sequencing artifacts.  \u003cp\u003eThis tool examines two sources of sequencing errors associated with hybrid selection protocols.  These errors are divided into two broad categories, pre-adapter and bait-bias.  Pre-adapter errors can arise from laboratory manipulations of a nucleic acid sample e.g. shearing and occur prior to the ligation of adapters for PCR amplification (hence the name pre-adapter).  \u003c/p\u003e\u003cp\u003eBait-bias artifacts occur during or after the target selection step, and correlate with substitution rates that are \u0027biased\u0027, or higher for sites having one base on the reference/positive strand relative to sites having the complementary base on that strand.  For example, during the target selection step, a (G\u003eT) artifact might result in a higher substitution rate at sites with a G on the positive strand (and C on the negative), relative to sites with the flip (C positive)/(G negative).  This is known as the \u0027G-Ref\u0027 artifact. \u003c/p\u003e\u003cp\u003eFor additional information on these types of artifacts, please see the corresponding GATK dictionary entries on \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6333\u0027\u003ebait-bias\u003c/a\u003e and \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6332\u0027\u003epre-adapter artifacts\u003c/a\u003e.\u003c/p\u003e\u003cp\u003eThis tool produces four files; summary and detail metrics files for both pre-adapter and bait-bias artifacts. The detailed metrics show the error rates for each type of base substitution within every possible triplet base configuration.  Error rates associated with these substitutions are Phred-scaled and provided as quality scores, the lower the value, the more likely it is that an alternate base call is due to an artifact. The summary metrics provide likelihood information on the \u0027worst-case\u0027 errors. \u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectSequencingArtifactMetrics \\\u003cbr /\u003e     I\u003dinput.bam \\\u003cbr /\u003e     O\u003dartifact_metrics.txt \\\u003cbr /\u003e     R\u003dreference_sequence.fasta\u003c/pre\u003ePlease see the metrics at the following links \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.PreAdapterDetailMetrics\u0027\u003ePreAdapterDetailMetrics\u003c/a\u003e, \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.PreAdapterSummaryMetrics\u0027\u003ePreAdapterSummaryMetrics\u003c/a\u003e, \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.BaitBiasDetailMetrics\u0027\u003eBaitBiasDetailMetrics\u003c/a\u003e, and \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.BaitBiasSummaryMetrics\u0027\u003eBaitBiasSummaryMetrics\u003c/a\u003e for complete descriptions of the output metrics produced by this tool. \u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "If true (default), then the sort order in the header file will be ignored.",
       "name": "--ASSUME_SORTED",
@@ -62,7 +77,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -134,6 +149,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -332,6 +362,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "Stop after processing N reads, mainly for debugging.",
       "name": "--STOP_AFTER",
       "synonyms": "NA",
@@ -480,6 +525,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Quantify substitution errors caused by mismatched base pairings during various\n stages of sample / library prep.\n\n We measure two distinct error types - artifacts that are introduced before\n the addition of the read1/read2 adapters (\"pre adapter\") and those that are\n introduced after target selection (\"bait bias\"). For each of these, we provide\n summary metrics as well as detail metrics broken down by reference context\n (the ref bases surrounding the substitution event).\n\n For a deeper explanation, see Costello et al. 2013:\n http://www.ncbi.nlm.nih.gov/pubmed/23303777",

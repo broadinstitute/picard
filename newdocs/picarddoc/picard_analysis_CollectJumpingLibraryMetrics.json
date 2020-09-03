@@ -1,6 +1,21 @@
 {
-  "summary": "Collect jumping library metrics. ",
+  "summary": "Collect jumping library metrics. \u003cp\u003eThis tool collects high-level metrics about the presence of outward-facing (jumping) and inward-facing (non-jumping) read pairs within a SAM or BAM file.For a brief primer on jumping libraries, see the GATK \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6326\u0027\u003eDictionary\u003c/a\u003e\u003c/p\u003e.\u003cp\u003eThis program gets all data for computation from the first read in each pair in which the mapping quality (MQ) tag is set with the mate\u0027s mapping quality.  If the MQ tag is not set, then the program assumes that the mate\u0027s MQ is greater than or equal to MINIMUM_MAPPING_QUALITY (default value is 0).\u003c/p\u003e \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectJumpingLibraryMetrics \\\u003cbr /\u003e      I\u003dinput.bam  \\\u003cbr /\u003e      O\u003djumping_metrics.txt\u003c/pre\u003ePlease see the output metrics documentation on \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#JumpingLibraryMetrics\u0027\u003eJumpingLibraryMetrics\u003c/a\u003e for detailed explanations of the output metrics.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Jumps greater than or equal to the greater of this value or 2 times the mode of the outward-facing pairs are considered chimeras",
       "name": "--CHIMERA_KB_MIN",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -164,6 +194,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -285,6 +330,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Command-line program to compute metrics about outward-facing pairs, inward-facing\n pairs, and chimeras in a jumping library.",

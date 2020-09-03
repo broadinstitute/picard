@@ -1,5 +1,5 @@
 {
-  "summary": "Downsample a SAM or BAM file to retain a subset of the reads based on the reads location in each tile in the flowcell.",
+  "summary": "\u003ch3\u003eSummary\u003c/h3\u003e\nClass to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the reads with the same queryname are either kept or dropped as a unit.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\nThe downsampling is _not_ random (and there is no random seed). It is deterministically determined by the position of each read within its tile. Specifically, it draws an ellipse that covers a FRACTION of the total tile\u0027s area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the same for all of them. The main concern of this downsampling method is that due to \"optical duplicates\" downsampling randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except for reads near the boundary of the circle) optical duplicates are kept or dropped as a group. By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See DEFAULT_READ_NAME_REGEX for more detail. The program traverses the INPUT twice: first to find out the size of each of the tiles, and next to perform the downsampling. Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated after downsampling. Thus, the default setting also removes the duplicate information. \n\nExample\n\njava -jar picard.jar PositionBasedDownsampleSam \\\n      I\u003dinput.bam \\\n      O\u003ddownsampled.bam \\\n      FRACTION\u003d0.1\n\nCaveats\n\nNote 1: This method is \u003cb\u003etechnology and read-name dependent\u003c/b\u003e. If the read-names do not have coordinate information embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider modifying {@link #READ_NAME_REGEX} in other cases. \n\nNote 2: The code has been designed to simulate, as accurately as possible, sequencing less, \u003cb\u003enot\u003c/b\u003e for getting an exact downsampled fraction (Use {@link DownsampleSam} for that.) In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument FRACTION. \n\nNote 3:Consider running {@link MarkDuplicates} after downsampling in order to \"expose\" the duplicates whose representative has been downsampled away.\n\nNote 4:The downsampling assumes a uniform distribution of reads in the flowcell. Input already downsampled with PositionBasedDownsampleSam violates this assumption. To guard against such input, PositionBasedDownsampleSam always places a PG record in the header of its output, and aborts whenever it finds such a PG record in its input.",
   "arguments": [
     {
       "summary": "Allow downsampling again despite this being a bad idea with possibly unexpected results.",
@@ -9,6 +9,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -89,6 +104,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -194,6 +224,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -315,6 +360,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the\n reads with the same queryname are either kept or dropped as a unit.\n \u003cbr/\u003e\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n The downsampling is \u003cb\u003enot\u003c/b\u003e random (and there is no random seed). It is deterministically determined by the position\n of each read within its tile. Specifically, it draws an ellipse that covers a #FRACTION of the total tile\u0027s\n area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads\n with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the\n same for all of them. The main concern of this downsampling method is that due to \"optical duplicates\" downsampling\n randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library\n size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except\n for reads near the boundary of the circle) optical duplicates are kept or dropped as a group.\n\n By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two\n to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See\n ReadNameParser#DEFAULT_READ_NAME_REGEX for more detail. The program traverses the #INPUT twice: first\n to find out the size of each of the tiles, and next to perform the downsampling.\n\n Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated\n after downsampling. Thus, the default setting also removes the duplicate information.\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar PositionBasedDownsampleSam \\\n       I\u003dinput.bam \\\n       O\u003ddownsampled.bam \\\n       FRACTION\u003d0.1\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n \u003col\u003e\n \u003cli\u003e\n This method is \u003cb\u003etechnology and read-name dependent\u003c/b\u003e. If the read-names do not have coordinate information\n embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines).\n this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider\n modifying #READ_NAME_REGEX in other cases.\n \u003c/li\u003e\n \u003cli\u003e\n The code has been designed to simulate, as accurately as possible, sequencing less, \u003cb\u003enot\u003c/b\u003e for getting an exact\n downsampled fraction (Use DownsampleSam for that.) In particular, since the reads may be distributed non-evenly\n within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument\n #FRACTION.\n \u003c/li\u003e\n \u003cli\u003e\n Consider running MarkDuplicates after downsampling in order to \"expose\" the duplicates whose representative has\n been downsampled away.\n \u003c/li\u003e\n \u003cli\u003e\n The downsampling assumes a uniform distribution of reads in the flowcell.\n Input already downsampled with PositionBasedDownsampleSam violates this assumption.\n To guard against such input,\n PositionBasedDownsampleSam always places a PG record in the header of its output,\n and aborts whenever it finds such a PG record in its input.\n \u003c/li\u003e\n \u003c/ol\u003e",

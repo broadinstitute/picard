@@ -1,6 +1,21 @@
 {
-  "summary": "Tool determines the barcode for each read in an Illumina lane.  ",
+  "summary": "Tool determines the barcode for each read in an Illumina lane.  \u003cp\u003eThis tool determines the numbers of reads containing barcode-matching sequences and provides statistics on the quality of these barcode matches.\u003c/p\u003e \u003cp\u003eIllumina sequences can contain at least two types of barcodes, sample and molecular (index).  Sample barcodes (B in the read structure) are used to demultiplex pooled samples while index barcodes (M in the read structure) are used to differentiate multiple reads of a template when carrying out paired-end sequencing.  Note that this tool only extracts sample (B) and not molecular barcodes (M).\u003c/p\u003e\u003cp\u003eBarcodes can be provided in the form of a list (BARCODE_FILE) or a string representing the barcode (BARCODE).  The BARCODE_FILE contains multiple fields including \u0027barcode_sequence\u0027 (or \u0027barcode_sequence_1\u0027), \u0027barcode_sequence_2\u0027 (optional), \u0027barcode_name\u0027, and \u0027library_name\u0027. In contrast, the BARCODE argument is used for runs with reads containing a single barcode (nonmultiplexed) and can be added directly as a string of text e.g. BARCODE\u003dCAATAGCG.\u003c/p\u003e\u003cp\u003eData is output per lane/tile within the BaseCalls directory with the file name format of \u0027s_{lane}_{tile}_barcode.txt\u0027.  These files contain the following tab-separated columns:\u003cul\u003e \u003cli\u003eRead subsequence at barcode position\u003c/li\u003e\u003cli\u003eY or N indicating if there was a barcode match\u003c/li\u003e\u003cli\u003eMatched barcode sequence (empty if read did not match one of the barcodes)\u003c/li\u003e  \u003cli\u003eThe number of mismatches if there was a barcode match\u003c/li\u003e  \u003cli\u003eThe number of mismatches to the second best barcode if there was a barcode match\u003c/li\u003e  \u003c/ul\u003eIf there is no match but we\u0027re close to the threshold of calling it a match, we output the barcode that would have been matched but in lower case.  Threshold values can be adjusted to accommodate barcode sequence mismatches from the reads.  The metrics file produced by the ExtractIlluminaBarcodes program indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.  These metrics are provided both per-barcode and per lane and can be found in the BaseCalls directory.\u003c/p\u003e\u003cp\u003eFor poorly matching barcodes, the order of specification of barcodes can cause arbitrary output differences.\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e \u003cpre\u003ejava -jar picard.jar ExtractIlluminaBarcodes \\\u003cbr /\u003e              BASECALLS_DIR\u003d/BaseCalls/ \\\u003cbr /\u003e              LANE\u003d1 \\\u003cbr /\u003e          READ_STRUCTURE\u003d25T8B25T \\\u003cbr /\u003e              BARCODE_FILE\u003dbarcodes.txt \\\u003cbr /\u003e              METRICS_FILE\u003dmetrics_output.txt \u003c/pre\u003ePlease see the ExtractIlluminaBarcodes.BarcodeMetric \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric\u0027\u003edefinitions\u003c/a\u003e for a complete description of the metrics produced by this tool.\u003c/p\u003e\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that have more than one barcode; use BARCODE_FILE in that case. ",
       "name": "--BARCODE",
@@ -77,7 +92,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -147,6 +162,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -345,6 +375,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -448,6 +493,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Determine the barcode for each read in an Illumina lane.\n For each tile, a file is written to the basecalls directory of the form s_\u003clane\u003e_\u003ctile\u003e_barcode.txt.\n An output file contains a line for each read in the tile, aligned with the regular basecall output\n The output file contains the following tab-separated columns:\n - read subsequence at barcode position\n - Y or N indicating if there was a barcode match\n - matched barcode sequence (empty if read did not match one of the barcodes).  If there is no match\n but we\u0027re close to the threshold of calling it a match we output the barcode that would have been\n matched but in lower case\n - distance to best matching barcode, \"mismatches\" (*)\n - distance to second-best matching barcode, \"mismatchesToSecondBest\" (*)\n\n NOTE (*): Due to an optimization the reported mismatches \u0026 mismatchesToSecondBest values may be inaccurate as long as\n the conclusion (match vs. no-match) isn\u0027t affected. For example, reported mismatches and\n mismatchesToSecondBest may be smaller than their true value if mismatches is truly larger than MAX_MISMATCHES.\n Also, mismatchesToSecondBest might be smaller than its true value if its true value is greater than\n mismatches + MIN_MISMATCH_DELTA.",

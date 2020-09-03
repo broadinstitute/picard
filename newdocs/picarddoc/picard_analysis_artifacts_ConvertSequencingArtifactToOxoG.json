@@ -1,6 +1,21 @@
 {
-  "summary": "Extract OxoG metrics from generalized artifacts metrics.  ",
+  "summary": "Extract OxoG metrics from generalized artifacts metrics.  \u003cp\u003eThis tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of CollectSequencingArtifactsMetrics (a tool that provides detailed information on a variety of artifacts found in sequencing libraries) and converts them to the CollectOxoGMetrics tool\u0027s output format. This conveniently eliminates the need to run CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/command-line-overview.html#CollectSequencingArtifactsMetrics\u0027\u003eCollectSequencingArtifactsMetrics\u003c/a\u003e and \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/command-line-overview.html#CollectOxoGMetrics\u0027\u003eCollectOxoGMetrics\u003c/a\u003e for additional information on these tools. \u003cp\u003eNote that only the base of the CollectSequencingArtifactsMetrics output file name is required for the (INPUT_BASE) parameter. For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics or artifact_metrics.txt.pre_adapter_detail_metrics, only the file name base \u0027artifact_metrics\u0027 is required on the command line for this parameter.  An output file called \u0027artifact_metrics.oxog_metrics\u0027 will be generated automatically.  Finally, to run this tool successfully, the REFERENCE_SEQUENCE must be provided.\u003cp\u003eThis command also lets you specify the detail metrics files by name, if files are not in the usual location or have different names. For example, the arguments PRE_ADAPTER_IN and BAIT_BIAS_IN specify the file location of the  pre adapter detail metrics and the bait bias detail metrics respectively. If these arguments are provided then the value of INPUT_BASE is ignored. \u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar ConvertSequencingArtifactToOxoG \\\u003cbr /\u003e     I\u003dartifact_metrics \\\u003cbr /\u003e     R\u003dreference.fasta\u003c/pre\u003ePlease see the metrics definitions page at \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectOxoGMetrics.CpcgMetrics\u0027\u003eConvertSequencingArtifactToOxoG\u003c/a\u003e for detailed descriptions of the output metrics produced by this tool.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "The bait bias input file. Defaults to a filename based on the input basename",
       "name": "--BAIT_BIAS_IN",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -182,6 +212,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -285,6 +330,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "",

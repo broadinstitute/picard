@@ -1,5 +1,5 @@
 {
-  "summary": "Compare two input \".sam\" or \".bam\" files.  ",
+  "summary": "Compare two input \".sam\" or \".bam\" files.  This tool initially compares the headers of SAM or BAM files.  If the file headers are comparable, the tool can perform either strict comparisons for which each alignment and the header must be identical, or a more lenient check of \"equivalence\", where reads with mapping quality \u003c LOW_MQ_THRESHOLD are allowed to have different alignments, duplicate marks are allowed to differ to account for ambiguities in selecting the representative read of a duplicate set, and some differences in headers is allowed.  By default, alignment comparisons, duplicate marking comparisons, and header comparisons are performed in the strict mode.  Results of comparison are summarised in  an output metrics file.\u003ch3\u003eUsage example:\u003c/h3\u003e\u003ch4\u003eCompareSAMs for exact matching:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CompareSAMs \\\u003cbr /\u003e      file_1.bam \\\u003cbr /\u003e      file_2.bam \\\u003cbr /\u003e      O\u003dcomparison.tsv\u003c/pre\u003e\n\u003ch4\u003eCompareSAMs for \"equivalence\":\u003c/h4\u003ejava -jar picard.jar CompareSAMs \\\u003cbr /\u003e      file_1.bam \\\u003cbr /\u003e      file_2.bam \\\u003cbr /\u003e      LENIENT_LOW_MQ_ALIGNMENT\u003dtrue \\\u003cbr /\u003e      LENIENT_DUP\u003dtrue \\\u003cbr /\u003e      O\u003dcomparison.tsv\u003c/pre\u003e\n\u003ch4\u003eCompareSAMs for \"equivalence\", allow certain differences in header:\u003c/h4\u003ejava -jar picard.jar CompareSAMs \\\u003cbr /\u003e      file_1.bam \\\u003cbr /\u003e      file_2.bam \\\u003cbr /\u003e      LENIENT_LOW_MQ_ALIGNMENT\u003dtrue \\\u003cbr /\u003e      LENIENT_DUP\u003dtrue \\\u003cbr /\u003e      LENIENT_HEADER\u003dtrue \\\u003cbr /\u003e      O\u003dcomparison.tsv\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Exactly two input .sam or .bam files to compare to one another.",
@@ -14,6 +14,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "positional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -212,6 +242,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -315,6 +360,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Rudimentary SAM comparer.  Compares headers, and if headers are compatible enough, compares SAMRecords,\n looking only at basic alignment info.  Summarizes the number of alignments that match, mismatch, are missing, etc.",

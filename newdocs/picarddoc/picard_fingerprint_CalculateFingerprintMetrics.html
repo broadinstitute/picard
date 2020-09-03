@@ -429,7 +429,14 @@
 
 		<h1>CalculateFingerprintMetrics</h1>
 
-		<p class="lead">Calculate statistics on fingerprints, checking their viability</p>
+		<p class="lead">Calculate statistics on fingerprints, checking their viabilityThis tools collects various statistics that pertain to a single fingerprint (<b>not</b> the comparison, or 'fingerprinting' of two distinct samples) and reports the results in a metrics file. <p>The statistics collected are p-values, where the null-hypothesis is that the fingerprint is collected from a non-contaminated, diploid human, whose genotypes are modelled by the probabilities given in the HAPLOTYPE_MAP file.<p>Please see the FingerprintMetrics <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#FingerprintMetrics'>definitions</a> for a complete description of the metrics produced by this tool.</p><hr /><p><h3>Example</h3>
+<pre>" +
+java -jar picard.jar CalculateFingerprintMetrics \
+      INPUT=sample.bam \
+      HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
+      OUTPUT=sample.fingerprint_metrics
+ </pre>
+</p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -482,6 +489,13 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--CALCULATE_BY">--CALCULATE_BY</a><br />
 					</td>
 					<!--<td>DataType</td> -->
@@ -496,11 +510,26 @@
 					<td>LOD score threshold for considering a genotype to be definitive.</td>
 				</tr>
 				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
+				</tr>
+				<tr>
 					<td><a href="#--NUMBER_OF_SAMPLING">--NUMBER_OF_SAMPLING</a><br />
 					</td>
 					<!--<td>int</td> -->
 					<td>100</td>
 					<td>Number of randomization trials for calculating the DISCRIMINATORY_POWER metric.</td>
+				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -517,7 +546,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -592,11 +621,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CALCULATE_BY">--CALCULATE_BY </a>
 			 / <small>NA</small>
@@ -641,7 +692,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -698,6 +749,18 @@
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
@@ -776,6 +839,18 @@
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
@@ -861,6 +936,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -871,7 +958,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

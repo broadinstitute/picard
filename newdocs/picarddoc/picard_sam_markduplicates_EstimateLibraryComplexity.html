@@ -429,7 +429,7 @@
 
 		<h1>EstimateLibraryComplexity</h1>
 
-		<p class="lead">Estimates the numbers of unique molecules in a sequencing library.  </p>
+		<p class="lead">Estimates the numbers of unique molecules in a sequencing library.  <p>This tool outputs quality metrics for a sequencing library preparation.Library complexity refers to the number of unique DNA fragments present in a given library.  Reductions in complexity resulting from PCR amplification during library preparation will ultimately compromise downstream analyses via an elevation in the number of duplicate reads.  PCR-associated duplication artifacts can result from: inadequate amounts of starting material (genomic DNA, cDNA, etc.), losses during cleanups, and size selection issues.  Duplicate reads can also arise from optical duplicates resulting from sequencing-machine optical sensor artifacts.</p>  <p>This tool attempts to estimate library complexity from sequence of read pairs alone.  Reads are sorted by the first N bases (5 by default) of the first read and then the first N bases of the second read of a pair.   Read pairs are considered to be duplicates if they match each other with no gaps and an overall mismatch rate less than or equal to MAX_DIFF_RATE (0.03 by default).  Reads of poor quality are filtered out to provide a more accurate estimate.  The filtering removes reads with any poor quality bases as defined by a read's MIN_MEAN_QUALITY (20 is the default value) across either the first or second read.  Unpaired reads are ignored in this computation.</p> <p>The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes these in the calculation of library size.  Also, since there is no alignment information used in this algorithm, an additional filter is applied to the data as follows.  After examining all reads, a histogram is built in which the number of reads in a duplicate set is compared with the number of of duplicate sets.   All bins that contain exactly one duplicate set are then removed from the histogram as outliers prior to the library size estimation.  </p><h4>Usage example:</h4><pre>java -jar picard.jar EstimateLibraryComplexity \<br />     I=input.bam \<br />     O=est_lib_complex_metrics.txt</pre>Please see the documentation for the companion <a href='https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates'>MarkDuplicates</a> tool.<hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -487,11 +487,26 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--BARCODE_TAG">--BARCODE_TAG</a><br />
 					</td>
 					<!--<td>String</td> -->
 					<td>null</td>
 					<td>Barcode SAM tag (ex. BC for 10X Genomics)</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_DIFF_RATE">--MAX_DIFF_RATE</a><br />
@@ -570,6 +585,13 @@
 					<td>null</td>
 					<td>Read two barcode SAM tag (ex. BX for 10X Genomics)</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -585,7 +607,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -660,11 +682,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BARCODE_TAG">--BARCODE_TAG </a>
 			 / <small>NA</small>
@@ -696,7 +740,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -726,6 +770,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
@@ -940,6 +996,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>NA</small>
 		</h3>
@@ -1023,6 +1091,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1033,7 +1113,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

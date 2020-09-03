@@ -1,5 +1,5 @@
 {
-  "summary": "Identifies duplicate reads, accounting for mate CIGAR.  ",
+  "summary": "Identifies duplicate reads, accounting for mate CIGAR.  This tool locates and tags duplicate reads (both PCR and optical) in a BAM or SAM file, where duplicate reads are defined as originating from the same original fragment of DNA, taking into account the CIGAR string of read mates. \u003cbr /\u003e\u003cbr /\u003eIt is intended as an improvement upon the original MarkDuplicates algorithm, from which it differs in several ways, includingdifferences in how it breaks ties. It may be the most effective duplicate marking program available, as it handles all cases including clipped and gapped alignments and locates duplicate molecules using mate cigar information. However, please note that it is not yet used in the Broad\u0027s production pipeline, so use it at your own risk. \u003cbr /\u003e\u003cbr /\u003eNote also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.  This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips (ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. \u003cbr /\u003e\u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MarkDuplicatesWithMateCigar \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003dmark_dups_w_mate_cig.bam \\\u003cbr /\u003e      M\u003dmark_dups_w_mate_cig_metrics.txt\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Add PG tag to each read in a SAM or BAM",
@@ -14,6 +14,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -113,7 +128,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -183,6 +198,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -411,6 +441,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "Skip record pairs with no mate cigar and include them in the output.",
       "name": "--SKIP_PAIRS_WITH_NO_MATE_CIGAR",
       "synonyms": "NA",
@@ -529,6 +574,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "An even better duplication marking algorithm that handles all cases including clipped\n and gapped alignments.\n \u003cp/\u003e\n This tool differs with MarkDuplicates as it may break ties differently.  Furthermore,\n as it is a one-pass algorithm, it cannot know the program records contained in the file\n that should be chained in advance.  Therefore it will only be able to examine the header\n to attempt to infer those program group records that have no associated previous program\n group record. If a read is encountered without a program record, or not one as previously\n defined, it will not be updated.\n \u003cp/\u003e\n This tool will also not work with alignments that have large gaps or skips, such as those\n from RNA-seq data.  This is due to the need to buffer small genomic windows to ensure\n integrity of the duplicate marking, while large skips (ex. skipping introns) in the\n alignment records would force making that window very large, thus exhausting memory.",

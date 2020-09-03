@@ -429,7 +429,36 @@
 
 		<h1>MergeBamAlignment</h1>
 
-		<p class="lead">Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  </p>
+		<p class="lead">Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  <h3>Summary</h3>
+A command-line tool for merging BAM/SAM alignment info from a third-party aligner with the data in an unmapped BAM file, producing a third BAM file that has alignment data (from the aligner) and all the remaining data from the unmapped BAM.
+
+Quick note: this is <b>not</b> a tool for taking multiple sam files and creating a bigger file by merging them. For that use-case, see {@link MergeSamFiles}.
+
+<h3>Details</h3>
+Many alignment tools (still!) require fastq format input. The unmapped bam may contain useful information that will be lost in the conversion to fastq (meta-data like sample alias, library, barcodes, etc., and read-level tags.)
+
+This tool takes an unaligned bam with meta-data, and the aligned bam produced by calling {@link SamToFastq} and then passing the result to an aligner/mapper. It produces a new SAM file that includes all aligned and unaligned reads and also carries forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the process of converting to fastq). The resulting file will be valid for use by Picard and GATK tools.
+
+The output may be coordinate-sorted, in which case the tags, NM, MD, and UQ will be calculated and populated, or query-name sorted, in which case the tags will not be calculated or populated.
+
+<h3>Usage example:</h3>
+
+java -jar picard.jar MergeBamAlignment \
+     ALIGNED=aligned.bam \
+     UNMAPPED=unmapped.bam \
+     O=merge_alignments.bam \
+     R=reference_sequence.fasta
+
+<h3>Caveats</h3>
+This tool has been developing for a while and many arguments have been added to it over the years. You may be particularly interested in the following (partial) list:
+<ul>
+<li>CLIP_ADAPTERS -- Whether to (soft-)clip the ends of the reads that are identified as belonging to adapters</li>
+<li>IS_BISULFITE_SEQUENCE -- Whether the sequencing originated from bisulfite sequencing, in which case NM will be calculated differently</li>
+<li>ALIGNER_PROPER_PAIR_FLAGS -- Use if the aligner that was used cannot be trusted to set the "Proper pair" flag and then the tool will set this flag based on orientation and distance between pairs.</li>
+<li>ADD_MATE_CIGAR -- Whether to use this opportunity to add the MC tag to each read.</li>
+<li>UNMAP_CONTAMINANT_READS (and MIN_UNCLIPPED_BASES) -- Whether to identify extremely short alignments (with clipping on both sides) as cross-species contamination and unmap the reads.</li>
+</ul>
+</p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -553,6 +582,13 @@
 					<td>Use the aligner's idea of what a proper pair is rather than computing in this program.</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--ATTRIBUTES_TO_REMOVE">--ATTRIBUTES_TO_REMOVE</a><br />
 					</td>
 					<!--<td>List[String]</td> -->
@@ -594,7 +630,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
-					<td>For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.</td>
+					<td>For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Reads are first soft clipped so that the 3' aligned end of each read does not extend past the 5' aligned end of its mate.  If HARD_CLIP_OVERLAPPING_READS is also true, then reads are additionally hard clipped so that the 3' unclipped end of each read does not extend past the 5' unclipped end of its mate.  Hard clipped bases and their qualities are stored in the XB and XQ tags, respectively.</td>
 				</tr>
 				<tr>
 					<td><a href="#--EXPECTED_ORIENTATIONS">--EXPECTED_ORIENTATIONS</a><br />
@@ -610,6 +646,14 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_SECONDARY_ALIGNMENTS">--INCLUDE_SECONDARY_ALIGNMENTS</a><br />
@@ -741,6 +785,13 @@
 					<td>DO_NOT_CHANGE</td>
 					<td>How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) Currently ignored unless UNMAP_CONTAMINANT_READS = true. Note that the DO_NOT_CHANGE strategy will actually reset the cigar and set the mapping quality on unmapped reads since otherwisethe result will be an invalid record. To force no change use the DO_NOT_CHANGE_INVALID strategy.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -763,7 +814,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -829,6 +880,16 @@
 					<!--<td>LogLevel</td> -->
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
+				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Deprecated Arguments</th>
@@ -916,6 +977,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ATTRIBUTES_TO_REMOVE">--ATTRIBUTES_TO_REMOVE </a>
 			 / <small>NA</small>
 		</h3>
@@ -980,7 +1053,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.</b><br />
+			<b>For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Reads are first soft clipped so that the 3' aligned end of each read does not extend past the 5' aligned end of its mate.  If HARD_CLIP_OVERLAPPING_READS is also true, then reads are additionally hard clipped so that the 3' unclipped end of each read does not extend past the 5' unclipped end of its mate.  Hard clipped bases and their qualities are stored in the XB and XQ tags, respectively.</b><br />
 			
 		</p>
 		<p>
@@ -1006,7 +1079,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -1056,6 +1129,18 @@
 		</h3>
 		<p class="args">
 			<b>If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
 			
 		</p>
 		<p>
@@ -1331,6 +1416,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SORT_ORDER">--SORT_ORDER </a>
 			 / <small>-SO</small>
 		</h3>
@@ -1491,6 +1588,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1501,7 +1610,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

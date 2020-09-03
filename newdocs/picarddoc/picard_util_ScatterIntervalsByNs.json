@@ -1,6 +1,21 @@
 {
-  "summary": "Writes an interval list created by splitting a reference at Ns.",
+  "summary": "Writes an interval list created by splitting a reference at Ns.A Program for breaking up a reference into intervals of alternating regions of N and ACGT bases.\u003cbr/\u003e\u003cbr/\u003e\u003cbr/\u003eUsed for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that will not cause problems at the edges of the intervals. By using large enough N blocks (so that the tools will not be able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with the resulting interval list will be the same as calling with one large region.\n\u003cbr/\u003e\u003ch3\u003eInput\u003c/h3\u003e- A reference file to use for creating the intervals (needs to have index and dictionary next to it.)\n- Which type of intervals to emit in the output (Ns only, ACGT only or both.)\n- An integer indicating the largest number of Ns in a contiguous block that will be \"tolerated\" and not converted into an N block.\n\n\u003ch3\u003eOutput\u003c/h3\u003e- An interval list (with a SAM header) where the names of the intervals are labeled (either N-block or ACGT-block) to indicate what type of block they define.\n\n\u003ch3\u003eUsage example\u003c/h3\u003e\u003ch4\u003eCreate an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar ScatterIntervalsByNs \\\n      REFERENCE\u003dreference_sequence.fasta \\\n      OUTPUT_TYPE\u003dACGT \\\n      OUTPUT\u003doutput.interval_list\n\u003c/pre\u003e\n\n",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -165,6 +195,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -268,6 +313,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "A Tool for breaking up a reference into intervals of alternating regions of N and ACGT bases.\n\n \u003cbr/\u003e\n \u003cbr/\u003e\n \u003ch3\u003eSummary\u003c/h3\u003e\n Used for creating a broken-up interval list that can be used for scattering a variant-calling pipeline in a way that\n will not cause problems at the edges of the intervals. By using large enough N blocks (so that the tools will not be\n able to anchor on both sides) we can be assured that the results of scattering and gathering the variants with the\n resulting interval list will be the same as calling with one large region.\n \u003cbr/\u003e\n \u003ch3\u003eInput\u003c/h3\u003e\n \u003cil\u003e\n     \u003cli\u003eA reference file to use for creating the intervals\u003c/li\u003e\n     \u003cli\u003eWhich type of intervals to emit in the output (Ns only, ACGT only or both).\u003c/li\u003e\n     \u003cli\u003eAn integer indicating the largest number of Ns in a contiguous block that will be \"tolerated\" and not\n     converted into an N block.\u003c/li\u003e\n \u003c/il\u003e\n \u003cbr/\u003e\n \u003ch3\u003eOutput\u003c/h3\u003e\n \u003cbr/\u003e\n An interval list (with a SAM header) where the names of the intervals are labeled (either N-block or ACGT-block) to\n indicate what type of block they define.\n\n\n \u003ch3\u003eUsage example\u003c/h3\u003e\n \u003ch4\u003eCreate an interval list of intervals that do not contain any N blocks for use with haplotype caller on short reads\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar ScatterIntervalsByNs \\\n       R\u003dreference_sequence.fasta \\\n       OT\u003dBOTH \\\n       O\u003doutput.interval_list\n \u003c/pre\u003e",

@@ -429,7 +429,29 @@
 
 		<h1>RevertSam</h1>
 
-		<p class="lead">Reverts SAM or BAM files to a previous state.  </p>
+		<p class="lead">Reverts SAM or BAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.
+<h3>Examples</h3>
+<h4>Example with single output:</h4>
+java -jar picard.jar RevertSam \
+     I=input.bam \
+     O=reverted.bam
+
+<h4>Example outputting by read group with output map:</h4>
+java -jar picard.jar RevertSam \
+     I=input.bam \
+     OUTPUT_BY_READGROUP=true \
+     OUTPUT_MAP=reverted_bam_paths.tsv
+
+Will output a BAM/SAM file per read group.
+<h4>Example outputting by read group without output map:</h4>
+java -jar picard.jar RevertSam \
+     I=input.bam \
+     OUTPUT_BY_READGROUP=true \
+     O=/write/reverted/read/group/bams/in/this/dir
+
+Will output a BAM file per read group. Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.
+Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to LENIENT or SILENT if the failures are expected to be obviated by the reversion process (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).
+</p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -517,11 +539,26 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--ATTRIBUTE_TO_CLEAR">--ATTRIBUTE_TO_CLEAR</a><br />
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[NM, UQ, PG, MD, MQ, SA, MC, AS]</td>
 					<td>When removing alignment information, the set of optional tags to remove.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--KEEP_FIRST_DUPLICATE">--KEEP_FIRST_DUPLICATE</a><br />
@@ -614,6 +651,13 @@
 					<td>queryname</td>
 					<td>The sort order to create the reverted output file with.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -629,7 +673,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -704,11 +748,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ATTRIBUTE_TO_CLEAR">--ATTRIBUTE_TO_CLEAR </a>
 			 / <small>NA</small>
@@ -740,7 +806,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -770,6 +836,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
@@ -998,6 +1076,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SORT_ORDER">--SORT_ORDER </a>
 			 / <small>-SO</small>
 		</h3>
@@ -1108,6 +1198,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1118,7 +1220,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

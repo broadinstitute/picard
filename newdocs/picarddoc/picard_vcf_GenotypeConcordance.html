@@ -429,7 +429,41 @@
 
 		<h1>GenotypeConcordance</h1>
 
-		<p class="lead">Calculates the concordance between genotype data of one sample in each of two VCFs - truth (or reference) vs. calls.</p>
+		<p class="lead">Calculates the concordance between genotype data of one sample in each of two VCFs - truth (or reference) vs. calls.<h3>Summary</h3>Calculates the concordance between genotype data of one sample in each of two VCFs - one being considered the truth (or reference) the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics are reported.
+
+<h3>Details</h3>
+This tool evaluates the concordance between genotype calls for a sample in different callsets where one is being considered as the "truth" (aka standard, or reference) and the other as the "call" that is being evaluated for accuracy. The Comparison can be restricted to a confidence interval which is typically used in order to enable proper assessment of False Positives and the False-Positive Rate (FPR).
+
+<h3>Usage example</h3>
+<h4>Compare two VCFs within a confidence region</h4>
+
+java -jar picard.jar GenotypeConcordance \
+      CALL_VCF=input.vcf \
+      CALL_SAMPLE=sample_name \
+      O=gc_concordance.vcf \
+      TRUTH_VCF=truth_set.vcf \
+      TRUTH_SAMPLE=sample_in_truth \
+      INTERVALS=confident.interval_list \
+      MISSING_SITES_HOM_REF = true
+
+<h3>Output Metrics:</h3>
+Output metrics consists of GenotypeConcordanceContingencyMetrics, GenotypeConcordanceSummaryMetrics, and GenotypeConcordanceDetailMetrics.  For each set of metrics, the data is broken into separate sections for SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes  of variants are not included.
+
+- GenotypeConcordanceContingencyMetrics enumerate the constituents of each contingent in a callset including true-positive(TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls. Seehttp://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceContingencyMetrics for more details.
+- GenotypeConcordanceDetailMetrics include the numbers of SNPs and INDELs for each contingent genotype as well as thenumber of validated genotypes. Seehttp://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceDetailMetrics for more details.- GenotypeConcordanceSummaryMetrics provide specific details for the variant caller performance on a callset including:values for sensitivity, specificity, and positive predictive values. Seehttp://broadinstitute.github.io/picard/picard-metric-definitions.html#GenotypeConcordanceSummaryMetrics for more details.
+
+Useful definitions applicable to alleles and genotypes:
+
+Truthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validatedwith multiple technologies e.g. Genome In A Bottle Consortium (GIAB) (https://sites.stanford.edu/abms/giab)
+TP - True-positives are variant sites that match against the truth-set
+FP - False-positives are reference sites miscalled as variant
+FN - False-negatives are variant sites miscalled as reference
+TN - True-negatives are correctly called as reference
+Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set
+
+<h3>VCF Output:</h3>
+- The concordance state will be stored in the CONC_ST tag in the INFO field
+- The truth sample name will be "truth" and call sample name will be "call"</p>
 
 			<h3>Category
 				<small> Variant Evaluation and Refinement</small>
@@ -534,12 +568,27 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--CALL_SAMPLE">--CALL_SAMPLE</a><br />
 								&nbsp;<em>-CS</em>
 					</td>
 					<!--<td>String</td> -->
 					<td>null</td>
 					<td>The name of the call sample within the call VCF. Not required if only one sample exists.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--IGNORE_FILTER_STATUS">--IGNORE_FILTER_STATUS</a><br />
@@ -613,6 +662,13 @@
 					<td>false</td>
 					<td>If true, use the VCF index, else iterate over the entire VCF.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -628,7 +684,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -703,11 +759,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CALL_SAMPLE">--CALL_SAMPLE </a>
 			 / <small>-CS</small>
@@ -752,7 +830,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -782,6 +860,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--IGNORE_FILTER_STATUS">--IGNORE_FILTER_STATUS </a>
@@ -935,6 +1025,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>NA</small>
 		</h3>
@@ -1055,6 +1157,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1065,7 +1179,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

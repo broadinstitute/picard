@@ -1,6 +1,21 @@
 {
-  "summary": "Subsets reads from a SAM or BAM file by applying one of several filters.",
+  "summary": "Subsets reads from a SAM or BAM file by applying one of several filters.\nTakes a SAM or BAM file and subsets it by either excluding or only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.\n\u003cbr /\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003ch4\u003eFilter by queryname\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\\u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       READ_LIST_FILE\u003dread_names.txt \\ \u003cbr /\u003e      FILTER\u003dincludeReadList\u003c/pre\u003e \u003ch4\u003eFilter by interval\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       INTERVAL_LIST\u003dregions.interval_list \\ \u003cbr/\u003e      FILTER\u003dincludePairedIntervals\u003c/pre\u003e \u003ch4\u003eFilter by Tag Value (type Z / String values only)\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       TAG\u003dCR \\ \u003cbr/\u003e      TAG_VALUE\u003dTTTGTCATCTCGAGTA \\ \u003cbr/\u003e      FILTER\u003dincludeTagValues\u003c/pre\u003e \u003ch4\u003eFilter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script\u003c/h4\u003e\u003cpre\u003ecat \u003c\u003cEOF \u003e script.js \u003cbr/\u003e/** reads having a soft clip larger than 2 bases in beginning of read*/ \u003cbr/\u003efunction accept(rec) {   \u003cbr/\u003e    if (rec.getReadUnmappedFlag()) return false; \u003cbr/\u003e    var cigar \u003d rec.getCigar(); \u003cbr/\u003e    if (cigar \u003d\u003d null) return false; \u003cbr/\u003e    var ce \u003d cigar.getCigarElement(0); \u003cbr/\u003e    return ce.getOperator().name() \u003d\u003d \"S\" \u0026\u0026 ce.length() \u003e 2; \u003cbr/\u003e} \u003cbr /\u003e\u003cbr /\u003eaccept(record); \u003cbr/\u003eEOF \u003cbr/\u003e\u003cbr/\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       JAVASCRIPT_FILE\u003dscript.js \\ \u003cbr/\u003e      FILTER\u003dincludeJavascript\u003c/pre\u003e ",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -107,6 +122,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -227,6 +257,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -399,6 +444,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     },
     {
       "summary": "Create \u003cOUTPUT\u003e.reads file containing names of reads from INPUT and OUTPUT (for debugging purposes.)",

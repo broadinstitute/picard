@@ -1,5 +1,5 @@
 {
-  "summary": "Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.",
+  "summary": "Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.\u003cp\u003eThe IlluminaBaseCallsToSam program collects, demultiplexes, and sorts reads across all of the tiles of a lane via barcode to produce an unmapped SAM/BAM file.  An unmapped BAM file is often referred to as a uBAM.  All barcode, sample, and library data is provided in the LIBRARY_PARAMS file.  Note, this LIBRARY_PARAMS file should be formatted according to the specifications indicated below.  The following is an example of a properly formatted LIBRARY_PARAMS file:\u003c/p\u003eBARCODE_1\tOUTPUT\tSAMPLE_ALIAS\tLIBRARY_NAME\nAAAAAAAA\tSA_AAAAAAAA.bam\tSA_AAAAAAAA\tLN_AAAAAAAA\nAAAAGAAG\tSA_AAAAGAAG.bam\tSA_AAAAGAAG\tLN_AAAAGAAG\nAACAATGG\tSA_AACAATGG.bam\tSA_AACAATGG\tLN_AACAATGG\nN\tSA_non_indexed.bam\tSA_non_indexed\tLN_NNNNNNNN\n \u003cp\u003eThe BARCODES_DIR file is produced by the \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes\u0027\u003eExtractIlluminaBarcodes\u003c/a\u003e tool for each lane of a flow cell.\u003c/p\u003e  \u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar IlluminaBasecallsToSam \\\u003cbr /\u003e      BASECALLS_DIR\u003d/BaseCalls/ \\\u003cbr /\u003e      LANE\u003d001 \\\u003cbr /\u003e      READ_STRUCTURE\u003d25T8B25T \\\u003cbr /\u003e      RUN_BARCODE\u003drun15 \\\u003cbr /\u003e      IGNORE_UNEXPECTED_BARCODES\u003dtrue \\\u003cbr /\u003e      LIBRARY_PARAMS\u003dlibrary.params \u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Which adapters to look for in the read.",
@@ -24,6 +24,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -120,7 +135,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -207,6 +222,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -570,6 +600,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "The list of tags to store each molecular index.  The number of tags should match the number of molecular indexes.",
       "name": "--TAG_PER_MOLECULAR_INDEX",
       "synonyms": "NA",
@@ -718,6 +763,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into\n SAM or BAM file format.\n \u003cp/\u003e\n In this application, barcode data is read from Illumina data file groups, each of which is associated with a tile.\n Each tile may contain data for any number of barcodes, and a single barcode\u0027s data may span multiple tiles.  Once the\n barcode data is collected from files, each barcode\u0027s data is written to its own SAM/BAM.  The barcode data must be\n written in order; this means that barcode data from each tile is sorted before it is written to file, and that if a\n barcode\u0027s data does span multiple tiles, data collected from each tile must be written in the order of the tiles\n themselves.\n \u003cp/\u003e\n This class employs a number of private subclasses to achieve this goal.  The TileReadAggregator controls the flow\n of operation.  It is fed a number of Tiles which it uses to spawn TileReaders.  TileReaders are responsible for\n reading Illumina data for their respective tiles from disk, and as they collect that data, it is fed back into the\n TileReadAggregator.  When a TileReader completes a tile, it notifies the TileReadAggregator, which reviews what was\n read and conditionally queues its writing to disk, baring in mind the requirements of write-order described in the\n previous paragraph.  As writes complete, the TileReadAggregator re-evaluates the state of reads/writes and may queue\n more writes.  When all barcodes for all tiles have been written, the TileReadAggregator shuts down.\n \u003cp/\u003e\n The TileReadAggregator controls task execution using a specialized ThreadPoolExecutor.  It accepts special Runnables\n of type PriorityRunnable which allow a priority to be assigned to the runnable.  When the ThreadPoolExecutor is\n assigning threads, it gives priority to those PriorityRunnables with higher priority values.  In this application,\n TileReaders are assigned lowest priority, and write tasks are assigned high priority.  It is designed in this fashion\n to minimize the amount of time data must remain in memory (write the data as soon as possible, then discard it from\n memory) while maximizing CPU usage.",

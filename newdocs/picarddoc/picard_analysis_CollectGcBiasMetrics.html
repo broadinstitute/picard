@@ -429,7 +429,7 @@
 
 		<h1>CollectGcBiasMetrics</h1>
 
-		<p class="lead">Collect metrics regarding GC bias. </p>
+		<p class="lead">Collect metrics regarding GC bias. This tool collects information about the relative proportions of guanine (G) and cytosine (C) nucleotides in a sample.  Regions of high and low G + C content have been shown to interfere with mapping/aligning, ultimately leading to fragmented genome assemblies and poor coverage in a phenomenon known as 'GC bias'.  Detailed information on the effects of GC bias on the collection and analysis of sequencing data can be found at DOI: 10.1371/journal.pone.0062856/.<br /><br /><p>The GC bias statistics are always output in a detailed long-form version, but a summary can also be produced. Both the detailed metrics and the summary metrics are output as tables '.txt' files) and an accompanying chart that plots the data ('.pdf' file). </p> <h4>Detailed metrics</h4>The table of detailed metrics includes GC percentages for each bin (GC), the percentage of WINDOWS corresponding to each GC bin of the reference sequence, the numbers of reads that start within a particular %GC content bin (READ_STARTS), and the mean base quality of the reads that correspond to a specific GC content distribution window (MEAN_BASE_QUALITY).  NORMALIZED_COVERAGE is a relative measure of sequence coverage by the reads at a particular GC content.For each run, the corresponding reference sequence is divided into bins or windows based on the percentage of G + C content ranging from 0 - 100%.  The percentages of G + C are determined from a defined length of sequence; the default value is set at 100 bases. The mean of the distribution will vary among organisms; human DNA has a mean GC content of 40%, suggesting a slight preponderance of AT-rich regions.  <br /><br /><h4>Summary metrics</h4>The table of summary metrics captures run-specific bias information including WINDOW_SIZE, ALIGNED_READS, TOTAL_CLUSTERS, AT_DROPOUT, and GC_DROPOUT.  While WINDOW_SIZE refers to the numbers of bases used for the distribution (see above), the ALIGNED_READS and TOTAL_CLUSTERS are the total number of aligned reads and the total number of reads (after filtering) produced in a run. In addition, the tool produces both AT_DROPOUT and GC_DROPOUT metrics, which indicate the percentage of misaligned reads that correlate with low (%-GC is &lt; 50%) or high (%-GC is &gt; 50%) GC content respectively.  <br /><br />The percentage of 'coverage' or depth in a GC bin is calculated by dividing the number of reads of a particular GC content by the mean number of reads of all GC bins.  A number of 1 represents mean coverage, a number less than 1 represents lower than mean coverage (e.g. 0.5 means half as much coverage as average) while a number greater than 1 represents higher than mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).  This tool also tracks mean base-quality scores of the reads within each GC content bin, enabling the user to determine how base quality scores vary with GC content.  <br /> <br />The chart output associated with this data table plots the NORMALIZED_COVERAGE, the distribution of WINDOWs corresponding to GC percentages, and base qualities corresponding to each %GC bin.<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage Example:</h4><pre>java -jar picard.jar CollectGcBiasMetrics \<br />      I=input.bam \<br />      O=gc_bias_metrics.txt \<br />      CHART=gc_bias_metrics.pdf \<br />      S=summary_metrics.txt \<br />      R=reference_sequence.fasta</pre>Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#GcBiasMetrics'>the GcBiasMetrics documentation</a> for further explanations of each metric.<hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -500,12 +500,27 @@
 					<td>Use to get additional results without duplicates. This option allows to gain two plots per level at the same time: one is the usual one and the other excludes duplicates.</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--ASSUME_SORTED">--ASSUME_SORTED</a><br />
 								&nbsp;<em>-AS</em>
 					</td>
 					<!--<td>boolean</td> -->
 					<td>true</td>
 					<td>If true (default), then the sort order in the header file will be ignored.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--IS_BISULFITE_SEQUENCED">--IS_BISULFITE_SEQUENCED</a><br />
@@ -546,6 +561,13 @@
 					<td>0</td>
 					<td>Stop after processing N reads, mainly for debugging.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -561,7 +583,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -636,6 +658,16 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
@@ -652,6 +684,18 @@
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ASSUME_SORTED">--ASSUME_SORTED </a>
@@ -697,7 +741,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -727,6 +771,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
@@ -845,6 +901,18 @@
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--STOP_AFTER">--STOP_AFTER </a>
 			 / <small>NA</small>
 		</h3>
@@ -955,6 +1023,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -965,7 +1045,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

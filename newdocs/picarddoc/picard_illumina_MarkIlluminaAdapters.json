@@ -1,5 +1,5 @@
 {
-  "summary": "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ",
+  "summary": "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  \u003cp\u003eThis tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of a SAM file.  The SAM/BAM file must be sorted by query name.\u003c/p\u003e \u003cp\u003eOutputs a metrics file histogram showing counts of bases_clipped per read.\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MarkIlluminaAdapters \\\u003cbr /\u003e INPUT\u003dinput.sam \\\u003cbr /\u003eMETRICS\u003dmetrics.txt \u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.",
@@ -32,6 +32,21 @@
       "options": []
     },
     {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -104,6 +119,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -302,6 +332,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "For specifying adapters other than standard Illumina",
       "name": "--THREE_PRIME_ADAPTER",
       "synonyms": "NA",
@@ -420,6 +465,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Command line program to mark the location of adapter sequences.\n This also outputs a Histogram of metrics describing the clipped bases",

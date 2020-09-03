@@ -429,7 +429,7 @@
 
 		<h1>MarkDuplicates</h1>
 
-		<p class="lead">Identifies duplicate reads.  </p>
+		<p class="lead">Identifies duplicate reads.  <p>This tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are defined as originating from a single fragment of DNA.  Duplicates can arise during sample preparation e.g. library construction using PCR.  See also <a href='https://broadinstitute.github.io/picard/command-line-overview.html#EstimateLibraryComplexity'>EstimateLibraryComplexity</a> for additional notes on PCR duplication artifacts.  Duplicate reads can also result from a single amplification cluster, incorrectly detected as multiple clusters by the optical sensor of the sequencing instrument.  These duplication artifacts are referred to as optical duplicates.</p><p>The MarkDuplicates tool works by comparing sequences in the 5 prime positions of both reads and read-pairs in a SAM/BAM file.  An BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are collected, the tool differentiates the primary and duplicate reads using an algorithm that ranks reads by the sums of their base-quality scores (default method).</p>  <p>The tool's main output is a new SAM or BAM file, in which duplicates have been identified in the SAM flags field for each read.  Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024.  If you are not familiar with this type of annotation, please see the following <a href='https://www.broadinstitute.org/gatk/blog?id=7019'>blog post</a> for additional information.</p><p>Although the bitwise flag annotation indicates whether a read was marked as a duplicate, it does not identify the type of duplicate.  To do this, a new tag called the duplicate type (DT) tag was recently added as an optional output in  the 'optional field' section of a SAM/BAM file.  Invoking the TAGGING_POLICY option, you can instruct the program to mark all the duplicates (All), only the optical duplicates (OpticalOnly), or no duplicates (DontTag).  The records within the output of a SAM/BAM file will have values for the 'DT' tag (depending on the invoked TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or sequencing-platform artifact duplicates (SQ).  This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary methods to identify and differentiate duplicate types.  Set READ_NAME_REGEX to null to skip optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim.  Note that without optical duplicate counts, library size estimation will be inaccurate.</p> <p>MarkDuplicates also produces a metrics file indicating the numbers of duplicates for both single- and paired-end reads.</p>  <p>The program can take either coordinate-sorted or query-sorted inputs, however the behavior is slightly different.  When the input is coordinate-sorted, unmapped mates of mapped records and supplementary/secondary alignments are not marked as duplicates.  However, when the input is query-sorted (actually query-grouped), then unmapped mates and secondary/supplementary reads are not excluded from the duplication test and can be marked as duplicate reads.</p>  <p>If desired, duplicates can be removed using the REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES options.</p><h4>Usage example:</h4><pre>java -jar picard.jar MarkDuplicates \<br />      I=input.bam \<br />      O=marked_duplicates.bam \<br />      M=marked_dup_metrics.txt</pre>Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#DuplicationMetrics'>MarkDuplicates</a> for detailed explanations of the output metrics.<hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -482,6 +482,13 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--ASSUME_SORT_ORDER">--ASSUME_SORT_ORDER</a><br />
 								&nbsp;<em>-ASO</em>
 					</td>
@@ -525,6 +532,14 @@
 					<!--<td>ScoringStrategy</td> -->
 					<td>SUM_OF_BASE_QUALITIES</td>
 					<td>The scoring strategy for choosing the non-duplicate among candidates.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_FILE_HANDLES_FOR_READ_ENDS_MAP">--MAX_FILE_HANDLES_FOR_READ_ENDS_MAP</a><br />
@@ -651,6 +666,13 @@
 					<td>DontTag</td>
 					<td>Determines how duplicate types are recorded in the DT optional attribute.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -673,7 +695,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -749,6 +771,16 @@
 					<td>Control verbosity of logging.</td>
 				</tr>
 			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
+			<tr>
 				<th colspan="4" id="row-divider">Deprecated Arguments</th>
 			</tr>
 				<tr>
@@ -775,6 +807,18 @@
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--ASSUME_SORT_ORDER">--ASSUME_SORT_ORDER </a>
@@ -872,7 +916,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -937,6 +981,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
@@ -1193,6 +1249,18 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SORTING_COLLECTION_SIZE_RATIO">--SORTING_COLLECTION_SIZE_RATIO </a>
 			 / <small>NA</small>
 		</h3>
@@ -1325,6 +1393,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1335,7 +1415,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

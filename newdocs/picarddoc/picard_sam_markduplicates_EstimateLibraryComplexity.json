@@ -1,6 +1,21 @@
 {
-  "summary": "Estimates the numbers of unique molecules in a sequencing library.  ",
+  "summary": "Estimates the numbers of unique molecules in a sequencing library.  \u003cp\u003eThis tool outputs quality metrics for a sequencing library preparation.Library complexity refers to the number of unique DNA fragments present in a given library.  Reductions in complexity resulting from PCR amplification during library preparation will ultimately compromise downstream analyses via an elevation in the number of duplicate reads.  PCR-associated duplication artifacts can result from: inadequate amounts of starting material (genomic DNA, cDNA, etc.), losses during cleanups, and size selection issues.  Duplicate reads can also arise from optical duplicates resulting from sequencing-machine optical sensor artifacts.\u003c/p\u003e  \u003cp\u003eThis tool attempts to estimate library complexity from sequence of read pairs alone.  Reads are sorted by the first N bases (5 by default) of the first read and then the first N bases of the second read of a pair.   Read pairs are considered to be duplicates if they match each other with no gaps and an overall mismatch rate less than or equal to MAX_DIFF_RATE (0.03 by default).  Reads of poor quality are filtered out to provide a more accurate estimate.  The filtering removes reads with any poor quality bases as defined by a read\u0027s MIN_MEAN_QUALITY (20 is the default value) across either the first or second read.  Unpaired reads are ignored in this computation.\u003c/p\u003e \u003cp\u003eThe algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes these in the calculation of library size.  Also, since there is no alignment information used in this algorithm, an additional filter is applied to the data as follows.  After examining all reads, a histogram is built in which the number of reads in a duplicate set is compared with the number of of duplicate sets.   All bins that contain exactly one duplicate set are then removed from the histogram as outliers prior to the library size estimation.  \u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar EstimateLibraryComplexity \\\u003cbr /\u003e     I\u003dinput.bam \\\u003cbr /\u003e     O\u003dest_lib_complex_metrics.txt\u003c/pre\u003ePlease see the documentation for the companion \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates\u0027\u003eMarkDuplicates\u003c/a\u003e tool.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Barcode SAM tag (ex. BC for 10X Genomics)",
       "name": "--BARCODE_TAG",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -317,6 +347,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -420,6 +465,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003cp\u003eAttempts to estimate library complexity from sequence alone. Does so by sorting all reads\n by the first N bases (5 by default) of each read and then comparing reads with the first\n N bases identical to each other for duplicates.  Reads are considered to be duplicates if\n they match each other with no gaps and an overall mismatch rate less than or equal to\n MAX_DIFF_RATE (0.03 by default).\u003c/p\u003e\n \u003cp/\u003e\n \u003cp\u003eReads of poor quality are filtered out so as to provide a more accurate estimate. The filtering\n removes reads with any no-calls in the first N bases or with a mean base quality lower than\n MIN_MEAN_QUALITY across either the first or second read.\u003c/p\u003e\n \u003cp/\u003e\n \u003cp\u003eThe algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes\n these in the calculation of library size. Also, since there is no alignment to screen out technical\n reads one further filter is applied on the data.  After examining all reads a Histogram is built of\n [#reads in duplicate set -\u003e #of duplicate sets]; all bins that contain exactly one duplicate set are\n then removed from the Histogram as outliers before library size is estimated.\u003c/p\u003e",

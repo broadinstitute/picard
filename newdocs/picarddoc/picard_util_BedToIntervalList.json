@@ -1,6 +1,21 @@
 {
-  "summary": "Converts a BED file to a Picard Interval List.  ",
+  "summary": "Converts a BED file to a Picard Interval List.  This tool provides easy conversion from BED to the Picard interval_list format which is required by many Picard processing tools. Note that the coordinate system of BED files is such that the first base or position in a sequence is numbered \"0\", while in interval_list files it is numbered \"1\".\u003cbr /\u003e\u003cbr /\u003eBED files contain sequence data displayed in a flexible format that includes nine optional fields, in addition to three required fields within the annotation tracks. The required fields of a BED file include:\u003cpre\u003e     chrom - The name of the chromosome (e.g. chr20) or scaffold (e.g. scaffold10671) \u003cbr /\u003e     chromStart - The starting position of the feature in the chromosome or scaffold. The first base in a chromosome is numbered \"0\" \u003cbr /\u003e     chromEnd - The ending position of the feature in the chromosome or scaffold.  The chromEnd base is not included in the display of the feature. For example, the first 100 bases of a chromosome are defined as chromStart\u003d0, chromEnd\u003d100, and span the bases numbered 0-99.\u003c/pre\u003eIn each annotation track, the number of fields per line must be consistent throughout a data set. For additional information regarding BED files and the annotation field options, please see: http://genome.ucsc.edu/FAQ/FAQformat.html#format1.\u003cbr /\u003e \u003cbr /\u003e Interval_list files contain sequence data distributed into intervals. The interval_list file format is relatively simple and reflects the SAM alignment format to a degree.  A SAM style header must be present in the file that lists the sequence records against which the intervals are described.  After the header, the file then contains records, one per line in plain text format with the following values tab-separated::\u003cpre\u003e      -Sequence name (SN) - The name of the sequence in the file for identification purposes, can be chromosome number e.g. chr20 \u003cbr /\u003e      -Start position - Interval start position (starts at +1) \u003cbr /\u003e      -End position - Interval end position (1-based, end inclusive) \u003cbr /\u003e      -Strand - Indicates +/- strand for the interval (either + or -) \u003cbr /\u003e      -Interval name - (Each interval should have a unique name) \u003c/pre\u003e\u003cbr/\u003eThis tool requires a sequence dictionary, provided with the SEQUENCE_DICTIONARY or SD argument. The value given to this argument can be any of the following:\u003cpre\u003e    - A file with .dict extension generated using Picard\u0027s CreateSequenceDictionaryTool\u003c/br\u003e    - A reference.fa or reference.fasta file with a reference.dict in the same directory\u003c/br\u003e    - Another IntervalList with @SQ lines in the header from which to generate a dictionary\u003c/br\u003e    - A VCF that contains #contig lines from which to generate a sequence dictionary\u003c/br\u003e    - A SAM or BAM file with @SQ lines in the header from which to generate a dictionary\u003c/br\u003e\u003c/pre\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar BedToIntervalList \\\u003cbr /\u003e      I\u003dinput.bed \\\u003cbr /\u003e      O\u003dlist.interval_list \\\u003cbr /\u003e      SD\u003dreference_sequence.dict\u003c/pre\u003e\u003cbr /\u003e \u003cbr /\u003e \u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -149,6 +179,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -285,6 +330,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "",

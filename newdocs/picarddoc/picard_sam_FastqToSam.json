@@ -1,5 +1,5 @@
 {
-  "summary": "Converts a FASTQ file to an unaligned BAM or SAM file",
+  "summary": "\u003cp\u003eConverts a FASTQ file to an unaligned BAM or SAM file.\u003c/p\u003e\u003cp\u003eOutput read records will contain the original base calls and quality scores will be translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.\u003c/p\u003e\u003cp\u003eThere are also arguments to provide values for SAM header and read attributes that are not present in FASTQ (e.g see RG or SM below).\u003c/p\u003e\u003ch3\u003eInputs\u003c/h3\u003e\u003cp\u003eOne FASTQ file name for single-end or two for pair-end sequencing input data. These files might be in gzip compressed format (when file name is ending with \".gz\").\u003c/p\u003e\u003cp\u003eAlternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name (see USE_SEQUENCIAL_FASTQ for details below).\u003c/p\u003e\u003cp\u003eBy default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly using the QUALITY_FORMAT argument.\u003c/p\u003e\u003ch3\u003eOutput\u003c/h3\u003e\u003cp\u003eA single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.\u003c/p\u003e\u003ch3\u003eUsage examples\u003c/h3\u003e\u003ch4\u003eExample 1:\u003c/h4\u003e\u003cp\u003eSingle-end sequencing FASTQ file conversion. All reads are annotated as belonging to the \"rg0013\" read group that in turn is part of the sample \"sample001\".\u003c/p\u003e\u003cpre\u003ejava -jar picard.jar FastqToSam \\\n        F1\u003dinput_reads.fastq \\\n        O\u003dunaligned_reads.bam \\\n        SM\u003dsample001 \\\n        RG\u003drg0013\u003c/pre\u003e\u003ch4\u003eExample 2:\u003c/h4\u003e\u003cp\u003eSimilar to example 1 above, but for paired-end sequencing.\u003c/p\u003e\u003cpre\u003ejava -jar picard.jar FastqToSam \\\n       F1\u003dforward_reads.fastq \\\n       F2\u003dreverse_reads.fastq \\\n       O\u003dunaligned_read_pairs.bam \\\n       SM\u003dsample001 \\\n       RG\u003drg0013\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Allow (and ignore) empty lines",
@@ -9,6 +9,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -134,6 +149,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -405,6 +435,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "The sort order for the output sam/bam file.",
       "name": "--SORT_ORDER",
       "synonyms": "-SO",
@@ -574,6 +619,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Converts a FASTQ file to an unaligned BAM or SAM file.\n \u003cp\u003e\n     Output read records will contain the original base calls and quality scores will be\n     translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.\n \u003c/p\u003e\n \u003cp\u003e\n     There are also arguments to provide values for SAM header and read attributes that are not present in FASTQ\n     (e.g see \u003ccode\u003eRG\u003c/code\u003e or \u003ccode\u003eSM\u003c/code\u003e below).\n \u003c/p\u003e\n \u003ch3\u003eInputs\u003c/h3\u003e\n \u003cp\u003e\n     One FASTQ file name for single-end or two for pair-end sequencing input data.\n     These files might be in gzip compressed format (when file name is ending with \".gz\").\n \u003c/p\u003e\n \u003cp\u003e\n     Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name (see \u003ccode\u003eUSE_SEQUENCIAL_FASTQ\u003c/code\u003e for details below).\n \u003c/p\u003e\n \u003cp\u003e\n     By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly\n     using the \u003ccode\u003eQUALITY_FORMAT\u003c/code\u003e argument.\n \u003c/p\u003e\n \u003ch3\u003eOutput\u003c/h3\u003e\n A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.\n \u003ch3\u003eUsage examples\u003c/h3\u003e\n\n \u003ch4\u003eExample 1:\u003c/h4\u003e\n \u003cp\u003e\n     Single-end sequencing FASTQ file conversion. All reads are annotated\n     as belonging to the \"rg0013\" read group that in turn is part of the sample \"sample001\".\n \u003c/p\u003e\n \u003cpre\u003e\n java -jar picard.jar FastqToSam \\\n      F1\u003dinput_reads.fastq \\\n      O\u003dunaligned_reads.bam \\\n      SM\u003dsample001 \\\n      RG\u003drg0013\n \u003c/pre\u003e\n \u003ch4\u003eExample 2:\u003c/h4\u003e\n \u003cp\u003e\n     Similar to example 1 above, but for paired-end sequencing.\n \u003c/p\u003e\n \u003cpre\u003e\n java -jar picard.jar FastqToSam \\\n      F1\u003dforward_reads.fastq \\\n      F2\u003dreverse_reads.fastq \\\n      O\u003dunaligned_read_pairs.bam \\\n      SM\u003dsample001 \\\n      RG\u003drg0013\n \u003c/pre\u003e",

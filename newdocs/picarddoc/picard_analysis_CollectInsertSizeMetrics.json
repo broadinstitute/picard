@@ -1,6 +1,21 @@
 {
-  "summary": "Collect metrics about the insert size distribution of a paired-end library.",
+  "summary": "Collect metrics about the insert size distribution of a paired-end library. This tool provides useful metrics for validating library construction including the insert size distribution and read orientation of paired-end libraries.\u003c/p\u003eThe expected proportions of these metrics vary depending on the type of library preparation used, resulting from technical differences between pair-end libraries and mate-pair libraries. For a brief primer on paired-end sequencing and mate-pair reads, see the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6327\u0027\u003eGATK Dictionary\u003c/a\u003e.\u003cp\u003eThe CollectInsertSizeMetrics tool outputs the percentages of read pairs in each of the three orientations (FR, RF, and TANDEM) as a histogram. In addition, the insert size distribution is output as both a histogram (.insert_size_Histogram.pdf) and as a data table (.insert_size_metrics.txt).\u003c/p\u003e\u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectInsertSizeMetrics \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003dinsert_size_metrics.txt \\\u003cbr /\u003e      H\u003dinsert_size_histogram.pdf \\\u003cbr /\u003e      M\u003d0.5\u003c/pre\u003eNote: If processing a small file, set the minimum percentage option (M) to 0.5, otherwise an error may occur. \u003cbr /\u003e\u003cbr /\u003ePlease see \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#InsertSizeMetrics\u0027\u003eInsertSizeMetrics\u003c/a\u003e for detailed explanations of each metric.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "If true (default), then the sort order in the header file will be ignored.",
       "name": "--ASSUME_SORTED",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -89,6 +104,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -257,6 +287,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "Stop after processing N reads, mainly for debugging.",
       "name": "--STOP_AFTER",
       "synonyms": "NA",
@@ -375,6 +420,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Command line program to read non-duplicate insert sizes, create a Histogram\n and report distribution statistics.",

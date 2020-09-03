@@ -429,7 +429,7 @@
 
 		<h1>IlluminaBasecallsToFastq</h1>
 
-		<p class="lead">Generate FASTQ file(s) from Illumina basecall read data.  </p>
+		<p class="lead">Generate FASTQ file(s) from Illumina basecall read data.  <p>This tool generates FASTQ files from data in an Illumina BaseCalls output directory.  Separate FASTQ files are created for each template, barcode, and index (molecular barcode) read.  Briefly, the template reads are the target sequence of your experiment, the barcode sequence reads facilitate sample demultiplexing, and the index reads help mitigate instrument phasing errors.  For additional information on the read types, please see the following reference <a href'=http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3245947/'>here</a>.</p><p>In the absence of sample pooling (multiplexing) and/or barcodes, then an OUTPUT_PREFIX (file directory) must be provided as the sample identifier.  For multiplexed samples, a MULTIPLEX_PARAMS file must be specified.  The MULTIPLEX_PARAMS file contains the list of sample barcodes used to sort template, barcode, and index reads.  It is essentially the same as the BARCODE_FILE used in the<a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> tool.</p>     <p>Files from this tool use the following naming format: {prefix}.{type}_{number}.fastq with the {prefix} indicating the sample barcode, the {type} indicating the types of reads e.g. index, barcode, or blank (if it contains a template read).  The {number} indicates the read number, either first (1) or second (2) for paired-end sequencing. </p> <h4>Usage examples:</h4><pre>Example 1: Sample(s) with either no barcode or barcoded without multiplexing <br />java -jar picard.jar IlluminaBasecallsToFastq \<br />      READ_STRUCTURE=25T8B25T \<br />      BASECALLS_DIR=basecallDirectory \<br />      LANE=001 \<br />      OUTPUT_PREFIX=noBarcode.1 \<br />      RUN_BARCODE=run15 \<br />      FLOWCELL_BARCODE=abcdeACXX <br /><br />Example 2: Multiplexed samples <br />java -jar picard.jar IlluminaBasecallsToFastq \<br />      READ_STRUCTURE=25T8B25T \<br />      BASECALLS_DIR=basecallDirectory \<br />      LANE=001 \<br />      MULTIPLEX_PARAMS=demultiplexed_output.txt \<br />      RUN_BARCODE=run15 \<br />      FLOWCELL_BARCODE=abcdeACXX <br /></pre><p>The FLOWCELL_BARCODE is required if emitting Casava 1.8-style read name headers.</p><hr /></p>
 
 			<h3>Category
 				<small> Base Calling</small>
@@ -516,6 +516,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads and convert their quality scores to Q2.</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--BARCODES_DIR">--BARCODES_DIR</a><br />
 								&nbsp;<em>-BCD</em>
 					</td>
@@ -551,6 +558,14 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>Boolean</td> -->
 					<td>true</td>
 					<td>If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed is larger than the available memory.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--IGNORE_UNEXPECTED_BARCODES">--IGNORE_UNEXPECTED_BARCODES</a><br />
@@ -610,6 +625,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>null</td>
 					<td>If set, process no more than this many tiles (used for debugging).</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -625,7 +647,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -701,6 +723,16 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>Control verbosity of logging.</td>
 				</tr>
 			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
+			<tr>
 				<th colspan="4" id="row-divider">Deprecated Arguments</th>
 			</tr>
 				<tr>
@@ -738,6 +770,18 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BARCODES_DIR">--BARCODES_DIR </a>
@@ -795,7 +839,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -861,6 +905,18 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--IGNORE_UNEXPECTED_BARCODES">--IGNORE_UNEXPECTED_BARCODES </a>
@@ -1073,6 +1129,18 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TILE_LIMIT">--TILE_LIMIT </a>
 			 / <small>NA</small>
 		</h3>
@@ -1168,6 +1236,18 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1178,7 +1258,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

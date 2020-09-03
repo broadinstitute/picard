@@ -1,5 +1,5 @@
 {
-  "summary": "Lifts over a VCF file from one reference build to another.  ",
+  "summary": "Lifts over a VCF file from one reference build to another.  \u003ch3\u003eSummary\u003c/h3\u003e\nTool for \"lifting over\" a VCF from one genome build to another, producing a properly headered, sorted and indexed VCF in one go.\n\n\u003ch3\u003eDetails\u003c/h3\u003e\nThis tool adjusts the coordinates of variants within a VCF file to match a new reference. The output file will be sorted and indexed using the target reference build. To be clear, REFERENCE_SEQUENCE should be the \u003cem\u003etarget\u003c/em\u003e reference build (that is, the \"new\" one). The tool is based on the UCSC LiftOver tool (see http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation.\n\nFor each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed, and, in the case that the reference and alternate alleles of a SNP have been swapped in the new genome build, it will adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.\n\n\u003ch3\u003eExample\u003c/h3\u003e\njava -jar picard.jar LiftoverVcf \\\n    I\u003dinput.vcf \\\n    O\u003dlifted_over.vcf \\\n    CHAIN\u003db37tohg38.chain \\\n    REJECT\u003drejected_variants.vcf \\\n    R\u003dreference_sequence.fasta\n\n\u003ch3\u003eCaveats\u003c/h3\u003e\n\u003ch4\u003eRejected Records\u003c/h4\u003e\nRecords may be rejected because they cannot be lifted over or because of sequence incompatibilities between the source and target reference genomes.  Rejected records will be emitted to the REJECT file using the source genome build coordinates. The reason for the rejection will be stated in the FILTER field, and more detail may be placed in the INFO field.\n\u003ch4\u003eMemory Use\u003c/h4\u003e\nLiftOverVcf sorts the output using a \"SortingCollection\" which relies on MAX_RECORDS_IN_RAM to specify how many (vcf) records to hold in memory before \"spilling\" to disk. The default value is reasonable when sorting SAM files, but not for VCFs as there is no good default due to the dependence on the number of samples and amount of information in the INFO and FORMAT fields. Consider lowering to 100,000 or even less if you have many genotypes.\n",
   "arguments": [
     {
       "summary": "Allow INFO and FORMAT in the records that are not found in the header",
@@ -9,6 +9,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -104,6 +119,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -242,6 +272,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "INFO field annotations that should be deleted when swapping reference with variant alleles.",
       "name": "--TAGS_TO_DROP",
       "synonyms": "NA",
@@ -375,6 +420,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     },
     {
       "summary": "Warn on missing contig.",

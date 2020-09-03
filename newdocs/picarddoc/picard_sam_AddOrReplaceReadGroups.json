@@ -1,6 +1,21 @@
 {
-  "summary": "Assigns all the reads in a file to a single new read-group.",
+  "summary": "Assigns all the reads in a file to a single new read-group.\n\nThis tool accepts INPUT BAM and SAM files or URLs from the \u003ca href\u003d\"http://ga4gh.org/#/documentation\"\u003eGlobal Alliance for Genomics and Health (GA4GH)\u003c/a\u003e.\n\u003ch3\u003eUsage example:\u003c/h3\u003e\njava -jar picard.jar AddOrReplaceReadGroups \\\n      I\u003dinput.bam \\\n      O\u003doutput.bam \\\n      RGID\u003d4 \\\n      RGLB\u003dlib1 \\\n      RGPL\u003dILLUMINA \\\n      RGPU\u003dunit1 \\\n      RGSM\u003d20\n \n\u003ch3\u003eCaveats\u003c/h3\u003e\nThe value of the tags must adhere (according to the \u003ca href\u003d\"https://samtools.github.io/hts-specs/SAMv1.pdf\"\u003eSAM-spec\u003c/a\u003e) with the regex \u003ccode\u003e\u0027^[ -~]+$\u0027\u003c/code\u003e (one or more characters from the ASCII range 32 through 126). In particular \u0026lt;Space\u0026gt; is the only non-printing character allowed.\n\nThe program enables only the wholesale assignment of all the reads in the INPUT to a single read-group. If your file already has reads assigned to multiple read-groups, the original RG value will be lost. \n\nFor more information about read-groups, see the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6472\u0027\u003eGATK Dictionary entry.\u003c/a\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -332,6 +362,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "Optional sort order to output in. If not supplied OUTPUT is in the same order as INPUT.",
       "name": "--SORT_ORDER",
       "synonyms": "-SO",
@@ -471,6 +516,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Assigns all the reads in a file to a single new read-group.\n\n \u003ch3\u003eSummary\u003c/h3\u003e\n Many tools (Picard and GATK for example) require or assume the presence of at least one \u003ccode\u003eRG\u003c/code\u003e tag, defining a \"read-group\"\n to which each read can be assigned (as specified in the \u003ccode\u003eRG\u003c/code\u003e tag in the SAM record).\n This tool enables the user to assign all the reads in the #INPUT to a single new read-group.\n For more information about read-groups, see the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6472\u0027\u003e\n GATK Dictionary entry.\u003c/a\u003e\n \u003cbr /\u003e\n This tool accepts as INPUT BAM and SAM files or URLs from the\n \u003ca href\u003d\"http://ga4gh.org/#/documentation\"\u003eGlobal Alliance for Genomics and Health (GA4GH)\u003c/a\u003e.\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar AddOrReplaceReadGroups \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       RGID\u003d4 \\\n       RGLB\u003dlib1 \\\n       RGPL\u003dILLUMINA \\\n       RGPU\u003dunit1 \\\n       RGSM\u003d20\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n The value of the tags must adhere (according to the \u003ca href\u003d\"https://samtools.github.io/hts-specs/SAMv1.pdf\"\u003eSAM-spec\u003c/a\u003e)\n with the regex \u003cpre\u003e#READGROUP_ID_REGEX\u003c/pre\u003e (one or more characters from the ASCII range 32 through 126). In\n particular \u003ccode\u003e\u0026lt;Space\u0026gt;\u003c/code\u003e is the only non-printing character allowed.\n \u003cbr/\u003e\n The program enables only the wholesale assignment of all the reads in the #INPUT to a single read-group. If your file\n already has reads assigned to multiple read-groups, the original \u003ccode\u003eRG\u003c/code\u003e value will be lost.",

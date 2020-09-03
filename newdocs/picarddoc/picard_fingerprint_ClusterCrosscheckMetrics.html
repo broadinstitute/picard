@@ -429,7 +429,20 @@
 
 		<h1>ClusterCrosscheckMetrics</h1>
 
-		<p class="lead">Clusters the results of a CrosscheckFingerprints run by LOD score</p>
+		<p class="lead"><h3>Summary</h3>
+Clusters the results from a {@link CrosscheckFingerprints} run according to the LOD score. The resulting metric file can be used to assist diagnosing results from {@link CrosscheckFingerprints}. It clusters the connectivity graph between the different groups. Two groups are connected if they have a LOD score greater than the {@link #LOD_THRESHOLD}.
+ 
+<h3>Details</h3>The results of running {@link CrosscheckFingerprints} can be difficult to analyze, especially when many groups are related (meaning LOD greater than {@link #LOD_THRESHOLD}) in non-transitive manner (A is related to B, B is related to C, but A doesn't seem to be related to C.) {@link ClusterCrosscheckMetrics} clusters the metrics from {@link CrosscheckFingerprints} so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters do not get high LOD scores when compared to each other.
+
+<h3>Example</h3>
+<pre>
+    java -jar picard.jar ClusterCrosscheckMetrics \
+             INPUT=sample.crosscheck_metrics \
+             LOD_THRESHOLD=3 \
+             OUTPUT=sample.clustered.crosscheck_metrics
+</pre>
+
+The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and contains the original crosscheck metric values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes the {@link ClusteredCrosscheckMetric#CLUSTER} identifier and the size of the cluster (in {@link ClusteredCrosscheckMetric#CLUSTER_SIZE}.) Groups that do not have high LOD scores with any other group (including itself!) will not be included in the metric file. Note that cross-group comparisons are not included in the metric file. </p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -491,6 +504,21 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
+				</tr>
+				<tr>
 					<td><a href="#--LOD_THRESHOLD">--LOD_THRESHOLD</a><br />
 								&nbsp;<em>-LOD</em>
 					</td>
@@ -505,6 +533,13 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>Output file to write metrics to. Will write to stdout if null.</td>
+				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
@@ -521,7 +556,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -596,11 +631,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
 			 / <small>NA</small>
@@ -620,7 +677,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -650,6 +707,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
@@ -727,6 +796,18 @@
 		<p>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
@@ -812,6 +893,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -822,7 +915,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

@@ -1,5 +1,5 @@
 {
-  "summary": "Identifies duplicate reads using information from read positions and UMIs. ",
+  "summary": "Identifies duplicate reads using information from read positions and UMIs. \u003cp\u003eThis tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads aredefined as originating from a single fragment of DNA. It is based on the {@link MarkDuplicatesWithMateCigar} tool, with added logicto leverage Unique Molecular Identifier (UMI) information.\u003c/p\u003e\u003cp\u003eIt makes use of the fact that duplicate sets with UMIs can be broken up into subsets based oninformation contained in the UMI.  In addition to assuming that all members of a duplicate set must have the same start and end position, it imposes thatthey must also have sufficiently similar UMIs. In this context, \u0027sufficiently similar\u0027 is parameterized by the command lineargument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the sameoriginal molecule. This logic allows for sequencing errors in UMIs.\u003c/p\u003e\u003cp\u003e If UMIs contain dashes, the dashes will be ignored. If UMIs contain Ns, these UMIs will not contribute to UMI metricsassociated with each record. If the MAX_EDIT_DISTANCE_TO_JOIN allows, UMIs with Ns will be included in the duplicate set andthe UMI metrics associated with each duplicate set. Ns are counted as an edit distance from other bases {ATCG}, but are notconsidered different from each other.\u003c/p\u003e\u003cp\u003eThis tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see {@link MarkDuplicates} or{@link MarkDuplicatesWithMateCigar}. Mixed data (where some reads have UMIs and others do not) is not supported.\u003c/p\u003e\u003cp\u003eNote also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips(ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. \u003c/p\u003e\u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \u003cbr /\u003e      I\u003dinput.bam \u003cbr /\u003e      O\u003doutput.bam \u003cbr /\u003e      M\u003doutput_duplicate_metrics.txt \u003cbr /\u003e      UMI_METRICS\u003doutput_umi_metrics.txt\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Add PG tag to each read in a SAM or BAM",
@@ -24,6 +24,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -143,7 +158,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -228,6 +243,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -546,6 +576,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "This number, plus the maximum RAM available to the JVM, determine the memory footprint used by some of the sorting collections.  If you are running out of memory, try reducing this number.",
       "name": "--SORTING_COLLECTION_SIZE_RATIO",
       "synonyms": "NA",
@@ -737,6 +782,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003cp\u003eThis tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are\n defined as originating from a single fragment of DNA. It is based on the MarkDuplicatesWithMateCigar tool, with added logic\n to leverage Unique Molecular Identifier (UMI) information.\u003c/p\u003e\n\n \u003cp\u003eIt makes use of the fact that duplicate sets with UMIs can be broken up into subsets based on\n information contained in the UMI.  In addition to assuming that all members of a duplicate set must have the same start and end position, it imposes that\n they must also have sufficiently similar UMIs. In this context, \u0027sufficiently similar\u0027 is parameterized by the command line\n argument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the same\n original molecule. This logic allows for sequencing errors in UMIs.\u003c/p\u003e\n \u003cp\u003e If UMIs contain dashes, the dashes will be ignored. If UMIs contain Ns, these UMIs will not contribute to UMI metrics\n associated with each record. If the MAX_EDIT_DISTANCE_TO_JOIN allows, UMIs with Ns will be included in the duplicate set and\n the UMI metrics associated with each duplicate set. Ns are counted as an edit distance from other bases {ATCG}, but are not\n considered different from each other.\u003c/p\u003e\n \u003cp\u003eThis tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or\n MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.\u003c/p\u003e\n\n \u003cp\u003eNote also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.\n This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips\n (ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. \u003c/p\u003e\n\n \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n\n java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\\\\u003cbr /\u003e\n      I\u003dinput.bam \\\\\u003cbr /\u003e\n      O\u003doutput.bam \\\\\u003cbr /\u003e\n      M\u003doutput_duplicate_metrics.txt \\\\\u003cbr /\u003e\n      UMI_METRICS\u003doutput_umi_metrics.txt\n \u003c/pre\u003e\n \u003chr /\u003e",

@@ -429,7 +429,7 @@
 
 		<h1>BaitDesigner</h1>
 
-		<p class="lead">Designs oligonucleotide baits for hybrid selection reactions.</p>
+		<p class="lead">Designs oligonucleotide baits for hybrid selection reactions.<p>This tool is used to design custom bait sets for hybrid selection experiments. The following files are input into BaitDesigner: a (TARGET) interval list indicating the sequences of interest, e.g. exons with their respective coordinates, a reference sequence, and a unique identifier string (DESIGN_NAME). </p><p>The tool will output interval_list files of both bait and target sequences as well as the actual bait sequences in FastA format. At least two baits are output for each target sequence, with greater numbers for larger intervals. Although the default values for both bait size  (120 bases) nd offsets (80 bases) are suitable for most applications, these values can be customized. Offsets represent the distance between sequential baits on a contiguous stretch of target DNA sequence. </p><p>The tool will also output a pooled set of 55,000 (default) oligonucleotides representing all of the baits redundantly. This redundancy achieves a uniform concentration of oligonucleotides for synthesis by a vendor as well as equal numbersof each bait to prevent bias during the hybrid selection reaction. </p><h4>Usage example:</h4><pre>java -jar picard.jar BaitDesigner \<br />      TARGET=targets.interval_list \<br />      DESIGN_NAME=new_baits \<br />      R=reference_sequence.fasta </pre> <hr /></p>
 
 			<h3>Category
 				<small> Reference</small>
@@ -480,6 +480,13 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--BAIT_OFFSET">--BAIT_OFFSET</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -513,6 +520,14 @@
 					<!--<td>boolean</td> -->
 					<td>true</td>
 					<td>If true, fill up the pools with alternating fwd and rc copies of all baits. Equal copies of all baits will always be maintained</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--LEFT_PRIMER">--LEFT_PRIMER</a><br />
@@ -578,6 +593,13 @@
 					<td>CACTGCGGCTCCTCA</td>
 					<td>The right amplification primer to prepend to all baits for synthesis</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -593,7 +615,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -660,11 +682,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BAIT_OFFSET">--BAIT_OFFSET </a>
 			 / <small>NA</small>
@@ -712,7 +756,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -804,6 +848,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LEFT_PRIMER">--LEFT_PRIMER </a>
@@ -961,6 +1017,18 @@
 			&nbsp;<span class="label">CACTGCGGCTCCTCA</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TARGETS">--TARGETS </a>
 			 / <small>-T</small>
 		</h3>
@@ -1057,6 +1125,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1067,7 +1147,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

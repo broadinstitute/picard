@@ -1,6 +1,21 @@
 {
-  "summary": "Validates a SAM or BAM file.",
+  "summary": "Validates a SAM or BAM file.\u003cp\u003eThis tool reports on the validity of a SAM or BAM file relative to the SAM format specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper formatting, faulty alignments, incorrect flag values, etc. \u003c/p\u003e \u003cp\u003eBy default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout). Therefore, it is often more practical to run this tool initially using the MODE\u003dSUMMARY option.  This mode outputs a summary table listing the numbers of all \u0027errors\u0027 and \u0027warnings\u0027.\u003c/p\u003e \u003cp\u003eWhen fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful suggestions on error prioritization, please follow this link to obtain additional documentation on \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003eValidateSamFile\u003c/a\u003e.\u003c/p\u003e\u003cp\u003eAfter identifying and fixing your \u0027warnings/errors\u0027, we recommend that you rerun this tool to validate your SAM/BAM file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.\u003c/p\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003cpre\u003ejava -jar picard.jar ValidateSamFile \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      MODE\u003dSUMMARY\u003c/pre\u003e\u003cp\u003eTo obtain a complete list with descriptions of both \u0027ERROR\u0027 and \u0027WARNING\u0027 messages, please see our additional \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003edocumentation\u003c/a\u003e for this tool.\u003c/p\u003e\u003chr /\u003eReturn codes depend on the errors/warnings discovered:\u003cp\u003e-1 failed to complete execution\n0  ran successfully\n1  warnings but no errors\n2  errors and warnings\n3  errors but no warnings",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -264,6 +294,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "If true, this tool will not attempt to validate mate information. In general cases, this option should not be used.  However, in cases where samples have very high duplication or chimerism rates (\u003e 10%), the mate validation process often requires extremely large amounts of memory to run, so this flag allows you to forego that check.",
       "name": "--SKIP_MATE_VALIDATION",
       "synonyms": "-SMV",
@@ -397,6 +442,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003cp\u003eThis tool reports on the validity of a SAM or BAM file relative to the SAM format\n specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper\n formatting, faulty alignments, incorrect flag values, etc. \u003c/p\u003e\n\n \u003cp\u003eBy default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout).\n Therefore, it is often more practical to run this tool initially using the MODE\u003dSUMMARY option.  This mode outputs a summary\n table listing the numbers of all \u0027errors\u0027 and \u0027warnings\u0027.\u003c/p\u003e\n\n \u003cp\u003eWhen fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the\n errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful\n suggestions on error prioritization, please follow this link to obtain additional documentation on \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003eValidateSamFile\u003c/a\u003e.\u003c/p\u003e\n\n \u003cp\u003eAfter identifying and fixing your \u0027warnings/errors\u0027, we recommend that you rerun this tool to validate your SAM/BAM\n file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.\u003c/p\u003e\n\n This tool is a wrapper for SamFileValidator.\n\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar ValidateSamFile \\\u003cbr /\u003e\n       I\u003dinput.bam \\\u003cbr /\u003e\n       MODE\u003dSUMMARY\n \u003c/pre\u003e\n \u003cp\u003eTo obtain a complete list with descriptions of both \u0027ERROR\u0027 and \u0027WARNING\u0027 messages, please see our additional\n  \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003edocumentation\u003c/a\u003e for this tool.\u003c/p\u003e\n \u003chr /\u003e",

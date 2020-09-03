@@ -1,6 +1,21 @@
 {
-  "summary": "Estimates the rate of independent replication rate of reads within a bam. \n",
+  "summary": "Estimates the rate of independent replication rate of reads within a bam. \n\u003cp\u003eThis tool estimates the fraction of the input reads which would be marked as duplicates but are actually biological replicates, independent observations of the data. \u003cp\u003eThe tools examines duplicate sets of size 2 and 3 that overlap known heterozygous sites of the sample. The tool classifies these duplicate sets into heterogeneous and homogeneous sets (those that contain the two alleles that are present in the variant and those that only contain one of them). From this the toolestimates the fraction of duplicates that arose from different original molecules, i.e. independently. \u003cp\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectIndependentReplicateMetrics \\\n    I\u003dinput.bam \\\n    V\u003dinput.vcf \\\n    O\u003doutput.independent_replicates_metrics \\\n\u003c/pre\u003e ",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Barcode Quality SAM tag.",
       "name": "--BARCODE_BQ",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -104,6 +119,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -287,6 +317,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "Number of sets to examine before stopping.",
       "name": "--STOP_AFTER",
       "synonyms": "NA",
@@ -420,6 +465,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "A CLP that, given a BAM and a VCF with genotypes of the same sample, estimates the rate of independent replication of reads within the bam.\n That is, it estimates the fraction of the reads which look like duplicates (in the MarkDuplicates sense of the word) but are actually\n independent observations of the data. In the presence of Unique Molecular Identifiers (UMIs), various metrics are collected regarding the\n utility of the UMI\u0027s for the purpose of increasing coverage.\n \u003cp\u003e\n The estimation is based on duplicate-sets of size 2 and 3 and gives separate estimates from each. The assumption is that the duplication\n rate (biological or otherwise) is independent of the duplicate-set size. A significant difference between the two rates may be an indication that\n this assumption is incorrect.\n \u003cp\u003e\n The duplicate sets are found using the mate-cigar tag (MC) which is added by picard.sam.MergeBamAlignment , or picard.sam.FixMateInformation.\n This program will not work without the MC tag.\n \u003cp\u003e\n Explanation of the calculation behind the estimation can be found in the IndependentReplicateMetric class.\n \u003cp\u003e\n The calculation Assumes a diploid organism (more accurately, assumes that only two alleles can appear at a HET site and that\n these two alleles will appear at equal probabilities. It requires as input a VCF with genotypes for the sample in question.\n\n NOTE: This class is very much in alpha stage, and still under heavy development (feel free to join!)",

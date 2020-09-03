@@ -429,7 +429,16 @@
 
 		<h1>FastqToSam</h1>
 
-		<p class="lead">Converts a FASTQ file to an unaligned BAM or SAM file</p>
+		<p class="lead"><p>Converts a FASTQ file to an unaligned BAM or SAM file.</p><p>Output read records will contain the original base calls and quality scores will be translated depending on the base quality score encoding: FastqSanger, FastqSolexa and FastqIllumina.</p><p>There are also arguments to provide values for SAM header and read attributes that are not present in FASTQ (e.g see RG or SM below).</p><h3>Inputs</h3><p>One FASTQ file name for single-end or two for pair-end sequencing input data. These files might be in gzip compressed format (when file name is ending with ".gz").</p><p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name (see USE_SEQUENCIAL_FASTQ for details below).</p><p>By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly using the QUALITY_FORMAT argument.</p><h3>Output</h3><p>A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.</p><h3>Usage examples</h3><h4>Example 1:</h4><p>Single-end sequencing FASTQ file conversion. All reads are annotated as belonging to the "rg0013" read group that in turn is part of the sample "sample001".</p><pre>java -jar picard.jar FastqToSam \
+        F1=input_reads.fastq \
+        O=unaligned_reads.bam \
+        SM=sample001 \
+        RG=rg0013</pre><h4>Example 2:</h4><p>Similar to example 1 above, but for paired-end sequencing.</p><pre>java -jar picard.jar FastqToSam \
+       F1=forward_reads.fastq \
+       F2=reverse_reads.fastq \
+       O=unaligned_read_pairs.bam \
+       SM=sample001 \
+       RG=rg0013</pre><hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -536,6 +545,13 @@
 					<td>Allow (and ignore) empty lines</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--COMMENT">--COMMENT</a><br />
 								&nbsp;<em>-CO</em>
 					</td>
@@ -558,6 +574,14 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>Input fastq file (optionally gzipped) for the second read of paired end data.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--LIBRARY_NAME">--LIBRARY_NAME</a><br />
@@ -677,6 +701,13 @@
     RUNNAME_S8_L005_R1_004.fastq
 RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -692,7 +723,7 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -768,6 +799,16 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
 			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
+			<tr>
 				<th colspan="4" id="row-divider">Deprecated Arguments</th>
 			</tr>
 				<tr>
@@ -793,6 +834,18 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 		<p>
 		<span class="label label-info ">Boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMMENT">--COMMENT </a>
@@ -825,7 +878,7 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -892,6 +945,18 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LIBRARY_NAME">--LIBRARY_NAME </a>
@@ -1117,6 +1182,18 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SORT_ORDER">--SORT_ORDER </a>
 			 / <small>-SO</small>
 		</h3>
@@ -1260,6 +1337,18 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</b><br />
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1270,7 +1359,7 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</b><br />
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

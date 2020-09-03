@@ -1,5 +1,5 @@
 {
-  "summary": "Verify mate-pair information between mates and fix if needed.",
+  "summary": "Verify mate-pair information between mates and fix if needed.This tool ensures that all mate-pair information is in sync between each read and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file and then copied over the INPUT file (with the original placed in a .old file.)  Reads marked with the secondary alignment flag are written to the output file unchanged. However \u003cb\u003esupplementary\u003c/b\u003e reads are corrected so that they point to the primary, non-supplemental mate record.\n\n\u003ch3\u003eUsage example\u003c/h3\u003e\n\njava -jar picard.jar FixMateInformation \\\n      I\u003dinput.bam \\\n       O\u003dfixed_mate.bam \\\n      ADD_MATE_CIGAR\u003dtrue\n\n\u003ch3\u003eCaveats\u003c/h3\u003e\nThe program should run with fairly limited memory unless there are many mate pairs that are missing or far apart from each other in the file, as it keeps track of the unmatched mates.",
   "arguments": [
     {
       "summary": "Adds the mate CIGAR tag (MC) if true, does not if false.",
@@ -9,6 +9,21 @@
       "required": "no",
       "fulltext": "",
       "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -47,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -89,6 +104,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -179,6 +209,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -321,6 +366,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n This tool ensures that all mate-pair information is in sync between each read\n and its mate pair.  If no #OUTPUT file is supplied then the output is written to a temporary file\n and then copied over the #INPUT file (with the original placed in a .old file.)\n Reads marked with the secondary alignment flag are written to the output file unchanged.\n However, \u003cb\u003esupplementary\u003c/b\u003e reads are corrected so that they point to the primary,\n non-supplemental mate record.\n\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar FixMateInformation \\\n       I\u003dinput.bam \\\n       O\u003dfixed_mate.bam \\\n       ADD_MATE_CIGAR\u003dtrue\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart\n from each other in the file, as it keeps track of the unmatched mates",

@@ -429,7 +429,37 @@
 
 		<h1>CrosscheckFingerprints</h1>
 
-		<p class="lead">Checks that all data in the input files appear to have come from the same individual</p>
+		<p class="lead">Checks that all data in the set of input files appear to come from the same individual. Can be used to cross-check readgroups, libraries, samples, or files. Operates on SAM/BAM/CRAM and VCF (including gVCF and gzipped-VCF). 
+<h3>Summary</h3>
+Checks if all the genetic data within a set of files appear to come from the same individual. It quickly determines whether a group's genotype matches that of an input file by selective sampling, and has been designed to work well for low-depth SAM (as well as high depth ones and VCFs.) The tool collects fingerprints (essentially, genotype information from different parts of the genome) at the finest level available in the data (readgroup for read-data files and sample for variant-data files) and then optionally aggregates it by library, sample or file, to increase power and provide results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results are emitted into a CrosscheckMetric metric file. In this format the output will include the LOD score and also tumor-aware LOD score which can help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could cause it to otherwise fail to notice that samples are from the same individual.) A matrix output is also available to facilitate visual inspection of crosscheck results.
+ 
+Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics as a follow-up step to running CrosscheckFingerprints.
+ 
+There are cases where one would like to identify a few groups out of a collection of many possible groups (say to link a SAM to its correct sample in a multi-sample VCF. In this case one would not case for the cross-checking of the various samples in the VCF against each other, but only in checking the identity of the SAM against the various samples in the VCF. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints does the following:
+ - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. 
+ - aggregation of data happens at the SAMPLE level 
+ - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. 
+ - MATRIX_OUTPUT is disabled. 
+In some cases, the groups collected may not have any observations (calls for a VCF, reads for a SAM) at fingerprinting sites, or a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least one comparison where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.
+<hr/><h3>Examples</h3><h4>Check that all the readgroups from a sample match each other:</h4><pre>    java -jar picard.jar CrosscheckFingerprints \
+          INPUT=sample.with.many.readgroups.bam \
+          HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
+          LOD_THRESHOLD=-5 \
+          OUTPUT=sample.crosscheck_metrics </pre>
+ <h4>Check that all the readgroups match as expected when providing reads from two samples from the same individual:</h4> <pre>     java -jar picard.jar CrosscheckFingerprints \
+           INPUT=sample.one.with.many.readgroups.bam \
+           INPUT=sample.two.with.many.readgroups.bam \
+           HAPLOTYPE_MAP=fingerprinting_haplotype_database.txt \
+           LOD_THRESHOLD=-5 \
+           EXPECT_ALL_GROUPS_TO_MATCH=true \
+           OUTPUT=sample.crosscheck_metrics </pre>
+
+<h4>Detailed Explanation</h4>
+This tool calculates the LOD score for identity check between "groups" of data in the INPUT files as defined by the CROSSCHECK_BY argument. A positive value indicates that the data seems to have come from the same individual or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates that the data do not match. A score that is near zero is inconclusive and can result from low coverage or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in the appropriate readgroup header line, for VCF this is taken from the column label in the file-header. After combining all the data from the same group together, an all-against-all comparison is performed. Results are categorized as one of EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH, or AMBIGUOUS depending on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are less than LOD_THRESHOLD are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous). If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise. 
+
+The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
+ 
+When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that it finds. </p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -564,6 +594,13 @@
 					<td>Allow the use of duplicate reads in performing the comparison. Can be useful when duplicate marking has been overly aggressive and coverage is low.</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--CALCULATE_TUMOR_AWARE_RESULTS">--CALCULATE_TUMOR_AWARE_RESULTS</a><br />
 					</td>
 					<!--<td>boolean</td> -->
@@ -613,11 +650,19 @@
 					<td>Assumed genotyping error rate that provides a floor on the probability that a genotype comes from the expected sample. Must be greater than zero. </td>
 				</tr>
 				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
+				</tr>
+				<tr>
 					<td><a href="#--INPUT_SAMPLE_FILE_MAP">--INPUT_SAMPLE_FILE_MAP</a><br />
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. </td>
+					<td>A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample VCF) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. </td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT_SAMPLE_MAP">--INPUT_SAMPLE_MAP</a><br />
@@ -695,6 +740,13 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 					<td>null</td>
 					<td>A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and the sample as it should be used for comparisons to INPUT (in the second column). Note that in case of unrolling files (file-of-filenames) one would need to reference the final file, i.e. the file that contains the genomic data. Need only include the samples that change. Values in column 1 should be unique. Values in column 2 should be unique even in union with the remaining unmapped samples. Should only be used with SECOND_INPUT. </td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -710,7 +762,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -785,6 +837,16 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
@@ -801,6 +863,18 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CALCULATE_TUMOR_AWARE_RESULTS">--CALCULATE_TUMOR_AWARE_RESULTS </a>
@@ -833,7 +907,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -978,6 +1052,18 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INPUT">--INPUT </a>
 			 / <small>-I</small>
 		</h3>
@@ -995,7 +1081,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. </b><br />
+			<b>A tsv with two columns representing the sample as it should be used for comparisons to SECOND_INPUT (in the first column) and  the source file (in INPUT) for the fingerprint (in the second column). Need only to include the samples that change. Values in column 1 should be unique even in union with the remaining unmapped samples. Values in column 2 should be unique in the file. Will error if more than one sample is found in a file (multi-sample VCF) pointed to in column 2. Should only be used in the presence of SECOND_INPUT. </b><br />
 			
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>INPUT_SAMPLE_MAP</code>.</p>
@@ -1175,6 +1261,18 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>NA</small>
 		</h3>
@@ -1258,6 +1356,18 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1268,7 +1378,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

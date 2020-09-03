@@ -1,6 +1,21 @@
 {
-  "summary": "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.",
+  "summary": "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.\u003cp\u003eThis tool categorizes the reads that did not pass filter (PF-Failing) into four groups.  These groups are based on a heuristic that was derived by looking at a few titration experiments. \u003c/p\u003e\u003cp\u003eAfter examining the called bases from the first 24 cycles of each read, the PF-Failed reads are grouped into the following four categories: \u003cul\u003e\u003cli\u003eMISALIGNED - The first 24 basecalls of a read are uncalled (numNs~24).   These types of reads appear to be flow cell artifacts because reads were only found near tile boundaries and were concentration (library) independent\u003c/li\u003e \u003cli\u003eEMPTY - All 24 bases are called (numNs~0) but the number of bases with quality scores greater than two is less than or equal to eight (numQGtTwo\u003c\u003d8).  These reads were location independent within the tiles and were inversely proportional to the library concentration\u003c/li\u003e\u003cli\u003ePOLYCLONAL - All 24 bases were called and numQGtTwo\u003e\u003d12, were independent of their location with the tiles, and were directly proportional to the library concentration.  These reads are likely the result of PCR artifacts \u003c/li\u003e\u003cli\u003eUNKNOWN - The remaining reads that are PF-Failing but did not fit into any of the groups listed above\u003c/li\u003e\u003c/ul\u003e\u003c/p\u003e  \u003cp\u003eThe tool defaults to the SUMMARY output which indicates the number of PF-Failed reads per tile and groups them into the categories described above accordingly.\u003c/p\u003e \u003cp\u003eA DETAILED metrics option is also available that subdivides the SUMMARY outputs by the x- y- position of these reads within each tile.  To obtain the DETAILED metric table, you must add the PROB_EXPLICIT_READS option to your command line and set the value between 0 and 1.  This value represents the fractional probability of PF-Failed reads to send to output.  For example, if PROB_EXPLICIT_READS\u003d0, then no metrics will be output.  If PROB_EXPLICIT_READS\u003d1, then it will provide detailed metrics for all (100%) of the reads.  It follows that setting the PROB_EXPLICIT_READS\u003d0.5, will provide detailed metrics for half of the PF-Failed reads.\u003c/p\u003e \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\u003ch4\u003eUsage example: (SUMMARY Metrics)\u003c/h4\u003e \u003cpre\u003ejava -jar picard.jar CollectHiSeqXPfFailMetrics \\\u003cbr /\u003e      BASECALLS_DIR\u003d/BaseCalls/ \\\u003cbr /\u003e      OUTPUT\u003d/metrics/ \\\u003cbr /\u003e      LANE\u003d001\u003c/pre\u003e\u003ch4\u003eUsage example: (DETAILED Metrics)\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectHiSeqXPfFailMetrics \\\u003cbr /\u003e      BASECALLS_DIR\u003d/BaseCalls/ \\\u003cbr /\u003e      OUTPUT\u003d/Detail_metrics/ \\\u003cbr /\u003e      LANE\u003d001 \\\u003cbr /\u003e      PROB_EXPLICIT_READS\u003d1\u003c/pre\u003ePlease see our documentation on the \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric\u0027\u003eSUMMARY\u003c/a\u003e and \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric\u0027\u003eDETAILED\u003c/a\u003e metrics for comprehensive explanations of the outputs produced by this tool.\u003chr /\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "The Illumina basecalls directory. ",
       "name": "--BASECALLS_DIR",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -74,6 +89,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -197,6 +227,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -300,6 +345,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Collect metrics regarding the reason for reads (sequenced by HiSeqX) not passing the Illumina PF Filter. (BETA)",

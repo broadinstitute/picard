@@ -1,6 +1,21 @@
 {
-  "summary": "Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.",
+  "summary": "This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retainingall site level information, including annotations based on genotypes (e.g. AN, AF). Output can beany supported variant format including .vcf, .vcf.gz or .bcf. \u003cbr /\u003e\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MakeSitesOnlyVcf \\ \u003cbr /\u003e      INPUT\u003dinput_variants.vcf \\ \u003cbr /\u003e      OUTPUT\u003doutput_variants.vcf\u003c/pre\u003e",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
@@ -17,7 +32,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -59,6 +74,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -149,6 +179,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -255,6 +300,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Creates a VCF that contains all the site-level information for all records in the input VCF but no genotype information.\n\n \u003ch3\u003e Summary \u003c/h3\u003e\n This tool reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining all site level information,\n including annotations based on genotypes (e.g. AN, AF). Output can be any supported variant format including .vcf,\n .vcf.gz or .bcf.\n\n \u003ch3\u003e Inputs\u003c/h3\u003e\n \u003cul\u003e\n     \u003cli\u003e Input VCF or BCF file containing genotype and site-level information. \u003c/li\u003e\n     \u003cli\u003e Output VCF or BCF file containing only site-level information. \u003c/li\u003e\n     \u003cli\u003e [Optional] Names of one or more samples to include in the output VCF. \u003c/li\u003e\n \u003c/ul\u003e\n\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar MakeSitesOnlyVcf \\\n      INPUT\u003dinput_variants.vcf \\\n      OUTPUT\u003doutput_variants.vcf\n \u003c/pre\u003e",

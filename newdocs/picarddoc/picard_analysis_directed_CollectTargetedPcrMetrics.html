@@ -429,7 +429,7 @@
 
 		<h1>CollectTargetedPcrMetrics</h1>
 
-		<p class="lead">Calculate PCR-related metrics from targeted sequencing data. </p>
+		<p class="lead">Calculate PCR-related metrics from targeted sequencing data. <p>This tool calculates a set of PCR-related metrics from an aligned SAM or BAM file containing targeted sequencing data. It is appropriate for data produced with multiple small-target technologies including exome sequencing an custom amplicon panels such as the Illumina <a href='http://www.illumina.com/content/dam/illumina-marketing/documents/products/datasheets/datasheet_truseq_custom_amplicon.pdf'>TruSeq Custom Amplicon (TSCA)</a> kit.</p><p>If a reference sequence is provided, AT/GC dropout metrics will be calculated and the PER_TARGET_COVERAGE  option can be used to output GC content and mean coverage information for each target. The AT/GC dropout metrics indicate the degree of inadequate coverage of a particular region based on its AT or GC content. The PER_TARGET_COVERAGE option can be used to output GC content and mean sequence depth information for every target interval. </p><p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage Example</h4><pre>java -jar picard.jar CollectTargetedPcrMetrics \<br />       I=input.bam \<br />       O=output_pcr_metrics.txt \<br />       R=reference.fasta \<br />       AMPLICON_INTERVALS=amplicon.interval_list \<br />       TARGET_INTERVALS=targets.interval_list </pre>Please see the metrics definitions page on <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#TargetedPcrMetrics'>TargetedPcrMetrics</a> for detailed explanations of the output metrics produced by this tool.<hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -523,6 +523,13 @@
 					<td>Allele fraction for which to calculate theoretical sensitivity.</td>
 				</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
 					<td><a href="#--CLIP_OVERLAPPING_READS">--CLIP_OVERLAPPING_READS</a><br />
 					</td>
 					<!--<td>boolean</td> -->
@@ -544,6 +551,14 @@
 					<!--<td>String</td> -->
 					<td>null</td>
 					<td>Custom amplicon set name. If not provided it is inferred from the filename of the AMPLICON_INTERVALS intervals.</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
 				</tr>
 				<tr>
 					<td><a href="#--INCLUDE_INDELS">--INCLUDE_INDELS</a><br />
@@ -611,6 +626,13 @@
 					<td>null</td>
 					<td>Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -626,7 +648,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -701,6 +723,16 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
@@ -730,6 +762,18 @@
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--CLIP_OVERLAPPING_READS">--CLIP_OVERLAPPING_READS </a>
@@ -776,7 +820,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -818,6 +862,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--INCLUDE_INDELS">--INCLUDE_INDELS </a>
@@ -988,6 +1044,18 @@
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TARGET_INTERVALS">--TARGET_INTERVALS </a>
 			 / <small>-TI</small>
 		</h3>
@@ -1096,6 +1164,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -1106,7 +1186,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

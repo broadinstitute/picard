@@ -1,5 +1,5 @@
 {
-  "summary": "Converts a BAM file into a BFQ (binary fastq formatted) file",
+  "summary": "\u003cp\u003eConverts a BAM file into a BFQ (binary fastq formatted) file.\u003c/p\u003e\u003cp\u003eThe BFQ format is the input format to some tools like Maq aligner.\u003c/p\u003e\u003ch3\u003eInput\u003c/h3\u003e\u003cp\u003eA single BAM file to convert\u003c/p\u003e\u003ch3\u003eOutput\u003c/h3\u003e\u003cp\u003eOne or two FASTQ files depending on whether the BAM file contains single- or paired-end sequencing data. You must indicate the output directory that will contain these files (\u003ccode\u003eANALYSIS_DIR\u003c/code\u003e) and the output file name prefix (\u003ccode\u003eOUTPUT_FILE_PREFIX\u003c/code\u003e).\u003c/p\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003cpre\u003ejava -jar picard.jar BamToBfq \\\n     I\u003dinput.bam \\\n     ANALYSIS_DIR\u003doutput_dir \\\n     OUTPUT_FILE_PREFIX\u003doutput_name \\\n     PAIRED_RUN\u003dfalse\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "The analysis directory for the binary output file. ",
@@ -14,6 +14,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "options": []
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -62,7 +77,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -119,6 +134,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -302,6 +332,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "One or more directories with space available to be used by this program for temporary storage of working files",
       "name": "--TMP_DIR",
       "synonyms": "NA",
@@ -405,6 +450,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Converts a BAM file into a BFQ (binary fastq formatted) file.\n \u003cp\u003e\n The BFQ format is the input format to some tools like Maq aligner.\n \u003c/p\u003e\n \u003ch3\u003eInput\u003c/h3\u003e\n \u003cp\u003eA single BAM file to convert\u003c/p\u003e.\n \u003ch3\u003eOutput\u003c/h3\u003e\n \u003cp\u003eOne or two FASTQ files depending on whether the BAM file contains single- or\n paired-end sequencing data. You must indicate the output directory that will contain these files (\u003ccode\u003eANALYSIS_DIR\u003c/code\u003e)\n and the output file name prefix (\u003ccode\u003eOUTPUT_FILE_PREFIX\u003c/code\u003e).\u003c/p\u003e\n \u003ch3\u003eUsage example:\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar BamToBfq \\\n             I\u003dinput.bam \\\n             ANALYSIS_DIR\u003doutput_dir \\\n             OUTPUT_FILE_PREFIX\u003doutput_name \\\n             PAIRED_RUN\u003dfalse\n \u003c/pre\u003e",

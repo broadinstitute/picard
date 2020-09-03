@@ -429,7 +429,7 @@
 
 		<h1>CollectHiSeqXPfFailMetrics</h1>
 
-		<p class="lead">Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.</p>
+		<p class="lead">Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.<p>This tool categorizes the reads that did not pass filter (PF-Failing) into four groups.  These groups are based on a heuristic that was derived by looking at a few titration experiments. </p><p>After examining the called bases from the first 24 cycles of each read, the PF-Failed reads are grouped into the following four categories: <ul><li>MISALIGNED - The first 24 basecalls of a read are uncalled (numNs~24).   These types of reads appear to be flow cell artifacts because reads were only found near tile boundaries and were concentration (library) independent</li> <li>EMPTY - All 24 bases are called (numNs~0) but the number of bases with quality scores greater than two is less than or equal to eight (numQGtTwo<=8).  These reads were location independent within the tiles and were inversely proportional to the library concentration</li><li>POLYCLONAL - All 24 bases were called and numQGtTwo>=12, were independent of their location with the tiles, and were directly proportional to the library concentration.  These reads are likely the result of PCR artifacts </li><li>UNKNOWN - The remaining reads that are PF-Failing but did not fit into any of the groups listed above</li></ul></p>  <p>The tool defaults to the SUMMARY output which indicates the number of PF-Failed reads per tile and groups them into the categories described above accordingly.</p> <p>A DETAILED metrics option is also available that subdivides the SUMMARY outputs by the x- y- position of these reads within each tile.  To obtain the DETAILED metric table, you must add the PROB_EXPLICIT_READS option to your command line and set the value between 0 and 1.  This value represents the fractional probability of PF-Failed reads to send to output.  For example, if PROB_EXPLICIT_READS=0, then no metrics will be output.  If PROB_EXPLICIT_READS=1, then it will provide detailed metrics for all (100%) of the reads.  It follows that setting the PROB_EXPLICIT_READS=0.5, will provide detailed metrics for half of the PF-Failed reads.</p> <p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage example: (SUMMARY Metrics)</h4> <pre>java -jar picard.jar CollectHiSeqXPfFailMetrics \<br />      BASECALLS_DIR=/BaseCalls/ \<br />      OUTPUT=/metrics/ \<br />      LANE=001</pre><h4>Usage example: (DETAILED Metrics)</h4><pre>java -jar picard.jar CollectHiSeqXPfFailMetrics \<br />      BASECALLS_DIR=/BaseCalls/ \<br />      OUTPUT=/Detail_metrics/ \<br />      LANE=001 \<br />      PROB_EXPLICIT_READS=1</pre>Please see our documentation on the <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric'>SUMMARY</a> and <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric'>DETAILED</a> metrics for comprehensive explanations of the outputs produced by this tool.<hr /></p>
 
 			<h3>Category
 				<small> Diagnostics and Quality Control</small>
@@ -481,6 +481,21 @@
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
 			</tr>
 				<tr>
+					<td><a href="#--arguments_file">--arguments_file</a><br />
+					</td>
+					<!--<td>List[File]</td> -->
+					<td>[]</td>
+					<td>read one or more arguments files and add them to the command line</td>
+				</tr>
+				<tr>
+					<td><a href="#--help">--help</a><br />
+								&nbsp;<em>-h</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the help message</td>
+				</tr>
+				<tr>
 					<td><a href="#--N_CYCLES">--N_CYCLES</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -503,6 +518,13 @@
 					<td>0.0</td>
 					<td>The fraction of (non-PF) reads for which to output explicit classification. Output file will be <OUTPUT>.pffail_detailed_metrics (if PROB_EXPLICIT_READS != 0)</td>
 				</tr>
+				<tr>
+					<td><a href="#--version">--version</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display the version number for this tool</td>
+				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Common Arguments</th>
 			</tr>
@@ -518,7 +540,7 @@
 					</td>
 					<!--<td>Boolean</td> -->
 					<td>false</td>
-					<td>Whether to create a BAM index when writing a coordinate-sorted BAM file.</td>
+					<td>Whether to create an index when writing VCF or coordinate sorted BAM output.</td>
 				</tr>
 				<tr>
 					<td><a href="#--CREATE_MD5_FILE">--CREATE_MD5_FILE</a><br />
@@ -593,11 +615,33 @@
 					<td>INFO</td>
 					<td>Control verbosity of logging.</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Advanced Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--showHidden">--showHidden</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>display hidden arguments</td>
+				</tr>
 					</tbody>
 				</table>
 
 					<h3>Argument details</h3>
 					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--arguments_file">--arguments_file </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>read one or more arguments files and add them to the command line</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[File]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--BASECALLS_DIR">--BASECALLS_DIR </a>
 			 / <small>-B</small>
@@ -630,7 +674,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Whether to create a BAM index when writing a coordinate-sorted BAM file.</b><br />
+			<b>Whether to create an index when writing VCF or coordinate sorted BAM output.</b><br />
 			
 		</p>
 		<p>
@@ -660,6 +704,18 @@
 		<p>
 		<span class="label label-info ">String</span>
 			&nbsp;<span class="label">client_secrets.json</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--help">--help </a>
+			 / <small>-h</small>
+		</h3>
+		<p class="args">
+			<b>display the help message</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LANE">--LANE </a>
@@ -768,6 +824,18 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--showHidden">--showHidden </a>
+			 / <small>-showHidden</small>
+		</h3>
+		<p class="args">
+			<b>display hidden arguments</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TMP_DIR">--TMP_DIR </a>
 			 / <small>NA</small>
 		</h3>
@@ -851,6 +919,18 @@
 		<span class="label label-info ">LogLevel</span>
 			&nbsp;<span class="label">INFO</span>
 		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--version">--version </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>display the version number for this tool</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
 
         <hr>
         <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
@@ -861,7 +941,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.2-SNAPSHOT built at 09-03-2020 05:03:30.
+        <p class="version">Picard version 2.23.4-SNAPSHOT built at 03-00-2020 02:00:19.
         </p>
 
 	</div>

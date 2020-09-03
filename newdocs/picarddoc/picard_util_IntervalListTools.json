@@ -1,5 +1,5 @@
 {
-  "summary": "A tool for performing various IntervalList manipulations",
+  "summary": "A tool for performing various IntervalList manipulations \u003ch3\u003eSummary\u003c/h3\u003eThis tool offers multiple interval list file manipulation capabilities, including: sorting, merging, subtracting, padding, and other set-theoretic operations. The default action is to merge and sort the intervals provided in the INPUTs. Other options, e.g. interval subtraction, are controlled by the arguments.\u003cbr /\u003eBoth IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension .interval_list, while a VCF must have one of .vcf, .vcf.gz, .bcf When VCF file is used as input, each variant is translated into an using its reference allele or the END INFO annotation (if present) to determine the extent of the interval. \nIntervalListTools can also \"scatter\" the resulting interval-list into many interval-files. This can be useful for creating multiple interval lists for scattering an analysis over.\n\n \u003ch3\u003eDetails\u003c/h3\u003e The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header, the file then contains records, one per line in text format with the followingvalues tab-separated: \n\n - Sequence name (SN) \n - Start position (1-based)\n - End position (1-based, inclusive)\n - Strand (either + or -)\n - Interval name (ideally unique names for intervals)\n\nThe coordinate system is 1-based, closed-ended so that the first base in a sequence has position 1, and both the start and the end positions are included in an interval.\n\nExample interval list file\u003cpre\u003e@HD\tVN:1.0\n@SQ\tSN:chr1\tLN:501\n@SQ\tSN:chr2\tLN:401\nchr1\t1\t100\t+\tstarts at the first base of the contig and covers 100 bases\nchr2\t100\t100\t+\tinterval with exactly one base\n\u003c/pre\u003e\n\n\u003ch3\u003eUsage Examples\u003c/h3\u003e\u003ch4\u003e1. Combine the intervals from two interval lists:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar IntervalListTools \\\n      ACTION\u003dCONCAT \\\n      I\u003dinput.interval_list \\\n      I\u003dinput_2.interval_list \\\n      O\u003dnew.interval_list\u003c/pre\u003e \u003ch4\u003e2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting intervals:\u003c/h4\u003e \u003cpre\u003e java -jar picard.jar IntervalListTools \\\n       ACTION\u003dCONCAT \\\n       SORT\u003dtrue \\\n       UNIQUE\u003dtrue \\\n       I\u003dinput.interval_list \\\n       I\u003dinput_2.interval_list \\\n       O\u003dnew.interval_list \u003c/pre\u003e \u003ch4\u003e3. Subtract the intervals in SECOND_INPUT from those in INPUT\u003c/h4\u003e \u003cpre\u003e java -jar picard.jar IntervalListTools \\\n       ACTION\u003dSUBTRACT \\\n       I\u003dinput.interval_list \\\n       SI\u003dinput_2.interval_list \\\n       O\u003dnew.interval_list \u003c/pre\u003e \u003ch4\u003e4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:\u003c/h4\u003e \u003cpre\u003e java -jar picard.jar IntervalListTools \\\n       ACTION\u003dINTERSECT \\\n       I\u003dinput1.interval_list \\\n       I\u003dinput2.interval_list \\\n       SI\u003dinput3.interval_list \\\n       O\u003dnew.interval_list \u003c/pre\u003e",
   "arguments": [
     {
       "summary": "Action to take on inputs.",
@@ -40,6 +40,21 @@
           "name": "OVERLAPS"
         }
       ]
+    },
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     },
     {
       "summary": "If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value. Set to 0 to NOT break up intervals.",
@@ -102,7 +117,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -144,6 +159,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -340,6 +370,21 @@
       "options": []
     },
     {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
+      "options": []
+    },
+    {
       "summary": "If true, sort the resulting interval list by coordinate.",
       "name": "--SORT",
       "synonyms": "NA",
@@ -505,6 +550,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "Performs various IntervalList manipulations.\n \u003cp\u003e\n \u003ch3\u003eSummary\u003c/h3\u003e\n This tool offers multiple interval list file manipulation capabilities, including: sorting,\n merging, subtracting, padding, and other set-theoretic operations. The default action\n is to merge and sort the intervals provided in the #INPUTs. Other options, e.g. interval subtraction, are\n controlled by the arguments.\n \u003cbr /\u003e\n Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension\n htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,\n htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END\n INFO annotation (if present) to determine the extent of the interval.\n \u003cp\u003e\n IntervalListTools can also \"scatter\" the resulting interval-list into many interval-files. This can be useful\n for creating multiple interval lists for scattering an analysis over.\n \u003cp\u003e\n \u003ch3\u003eDetails\u003c/h3\u003e\n The IntervalList file format is designed to help the users avoid mixing references when supplying intervals and\n other genomic data to a single tool. A SAM style header must be present at the top of the file. After the header,\n the file then contains records, one per line in text format with the following\n values tab-separated:\n \u003cpre\u003e\n \u003cul\u003e\n \u003cli\u003eSequence name (SN)\u003c/li\u003e\n \u003cli\u003eStart position (1-based)\u003c/li\u003e\n \u003cli\u003eEnd position (1-based, end inclusive)\u003c/li\u003e\n \u003cli\u003eStrand (either + or -)\u003c/li\u003e\n \u003cli\u003eInterval name (ideally unique names for intervals)\u003c/li\u003e\n \u003c/ul\u003e\n \u003c/pre\u003e\n The coordinate system is 1-based, closed-ended, so that the first base in a sequence is at position 1, and both the start\n and the end positions are included in an interval.\n \u003cp\u003e\n For Example:\n \u003cpre\u003e\n \\@HD\tVN:1.0\n \\@SQ\tSN:chr1\tLN:501\n \\@SQ\tSN:chr2\tLN:401\n chr1\t1\t100\t+\tstarts at the first base of the contig and covers 100 bases\n chr2\t100\t100\t+\tinterval with exactly one base\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003e1. Combine the intervals from two interval lists:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dCONCAT \\\\\n       I\u003dinput.interval_list \\\\\n       I\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003e2. Combine the intervals from two interval lists, sorting the resulting in list and merging overlapping and abutting\n intervals:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dCONCAT \\\\\n       SORT\u003dtrue \\\\\n       UNIQUE\u003dtrue \\\\\n       I\u003dinput.interval_list \\\\\n       I\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003e3. Subtract the intervals in SECOND_INPUT from those in INPUT:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dSUBTRACT \\\\\n       I\u003dinput.interval_list \\\\\n       SI\u003dinput_2.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e\n \u003cp\u003e\n \u003ch4\u003e4. Find bases that are in either input1.interval_list or input2.interval_list, and also in input3.interval_list:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar IntervalListTools \\\\\n       ACTION\u003dINTERSECT \\\\\n       I\u003dinput1.interval_list \\\\\n       I\u003dinput2.interval_list \\\\\n       SI\u003dinput3.interval_list \\\\\n       O\u003dnew.interval_list\n \u003c/pre\u003e",

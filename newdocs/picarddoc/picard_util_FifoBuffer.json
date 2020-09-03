@@ -1,6 +1,21 @@
 {
-  "summary": "Provides a large, FIFO buffer that can be used to buffer input and output streams between programs.",
+  "summary": "Acts as a large memory buffer between processes that are connected with unix pipes for the case that one or more processes produces or consumes their input or output in bursts.  By inserting a large memory buffer between such processes each process can run at full speed and the bursts can be smoothed out by the memory buffer.\n \n\u003ch3\u003eExample\u003c/h3\u003e\n  java -jar SamToFastq.jar \\\n     F\u003dmy.fastq \\\n     INTERLEAVE\u003dtrue |\n  java -jar FifoBuffer |\n  bwa mem -t 8 \\dev\\stdin output.bam\n",
   "arguments": [
+    {
+      "summary": "read one or more arguments files and add them to the command line",
+      "name": "--arguments_file",
+      "synonyms": "NA",
+      "type": "List[File]",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "[]",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
     {
       "summary": "The size of the memory buffer in bytes.",
       "name": "--BUFFER_SIZE",
@@ -32,7 +47,7 @@
       "options": []
     },
     {
-      "summary": "Whether to create a BAM index when writing a coordinate-sorted BAM file.",
+      "summary": "Whether to create an index when writing VCF or coordinate sorted BAM output.",
       "name": "--CREATE_INDEX",
       "synonyms": "NA",
       "type": "Boolean",
@@ -89,6 +104,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display the help message",
+      "name": "--help",
+      "synonyms": "-h",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
@@ -164,6 +194,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "options": []
+    },
+    {
+      "summary": "display hidden arguments",
+      "name": "--showHidden",
+      "synonyms": "-showHidden",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "advanced",
       "options": []
     },
     {
@@ -270,6 +315,21 @@
           "name": "DEBUG"
         }
       ]
+    },
+    {
+      "summary": "display the version number for this tool",
+      "name": "--version",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
     }
   ],
   "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Acts as a large memory buffer between processes that are\n connected with unix pipes for the case that one or more processes produces or consumes their\n input or output in bursts.  By inserting a large memory buffer between such processes\n each process can run at full speed and the bursts can be smoothed out by the memory buffer.\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n   java -jar SamToFastq.jar \\\n      F\u003dmy.fastq \\\n      INTERLEAVE\u003dtrue |\n   java -jar FifoBuffer |\n   bwa mem -t 8 -Y reference.fasta \\dev\\stdin output.bam\n  \u003c/pre\u003e",
