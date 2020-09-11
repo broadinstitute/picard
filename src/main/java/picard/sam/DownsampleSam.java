@@ -31,11 +31,16 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineArgumentParser;
+import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineSyntaxTranslater;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
@@ -43,6 +48,7 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -120,6 +126,8 @@ import java.util.Random;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
+
+    final String PG_PROGRAM_NAME = getClass().getSimpleName();
 
     static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.";
     static final String USAGE_DETAILS = "This tool applies a downsampling algorithm to a SAM or BAM file to retain " +
@@ -212,7 +220,40 @@ public class DownsampleSam extends CommandLineProgram {
         }
 
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
+        final SAMFileHeader header = in.getFileHeader().clone();
+
+        if (STRATEGY == Strategy.ConstantMemory) {
+            //if running using ConstantMemory strategy, need to check if we have previously run using either ConstantMemory or Chained strategy on this data
+            for (final SAMProgramRecord pg : header.getProgramRecords()) {
+                if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
+                    final String previousCommandLine = pg.getCommandLine();
+                    if (previousCommandLine != null) {
+                        final String[] previousCmdSplit = previousCommandLine.split("\\s+");
+                        final String[] previousArgs = Arrays.copyOfRange(previousCmdSplit, 1, previousCmdSplit.length);
+                        final DownsampleSam previousDownsample = new DownsampleSam();
+                        final CommandLineParser previousParser = CommandLineSyntaxTranslater.isLegacyPicardStyle(previousArgs) ?
+                                new LegacyCommandLineArgumentParser(previousDownsample) : new CommandLineArgumentParser(previousDownsample);
+                        previousParser.parseArguments(System.err, previousArgs);
+
+                        if (previousDownsample.STRATEGY == Strategy.ConstantMemory || previousDownsample.STRATEGY == Strategy.Chained) {
+                            //are the random seeds the same?
+                            if (RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
+                                throw new PicardException("Attempting to downsample using STRATEGY " + STRATEGY + " on data that has already been downsampled using STRATEGY " + previousDownsample.STRATEGY + " and same " +
+                                        "RANDOM_SEED  " + RANDOM_SEED + ".  In order to downsample this data further, you must either supply a different RANDOM_SEED, or use STRATEGY HighAccuracy");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
+
+        final SAMProgramRecord programRecord = new SAMProgramRecord(pgIdGenerator.getNonCollidingId(PG_PROGRAM_NAME));
+        programRecord.setProgramName(PG_PROGRAM_NAME);
+        programRecord.setCommandLine(getCommandLine());
+        programRecord.setProgramVersion(getVersion());
+        header.addProgramRecord(programRecord);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);

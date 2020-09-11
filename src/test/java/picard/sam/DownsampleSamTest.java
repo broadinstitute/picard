@@ -8,6 +8,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.util.SamTestUtil;
 import htsjdk.samtools.DownsamplingIteratorFactory.Strategy;
@@ -18,8 +19,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.Chained;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.ConstantMemory;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.HighAccuracy;
 
 
 /**
@@ -147,6 +155,80 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         if (seed!=null) {
             TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
             TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
+        }
+    }
+
+    @DataProvider(name = "RepeatedDownsamplingProvider")
+    public Object[][] repeatedDownsamplingProvider() {
+        final List<Object[]> rets = new ArrayList<>();
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(2,1), Arrays.asList(false, false)}); //ok, different seeds
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
+        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
+        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3), Arrays.asList(false, false)}); //ok, different seeds
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, chained comes second
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok HighAccuracy
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok HighAccuracy
+        rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1), Arrays.asList(false, false)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1), Arrays.asList(false, false)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
+        rets.add(new Object[]{Arrays.asList(Chained, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
+
+        //randomly generate some sequences to test out
+        final Strategy[] availableStratagies = Strategy.values();
+        final Random random = new Random(12345);
+        for (int i =0; i<20; i++) {
+            final Set<Integer> previouslyUsedSeeds = new HashSet<>();
+            final List<Strategy> strategies = new ArrayList<>();
+            final List<Integer> seeds = new ArrayList<>();
+            final List<Boolean> throwStatusList = new ArrayList<>();
+
+            while (strategies.size() < 5) {
+                final int seed = random.nextInt(3);
+                final Strategy strategy = availableStratagies[random.nextInt(availableStratagies.length)];
+                final Boolean throwStatus = strategy == ConstantMemory && previouslyUsedSeeds.contains(seed);
+
+                seeds.add(seed);
+                strategies.add(strategy);
+                throwStatusList.add(throwStatus);
+                if (throwStatus) {
+                    break;
+                }
+
+                if (strategy == ConstantMemory || strategy == Chained) {
+                    previouslyUsedSeeds.add(seed);
+                }
+            }
+            rets.add(new Object[]{strategies, seeds, throwStatusList});
+        }
+
+        return rets.toArray(new Object[0][]);
+    }
+
+    @Test(dataProvider = "RepeatedDownsamplingProvider")
+    public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds, List<Boolean> doesItThrow) throws IOException {
+
+        File input = tempSamFile;
+
+        for (int i = 0 ; i < strategies.size(); i++) {
+            final File downsampled = File.createTempFile("DownsampleSam", ".sam", tempDir);
+            downsampled.deleteOnExit();
+            final Strategy strategy = strategies.get(i);
+            final Integer seed = seeds.get(i);
+            final String[] args = new String[]{
+                    "INPUT=" + input.getAbsolutePath(),
+                    "OUTPUT=" + downsampled.getAbsolutePath(),
+                    "PROBABILITY=0.5",
+                    "STRATEGY=" + strategy,
+                    "RANDOM_SEED=" + seed,
+                    "CREATE_INDEX=true"
+            };
+            if (doesItThrow.get(i)) {
+                Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
+                break;
+            }
+
+            runPicardCommandLine(args);
+            input = downsampled;
         }
     }
 }
