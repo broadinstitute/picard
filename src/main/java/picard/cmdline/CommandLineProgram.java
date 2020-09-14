@@ -26,8 +26,10 @@ package picard.cmdline;
 import com.intel.gkl.compression.IntelDeflaterFactory;
 import com.intel.gkl.compression.IntelInflaterFactory;
 import htsjdk.samtools.Defaults;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
+import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.Header;
@@ -442,6 +444,18 @@ public abstract class CommandLineProgram {
     public void setDefaultHeaders(final List<Header> headers) {
         this.defaultHeaders.clear();
         this.defaultHeaders.addAll(headers);
+    }
+
+    public void addPGRecordToHeader(final SAMFileHeader header) {
+        final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
+
+        final String pgProgramName = getClass().getSimpleName();
+        final SAMProgramRecord programRecord = new SAMProgramRecord(pgIdGenerator.getNonCollidingId(pgProgramName));
+
+        programRecord.setProgramName(pgProgramName);
+        programRecord.setCommandLine(getCommandLine());
+        programRecord.setProgramVersion(getVersion());
+        header.addProgramRecord(programRecord);
     }
 
     public List<Header> getDefaultHeaders() {

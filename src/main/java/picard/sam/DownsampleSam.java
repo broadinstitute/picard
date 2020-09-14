@@ -246,13 +246,8 @@ public class DownsampleSam extends CommandLineProgram {
                 }
             }
         }
-        final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
 
-        final SAMProgramRecord programRecord = new SAMProgramRecord(pgIdGenerator.getNonCollidingId(PG_PROGRAM_NAME));
-        programRecord.setProgramName(PG_PROGRAM_NAME);
-        programRecord.setCommandLine(getCommandLine());
-        programRecord.setProgramVersion(getVersion());
-        header.addProgramRecord(programRecord);
+        addPGRecordToHeader(header);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
