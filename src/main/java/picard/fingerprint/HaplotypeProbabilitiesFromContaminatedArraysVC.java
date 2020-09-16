@@ -67,11 +67,60 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
      * Adds a base observation with the observed quality to the evidence for this haplotype
      * based on the fact that the SNP is part of the haplotype.
      */
-    public void addToProbs(final VariantContext vc) {
-    }
+    public void addToProbs(final Snp snp, final VariantContext vc) {
+        assertSnpPartOfHaplotype(snp);
+        valuesNeedUpdating = true;
 
-    //a function needed to update the logLikelihoods from the likelihoodMap.
-    private void updateLikelihoods() {
+
+        // Skip bases that don't match either expected allele for this SNP
+        if (!vc.isBiallelic() ||
+                !vc.isSNP()) {
+            return;
+        }
+
+        final boolean refIsAllele1;
+        if (vc.getReference().getBases()[0] == snp.getAllele1() &&
+                vc.getAlternateAllele(0).getBases()[0] == snp.getAllele2()
+        ) {
+            refIsAllele1 = true;
+        } else if (vc.getReference().getBases()[0] == snp.getAllele2() &&
+                vc.getAlternateAllele(0).getBases()[0] == snp.getAllele1()
+        ) {
+            refIsAllele1 = false;
+        } else {
+            return;
+        }
+
+        final String alleleA = vc.getAttributeAsString("ALLELE_A", "");
+        final String alleleB = vc.getAttributeAsString("ALLELE_B", "");
+
+        if (alleleA.equals("") || alleleB.equals("")) {
+            return;
+        }
+
+        final boolean alleleAisRef;
+        if (alleleA.equals(vc.getReference().getBaseString()) &&
+                alleleB.equals(vc.getAlternateAllele(0).getBaseString())) {
+            alleleAisRef=true;
+        } else if (alleleB.equals(vc.getReference().getBaseString()) &&
+                alleleA.equals(vc.getAlternateAllele(0).getBaseString())) {
+            alleleAisRef = false;
+        } else {
+            return;
+        }
+
+
+        /////needs work
+
+        for (final Genotype contGeno : Genotype.values()) {
+            for (final Genotype mainGeno : Genotype.values()) {
+                // theta is the expected frequency of the alternate allele
+                final double theta = 0.5 * ((1 - contamination) * mainGeno.v + contamination * contGeno.v);
+                likelihoodMap[contGeno.v][mainGeno.v] *= ((altAllele ? theta : (1 - theta)) * (1 - pErr) +
+                        (!altAllele ? theta : (1 - theta)) * pErr);
+            }
+        }
+
 
     }
 
