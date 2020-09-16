@@ -24,6 +24,7 @@
 
 package picard.fingerprint;
 
+import com.sun.javafx.scene.shape.PathUtils;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -33,6 +34,8 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -50,7 +53,7 @@ import java.util.Map;
 public class ExtractFingerprint extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file, or array vcf with required intensity data")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output fingerprint file (VCF).")
     public File OUTPUT;
@@ -84,7 +87,13 @@ public class ExtractFingerprint extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        Path input = null;
+        try {
+            input = IOUtil.getPath(INPUT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        IOUtil.assertFileIsReadable(input);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(referenceSequence.getReferenceFile());
@@ -104,7 +113,7 @@ public class ExtractFingerprint extends CommandLineProgram {
             checker.setDefaultSampleID(SAMPLE_ALIAS);
         }
 
-        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION);
+        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(input, CONTAMINATION);
 
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());
@@ -116,7 +125,7 @@ public class ExtractFingerprint extends CommandLineProgram {
         final String sampleToUse = getSampleToUse(soleEntry.getKey());
 
         try {
-            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(), sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
+            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(), sampleToUse, "PLs derived from " + input.toAbsolutePath() + " using an assumed contamination of " + this.CONTAMINATION);
         } catch (Exception e) {
             log.error(e);
         }
