@@ -101,11 +101,11 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
 
         //TODO deal with these possible flips and what they mean....
         final boolean alleleAisRef;
-        if (alleleA.equals(vc.getReference().getBaseString()) &&
-                alleleB.equals(vc.getAlternateAllele(0).getBaseString())) {
+        if (alleleA.equals(vc.getReference().toString()) &&
+                alleleB.equals(vc.getAlternateAllele(0).toString())) {
             alleleAisRef = true;
-        } else if (alleleB.equals(vc.getReference().getBaseString()) &&
-                alleleA.equals(vc.getAlternateAllele(0).getBaseString())) {
+        } else if (alleleB.equals(vc.getReference().toString()) &&
+                alleleA.equals(vc.getAlternateAllele(0).toString())) {
             alleleAisRef = false;
         } else {
             return;
