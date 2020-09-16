@@ -109,17 +109,21 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             return;
         }
 
-
-        /////needs work
         ArraysAssay assay = ArraysUtils.getArraysAssay(vc);
-        if (!vc.getGenotype(0).hasExtendedAttribute("NORMX")) {
+
+        if (vc.getNSamples() != 1) {
+            throw new PicardException("Current implementation requires that variant shave exactly one sample, found " + vc.getNSamples());
+        }
+        final htsjdk.variant.variantcontext.Genotype genotype = vc.getGenotype(0);
+        if (!genotype.hasExtendedAttribute("NORMX")) {
             throw new PicardException("Cannot find genotype attribute NORMX in " + vc);
         }
-        if (!vc.getGenotype(0).hasExtendedAttribute("NORMY")) {
+
+        if (!genotype.hasExtendedAttribute("NORMY")) {
             throw new PicardException("Cannot find genotype attribute NORMY in " + vc);
         }
-        double normX = vc.getGenotype(0).getAttributeAsDouble("NORMX", 0);
-        double normY = vc.getGenotype(0).getAttributeAsDouble("NORMY", 0);
+        double normX = genotype.getAttributeAsDouble("NORMX", 0);
+        double normY = genotype.getAttributeAsDouble("NORMY", 0);
 
 
         for (final Genotype contGeno : Genotype.values()) {
