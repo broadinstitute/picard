@@ -10,8 +10,8 @@ public class ArraysCluster {
     final public float devX;
     final public float devY;
 
-    final Gaussian xDistribution;
-    final Gaussian yDistribution;
+//    final Gaussian xDistribution;
+//    final Gaussian yDistribution;
 
 
     public ArraysCluster(float meanX, float meanY, float devX, float devY) {
@@ -23,8 +23,8 @@ public class ArraysCluster {
 
     }
 
-    public float likelihood(final float x, final float y) {
-        return Gaussian()
+//    public float likelihood(final float x, final float y) {
+//        return Gaussian()
 
-    }
+//    }
 }
