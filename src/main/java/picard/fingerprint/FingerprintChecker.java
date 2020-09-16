@@ -185,21 +185,25 @@ public class FingerprintChecker {
      *                        of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
      */
-    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample) {
+    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample, final double contamination) {
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
         checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
         final Map<String, Fingerprint> fingerprints;
         if (reader.isQueryable()) {
-            fingerprints = loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile);
+            fingerprints = loadFingerprintsFromQueriableReader(reader, specificSample, fingerprintFile, contamination);
         } else {
             log.warn("Couldn't find index for file " + fingerprintFile + " going to read through it all.");
-            fingerprints = loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile);
+            fingerprints = loadFingerprintsFromVariantContexts(reader, specificSample, fingerprintFile, contamination);
         }
         //add an entry for each sample which was not fingerprinted
         reader.getFileHeader().getGenotypeSamples().forEach(sample -> fingerprints.computeIfAbsent(sample, s -> new Fingerprint(s, fingerprintFile, null)));
 
         return fingerprints;
+    }
+
+    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample) {
+        return loadFingerprints(fingerprintFile, specificSample, 0);
     }
 
     private void checkDictionaryGoodForFingerprinting(final SAMSequenceDictionary sequenceDictionaryToCheck) {
@@ -251,7 +255,7 @@ public class FingerprintChecker {
      * @param source         The path of the source file used. used to emit errors, and annotate the fingerprints.
      * @return a Map of Sample name to Fingerprint
      */
-    public Map<String, Fingerprint> loadFingerprintsFromVariantContexts(final Iterable<VariantContext> iterable, final String specificSample, final Path source) {
+    public Map<String, Fingerprint> loadFingerprintsFromVariantContexts(final Iterable<VariantContext> iterable, final String specificSample, final Path source, final double contamination) {
 
         final Map<String, Fingerprint> fingerprints = new HashMap<>();
         Set<String> samples = null;
@@ -277,13 +281,18 @@ public class FingerprintChecker {
                 samples.forEach(s -> fingerprints.put(s, new Fingerprint(s, source, null)));
             }
             try {
-                getFingerprintFromVc(fingerprints, ctx);
+                getFingerprintFromVc(fingerprints, ctx, contamination);
             } catch (final IllegalArgumentException e) {
                 log.warn(e, "There was a genotyping error in File: " + source.toUri().toString() + "\n" + e.getMessage());
             }
         }
 
         return fingerprints;
+    }
+
+    public Map<String, Fingerprint> loadFingerprintsFromVariantContexts(final Iterable<VariantContext> iterable, final String specificSample, final Path source)
+    {
+        return loadFingerprintsFromVariantContexts(iterable, specificSample, source, 0);
     }
 
     /**
@@ -310,7 +319,7 @@ public class FingerprintChecker {
      * @param source         The path of the source file used. used to emit errors.
      * @return a Map of Sample name to Fingerprint
      */
-    public Map<String, Fingerprint> loadFingerprintsFromQueriableReader(final VCFFileReader reader, final String specificSample, final Path source) {
+    public Map<String, Fingerprint> loadFingerprintsFromQueriableReader(final VCFFileReader reader, final String specificSample, final Path source, final double contamination) {
 
         checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
@@ -324,7 +333,11 @@ public class FingerprintChecker {
                                 return null;
                             }
                         }).iterator(),
-                specificSample, source);
+                specificSample, source, contamination);
+    }
+
+    public Map<String, Fingerprint> loadFingerprintsFromQueriableReader(final VCFFileReader reader, final String specificSample, final Path source) {
+        return loadFingerprintsFromQueriableReader(reader, specificSample, source, 0);
     }
 
     /**
@@ -333,7 +346,7 @@ public class FingerprintChecker {
      * @param fingerprints a map from Sample to fingerprint
      * @param ctx          the VC from which to extract (part of ) a fingerprint
      */
-    private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
+    private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx, final double contamination) throws IllegalArgumentException {
         final HaplotypeBlock h = this.haplotypes.getHaplotype(ctx.getContig(), ctx.getStart());
         if (h == null) {
             return;
@@ -373,7 +386,11 @@ public class FingerprintChecker {
 
             // Get the genotype for the sample and check that it is useful
             final Genotype genotype = usableSnp.getGenotype(sample);
-            if (genotype == null) {
+            if (contamination > 0) {
+                final HaplotypeProbabilitiesFromContaminatedArraysVC hFp = new HaplotypeProbabilitiesFromContaminatedArraysVC(h, contamination);
+                hFp.addToProbs(usableSnp);
+                fp.add(hFp);
+            } else if (genotype == null) {
                 throw new IllegalArgumentException("Cannot find sample " + sample + " in provided file. ");
             }
             if (genotype.hasPL()) {
@@ -409,6 +426,11 @@ public class FingerprintChecker {
             }
         }
     }
+
+    private void getFingerprintFromVc(final Map<String, Fingerprint> fingerprints, final VariantContext ctx) throws IllegalArgumentException {
+        getFingerprintFromVc(fingerprints, ctx);
+    }
+
 
     /**
      * Takes a set of fingerprints and returns an IntervalList containing all the loci that
@@ -611,15 +633,23 @@ public class FingerprintChecker {
      * Generates a per-sample Fingerprint for the contaminant in the supplied SAM file.
      * Data is aggregated by sample, not read-group.
      */
-    public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination) {
+    public Map<String, Fingerprint> identifyContaminant(final Path file, final double contamination) {
 
-        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+        if (CheckFingerprint.fileContainsReads(file)) {
+            final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap;
+            fpIdDetailsMap = this.fingerprintSamFile(file, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+            final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
+                    Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
+            return fpIdDetailsBySample.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
+        } else {
+            final Map<String, Fingerprint> fpMap = loadFingerprints(file, null, contamination);
+            return fpMap;
+        }
 
-        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
-                Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
 
-        return fpIdDetailsBySample.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getKey().sample, Map.Entry::getValue));
+
+
     }
 
     /**
