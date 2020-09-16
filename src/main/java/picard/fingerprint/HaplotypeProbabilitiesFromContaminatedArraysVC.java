@@ -24,9 +24,12 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.util.QualityUtil;
 import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.variantcontext.VariantContext;
+import picard.PicardException;
+import picard.arrays.ArraysAssay;
+import picard.arrays.ArraysCluster;
+import picard.arrays.ArraysUtils;
 import picard.util.MathUtil;
 
 /**
@@ -43,7 +46,6 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
     // for each model (contGenotype, mainGenotype) there's a likelihood of the data. These need to be collected separately
     // and only collated once all the data is in.
     private final double[][] likelihoodMap = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
-    private boolean valuesNeedUpdating = true;
 
     public HaplotypeProbabilitiesFromContaminatedArraysVC(final HaplotypeBlock haplotypeBlock, final double contamination) {
         super(haplotypeBlock);
@@ -69,8 +71,6 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
      */
     public void addToProbs(final Snp snp, final VariantContext vc) {
         assertSnpPartOfHaplotype(snp);
-        valuesNeedUpdating = true;
-
 
         // Skip bases that don't match either expected allele for this SNP
         if (!vc.isBiallelic() ||
@@ -101,7 +101,7 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
         final boolean alleleAisRef;
         if (alleleA.equals(vc.getReference().getBaseString()) &&
                 alleleB.equals(vc.getAlternateAllele(0).getBaseString())) {
-            alleleAisRef=true;
+            alleleAisRef = true;
         } else if (alleleB.equals(vc.getReference().getBaseString()) &&
                 alleleA.equals(vc.getAlternateAllele(0).getBaseString())) {
             alleleAisRef = false;
@@ -111,17 +111,31 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
 
 
         /////needs work
+        ArraysAssay assay = ArraysUtils.getArraysAssay(vc);
+        if (!vc.getGenotype(0).hasExtendedAttribute("NORMX")) {
+            throw new PicardException("Cannot find genotype attribute NORMX in " + vc);
+        }
+        if (!vc.getGenotype(0).hasExtendedAttribute("NORMY")) {
+            throw new PicardException("Cannot find genotype attribute NORMY in " + vc);
+        }
+        double normX = vc.getGenotype(0).getAttributeAsDouble("NORMX", 0);
+        double normY = vc.getGenotype(0).getAttributeAsDouble("NORMY", 0);
+
 
         for (final Genotype contGeno : Genotype.values()) {
             for (final Genotype mainGeno : Genotype.values()) {
                 // theta is the expected frequency of the alternate allele
-                final double theta = 0.5 * ((1 - contamination) * mainGeno.v + contamination * contGeno.v);
-                likelihoodMap[contGeno.v][mainGeno.v] *= ((altAllele ? theta : (1 - theta)) * (1 - pErr) +
-                        (!altAllele ? theta : (1 - theta)) * pErr);
+                ArraysCluster contaminatedCluster = ArraysUtils.contaminateClusters(assay.getCluster(mainGeno.v), assay.getCluster(contGeno.v), contamination);
+                likelihoodMap[contGeno.v][mainGeno.v] *= contaminatedCluster.likelihood(normX, normY);
             }
         }
 
-
+        final double[] ll = new double[NUM_GENOTYPES];
+        for (final Genotype contGeno : Genotype.values()) {
+            // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
+            ll[contGeno.v] = Math.log10(Double.MIN_VALUE + MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
+        }
+        setLogLikelihoods(ll);
     }
 
     @Override
@@ -150,19 +164,8 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
         for (final Genotype contGeno : Genotype.values()) {
             this.likelihoodMap[contGeno.v] = MathUtil.multiply(this.likelihoodMap[contGeno.v], o.likelihoodMap[contGeno.v]);
         }
-        valuesNeedUpdating = true;
+
         return this;
     }
 
-    @Override
-    public double[] getLikelihoods() {
-        updateLikelihoods();
-        return super.getLikelihoods();
-    }
-
-    @Override
-    public double[] getLogLikelihoods() {
-        updateLikelihoods();
-        return super.getLogLikelihoods();
-    }
 }
