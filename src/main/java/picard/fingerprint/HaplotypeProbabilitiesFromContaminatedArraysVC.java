@@ -78,6 +78,7 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             return;
         }
 
+        //TODO deal with these possible flips and what they mean....
         final boolean refIsAllele1;
         if (vc.getReference().getBases()[0] == snp.getAllele1() &&
                 vc.getAlternateAllele(0).getBases()[0] == snp.getAllele2()
@@ -98,6 +99,7 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             return;
         }
 
+        //TODO deal with these possible flips and what they mean....
         final boolean alleleAisRef;
         if (alleleA.equals(vc.getReference().getBaseString()) &&
                 alleleB.equals(vc.getAlternateAllele(0).getBaseString())) {
