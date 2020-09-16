@@ -117,6 +117,9 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             throw new PicardException("Current implementation requires that variant shave exactly one sample, found " + vc.getNSamples());
         }
         final htsjdk.variant.variantcontext.Genotype genotype = vc.getGenotype(0);
+        if(genotype.isNoCall()) {
+            return;
+        }
         if (!genotype.hasExtendedAttribute("NORMX")) {
             throw new PicardException("Cannot find genotype attribute NORMX in " + vc);
         }
