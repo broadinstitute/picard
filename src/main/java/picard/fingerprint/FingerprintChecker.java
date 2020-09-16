@@ -388,7 +388,7 @@ public class FingerprintChecker {
             final Genotype genotype = usableSnp.getGenotype(sample);
             if (contamination > 0) {
                 final HaplotypeProbabilitiesFromContaminatedArraysVC hFp = new HaplotypeProbabilitiesFromContaminatedArraysVC(h, contamination);
-                hFp.addToProbs(usableSnp);
+                hFp.addToProbs(snp, usableSnp);
                 fp.add(hFp);
             } else if (genotype == null) {
                 throw new IllegalArgumentException("Cannot find sample " + sample + " in provided file. ");
