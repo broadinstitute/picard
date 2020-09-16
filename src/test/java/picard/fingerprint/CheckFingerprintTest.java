@@ -193,6 +193,24 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testIdentifyContaminantArray() {
+        final File array = new File("testdata/picard/arrays/illumina/TestVcfToAdpc.vcf");
+        final File hap_database = new File ("testdata/picard/arrays/illumina/test.haplotype_database.txt");
+        final String sample = "203078500006_R01C01";
+
+        final FingerprintChecker checker = new FingerprintChecker(hap_database);
+
+        final Fingerprint extractedFp = checker.identifyContaminant(array.toPath(), 1).get(sample);
+
+        final Fingerprint arrayFP = checker.loadFingerprints(array.toPath(), sample).get(sample);
+
+        Assert.assertTrue(FingerprintChecker.calculateMatchResults(arrayFP, extractedFp).getLOD() > 0);
+
+
+
+    }
+
+    @Test
     public void testFPToVC() throws IOException {
 
         final File Na12892 = new File(TEST_DATA_DIR, "NA12892.over.fingerprints.shifted.for.crams.r1.sam");
