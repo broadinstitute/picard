@@ -26,11 +26,16 @@ package picard.fingerprint;
 
 import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.variantcontext.VariantContext;
+import org.apache.commons.lang.ArrayUtils;
 import picard.PicardException;
 import picard.arrays.ArraysAssay;
 import picard.arrays.ArraysCluster;
 import picard.arrays.ArraysUtils;
 import picard.util.MathUtil;
+
+import static picard.fingerprint.HaplotypeProbabilities.Genotype.HET_ALLELE12;
+import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE1;
+import static picard.fingerprint.HaplotypeProbabilities.Genotype.HOM_ALLELE2;
 
 /**
  * Represents the probability of the underlying haplotype of the contaminating sample given the data.
@@ -111,6 +116,15 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             return;
         }
 
+        final boolean swapAB;
+        if (alleleA.getBytes()[0] == snp.getAllele1() && alleleB.getBytes()[0] == snp.getAllele2()) {
+            swapAB = false;
+        } else if (alleleB.getBytes()[0] == snp.getAllele1() && alleleA.getBytes()[0] == snp.getAllele2()) {
+            swapAB = true;
+        } else {
+            return;
+        }
+
         ArraysAssay assay = ArraysUtils.getArraysAssay(vc);
 
         if (vc.getNSamples() != 1) {
@@ -135,7 +149,7 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             for (final Genotype mainGeno : Genotype.values()) {
                 // theta is the expected frequency of the alternate allele
                 ArraysCluster contaminatedCluster = ArraysUtils.contaminateClusters(assay.getCluster(mainGeno.v), assay.getCluster(contGeno.v), contamination);
-                likelihoodMap[contGeno.v][mainGeno.v] *= contaminatedCluster.likelihood(normX, normY);
+                likelihoodMap[alleleABGenoToAllele12Geno(contGeno, swapAB).v][alleleABGenoToAllele12Geno(mainGeno, swapAB).v] *= contaminatedCluster.likelihood(normX, normY);
             }
         }
 
@@ -144,7 +158,21 @@ public class HaplotypeProbabilitiesFromContaminatedArraysVC extends HaplotypePro
             // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
             ll[contGeno.v] = Math.log10(Double.MIN_VALUE + MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
         }
+
         setLogLikelihoods(ll);
+    }
+
+    private Genotype alleleABGenoToAllele12Geno(final Genotype geno, final boolean swapAB) {
+        switch (geno) {
+            case HOM_ALLELE1:
+                return swapAB ? HOM_ALLELE2 : HOM_ALLELE1;
+            case HET_ALLELE12:
+                return HET_ALLELE12;
+            case HOM_ALLELE2:
+                return swapAB ? HOM_ALLELE1 : HOM_ALLELE2;
+            default:
+                throw new PicardException("uh-oh");
+        }
     }
 
     @Override

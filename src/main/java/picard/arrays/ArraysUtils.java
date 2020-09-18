@@ -27,18 +27,7 @@ public class ArraysUtils {
         ArraysCluster AB = getCluster("AB", vc);
         ArraysCluster BB = getCluster("BB", vc);
 
-        String alleleA = vc.getAttributeAsString("ALLELE_A", "");
-        String alleleB = vc.getAttributeAsString("ALLELE_B", "");
-
-        if (alleleA.equals(vc.getReference().toString()) &&
-                alleleB.equals(vc.getAlternateAllele(0).toString())) {
-            return new ArraysAssay(AA, AB, BB);
-        } else if (alleleB.equals(vc.getReference().toString()) &&
-                alleleA.equals(vc.getAlternateAllele(0).toString())) {
-            return new ArraysAssay(BB, AB, AA);
-        } else {
-            throw new PicardException("None of the alleles in the Assay matched the reference and the alternate allele");
-        }
+        return new ArraysAssay(AA, AB, BB);
     }
 
     static private ArraysCluster getCluster(String clusterSuffix, final VariantContext vc) {
