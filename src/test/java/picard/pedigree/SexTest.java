@@ -11,9 +11,9 @@ public class SexTest {
     @DataProvider(name = "testSexDataProviderInt")
     public Object[][] testSexDataProviderInt() {
         return new Object[][]{
-                new Object[]{Sex.Male, 1},
-                new Object[]{Sex.Female, 2},
-                new Object[]{Sex.Unknown, 0},
+                {Sex.Male, 1},
+                {Sex.Female, 2},
+                {Sex.Unknown, 0},
         };
     }
 
