@@ -8,18 +8,18 @@ import picard.PicardException;
 import java.util.Arrays;
 
 public class SexTest {
-    @DataProvider(name="testSexDataProviderInt")
+    @DataProvider(name = "testSexDataProviderInt")
     public Object[][] testSexDataProviderInt() {
-        return new Object[][] {
+        return new Object[][]{
                 new Object[]{Sex.Male, 1},
                 new Object[]{Sex.Female, 2},
                 new Object[]{Sex.Unknown, 0},
-                };
+        };
     }
 
-    @DataProvider(name="testSexDataProviderStr")
+    @DataProvider(name = "testSexDataProviderStr")
     public Object[][] testSexDataProviderStr() {
-        return new Object[][] {
+        return new Object[][]{
                 {Sex.Female, "F"},
                 {Sex.Female, "f"},
                 {Sex.Female, "Female"},
@@ -36,21 +36,21 @@ public class SexTest {
     }
 
     /**
-     *Test Methods within Sex enum
+     * Test Methods within Sex enum
      */
 
-    @Test(dataProvider="testSexDataProviderInt")
-    public void testFromCode(final Sex sex, final int i){
+    @Test(dataProvider = "testSexDataProviderInt")
+    public void testFromCode(final Sex sex, final int i) {
         Assert.assertTrue(sex == Sex.fromCode(i));
     }
 
-    @Test(dataProvider="testSexDataProviderStr")
-    public void testFromString(final Sex sex, final String s){
+    @Test(dataProvider = "testSexDataProviderStr")
+    public void testFromString(final Sex sex, final String s) {
         Assert.assertTrue(sex == Sex.fromString(s));
     }
 
     @Test(expectedExceptions = PicardException.class)
-    public void testFromStringException(){
+    public void testFromStringException() {
         Sex.fromString("notASex");
     }
 
