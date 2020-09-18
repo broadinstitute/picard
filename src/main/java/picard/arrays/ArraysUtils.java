@@ -25,7 +25,7 @@ public class ArraysUtils {
     static public ArraysAssay getArraysAssay(VariantContext vc) {
         ArraysCluster AA = getCluster("AA", vc);
         ArraysCluster AB = getCluster("AB", vc);
-        ArraysCluster BB = getCluster("AB", vc);
+        ArraysCluster BB = getCluster("BB", vc);
 
         String alleleA = vc.getAttributeAsString("ALLELE_A", "");
         String alleleB = vc.getAttributeAsString("ALLELE_B", "");
