@@ -11,24 +11,27 @@ public class SexTest {
     @DataProvider(name="testSexDataProviderInt")
     public Object[][] testSexDataProviderInt() {
         return new Object[][] {
-                new Object[]{Sex.Male, 1, true},
-                new Object[]{Sex.Female, 2, true},
-                new Object[]{Sex.Unknown, 0, true},
-                new Object[]{Sex.NotReported, 0, false},
-                new Object[]{Sex.Female, 1, false},
-                new Object[]{Sex.Unknown, 2, false},
+                new Object[]{Sex.Male, 1},
+                new Object[]{Sex.Female, 2},
+                new Object[]{Sex.Unknown, 0},
                 };
     }
 
     @DataProvider(name="testSexDataProviderStr")
     public Object[][] testSexDataProviderStr() {
         return new Object[][] {
-                new Object[]{Sex.Male, "M", true},
-                new Object[]{Sex.Female, "Female", true},
-                new Object[]{Sex.Unknown, "Unknown", true},
-                new Object[]{Sex.NotReported, "NotReported", true},
-                new Object[]{Sex.Female, "M", false},
-                new Object[]{Sex.Unknown, "female", false}
+                {Sex.Female, "F"},
+                {Sex.Female, "f"},
+                {Sex.Female, "Female"},
+                {Sex.Female, "female"},
+                {Sex.Male, "M"},
+                {Sex.Male, "m"},
+                {Sex.Male, "Male"},
+                {Sex.Male, "male"},
+                {Sex.Unknown, "Unknown"},
+                {Sex.Unknown, "U"},
+                {Sex.Unknown, "unknown"},
+                {Sex.Unknown, "u"},
         };
     }
 
@@ -37,13 +40,13 @@ public class SexTest {
      */
 
     @Test(dataProvider="testSexDataProviderInt")
-    public void testFromCode(final Sex sex, final int i, final boolean b){
-        Assert.assertEquals(sex == Sex.fromCode(i), b);
+    public void testFromCode(final Sex sex, final int i){
+        Assert.assertTrue(sex == Sex.fromCode(i));
     }
 
     @Test(dataProvider="testSexDataProviderStr")
-    public void testFromString(final Sex sex, final String s, final boolean b){
-        Assert.assertEquals(sex == Sex.fromString(s), b);
+    public void testFromString(final Sex sex, final String s){
+        Assert.assertTrue(sex == Sex.fromString(s));
     }
 
     @Test(expectedExceptions = PicardException.class)
