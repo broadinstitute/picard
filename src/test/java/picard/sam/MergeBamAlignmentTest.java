@@ -49,6 +49,8 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.ValidateSamTester;
+import picard.sam.util.SAMComparisonArgumentCollection;
+import picard.sam.util.SamComparison;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -69,12 +71,13 @@ import java.util.Map;
  */
 public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MergeBamAlignment");
+    private static final File DATA_DIR = new File("testdata/picard/sam");
+    private static final File TEST_DATA_DIR = new File(DATA_DIR,"MergeBamAlignment");
 
-    private static final File unmappedBam = new File("testdata/picard/sam/unmapped.sam");
-    private static final File alignedBam = new File("testdata/picard/sam/aligned.sam");
-    private static final File oneHalfAlignedBam = new File("testdata/picard/sam/onehalfaligned.sam");
-    private static final File otherHalfAlignedBam = new File("testdata/picard/sam/otherhalfaligned.sam");
+    private static final File unmappedBam = new File(DATA_DIR,"unmapped.sam");
+    private static final File alignedBam = new File(DATA_DIR,"aligned.sam");
+    private static final File oneHalfAlignedBam = new File(DATA_DIR,"onehalfaligned.sam");
+    private static final File otherHalfAlignedBam = new File(DATA_DIR,"otherhalfaligned.sam");
     private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
     private static final File firstReadAlignedBam = new File(TEST_DATA_DIR, "allread1.trimmed.aligned.sam");
     private static final File secondReadAlignedBam = new File(TEST_DATA_DIR, "allread2.trimmed.aligned.sam");
@@ -83,11 +86,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
-    private static final File alignedQuerynameSortedBam = new File("testdata/picard/sam/aligned_queryname_sorted.sam");
-    private static final File fasta = new File("testdata/picard/sam/merger.fasta");
+    private static final File alignedQuerynameSortedBam = new File(DATA_DIR, "aligned_queryname_sorted.sam");
+    private static final File fasta = new File(DATA_DIR ,"merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
-    private static final File sequenceDict = new File("testdata/picard/sam/merger.dict");
-    private static final File sequenceDict2 = new File("testdata/picard/sam/merger.2.dict");
+    private static final File sequenceDict = new File(DATA_DIR, "merger.dict");
+    private static final File sequenceDict2 = new File(DATA_DIR, "merger.2.dict");
     private static final File badorderUnmappedBam = new File(TEST_DATA_DIR, "unmapped.badorder.sam");
     private static final File badorderAlignedBam = new File(TEST_DATA_DIR, "aligned.badorder.sam");
     private static final File multipleStrandsAlignedBam = new File(TEST_DATA_DIR, "aligned.both.strands.sam");
@@ -1173,7 +1176,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
      */
     @Test
     public void testShortFragmentClipping() throws Exception {
-        final File output = File.createTempFile("testShortFragmentClipping", ".sam");
+        final File output = File.createTempFile("testShortFragmentClipping", ".bam");
         output.deleteOnExit();
         doMergeAlignment(new File(TEST_DATA_DIR, "cliptest.unmapped.sam"),
                 Collections.singletonList(new File(TEST_DATA_DIR, "cliptest.aligned.sam")),
@@ -1186,7 +1189,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null);
 
         final SamReader result = SamReaderFactory.makeDefault().open(output);
-        final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+        final Map<String, SAMRecord> firstReadEncountered = new HashMap<>();
 
         for (final SAMRecord rec : result) {
             final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
@@ -1206,7 +1209,42 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         result.close();
     }
 
-    @Test
+    @DataProvider
+    public Object[][] testShortFragmentWithIndelsClipping() {
+        return new Object[][]{
+                {"indel_reads_aligned.sam", "indel_reads_unmapped.sam","indel_reads_expected.sam",false},
+                {"indel_reads_aligned.sam", "indel_reads_unmapped.sam","indel_reads_expected_with_hardclips.sam",true}
+        };
+    }
+    @Test(dataProvider = "testShortFragmentWithIndelsClipping")
+    public void testShortFragmentWithIndelsClipping(final String aligned, final String unmapped, final String expected, final boolean hardclip) throws Exception {
+        final File output = File.createTempFile("testShortFragmentClipping", ".sam");
+        output.deleteOnExit();
+        final File alignedSam = new File(TEST_DATA_DIR, aligned);
+        final File unmappedSam = new File(TEST_DATA_DIR, unmapped);
+        final File expectedSam = new File(TEST_DATA_DIR, expected);
+
+
+        final File ref = new File(TEST_DATA_DIR, "cliptest.fasta");
+
+        final List<String> args = Arrays.asList(
+                "UNMAPPED_BAM=" + unmappedSam.getAbsolutePath(),
+                "ALIGNED_BAM=" + alignedSam.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "HARD_CLIP_OVERLAPPING_READS=true",
+                "SORT_ORDER=queryname"
+        );
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final SamReader result = SamReaderFactory.makeDefault().open(output);
+        final SamReader expectedReader = SamReaderFactory.makeDefault().open(expectedSam);
+        final SamComparison comparison = new SamComparison(result, expectedReader,"result","expected", new SAMComparisonArgumentCollection());
+        Assert.assertTrue(comparison.areEqual());
+
+    }
+        @Test
     public void testShortFragmentHardClipping() throws IOException {
         final File output = File.createTempFile("testShortFragmentClipping", ".sam");
         output.deleteOnExit();
@@ -1225,7 +1263,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final SamReader result = SamReaderFactory.makeDefault().open(output);
-        final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+        final Map<String, SAMRecord> firstReadEncountered = new HashMap<>();
         for (final SAMRecord rec : result) {
             final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
             if (otherEnd == null) {

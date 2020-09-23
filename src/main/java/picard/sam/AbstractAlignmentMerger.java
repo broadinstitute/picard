@@ -832,7 +832,6 @@ public abstract class AbstractAlignmentMerger {
     }
 
     static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
-        final int readPosition;
         final Cigar oldCigar = rec.getCigar();
         final int oldStart = rec.getAlignmentStart();
         final Cigar newCigar = new Cigar();
@@ -861,10 +860,21 @@ public abstract class AbstractAlignmentMerger {
         rec.setCigar(newCigar);
         // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
         // also to be moved forward bye posShift so that it's still querying the same base.
-        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+        final int readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, true);
+
         rec.setCigar(oldCigar);
 
-        return readPosition;
+        // if this returns zero, it means that there's a deletion at the position of the desired base,
+        // if the read is on the positive strand readPosition should be incremented by one to get the
+        // base __following__ the deletion rather than the one preceding it (which is what returnLastBaseIfDeleted argument in
+        // getReadPositionAtReferencePosition will do)
+        final int readPositionZeroOnDeletion = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+        final boolean increamentReadPosition = readPositionZeroOnDeletion == 0 &&
+                !rec.getReadNegativeStrandFlag() &&
+                readPosition < rec.getReadLength() - 1;
+
+        return increamentReadPosition ? readPosition + 1 : readPosition;
+
     }
 
     private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
