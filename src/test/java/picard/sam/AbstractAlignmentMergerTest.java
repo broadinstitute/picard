@@ -1,13 +1,7 @@
 package picard.sam;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CigarUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -42,6 +36,13 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final String default110LongR1ClippedBases = "AGATTCTCCT";
         final String default110LongR2ClippedBases = "TGTGCCCGGC";
 
+        final String default27LongR1Bases = "AGATTCTCCTTGTGCCCGGCAGATTCT";
+        final String default27LongR2Bases = "TGTGCCCGGCAGATTCTCCTCTTGTGC";
+
+        final String default27LongR1Qualities = "ABCDEFGHIJKLMNOPQRSTUVWXYZ.";
+        final String default27LongR2Qualities = "abcdefghijklmnopqrstuvwxyz,";
+
+
         final String default120LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF.FFF";
         final String default120LongR2BaseQualities ="FFFFFF.FFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
         final String default110LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF";
@@ -49,11 +50,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         final String sharedQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
-        // The use of the reverse method here is so that it is easy to match by eye the base qualities above.
-        final String r1ClippedQualities10 = "FF.FFF.FFF";
-        final String r2ClippedQualities10 = new StringBuilder("FFFFFF.FFF").reverse().toString();
-        final String r1ClippedQualities20 = "FFFFFFFF.FFF.FFF.FFF";
-        final String r2ClippedQualities20 = new StringBuilder("FFFFFF.FFFFF.FFFFFFF").reverse().toString();
+        final String r1ClippedQualities10 = default120LongR1BaseQualities.substring(default120LongR1BaseQualities.length() - 10);
+        final String r2ClippedQualities10 = new StringBuilder(default120LongR2BaseQualities.substring(0, 10)).reverse().toString();
+        final String r1ClippedQualities20 = default120LongR1BaseQualities.substring(default120LongR1BaseQualities.length() - 20);
+        final String r2ClippedQualities20 = new StringBuilder(default120LongR2BaseQualities.substring(0, 20)).reverse().toString();
+
 
         return new Object[][] {
                 {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", false,
@@ -199,6 +200,136 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 {110, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M8S10H", "10H12S88M", true,
                         default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMMMsssssssss->
+                //     <ssssssssMMM-MMMMMMMMMMMMMMMM
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMSSsssssssss->
+                //      <ssssssssSSSMMMMMMMMMMMMMMMM
+
+
+                {27, 18, 14, "18M9S", "8S3M1D16M", false, true, 18, 18, "16M11S", "11S16M", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMMMsssssssss->
+                //   <ssssssssMMM---MMMMMMMMMMMMMMMM
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMSSsssssssss->
+                //      <ssssssssSSSMMMMMMMMMMMMMMMM
+
+
+                {27, 18, 12, "18M9S", "8S3M3D16M", false, true, 18, 18, "16M11S", "11S16M", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMM-MMMsssssssss>
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssSSSSMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMMSSSsssssssss>
+
+
+                {27, 14, 18, "8S19M", "15M1D3M9S", true, false, 18, 18, "12S15M", "15M12S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMM---MMMsssssssss>
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssSSSSMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMMSSSsssssssss>
+
+
+                {27, 14, 18, "8S19M", "15M3D3M9S", true, false, 18, 18, "12S15M", "15M12S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+
+
+                //                  123456789.123456--789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                                     MMMMMMMMMMMMMMMMMMsssssssss>
+                //                          <sssssMMiiMMMMMMMMMMMMMMMMMM
+                //                                  /\
+                //   with an insertion of two bases here should become
+                //                    123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                                     MMMMMMMMMMMMMMMMMssssssssss>
+                //                          <sssssSSSSSMMMMMMMMMMMMMMMMM
+
+
+                {27, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10S", "10S17M", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+
+                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMMiiMsssssss>
+                //                                         /\
+                //         with an insertion of two bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMSSSSsssssss>
+
+
+                {27, 14, 18, "7S20M", "17M2I1M7S", true, false, 18, 18,"11S16M","16M11S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+
+                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMiiMMsssssss>
+                //                                        /\
+                //        with an insertion of two bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMSSSSsssssss>
+
+
+                {27, 14, 18, "7S20M", "16M2I2M7S", true, false, 18, 18, "11S16M", "16M11S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
+
+
+                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMiMMMsssssss>
+                //                                        /\
+                //        with an insertion of one bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMSSSSsssssss>
+
+
+                {27, 14, 18, "7S20M", "16M1I3M7S", true, false, 18, 18, "11S16M", "16M11S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
+
+                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMMiMMsssssss>
+                //                                         /\
+                //         with an insertion of one bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMSSSSsssssss>
+
+
+                {27, 14, 18, "7S20M", "17M1I2M7S", true, false, 18, 18, "11S16M", "16M11S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
+
+
         };
     }
 
@@ -271,7 +402,6 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         Assert.assertEquals(r2Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities);
 
     }
-
 
 
 
@@ -380,6 +510,57 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final int readPosition = AbstractAlignmentMerger.getReadPositionAtReferencePositionIgnoreSoftClips(rec, queryPosition);
 
         Assert.assertEquals(readPosition, expectedReadPosititon);
+    }
+
+
+    @DataProvider
+    public Object[][] referencePositionAndReadPositions(){
+        return new Object[][]{
+                {1, 0, false}, {1, 0, true},
+                {2, 0, false}, {2, 0, true},
+                {3, 0, false}, {3, 0, true},
+                {4, 1, false}, {4, 1, true},
+                {5, 2, false}, {5, 2, true},
+                {6, 3, false}, {6, 3, true},
+                {7, 4, false}, {7, 4, true},
+                {8, 5, false}, {8, 5, true},
+                {9, 6, false}, {9, 6, true},
+                {10, 7, false}, {10, 7, true},
+                {11, 8, false}, {11, 8, true},
+                {12, 9, false}, {12, 8, true},
+                {13, 9, false}, {13, 8, true},
+                {14, 9, false}, {14, 8, true},
+                {15, 9, false}, {15, 8, true},
+                {16, 9, false}, {16, 9, true},
+                {17, 10, false}, {17, 10, true},
+                {18, 11, false}, {18, 11, true},
+                {19, 12, false}, {19, 12, true},
+                {20, 17, false}, {20, 17, true},
+                {21, 18, false}, {21, 18, true},
+                {22, 19, false}, {22, 19, true},
+                {23, 20, false}, {23, 20, true},
+                {24, 21, false}, {24, 20, true},
+                {25, 21, false}, {25, 20, true},
+                {26, 21, false}, {26, 20, true},
+                {27, 21, false}, {27, 20, true},
+                {28, 21, false}, {28, 21, true},
+                {29, 22, false}, {29, 22, true},
+                {30, 23, false}, {30, 23, true},
+                {31, 24, false}, {31, 24, true},
+                {32, 0, false}, {32, 0, true},
+        };
+    }
+
+    @Test(dataProvider = "referencePositionAndReadPositions")
+    public void testGetReadPositionAtReferencePositionIgnoreSoftClips(final int refPos, final int readPos, final boolean negativeStrand){
+        final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
+        //REF   123456789.123456789----.123456789.123456789.
+        //         ....||||----||||....||||----....
+        //         SSSSMMMMDDDDMMMMIIIIMMMMDDDDSSSS---->>
+        //READ     12345678----9.123456789.----12345678
+        final SAMRecord samRecord = set.addFrag("test", 0, 8, negativeStrand, false, "4S4M4D4M4I4M4D4S", "null", 30);
+
+        Assert.assertEquals(AbstractAlignmentMerger.getReadPositionAtReferencePositionIgnoreSoftClips(samRecord, refPos), readPos);
     }
 }
 
