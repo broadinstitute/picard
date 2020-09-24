@@ -242,11 +242,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //                  MMMMMMMMMMMMMMMMMMsssssssss->
+                //                  MMMMMMMMMMMMMMMMMMsssssssss>
                 //   <ssssssssMMM---MMMMMMMMMMMMMMMM
                 //          should become
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //                  MMMMMMMMMMMMMMMMSSsssssssss->
+                //                  MMMMMMMMMMMMMMMMSSsssssssss>
                 //      <ssssssssSSSMMMMMMMMMMMMMMMM
 
 
@@ -310,10 +310,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                  123456789.123456--789.123456789.123456789.123456789.123456789.123456789.123456789
                 //                                     MMMMMMMMMMMMMMMMMMsssssssss>
                 //                          <sssssMMiiMMMMMMMMMMMMMMMMMM
-                //                                  /\
+                //                                  ^^
                 //   with an insertion of two bases here should become
                 //                    123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //                                     MMMMMMMMMMMMMMMMMssssssssss>
+                //                                     MMMMMMMMMMMMMMMMMSsssssssss>
                 //                          <sssssSSSSSMMMMMMMMMMMMMMMMM
                 {27, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10S", "10S17M", false,
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
@@ -323,10 +323,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
                 //            <sssssssMMMMMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMMiiMsssssss>
-                //                                         /\
+                //                                         ^^
                 //         with an insertion of two bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
 
 
@@ -335,10 +335,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
 
-                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //       123456789.123456789.123456789.123--456789.123456789.123456789.123456789.123456789
                 //            <sssssssMMMMMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMiiMMsssssss>
-                //                                        /\
+                //                                        ^^
                 //        with an insertion of two bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <ssssssSSSSSMMMMMMMMMMMMMMMM
@@ -350,10 +350,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
 
-                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //       123456789.123456789.123456789.123-456789.123456789.123456789.123456789.123456789
                 //            <sssssssMMMMMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMiMMMsssssss>
-                //                                        /\
+                //                                        ^
                 //        with an insertion of one bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <ssssssSSSSSMMMMMMMMMMMMMMMM
@@ -366,18 +366,16 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
                 //            <sssssssMMMMMMMMMMMMMMMMMMMM
-                //                        MMMMMMMMMMMMMMMMMiMMsssssss>
-                //                                         /\
+                //                        MMMMMMMMMMMMMMMMMiiMMssssss>
+                //                                         ^^
                 //         with an insertion of one bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <ssssssSSSSSMMMMMMMMMMMMMMMM
-                //                        MMMMMMMMMMMMMMMMSSSSsssssss>
+                //                        MMMMMMMMMMMMMMMMSSSSSssssss>
 
-
-                {27, 14, 18, "7S20M", "17M1I2M7S", true, false, 18, 18, "11S16M", "16M11S", false,
+                {27, 14, 18, "7S20M", "17M2I2M6S", true, false, 18, 18, "11S16M", "16M11S", false,
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
-
 
         };
     }
