@@ -347,7 +347,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                                        ^^
                 //        with an insertion of two bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
 
 
@@ -376,7 +376,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                                         ^^
                 //         with an insertion of one bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //            <ssssssSSSSSMMMMMMMMMMMMMMMM
+                //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSSssssss>
 
                 {27, 14, 18, "7S20M", "17M2I2M6S", true, false, 18, 18, "11S16M", "16M11S", false,
