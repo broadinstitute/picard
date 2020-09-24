@@ -2,6 +2,7 @@ package picard.sam;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CigarUtil;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -22,10 +23,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     @DataProvider(name = "overlapReadData")
     public Object[][] overlapReadData() {
         // The spaces here are deliberate to illustrate the region the two default reads match
-        final String default120LongR1Bases =                     "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCTGTCAGTTTGC";
+        final String default120LongR1Bases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCTGTCAGTTTGC";
         final String default120LongR2Bases = "CGTTGGCAATGCCGGGCACAATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
 
-        final String default110LongR1Bases =           "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCT";
+        final String default110LongR1Bases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCT";
         final String default110LongR2Bases = "GCCGGGCACAATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
 
         final String sharedBases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACC";
@@ -44,7 +45,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
 
         final String default120LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF.FFF";
-        final String default120LongR2BaseQualities ="FFFFFF.FFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        final String default120LongR2BaseQualities = "FFFFFF.FFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
         final String default110LongR1BaseQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFF.FFF";
         final String default110LongR2BaseQualities = "FFFFFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
@@ -56,7 +57,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final String r2ClippedQualities20 = new StringBuilder(default120LongR2BaseQualities.substring(0, 20)).reverse().toString();
 
 
-        return new Object[][] {
+        return new Object[][]{
                 {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", false,
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads
@@ -139,6 +140,32 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
+                // 3' end soft clip tests
+                /*
+                                       SSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM>
+                                 <SSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSS
+
+                                 soft clipping becomes:
+                                       SSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSS>
+                                 <SSSSSSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSS
+
+                                 hard clipping becomes:
+                                       SSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSHHHHH>
+                                 <HHHHHSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSS
+                */
+
+                {110, 105, 100, "10S100M", "10S95M5S", false, true, 105, 105, "10S90M10S", "15S90M5S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Already soft clipped at 5' end
+
+                {110, 105, 100, "10S100M", "10S95M5S", false, true, 105, 105, "10S90M5S5H", "5H10S90M5S", true,
+                        default110LongR1Bases, default110LongR2Bases,
+                        default110LongR1Bases.substring(0, 105), default110LongR2Bases.substring(5),
+                        default110LongR1Bases.substring(105), SequenceUtil.reverseComplement(default110LongR2Bases.substring(0, 5)),
+                        default110LongR1BaseQualities, default110LongR2BaseQualities,
+                        default110LongR1BaseQualities.substring(0, 105), default110LongR2BaseQualities.substring(5),
+                        default110LongR1BaseQualities.substring(105), StringUtil.reverseString(default110LongR2BaseQualities.substring(0, 5))}, // Already soft clipped at 5' end
+
                 /*
                                 SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM->
                                      <-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
@@ -202,11 +229,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //                  MMMMMMMMMMMMMMMMMMsssssssss->
+                //                  MMMMMMMMMMMMMMMMMMsssssssss>
                 //     <ssssssssMMM-MMMMMMMMMMMMMMMM
                 //          should become
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
-                //                  MMMMMMMMMMMMMMMMSSsssssssss->
+                //                  MMMMMMMMMMMMMMMMSSsssssssss>
                 //      <ssssssssSSSMMMMMMMMMMMMMMMM
 
 
@@ -254,6 +281,30 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMM---MMMMsssssssss>
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssSSSSMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMSSSSsssssssss>
+
+
+                {27, 14, 18, "8S19M", "14M3D4M9S", true, false, 18, 18, "12S15M", "14M13S", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+
+                // 123456789.123456789.123456789.12-3456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //      MMMMMMMMMMMMMMMMMMMMMMMMMMM-> ## deletion right at the end
+                //          should remain
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //      MMMMMMMMMMMMMMMMMMMMMMMMMMM->  ## deletion right at the end
+                    {27, 14, 6, "8S19M", "27M1D", true, false, 14, 6, "8S19M", "27M1D", false,
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
+
 
 
                 //                  123456789.123456--789.123456789.123456789.123456789.123456789.123456789.123456789
@@ -264,8 +315,6 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                    123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //                                     MMMMMMMMMMMMMMMMMssssssssss>
                 //                          <sssssSSSSSMMMMMMMMMMMMMMMMM
-
-
                 {27, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10S", "10S17M", false,
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
@@ -356,20 +405,20 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         r2.setBaseQualities(SAMUtils.fastqToPhred(read2Qualities));
 
         AbstractAlignmentMerger.clipForOverlappingReads(r1, r2, hardClipOverlappingReads);
-        Assert.assertEquals(r1.getAlignmentStart(), r1ExpectedAlignmentStart);
-        Assert.assertEquals(r1.getCigarString(), expectedR1Cigar);
-        Assert.assertEquals(r2.getAlignmentStart(), r2ExpectedAlignmentStart);
-        Assert.assertEquals(r2.getCigarString(), expectedR2Cigar);
-        Assert.assertEquals(r1.getReadString(), expectedR1Bases);
-        Assert.assertEquals(r2.getReadString(), expectedR2Bases);
-        Assert.assertEquals(SAMUtils.phredToFastq(r1.getBaseQualities()), expectedR1Qualities);
-        Assert.assertEquals(SAMUtils.phredToFastq(r2.getBaseQualities()), expectedR2Qualities);
+        Assert.assertEquals(r1.getAlignmentStart(), r1ExpectedAlignmentStart, "r1 POS");
+        Assert.assertEquals(r1.getCigarString(), expectedR1Cigar, "r1 CIGAR");
+        Assert.assertEquals(r2.getAlignmentStart(), r2ExpectedAlignmentStart, "r2 POS");
+        Assert.assertEquals(r2.getCigarString(), expectedR2Cigar, "r2 CIGAR");
+        Assert.assertEquals(r1.getReadString(), expectedR1Bases, "r1 BASES");
+        Assert.assertEquals(r2.getReadString(), expectedR2Bases, "r1 BASES");
+        Assert.assertEquals(SAMUtils.phredToFastq(r1.getBaseQualities()), expectedR1Qualities, "r1 QUAL");
+        Assert.assertEquals(SAMUtils.phredToFastq(r2.getBaseQualities()), expectedR2Qualities, "r2 QUAL");
 
-        Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR1ClippedBases);
-        Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR2ClippedBases);
+        Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR1ClippedBases, "r1 CLIPPED BASES");
+        Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR2ClippedBases, "r2 CLIPPED BASES");
 
-        Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities);
-        Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR2ClippedQualities);
+        Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities, "r1 CLIPPED QUALS");
+        Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR2ClippedQualities, "r2 CLIPPED QUALS");
 
 
         // Swap first and second read to ensure logic is correct for both F1R2 and F2R1
@@ -404,25 +453,24 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     }
 
 
-
     @Test
     public void testUnmapBacterialContamination() throws IOException {
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.queryname);
         final SAMFileHeader header = builder.getHeader();
         final SAMFileHeader.SortOrder sortOrder = header.getSortOrder();
-        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(sortOrder, 100000,true);
+        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(sortOrder, 100000, true);
         builder.setHeader(newHeader);
 
-        final File reference = File.createTempFile("reference",".fasta");
+        final File reference = File.createTempFile("reference", ".fasta");
         reference.deleteOnExit();
 
         builder.writeRandomReference(reference.toPath());
 
-        builder.addPair("overlappingpair", 0,500,500, false,false,"20S20M60S","20S20M60M",true,false,45);
-        builder.addPair("overlappingpairFirstAligned", 0,500,500, false,true,"20S20M60S",null,true,false,45);
-        builder.addPair("overlappingpairSecondAligned", 0,500,500, true,false,null,"20S20M60S",true,false,45);
-        builder.addPair("overlappingpairFirstAlignedB", 0,500,500, false,true,"20S20M60S",null,false,true,45);
-        builder.addPair("overlappingpairSecondAlignedB", 0,500,500, true,false,null,"20S20M60S",false,true,45);
+        builder.addPair("overlappingpair", 0, 500, 500, false, false, "20S20M60S", "20S20M60M", true, false, 45);
+        builder.addPair("overlappingpairFirstAligned", 0, 500, 500, false, true, "20S20M60S", null, true, false, 45);
+        builder.addPair("overlappingpairSecondAligned", 0, 500, 500, true, false, null, "20S20M60S", true, false, 45);
+        builder.addPair("overlappingpairFirstAlignedB", 0, 500, 500, false, true, "20S20M60S", null, false, true, 45);
+        builder.addPair("overlappingpairSecondAlignedB", 0, 500, 500, true, false, null, "20S20M60S", false, true, 45);
 
 //        builder.addFrag("frag",1,500,false,false,"20S20M60S",null, 45);
 //        builder.addFrag("frag2",1,500,true,false,"20S20M60S",null, 45);
@@ -442,12 +490,12 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         revertSam.OUTPUT = fileUnaligned;
 
         revertSam.SANITIZE = false;
-        revertSam.REMOVE_ALIGNMENT_INFORMATION=true;
-        revertSam.REMOVE_DUPLICATE_INFORMATION=true;
+        revertSam.REMOVE_ALIGNMENT_INFORMATION = true;
+        revertSam.REMOVE_DUPLICATE_INFORMATION = true;
 
         revertSam.SORT_ORDER = SAMFileHeader.SortOrder.queryname;
 
-        Assert.assertEquals(revertSam.doWork(),0);
+        Assert.assertEquals(revertSam.doWork(), 0);
 
         MergeBamAlignment mergeBamAlignment = new MergeBamAlignment();
 
@@ -465,7 +513,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         mergeBamAlignment.OUTPUT = fileMerged;
 
         // merge file with itself.
-        Assert.assertEquals(mergeBamAlignment.doWork(),0);
+        Assert.assertEquals(mergeBamAlignment.doWork(), 0);
 
         // check that all reads have been unmapped due to bacterial contamination as needed.
         try (SamReader mergedReader = SamReaderFactory.makeDefault().open(fileMerged)) {
@@ -483,13 +531,14 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
 
     private static File newTempSamFile(final String filename) throws IOException {
-        final File file = File.createTempFile(filename,".sam");
+        final File file = File.createTempFile(filename, ".sam");
         file.deleteOnExit();
         return file;
     }
+
     @DataProvider(name = "readPositionIgnoringSoftClips")
     public Object[][] readPositionIgnoringSoftClips() {
-        return new Object[][] {
+        return new Object[][]{
                 {"26S58M62S", 3688, 3827, 0}, // This is from the read that made us aware of a bug
                 {"26S58M62S", 3688, 3665, 4},
                 {"26S58M62S", 3688, 3660, 0}, // Before soft clip
@@ -499,9 +548,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 {"10S100M2S", 5, 107, 0}
         };
     }
+
     @Test(dataProvider = "readPositionIgnoringSoftClips")
     public void testGetReadPositionIgnoringSoftClips(final String cigarString, final int startPosition, final int queryPosition, final int expectedReadPosititon) {
-        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(SAMFileHeader.SortOrder.queryname, 100000,false);
+        final SAMFileHeader newHeader = SAMRecordSetBuilder.makeDefaultHeader(SAMFileHeader.SortOrder.queryname, 100000, false);
         final SAMRecord rec = new SAMRecord(newHeader);
 
         rec.setCigarString(cigarString);
@@ -514,7 +564,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
 
     @DataProvider
-    public Object[][] referencePositionAndReadPositions(){
+    public Object[][] referencePositionAndReadPositions() {
         return new Object[][]{
                 {1, 0, false}, {1, 0, true},
                 {2, 0, false}, {2, 0, true},
@@ -552,11 +602,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "referencePositionAndReadPositions")
-    public void testGetReadPositionAtReferencePositionIgnoreSoftClips(final int refPos, final int readPos, final boolean negativeStrand){
+    public void testGetReadPositionAtReferencePositionIgnoreSoftClips(final int refPos, final int readPos, final boolean negativeStrand) {
         final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
         //REF   123456789.123456789----.123456789.123456789.
         //         ....||||----||||....||||----....
-        //         SSSSMMMMDDDDMMMMIIIIMMMMDDDDSSSS---->>
+        //         SSSSMMMMDDDDMMMMIIIIMMMMDDDDSSSS>
         //READ     12345678----9.123456789.----12345678
         final SAMRecord samRecord = set.addFrag("test", 0, 8, negativeStrand, false, "4S4M4D4M4I4M4D4S", "null", 30);
 

@@ -860,18 +860,21 @@ public abstract class AbstractAlignmentMerger {
         // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
         // also to be moved forward by posShift so that it's still querying the same base.
         final int readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, true);
-        final int readPositionZeroOnDeletion = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
-
-        rec.setCigar(oldCigar);
 
         // if this returns zero, it means that there's a deletion at the position of the desired base,
         // if the read is on the positive strand readPosition should be incremented by one to get the
         // base __following__ the deletion rather than the one preceding it (which is what returnLastBaseIfDeleted argument in
         // getReadPositionAtReferencePosition will do)
-        final boolean incrementReadPosition = readPositionZeroOnDeletion == 0 &&
-                readPosition != 0 &&
-                !rec.getReadNegativeStrandFlag() &&
-                readPosition < rec.getReadLength() - 1;
+        final int readPositionZeroOnDeletion = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+
+        rec.setCigar(oldCigar);
+
+        final boolean refPositionOnDeletion = readPositionZeroOnDeletion == 0 && readPosition != 0;
+
+        final boolean incrementReadPosition = refPositionOnDeletion &&
+                !rec.getReadNegativeStrandFlag() && // only needed for positive-strand reads
+                readPosition < rec.getReadLength(); // protection against the possibility that getReadPositionAtReferencePosition
+        // would return the last base of a read when it ends in a deletion (it currently doesn't)
 
         return incrementReadPosition ? readPosition + 1 : readPosition;
 
