@@ -596,7 +596,8 @@ public class IntervalListTools extends CommandLineProgram {
                     }
                 }
             }
-            throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
+            LOG.info("Unrecognized file extension, defaulting to .interval_list");
+            return INTERVAL_LIST;
         }
 
         public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {
