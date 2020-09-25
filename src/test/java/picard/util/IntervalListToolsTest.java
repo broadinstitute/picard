@@ -48,6 +48,7 @@ import java.util.Scanner;
 public class IntervalListToolsTest extends CommandLineProgramTest {
     private final File TEST_DATA_DIR = new File("testdata/picard/util/");
     private final File scatterable = new File(TEST_DATA_DIR, "scatterable.interval_list");
+    private final File scatterableStdin = new File(TEST_DATA_DIR, "scatterable_stdin");
     private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
     private final File largeScatterable = new File(TEST_DATA_DIR, "large_scatterable.interval_list");
 
@@ -106,6 +107,25 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         args.add("ACTION=" + action.toString());
         args.add("INPUT=" + scatterable);
+
+        if (action.takesSecondInput) {
+            args.add("SECOND_INPUT=" + secondInput);
+        }
+        args.add("OUTPUT=" + ilOut);
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
+    // test that all actions work for standard input, but not test output at all.
+    @Test(dataProvider = "ActionsTest")
+    public void testAllActionsStandardInput(final IntervalListTools.Action action) throws IOException {
+        final File ilOut = File.createTempFile("IntervalListTools", "interval_list");
+        ilOut.deleteOnExit();
+
+        final List<String> args = new ArrayList<>();
+
+        args.add("ACTION=" + action.toString());
+        args.add("INPUT=" + scatterableStdin);
 
         if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
