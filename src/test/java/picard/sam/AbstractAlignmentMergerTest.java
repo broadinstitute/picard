@@ -18,15 +18,14 @@ import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Tests related to code in AbstractAlignmentMerger
  */
 public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
-    @DataProvider(name = "overlapReadData")
+//    @DataProvider(name = "overlapReadData")
     public Object[][] overlapReadData() {
         // The spaces here are deliberate to illustrate the region the two default reads match
         final String default120LongR1Bases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCTGTCAGTTTGC";
@@ -64,63 +63,63 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
 
         return new Object[][]{
-                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", false,
+                {110, false, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads
 
-                {110, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M", true,
+                {110, true, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 100, 200, "110M", "110M", false, false, 100, 200, "110M", "110M", false,
+                {110, false, 100, 200, "110M", "110M", false, false, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // F1F2
 
-                {110, 100, 200, "110M", "110M", false, false, 100, 200, "110M", "110M", true,
+                {110, true, 100, 200, "110M", "110M", false, false, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 100, 200, "110M", "110M", true, true, 100, 200, "110M", "110M", false,
+                {110, false, 100, 200, "110M", "110M", true, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // R1R2
 
-                {110, 100, 200, "110M", "110M", true, true, 100, 200, "110M", "110M", true,
+                {110, true, 100, 200, "110M", "110M", true, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 100, 300, "110M", "110M", true, false, 100, 300, "110M", "110M", false,
+                {110, false, 100, 300, "110M", "110M", true, false, 100, 300, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping "outies"
 
-                {110, 100, 300, "110M", "110M", true, false, 100, 300, "110M", "110M", true,
+                {110, true, 100, 300, "110M", "110M", true, false, 100, 300, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10S", "10S100M", false,
+                {110, false, 100, 90, "110M", "110M", false, true, 100, 100, "100M10S", "10S100M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Basic overlapped read
 
-                {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10H", "10H100M", true,
+                {110, true, 100, 90, "110M", "110M", false, true, 100, 100, "100M10H", "10H100M",
                         default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
-                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M20S5H", "5H20S100M", false,
+                {120, false, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M20S5H", "5H20S100M",
                         default120LongR1Bases, default120LongR2Bases, default120LongR1Bases, default120LongR2Bases, null, null,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, default120LongR1BaseQualities, default120LongR2BaseQualities, null, null}, // Already hard and soft clipped
 
-                {120, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M25H", "25H100M", true,
+                {120, true, 100, 95, "110M10S5H", "5H15S105M", false, true, 100, 100, "100M25H", "25H100M",
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
 
-                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20S", "20S100M", false,
+                {120, false, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20S", "20S100M",
                         default120LongR1Bases, default120LongR2Bases, default120LongR1Bases, default120LongR2Bases, null, null,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, default120LongR1BaseQualities, default120LongR2BaseQualities, null, null}, // Already soft clipped
 
-                {120, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20H", "20H100M", true,
+                {120, true, 100, 95, "110M10S", "15S105M", false, true, 100, 100, "100M20H", "20H100M",
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
 
-                {120, 100, 95, "95M25S", "15S105M", false, true, 100, 100, "95M5S20H", "20H100M", true,
+                {120, true, 100, 95, "95M25S", "15S105M", false, true, 100, 100, "95M5S20H", "20H100M",
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
                         default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
 
@@ -138,11 +137,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                                  <-HHHHSSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
                 */
 
-                {110, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M17S", "15S88M7S", false,
+                {110, false, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M17S", "15S88M7S",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Already soft clipped at 5' end
 
-                {110, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M7S10H", "10H5S88M7S", true,
+                {110, true, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M7S10H", "10H5S88M7S",
                         default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
@@ -160,11 +159,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                                  <HHHHHSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSS
                 */
 
-                {110, 105, 100, "10S100M", "10S95M5S", false, true, 105, 105, "10S90M10S", "15S90M5S", false,
+                {110, false, 105, 100, "10S100M", "10S95M5S", false, true, 105, 105, "10S90M10S", "15S90M5S",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Already soft clipped at 5' end
 
-                {110, 105, 100, "10S100M", "10S95M5S", false, true, 105, 105, "10S90M5S5H", "5H10S90M5S", true,
+                {110, true, 105, 100, "10S100M", "10S95M5S", false, true, 105, 105, "10S90M5S5H", "5H10S90M5S",
                         default110LongR1Bases, default110LongR2Bases,
                         default110LongR1Bases.substring(0, 105), default110LongR2Bases.substring(5),
                         default110LongR1Bases.substring(105), SequenceUtil.reverseComplement(default110LongR2Bases.substring(0, 5)),
@@ -184,11 +183,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                  */
 
-                {110, 105, 100, "10S100M", "103M7S", false, true, 105, 105, "10S98M2S", "5S98M7S", false,
+                {110, false, 105, 100, "10S100M", "103M7S", false, true, 105, 105, "10S98M2S", "5S98M7S",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 105, 100, "10S100M", "103M7S", false, true, 105, 105, "10S98M2S", "5S98M7S", false,
+                {110, false, 105, 100, "10S100M", "103M7S", false, true, 105, 105, "10S98M2S", "5S98M7S",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
@@ -203,11 +202,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                                 hard-clipping results in the same as with soft-clipping in this case.
 
                  */
-                {110, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S", false,
+                {110, false, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S", false,
+                {110, false, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
@@ -226,11 +225,11 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                  */
 
-                {110, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M18S", "22S88M", false,
+                {110, false, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M18S", "22S88M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
-                {110, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M8S10H", "10H12S88M", true,
+                {110, true, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M8S10H", "10H12S88M",
                         default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
 
@@ -243,7 +242,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //      <ssssssssSSSMMMMMMMMMMMMMMMM
 
 
-                {27, 18, 14, "18M9S", "8S3M1D16M", false, true, 18, 18, "16M11S", "11S16M", false,
+                {27, false, 18, 14, "18M9S", "8S3M1D16M", false, true, 18, 18, "16M11S", "11S16M",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -256,7 +255,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //      <ssssssssSSSMMMMMMMMMMMMMMMM
 
 
-                {27, 18, 12, "18M9S", "8S3M3D16M", false, true, 18, 18, "16M11S", "11S16M", false,
+                {27, false, 18, 12, "18M9S", "8S3M3D16M", false, true, 18, 18, "16M11S", "11S16M",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -269,7 +268,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                  MMMMMMMMMMMMMMMSSSsssssssss>
 
 
-                {27, 14, 18, "8S19M", "15M1D3M9S", true, false, 18, 18, "12S15M", "15M12S", false,
+                {27, false, 14, 18, "8S19M", "15M1D3M9S", true, false, 18, 18, "12S15M", "15M12S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -283,7 +282,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                  MMMMMMMMMMMMMMMSSSsssssssss>
 
 
-                {27, 14, 18, "8S19M", "15M3D3M9S", true, false, 18, 18, "12S15M", "15M12S", false,
+                {27, false, 14, 18, "8S19M", "15M3D3M9S", true, false, 18, 18, "12S15M", "15M12S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -296,7 +295,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                  MMMMMMMMMMMMMMSSSSsssssssss>
 
 
-                {27, 14, 18, "8S19M", "14M3D4M9S", true, false, 18, 18, "12S15M", "14M13S", false,
+                {27, false, 14, 18, "8S19M", "14M3D4M9S", true, false, 18, 18, "12S15M", "14M13S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -307,7 +306,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //     <ssssssssMMMMMMMMMMMMMMMMMMM
                 //      MMMMMMMMMMMMMMMMMMMMMMMMMMM->  ## deletion right at the end
-                    {27, 14, 6, "8S19M", "27M1D", true, false, 14, 6, "8S19M", "27M1D", false,
+                    {27, false, 14, 6, "8S19M", "27M1D", true, false, 14, 6, "8S19M", "27M1D",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
@@ -321,7 +320,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                    123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //                                     MMMMMMMMMMMMMMMMMSsssssssss>
                 //                          <sssssSSSSSMMMMMMMMMMMMMMMMM
-                {27, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10S", "10S17M", false,
+                {27, false, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10S", "10S17M",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -336,7 +335,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
 
 
-                {27, 14, 18, "7S20M", "17M2I1M7S", true, false, 18, 18,"11S16M","16M11S", false,
+                {27, false, 14, 18, "7S20M", "17M2I1M7S", true, false, 18, 18,"11S16M","16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
 
@@ -351,7 +350,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
 
 
-                {27, 14, 18, "7S20M", "16M2I2M7S", true, false, 18, 18, "11S16M", "16M11S", false,
+                {27, false, 14, 18, "7S20M", "16M2I2M7S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
@@ -366,7 +365,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
 
 
-                {27, 14, 18, "7S20M", "16M1I3M7S", true, false, 18, 18, "11S16M", "16M11S", false,
+                {27, false, 14, 18, "7S20M", "16M1I3M7S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
@@ -379,21 +378,45 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSSssssss>
 
-                {27, 14, 18, "7S20M", "17M2I2M6S", true, false, 18, 18, "11S16M", "16M11S", false,
+                {27, false, 14, 18, "7S20M", "17M2I2M6S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
         };
     }
 
-    @Test(dataProvider = "overlapReadData")
-    public void testOverlappedReadClipping(final int readLength, final int start1, final int start2, final String cigar1, final String cigar2,
+    @DataProvider
+    public Iterator<Object[]> overlapReadDataWithSwaps(){
+        List<Object[]> tests = new LinkedList<>();
+
+        for (Object[] inputs : overlapReadData()) {
+            tests.add(inputs);
+            final Object[] swappedInputs = new Object[inputs.length];
+            swappedInputs[0] = inputs[0]; //read length
+            swappedInputs[1] = inputs[1]; // hard_clip
+
+            for (int i = 2; i < inputs.length; i += 2) {
+                swappedInputs[i] = inputs[i + 1];
+                swappedInputs[i + 1] = inputs[i];
+            }
+            tests.add(swappedInputs);
+        }
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "overlapReadDataWithSwaps")
+    public void testOverlappedReadClipping(
+                                           final int readLength,final boolean hardClipOverlappingReads,
+                                           final int start1, final int start2,
+                                           final String cigar1, final String cigar2,
                                            final boolean strand1, final boolean strand2,
                                            final int r1ExpectedAlignmentStart, final int r2ExpectedAlignmentStart,
-                                           final String expectedR1Cigar, final String expectedR2Cigar, final boolean hardClipOverlappingReads,
-                                           final String read1Bases, final String read2Bases, final String expectedR1Bases, final String expectedR2Bases,
-                                           final String expectedR1ClippedBases, final String expectedR2ClippedBases, final String read1Qualities,
-                                           final String read2Qualities, final String expectedR1Qualities, final String expectedR2Qualities,
+                                           final String expectedR1Cigar, final String expectedR2Cigar,
+                                           final String read1Bases, final String read2Bases,
+                                           final String expectedR1Bases, final String expectedR2Bases,
+                                           final String expectedR1ClippedBases, final String expectedR2ClippedBases,
+                                           final String read1Qualities, final String read2Qualities,
+                                           final String expectedR1Qualities, final String expectedR2Qualities,
                                            final String expectedR1ClippedQualities, final String expectedR2ClippedQualities) {
 
         final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
@@ -423,37 +446,6 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         Assert.assertEquals(r1.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities, "r1 CLIPPED QUALS");
         Assert.assertEquals(r2.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR2ClippedQualities, "r2 CLIPPED QUALS");
-
-
-        // Swap first and second read to ensure logic is correct for both F1R2 and F2R1
-        final SAMRecordSetBuilder setSwapped = new SAMRecordSetBuilder();
-        setSwapped.setReadLength(readLength);
-        final List<SAMRecord> recsSwapped = set.addPair("q1", 0, start2, start1, false, false, cigar2, cigar1, strand2, strand1, 30);
-        final SAMRecord r1Swapped = recsSwapped.get(0);
-        final SAMRecord r2Swapped = recsSwapped.get(1);
-
-        r1Swapped.setReadBases(StringUtil.stringToBytes(read2Bases));
-        r2Swapped.setReadBases(StringUtil.stringToBytes(read1Bases));
-
-        r1Swapped.setBaseQualities(SAMUtils.fastqToPhred(read2Qualities));
-        r2Swapped.setBaseQualities(SAMUtils.fastqToPhred(read1Qualities));
-
-        AbstractAlignmentMerger.clipForOverlappingReads(r1Swapped, r2Swapped, hardClipOverlappingReads);
-        Assert.assertEquals(r1Swapped.getAlignmentStart(), r2ExpectedAlignmentStart);
-        Assert.assertEquals(r1Swapped.getCigarString(), expectedR2Cigar);
-        Assert.assertEquals(r2Swapped.getAlignmentStart(), r1ExpectedAlignmentStart);
-        Assert.assertEquals(r2Swapped.getCigarString(), expectedR1Cigar);
-        Assert.assertEquals(r1Swapped.getReadString(), expectedR2Bases);
-        Assert.assertEquals(r2Swapped.getReadString(), expectedR1Bases);
-        Assert.assertEquals(SAMUtils.phredToFastq(r1Swapped.getBaseQualities()), expectedR2Qualities);
-        Assert.assertEquals(SAMUtils.phredToFastq(r2Swapped.getBaseQualities()), expectedR1Qualities);
-
-        Assert.assertEquals(r1Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR2ClippedBases);
-        Assert.assertEquals(r2Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG), expectedR1ClippedBases);
-
-        Assert.assertEquals(r1Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR2ClippedQualities);
-        Assert.assertEquals(r2Swapped.getAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG), expectedR1ClippedQualities);
-
     }
 
 
