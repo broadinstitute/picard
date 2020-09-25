@@ -18,14 +18,17 @@ import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Tests related to code in AbstractAlignmentMerger
  */
 public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
-//    @DataProvider(name = "overlapReadData")
+    // the actual data provider is overlapReadDataWithSwaps
     public Object[][] overlapReadData() {
         // The spaces here are deliberate to illustrate the region the two default reads match
         final String default120LongR1Bases = "ATCACACCAGTGTCTGCGTTCACAGCAGGCATCATCAGTAGCCTCCAGAGGCCTCAGGTCCAGTCTCTAAAAATATCTCAGGAGGCTGCAGTGGCTGACCAGATTCTCCTGTCAGTTTGC";
