@@ -119,25 +119,6 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
     }
 
-    // test that all actions work for standard input, but not test output at all.
-    @Test(dataProvider = "ActionsTest")
-    public void testAllActionsStandardInput(final IntervalListTools.Action action) throws IOException {
-        final File ilOut = File.createTempFile("IntervalListTools", "interval_list");
-        ilOut.deleteOnExit();
-
-        final List<String> args = new ArrayList<>();
-
-        args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + scatterableStdin);
-
-        if (action.takesSecondInput) {
-            args.add("SECOND_INPUT=" + secondInput);
-        }
-        args.add("OUTPUT=" + ilOut);
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-    }
-
     @DataProvider
     public Object[][] actionAndTotalBasesData() {
         return new Object[][]{
