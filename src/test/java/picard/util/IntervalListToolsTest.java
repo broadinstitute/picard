@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 /**
  * Created by farjoun on 10/22/17.
@@ -94,19 +95,21 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @DataProvider
     public Iterator<Object[]> ActionsTest() {
-        return Arrays.stream(IntervalListTools.Action.values()).map(a -> new Object[]{a}).iterator();
+        final Stream stream1 = Arrays.stream(IntervalListTools.Action.values()).map(a -> new Object[]{a, scatterable});
+        final Stream stream2 = Arrays.stream(IntervalListTools.Action.values()).map(a -> new Object[]{a, scatterableStdin});
+        return Stream.concat(stream1, stream2).iterator();
     }
 
     // test that all actions work. but not test output at all.
     @Test(dataProvider = "ActionsTest")
-    public void testAllActions(final IntervalListTools.Action action) throws IOException {
+    public void testAllActions(final IntervalListTools.Action action, final File file) throws IOException {
         final File ilOut = File.createTempFile("IntervalListTools", "interval_list");
         ilOut.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + scatterable);
+        args.add("INPUT=" + file);
 
         if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
