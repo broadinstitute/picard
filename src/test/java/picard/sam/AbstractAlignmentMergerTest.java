@@ -64,6 +64,30 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
+                {110, 100, 200, "110M", "110M", false, false, 100, 200, "110M", "110M", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // F1F2
+
+                {110, 100, 200, "110M", "110M", false, false, 100, 200, "110M", "110M", true,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, 100, 200, "110M", "110M", true, true, 100, 200, "110M", "110M", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // R1R2
+
+                {110, 100, 200, "110M", "110M", true, true, 100, 200, "110M", "110M", true,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, 100, 300, "110M", "110M", true, false, 100, 300, "110M", "110M", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping "outies"
+
+                {110, 100, 300, "110M", "110M", true, false, 100, 300, "110M", "110M", true,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
                 {110, 100, 90, "110M", "110M", false, true, 100, 100, "100M10S", "10S100M", false,
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Basic overlapped read
@@ -90,8 +114,91 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {120, 100, 95, "95M25S", "15S105M", false, true, 100, 100, "95M5S20H", "20H100M", true,
                         default120LongR1Bases, default120LongR2Bases, sharedBases, sharedBases, default120LongR1ClippedBases, default120LongR2ClippedBases,
-                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20}
+                        default120LongR1BaseQualities, default120LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities20, r2ClippedQualities20},
 
+                // 5' end soft clip tests
+                /*
+                                       SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM->
+                                 <-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
+
+                                 soft clipping becomes:
+                                       SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSSSSS->
+                                 <-SSSSSSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
+
+                                 hard clipping becomes:
+                                       SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSHHHH->
+                                 <-HHHHSSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
+                */
+
+                {110, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M17S", "15S88M7S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Already soft clipped at 5' end
+
+                {110, 105, 90, "5S105M", "103M7S", false, true, 105, 105, "5S88M7S10H", "10H5S88M7S", true,
+                        default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
+
+                /*
+                                SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM->
+                                     <-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
+
+                                soft clipping becomes:
+                                SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSS->
+                                     <-SSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSS
+
+                                hard-clipping results in the same as with soft-clipping in this case.
+
+                 */
+
+                {110, 105, 100, "10S100M", "103M7S", false, true, 105, 105, "10S98M2S", "5S98M7S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, 105, 100, "10S100M", "103M7S", false, true, 105, 105, "10S98M2S", "5S98M7S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                /*
+                                SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSS->
+                                     <-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSSSSSSSSSSSSSS
+
+                                soft clipping becomes:
+                                SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSSSSSS->
+                                     <-SSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSSSSSSSSSSSSSSSSSS
+
+                                hard-clipping results in the same as with soft-clipping in this case.
+
+                 */
+                {110, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, 105, 100, "10S97M3S", "99M11S", false, true, 105, 105, "10S94M6S", "5S94M11S", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                /*
+                                          SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSS->
+                                     <-SSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+
+                                soft clipping becomes:
+                                          SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSSSS->
+                                     <-SSSSSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+
+
+                                hard clipping becomes:
+                                          SSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMSSSHHH->
+                                     <-HHHSSSSSSSSSSSMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+
+                 */
+
+                {110, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M18S", "22S88M", false,
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, 105, 96, "12S80M18S", "13S97M", false, true, 105, 105, "12S80M8S10H", "10H12S88M", true,
+                        default110LongR1Bases, default110LongR2Bases, sharedBases, sharedBases, default110LongR1ClippedBases, default110LongR2ClippedBases,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, sharedQualities, sharedQualities, r1ClippedQualities10, r2ClippedQualities10},
         };
     }
 

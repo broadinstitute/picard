@@ -42,14 +42,14 @@ import java.util.Map;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        summary = "Computes/Extracts the fingerprint genotype likelihoods from the supplied SAM/BAM/VCF file." +
+        summary = "Computes/Extracts the fingerprint genotype likelihoods from the supplied file." +
                 "It is given as a list of PLs at the fingerprinting sites.",
-        oneLineSummary = "Computes a fingerprint from the supplied SAM/BAM file.",
+        oneLineSummary = "Computes a fingerprint from the input file.",
         programGroup = DiagnosticsAndQCProgramGroup.class)
 
 public class ExtractFingerprint extends CommandLineProgram {
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output fingerprint file (VCF).")
@@ -97,6 +97,7 @@ public class ExtractFingerprint extends CommandLineProgram {
         }
 
         checker.setLocusMaxReads(LOCUS_MAX_READS);
+        checker.setReferenceFasta(REFERENCE_SEQUENCE);
         checker.setValidationStringency(VALIDATION_STRINGENCY);
 
         if (SAMPLE_ALIAS != null) {
