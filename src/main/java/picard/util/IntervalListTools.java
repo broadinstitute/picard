@@ -237,7 +237,9 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
-                    "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)
+                    "result of merging the inputs. Supported formats are interval_list and VCF." +
+                    "If file extension is unrecognized, assumes file is interval_list" +
+                    "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
     public List<File> INPUT;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
@@ -596,7 +598,8 @@ public class IntervalListTools extends CommandLineProgram {
                     }
                 }
             }
-            throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
+            LOG.info("Unrecognized file extension, defaulting to .interval_list");
+            return INTERVAL_LIST;
         }
 
         public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {
