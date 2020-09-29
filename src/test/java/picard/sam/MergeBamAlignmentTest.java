@@ -49,6 +49,8 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.ValidateSamTester;
+import picard.sam.util.SAMComparisonArgumentCollection;
+import picard.sam.util.SamComparison;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -63,18 +65,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *  Test for the MergeBamAlignment class
+ * Test for the MergeBamAlignment class
  *
  * @author ktibbett@broadinstitute.org
  */
 public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MergeBamAlignment");
+    private static final File DATA_DIR = new File("testdata/picard/sam");
+    private static final File TEST_DATA_DIR = new File(DATA_DIR, "MergeBamAlignment");
 
-    private static final File unmappedBam = new File("testdata/picard/sam/unmapped.sam");
-    private static final File alignedBam = new File("testdata/picard/sam/aligned.sam");
-    private static final File oneHalfAlignedBam = new File("testdata/picard/sam/onehalfaligned.sam");
-    private static final File otherHalfAlignedBam = new File("testdata/picard/sam/otherhalfaligned.sam");
+    private static final File unmappedBam = new File(DATA_DIR, "unmapped.sam");
+    private static final File alignedBam = new File(DATA_DIR, "aligned.sam");
+    private static final File oneHalfAlignedBam = new File(DATA_DIR, "onehalfaligned.sam");
+    private static final File otherHalfAlignedBam = new File(DATA_DIR, "otherhalfaligned.sam");
     private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
     private static final File firstReadAlignedBam = new File(TEST_DATA_DIR, "allread1.trimmed.aligned.sam");
     private static final File secondReadAlignedBam = new File(TEST_DATA_DIR, "allread2.trimmed.aligned.sam");
@@ -83,11 +86,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
-    private static final File alignedQuerynameSortedBam = new File("testdata/picard/sam/aligned_queryname_sorted.sam");
-    private static final File fasta = new File("testdata/picard/sam/merger.fasta");
+    private static final File alignedQuerynameSortedBam = new File(DATA_DIR, "aligned_queryname_sorted.sam");
+    private static final File fasta = new File(DATA_DIR, "merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
-    private static final File sequenceDict = new File("testdata/picard/sam/merger.dict");
-    private static final File sequenceDict2 = new File("testdata/picard/sam/merger.2.dict");
+    private static final File sequenceDict = new File(DATA_DIR, "merger.dict");
+    private static final File sequenceDict2 = new File(DATA_DIR, "merger.2.dict");
     private static final File badorderUnmappedBam = new File(TEST_DATA_DIR, "unmapped.badorder.sam");
     private static final File badorderAlignedBam = new File(TEST_DATA_DIR, "aligned.badorder.sam");
     private static final File multipleStrandsAlignedBam = new File(TEST_DATA_DIR, "aligned.both.strands.sam");
@@ -114,8 +117,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         final SamReader result = SamReaderFactory.makeDefault().open(outputWithSupplemental);
 
-        final List<Integer> clipAdapterFlags = new ArrayList<Integer>(Arrays.asList(99, 2147, 147, 2195));
-        final List<Integer> foundClipAdapterFlags = new ArrayList<Integer>();
+        final List<Integer> clipAdapterFlags = new ArrayList<>(Arrays.asList(99, 2147, 147, 2195));
+        final List<Integer> foundClipAdapterFlags = new ArrayList<>();
 
         for (final SAMRecord sam : result) {
             if (sam.getReadName().equals("both_reads_align_clip_adapter")) {
@@ -131,12 +134,13 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 } else {
                     Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " + sam.getReadName());
                 }
-            }
-            else if (sam.getReadName().equals("both_reads_align_clip_adapter")) {
+            } else if (sam.getReadName().equals("both_reads_align_clip_adapter")) {
                 Assert.assertEquals(sam.getReferenceName(), "chr7");
                 if (!sam.getSupplementaryAlignmentFlag()) {
-                    if (sam.getReadNegativeStrandFlag()) Assert.assertEquals(sam.getCigarString(), "5S96M", "Incorrect CIGAR string for " + sam.getReadName());
-                    else Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " + sam.getReadName());
+                    if (sam.getReadNegativeStrandFlag())
+                        Assert.assertEquals(sam.getCigarString(), "5S96M", "Incorrect CIGAR string for " + sam.getReadName());
+                    else
+                        Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " + sam.getReadName());
                 }
             }
             // This tests that we DON'T clip when we run off the end if there are equal to or more than
@@ -236,10 +240,10 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             final boolean pos = !sam.getReadNegativeStrandFlag();
             Assert.assertEquals(sam.getAttribute("aa"), pos ? "Hello" : "olleH");
             Assert.assertEquals(sam.getAttribute("ab"), pos ? "ATTCGG" : "CCGAAT");
-            Assert.assertEquals(sam.getAttribute("ac"), pos ? new byte[] {1,2,3} : new byte[] {3,2,1});
-            Assert.assertEquals(sam.getAttribute("as"), pos ? new short[]{1,2,3} : new short[]{3,2,1});
-            Assert.assertEquals(sam.getAttribute("ai"), pos ? new int[]  {1,2,3} : new int[]  {3,2,1});
-            Assert.assertEquals(sam.getAttribute("af"), pos ? new float[]{1,2,3} : new float[]{3,2,1});
+            Assert.assertEquals(sam.getAttribute("ac"), pos ? new byte[]{1, 2, 3} : new byte[]{3, 2, 1});
+            Assert.assertEquals(sam.getAttribute("as"), pos ? new short[]{1, 2, 3} : new short[]{3, 2, 1});
+            Assert.assertEquals(sam.getAttribute("ai"), pos ? new int[]{1, 2, 3} : new int[]{3, 2, 1});
+            Assert.assertEquals(sam.getAttribute("af"), pos ? new float[]{1, 2, 3} : new float[]{3, 2, 1});
         }
 
         // Quick test to make sure the program record gets picked up from the file if not specified
@@ -319,13 +323,13 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
     }
 
-    @Test(dataProvider="data")
+    @Test(dataProvider = "data")
     public void testSortingOnSamAlignmentMerger(final File unmapped, final File aligned, final boolean sorted, final boolean coordinateSorted, final String testName)
-        throws IOException {
+            throws IOException {
 
         final File target = File.createTempFile("target", "bam");
         target.deleteOnExit();
-        final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
+        final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped, target, fasta, null, true, false,
                 false, Collections.singletonList(aligned), 1, null, null, null, null, null, null,
                 Collections.singletonList(SamPairUtil.PairOrientation.FR),
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
@@ -344,9 +348,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         Assert.assertEquals(aln, 6, "Incorrect number of aligned reads in merged BAM file");
     }
 
-    @DataProvider(name="data")
+    @DataProvider(name = "data")
     public Object[][] getDataForSortingTest() {
-        return new Object[][] {
+        return new Object[][]{
                 {unmappedBam, alignedQuerynameSortedBam, true, true, "Basic test with pre-sorted alignment"},
                 {unmappedBam, alignedBam, false, true, "Basic test with unsorted alignment"},
                 {unmappedBam, alignedQuerynameSortedBam, true, false, "Basic test with pre-sorted alignment"},
@@ -357,10 +361,10 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     /**
      * Minimal test of merging data from separate read 1 and read 2 alignments
      */
-    @Test(dataProvider="separateTrimmed")
+    @Test(dataProvider = "separateTrimmed")
     public void testMergingFromSeparatedReadTrimmedAlignments(final File unmapped, final List<File> r1Align, final List<File> r2Align, final int r1Trim, final int r2Trim, final String testName) throws Exception {
-         final File output = File.createTempFile("mergeMultipleAlignmentsTest", ".sam");
-         output.deleteOnExit();
+        final File output = File.createTempFile("mergeMultipleAlignmentsTest", ".sam");
+        output.deleteOnExit();
 
         doMergeAlignment(unmapped, null, r1Align, r2Align, r1Trim, r2Trim,
                 false, true, false, 1,
@@ -370,7 +374,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         SamReaderFactory factory = SamReaderFactory.makeDefault();
         final SamReader result = factory.open(output);
-         for (final SAMRecord sam : result) {
+        for (final SAMRecord sam : result) {
             // Get the alignment record
             final List<File> rFiles = sam.getFirstOfPairFlag() ? r1Align : r2Align;
             SAMRecord alignment = null;
@@ -408,14 +412,14 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
     }
 
-    @DataProvider(name="separateTrimmed")
+    @DataProvider(name = "separateTrimmed")
     public Object[][] getDataForMergingTest() {
-        return new Object[][] {
-            // Tests using one file for each read, queryname sorted, trimmed, not all bases written
-            {mergingUnmappedBam, Arrays.asList(firstReadAlignedBam), Arrays.asList(secondReadAlignedBam), 17, 20, "one file per read"},
-            // Tests using multiple files for each read, coordinate sorted, trimmed, not all bases written
-            {mergingUnmappedBam, Arrays.asList(firstReadAlignedBam_firstHalf, firstReadAlignedBam_secondHalf),
-                    Arrays.asList(secondReadAlignedBam_firstHalf, secondReadAlignedBam_secondHalf), 17, 20, "two files per read"}
+        return new Object[][]{
+                // Tests using one file for each read, queryname sorted, trimmed, not all bases written
+                {mergingUnmappedBam, Arrays.asList(firstReadAlignedBam), Arrays.asList(secondReadAlignedBam), 17, 20, "one file per read"},
+                // Tests using multiple files for each read, coordinate sorted, trimmed, not all bases written
+                {mergingUnmappedBam, Arrays.asList(firstReadAlignedBam_firstHalf, firstReadAlignedBam_secondHalf),
+                        Arrays.asList(secondReadAlignedBam_firstHalf, secondReadAlignedBam_secondHalf), 17, 20, "two files per read"}
         };
     }
 
@@ -450,7 +454,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null, null, null);
 
         // Iterate over the merged output and gather some statistics
-        final Map<String, AlignmentAccumulator> accumulatorMap = new HashMap<String, AlignmentAccumulator>();
+        final Map<String, AlignmentAccumulator> accumulatorMap = new HashMap<>();
 
         final SamReader reader = SamReaderFactory.makeDefault().open(merged);
         for (final SAMRecord rec : reader) {
@@ -476,7 +480,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
 
         // Set up expected results
-        final Map<String, AlignmentAccumulator> expectedMap = new HashMap<String, AlignmentAccumulator>();
+        final Map<String, AlignmentAccumulator> expectedMap = new HashMap<>();
         expectedMap.put("frag_hit", new AlignmentAccumulator(false, 1, "chr1"));
         expectedMap.put("frag_multihit", new AlignmentAccumulator(false, 3, "chr2"));
         expectedMap.put("frag_no_hit", new AlignmentAccumulator(true, 0, null));
@@ -514,7 +518,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         int numAlignments = 0;
         String primaryAlignmentSequence = null;
 
-        private AlignmentAccumulator() {}
+        private AlignmentAccumulator() {
+        }
 
         private AlignmentAccumulator(final boolean seenUnaligned, final int numAlignments, final String primaryAlignmentSequence) {
             this.seenUnaligned = seenUnaligned;
@@ -557,13 +562,14 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     /**
      * Read a single paired-end read from a file, and create one or more aligned records for the read pair based on
      * the lists, merge with the original paired-end read, and assert expected results.
+     *
      * @param description
-     * @param firstOfPair List that describes the aligned SAMRecords to create for the first end.
-     * @param secondOfPair List that describes the aligned SAMRecords to create for the second end.
+     * @param firstOfPair             List that describes the aligned SAMRecords to create for the first end.
+     * @param secondOfPair            List that describes the aligned SAMRecords to create for the second end.
      * @param expectedPrimaryHitIndex Expected value for the HI tag in the primary alignment in the merged output.
-     * @param expectedNumFirst Expected number of first-of-pair SAMRecords in the merged output.
-     * @param expectedNumSecond Expected number of second-of-pair SAMRecords in the merged output.
-     * @param expectedPrimaryMapq Sum of mapqs of both ends of primary alignment in the merged output.
+     * @param expectedNumFirst        Expected number of first-of-pair SAMRecords in the merged output.
+     * @param expectedNumSecond       Expected number of second-of-pair SAMRecords in the merged output.
+     * @param expectedPrimaryMapq     Sum of mapqs of both ends of primary alignment in the merged output.
      * @throws Exception
      */
     @Test(dataProvider = "testPairedMultiHitWithFilteringTestCases")
@@ -584,8 +590,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
         final SAMFileWriter alignedWriter = new SAMFileWriterFactory().makeSAMWriter(alignedHeader, true, alignedSam);
         for (int i = 0; i < Math.max(firstOfPair.size(), secondOfPair.size()); ++i) {
-            final HitSpec firstHitSpec = firstOfPair.isEmpty()? null: firstOfPair.get(i);
-            final HitSpec secondHitSpec = secondOfPair.isEmpty()? null: secondOfPair.get(i);
+            final HitSpec firstHitSpec = firstOfPair.isEmpty() ? null : firstOfPair.get(i);
+            final HitSpec secondHitSpec = secondOfPair.isEmpty() ? null : secondOfPair.get(i);
             final SAMRecord first = makeRead(alignedHeader, firstUnmappedRec, firstHitSpec, true, i);
             final SAMRecord second = makeRead(alignedHeader, secondUnmappedRec, secondHitSpec, false, i);
             if (first != null && second != null) SamPairUtil.setMateInfo(first, second);
@@ -622,9 +628,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         for (final SAMRecord rec : mergedReader) {
             if (rec.getFirstOfPairFlag()) ++numFirst;
             if (rec.getSecondOfPairFlag()) ++numSecond;
-            if (!rec.getNotPrimaryAlignmentFlag()  && !rec.getReadUnmappedFlag()) {
+            if (!rec.getNotPrimaryAlignmentFlag() && !rec.getReadUnmappedFlag()) {
                 final Integer hitIndex = rec.getIntegerAttribute(SAMTag.HI.name());
-                final int newHitIndex = (hitIndex == null? -1: hitIndex);
+                final int newHitIndex = (hitIndex == null ? -1 : hitIndex);
                 if (primaryHitIndex == null) primaryHitIndex = newHitIndex;
                 else Assert.assertEquals(newHitIndex, primaryHitIndex.intValue());
                 primaryMapq += rec.getMappingQuality();
@@ -662,7 +668,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final int readLength = rec.getReadLength();
         if (hitSpec.filtered) {
             // Add two insertions so alignment is filtered.
-            cigar.add(new CigarElement(readLength-4, CigarOperator.M));
+            cigar.add(new CigarElement(readLength - 4, CigarOperator.M));
             cigar.add(new CigarElement(1, CigarOperator.I));
             cigar.add(new CigarElement(1, CigarOperator.M));
             cigar.add(new CigarElement(1, CigarOperator.I));
@@ -691,36 +697,36 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
     }
 
-    @DataProvider(name="testPairedMultiHitWithFilteringTestCases")
+    @DataProvider(name = "testPairedMultiHitWithFilteringTestCases")
     public Object[][] testPairedMultiHitWithFilteringTestCases() {
-        final ArrayList<Object[]> ret = new ArrayList<Object[]>();
+        final ArrayList<Object[]> ret = new ArrayList<>();
         List<HitSpec> firstOfPair;
         List<HitSpec> secondOfPair;
 
         // One end aligned test cases...
 
-        firstOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
         secondOfPair = Collections.emptyList();
         firstOfPair.add(new HitSpec(false, true, 10));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, false, 9));
         ret.add(new Object[]{"Only 1st end has alignments, primary alignment is filtered, one 2ndary is filtered", firstOfPair, secondOfPair, -1, 1, 1, 9});
 
-        secondOfPair = new ArrayList<HitSpec>();
+        secondOfPair = new ArrayList<>();
         firstOfPair = Collections.emptyList();
         secondOfPair.add(new HitSpec(false, false, 11));
         secondOfPair.add(new HitSpec(true, true, 10));
         secondOfPair.add(new HitSpec(false, true, 9));
         ret.add(new Object[]{"Only 2nd end has alignments, primary alignment is filtered, one 2ndary is filtered", firstOfPair, secondOfPair, -1, 1, 1, 11});
 
-        firstOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
         secondOfPair = Collections.emptyList();
         firstOfPair.add(new HitSpec(false, true, 10));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, true, 9));
         ret.add(new Object[]{"Only 1st end has alignments, all are filtered", firstOfPair, secondOfPair, null, 1, 1, 0});
 
-        secondOfPair = new ArrayList<HitSpec>();
+        secondOfPair = new ArrayList<>();
         firstOfPair = Collections.emptyList();
         secondOfPair.add(new HitSpec(false, true, 10));
         secondOfPair.add(new HitSpec(true, true, 10));
@@ -729,8 +735,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         // Both ends aligned test cases...
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, false, 10));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, false, 9));
@@ -739,8 +745,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.add(new HitSpec(false, false, 9));
         ret.add(new Object[]{"Both ends aligned, one end of primary filtered", firstOfPair, secondOfPair, -1, 3, 3, 30});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, false, 10));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, true, 9));
@@ -749,8 +755,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.add(new HitSpec(false, false, 9));
         ret.add(new Object[]{"Both ends aligned, one end of primary filtered, one end of secondary filtered", firstOfPair, secondOfPair, -1, 2, 3, 30});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, false, 9));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, false, 10));
@@ -759,8 +765,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.add(new HitSpec(false, false, 11));
         ret.add(new Object[]{"Both ends aligned, both ends of primary filtered", firstOfPair, secondOfPair, 1, 2, 2, 21});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, false, 9));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, false, 10));
@@ -770,8 +776,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         ret.add(new Object[]{"Both ends aligned, both ends of primary filtered, two secondary alignments with identical mapq",
                 firstOfPair, secondOfPair, 1, 2, 2, 21});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, true, 9));
         firstOfPair.add(new HitSpec(true, true, 10));
         firstOfPair.add(new HitSpec(false, false, 10));
@@ -781,8 +787,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         ret.add(new Object[]{"Both ends aligned, both ends of primary filtered, one end of secondary filtered, but with high mapq",
                 firstOfPair, secondOfPair, -1, 2, 2, 30});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, true, 9));
         firstOfPair.add(new HitSpec(false, false, 10));
         firstOfPair.add(new HitSpec(true, false, 10));
@@ -791,8 +797,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.add(new HitSpec(true, false, 30));
         ret.add(new Object[]{"Both ends aligned, secondary filtered on both ends", firstOfPair, secondOfPair, 1, 2, 2, 40});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, false, 9));
         firstOfPair.add(new HitSpec(false, false, 10));
         firstOfPair.add(new HitSpec(true, false, 10));
@@ -801,8 +807,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.add(new HitSpec(true, false, 30));
         ret.add(new Object[]{"Both ends aligned, secondary filtered on second end", firstOfPair, secondOfPair, 2, 3, 2, 40});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, false, 9));
         firstOfPair.add(new HitSpec(false, true, 10));
         firstOfPair.add(new HitSpec(true, false, 10));
@@ -811,8 +817,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondOfPair.add(new HitSpec(true, false, 30));
         ret.add(new Object[]{"Both ends aligned, secondary filtered on first end", firstOfPair, secondOfPair, 2, 2, 3, 40});
 
-        firstOfPair = new ArrayList<HitSpec>();
-        secondOfPair = new ArrayList<HitSpec>();
+        firstOfPair = new ArrayList<>();
+        secondOfPair = new ArrayList<>();
         firstOfPair.add(new HitSpec(false, true, 9));
         firstOfPair.add(new HitSpec(false, true, 10));
         firstOfPair.add(new HitSpec(true, true, 10));
@@ -825,22 +831,21 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     }
 
 
-
-
     /**
      * Read a single fragment read from a file, and create one or more aligned records for the read pair based on
      * the lists, merge with the original read, and assert expected results.
+     *
      * @param description
-     * @param hitSpecs List that describes the aligned SAMRecords to create.
+     * @param hitSpecs                List that describes the aligned SAMRecords to create.
      * @param expectedPrimaryHitIndex Expected value for the HI tag in the primary alignment in the merged output.
-     * @param expectedNumReads Expected number of SAMRecords in the merged output.
-     * @param expectedPrimaryMapq Mapq of both ends of primary alignment in the merged output.
+     * @param expectedNumReads        Expected number of SAMRecords in the merged output.
+     * @param expectedPrimaryMapq     Mapq of both ends of primary alignment in the merged output.
      * @throws Exception
      */
     @Test(dataProvider = "testFragmentMultiHitWithFilteringTestCases")
     public void testFragmentMultiHitWithFiltering(final String description, final List<HitSpec> hitSpecs,
-                                                final Integer expectedPrimaryHitIndex, final int expectedNumReads,
-                                                final int expectedPrimaryMapq) throws Exception {
+                                                  final Integer expectedPrimaryHitIndex, final int expectedNumReads,
+                                                  final int expectedPrimaryMapq) throws Exception {
 
         // Create the aligned file by copying bases, quals, readname from the unmapped read, and conforming to each HitSpec.
         final File unmappedSam = new File(TEST_DATA_DIR, "multihit.filter.fragment.unmapped.sam");
@@ -882,9 +887,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         int primaryMapq = 0;
         for (final SAMRecord rec : mergedReader) {
             ++numReads;
-            if (!rec.getNotPrimaryAlignmentFlag()  && !rec.getReadUnmappedFlag()) {
+            if (!rec.getNotPrimaryAlignmentFlag() && !rec.getReadUnmappedFlag()) {
                 final Integer hitIndex = rec.getIntegerAttribute(SAMTag.HI.name());
-                final int newHitIndex = (hitIndex == null? -1: hitIndex);
+                final int newHitIndex = (hitIndex == null ? -1 : hitIndex);
                 Assert.assertNull(primaryHitIndex);
                 primaryHitIndex = newHitIndex;
                 primaryMapq = rec.getMappingQuality();
@@ -895,36 +900,36 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         Assert.assertEquals(primaryMapq, expectedPrimaryMapq);
     }
 
-    @DataProvider(name="testFragmentMultiHitWithFilteringTestCases")
+    @DataProvider(name = "testFragmentMultiHitWithFilteringTestCases")
     public Object[][] testFragmentMultiHitWithFilteringTestCases() {
-        final ArrayList<Object[]> ret = new ArrayList<Object[]>();
+        final ArrayList<Object[]> ret = new ArrayList<>();
         List<HitSpec> hitSpecs;
 
-        hitSpecs = new ArrayList<HitSpec>();
+        hitSpecs = new ArrayList<>();
         hitSpecs.add(new HitSpec(false, true, 10));
         hitSpecs.add(new HitSpec(true, false, 8));
         hitSpecs.add(new HitSpec(false, false, 9));
         ret.add(new Object[]{"One secondary filtered", hitSpecs, -1, 2, 8});
 
-        hitSpecs = new ArrayList<HitSpec>();
+        hitSpecs = new ArrayList<>();
         hitSpecs.add(new HitSpec(false, false, 10));
         hitSpecs.add(new HitSpec(true, true, 8));
         hitSpecs.add(new HitSpec(false, false, 11));
         ret.add(new Object[]{"Primary filtered", hitSpecs, -1, 2, 11});
 
-        hitSpecs = new ArrayList<HitSpec>();
+        hitSpecs = new ArrayList<>();
         hitSpecs.add(new HitSpec(false, false, 11));
         hitSpecs.add(new HitSpec(true, true, 8));
         hitSpecs.add(new HitSpec(false, false, 11));
         ret.add(new Object[]{"Primary filtered, two secondaries with identical mapq", hitSpecs, -1, 2, 11});
 
-        hitSpecs = new ArrayList<HitSpec>();
+        hitSpecs = new ArrayList<>();
         hitSpecs.add(new HitSpec(false, true, 10));
         hitSpecs.add(new HitSpec(true, true, 8));
         hitSpecs.add(new HitSpec(false, false, 9));
         ret.add(new Object[]{"Primary and one secondary filtered", hitSpecs, -1, 1, 9});
 
-        hitSpecs = new ArrayList<HitSpec>();
+        hitSpecs = new ArrayList<>();
         hitSpecs.add(new HitSpec(false, true, 10));
         hitSpecs.add(new HitSpec(true, true, 8));
         hitSpecs.add(new HitSpec(false, true, 9));
@@ -1059,7 +1064,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
     @DataProvider(name = "testEarliestFragmentStrategyDataProvider")
     public Object[][] testEarliestFragmentStrategyDataProvider() {
-        return new Object[][] {
+        return new Object[][]{
                 {"simpleForward", new MultipleAlignmentSpec[]{new MultipleAlignmentSpec("16M", false, 200, true)}},
                 {"simpleReverse", new MultipleAlignmentSpec[]{new MultipleAlignmentSpec("16M", true, 200, true)}},
                 {"2 forward one earlier", new MultipleAlignmentSpec[]{
@@ -1173,7 +1178,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
      */
     @Test
     public void testShortFragmentClipping() throws Exception {
-        final File output = File.createTempFile("testShortFragmentClipping", ".sam");
+        final File output = File.createTempFile("testShortFragmentClipping", ".bam");
         output.deleteOnExit();
         doMergeAlignment(new File(TEST_DATA_DIR, "cliptest.unmapped.sam"),
                 Collections.singletonList(new File(TEST_DATA_DIR, "cliptest.aligned.sam")),
@@ -1186,7 +1191,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 null, null, null, null);
 
         final SamReader result = SamReaderFactory.makeDefault().open(output);
-        final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+        final Map<String, SAMRecord> firstReadEncountered = new HashMap<>();
 
         for (final SAMRecord rec : result) {
             final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
@@ -1206,6 +1211,41 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         result.close();
     }
 
+    @DataProvider
+    public Object[][] testShortFragmentWithIndelsClipping() {
+        return new Object[][]{
+                {"indel_reads_aligned.sam", "indel_reads_unmapped.sam", "indel_reads_expected.sam", false},
+                {"indel_reads_aligned.sam", "indel_reads_unmapped.sam", "indel_reads_expected_with_hardclips.sam", true}
+        };
+    }
+
+    @Test(dataProvider = "testShortFragmentWithIndelsClipping")
+    public void testShortFragmentWithIndelsClipping(final String aligned, final String unmapped, final String expected, final boolean hardclip) throws Exception {
+        final File output = File.createTempFile("testShortFragmentClipping", ".sam");
+        output.deleteOnExit();
+        final File alignedSam = new File(TEST_DATA_DIR, aligned);
+        final File unmappedSam = new File(TEST_DATA_DIR, unmapped);
+        final File expectedSam = new File(TEST_DATA_DIR, expected);
+
+        final File ref = new File(TEST_DATA_DIR, "cliptest.fasta");
+
+        final List<String> args = Arrays.asList(
+                "UNMAPPED_BAM=" + unmappedSam.getAbsolutePath(),
+                "ALIGNED_BAM=" + alignedSam.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "HARD_CLIP_OVERLAPPING_READS=true",
+                "SORT_ORDER=queryname"
+        );
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final SamReader result = SamReaderFactory.makeDefault().open(output);
+        final SamReader expectedReader = SamReaderFactory.makeDefault().open(expectedSam);
+        final SamComparison comparison = new SamComparison(result, expectedReader, "result", "expected", new SAMComparisonArgumentCollection());
+        Assert.assertTrue(comparison.areEqual());
+    }
+
     @Test
     public void testShortFragmentHardClipping() throws IOException {
         final File output = File.createTempFile("testShortFragmentClipping", ".sam");
@@ -1220,12 +1260,12 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 "OUTPUT=" + output.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
                 "HARD_CLIP_OVERLAPPING_READS=true"
-                );
+        );
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final SamReader result = SamReaderFactory.makeDefault().open(output);
-        final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+        final Map<String, SAMRecord> firstReadEncountered = new HashMap<>();
         for (final SAMRecord rec : result) {
             final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
             if (otherEnd == null) {
@@ -1240,8 +1280,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 Assert.assertEquals(fragmentStart, expectedFragmentStart, rec.getReadName());
                 Assert.assertEquals(fragmentEnd, expectedFragmentEnd, rec.getReadName());
                 if (readNameFields[0].equals("FR_clip")) {
-                    Assert.assertEquals(rec.getCigarString(), rec.getReadNegativeStrandFlag()? "20H56M" : "56M20H");
-                    Assert.assertEquals(otherEnd.getCigarString(), otherEnd.getReadNegativeStrandFlag()? "20H56M" : "56M20H");
+                    Assert.assertEquals(rec.getCigarString(), rec.getReadNegativeStrandFlag() ? "20H56M" : "56M20H");
+                    Assert.assertEquals(otherEnd.getCigarString(), otherEnd.getReadNegativeStrandFlag() ? "20H56M" : "56M20H");
 
                     if (!rec.getReadNegativeStrandFlag()) {
                         Assert.assertEquals(rec.getAttribute("XB"), "AGATCGGAAGAGCACACGTC");
@@ -1258,7 +1298,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
     }
 
-    @Test(dataProvider="testBestFragmentMapqStrategy")
+    @Test(dataProvider = "testBestFragmentMapqStrategy")
     public void testBestFragmentMapqStrategy(final String testName, final int[] firstMapQs, final int[] secondMapQs,
                                              final int expectedFirstMapq, final int expectedSecondMapq) throws Exception {
         testBestFragmentMapqStrategy(testName + "includeSecondary", firstMapQs, secondMapQs, true, expectedFirstMapq,
@@ -1330,10 +1370,10 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         int numSecondRecords = 0;
         int firstPrimaryMapq = -1;
         int secondPrimaryMapq = -1;
-        for (final SAMRecord rec: reader) {
+        for (final SAMRecord rec : reader) {
             Assert.assertTrue(rec.getReadPairedFlag());
             if (rec.getFirstOfPairFlag()) ++numFirstRecords;
-            else if (rec.getSecondOfPairFlag()) ++ numSecondRecords;
+            else if (rec.getSecondOfPairFlag()) ++numSecondRecords;
             else Assert.fail("unpossible!");
             if (!rec.getReadUnmappedFlag() && !rec.getNotPrimaryAlignmentFlag()) {
                 if (rec.getFirstOfPairFlag()) {
@@ -1389,7 +1429,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                   final SAMFileHeader.SortOrder sortOrder,
                                   final AbstractAlignmentMerger.UnmappingReadStrategy unmappingReadStrategy) {
 
-        final List<String> tagsToRc  = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
+        final List<String> tagsToRc = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
         final List<String> tagsToRev = new ArrayList<>(SAMRecord.TAGS_TO_REVERSE);
         tagsToRc.add("ab");
         tagsToRev.addAll(Arrays.asList("aa", "ac", "as", "ai", "af"));
@@ -1493,7 +1533,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     }
 
 
-    @DataProvider(name="testBestFragmentMapqStrategy")
+    @DataProvider(name = "testBestFragmentMapqStrategy")
     public Object[][] testBestFragmentMapqStrategyDataProvider() {
         /**
          *
@@ -1503,7 +1543,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
          * @param expectedFirstMapq
          * @param expectedSecondMapq
          */
-        return new Object[][] {
+        return new Object[][]{
                 {"singleAlignmentFirstEnd", new int[]{12}, new int[0], 12, -1},
                 {"singleAlignmentSecondEnd", new int[0], new int[]{12}, -1, 12},
                 {"singleAlignmentBothEnd", new int[]{13}, new int[]{12}, 13, 12},
@@ -1520,13 +1560,13 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     public void testMostDistantStrategy(final String testName,
                                         final MostDistantStrategyAlignmentSpec[] firstEndSpecs,
                                         final MostDistantStrategyAlignmentSpec[] secondEndSpecs) throws Exception {
-        testMostDistantStrategy(testName +".includeSecondary", true, firstEndSpecs, secondEndSpecs);
-        testMostDistantStrategy(testName +".excludeSecondary", false, firstEndSpecs, secondEndSpecs);
+        testMostDistantStrategy(testName + ".includeSecondary", true, firstEndSpecs, secondEndSpecs);
+        testMostDistantStrategy(testName + ".excludeSecondary", false, firstEndSpecs, secondEndSpecs);
     }
 
     public void testMostDistantStrategy(final String testName, final boolean includeSecondary,
-        final MostDistantStrategyAlignmentSpec[] firstEndSpecs,
-        final MostDistantStrategyAlignmentSpec[] secondEndSpecs) throws Exception {
+                                        final MostDistantStrategyAlignmentSpec[] firstEndSpecs,
+                                        final MostDistantStrategyAlignmentSpec[] secondEndSpecs) throws Exception {
 
         final File unmappedSam = File.createTempFile("unmapped.", ".sam");
         unmappedSam.deleteOnExit();
@@ -1554,7 +1594,6 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         secondUnmappedRead.setSecondOfPairFlag(true);
 
 
-
         final SAMFileWriter unmappedWriter = factory.makeSAMWriter(header, false, unmappedSam);
         unmappedWriter.addAlignment(firstUnmappedRead);
         unmappedWriter.addAlignment(secondUnmappedRead);
@@ -1575,7 +1614,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         // Semi-randomly make the reads align to forward or reverse strand.
         boolean reverse = false;
-        for (final MostDistantStrategyAlignmentSpec spec: firstEndSpecs) {
+        for (final MostDistantStrategyAlignmentSpec spec : firstEndSpecs) {
             addAlignmentForMostStrategy(alignedWriter, firstUnmappedRead, spec, reverse);
             reverse = !reverse;
             if (spec.expectedPrimary) {
@@ -1583,7 +1622,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 expectedFirstPrimaryAlignmentStart = spec.alignmentStart;
             }
         }
-        for (final MostDistantStrategyAlignmentSpec spec: secondEndSpecs) {
+        for (final MostDistantStrategyAlignmentSpec spec : secondEndSpecs) {
             addAlignmentForMostStrategy(alignedWriter, secondUnmappedRead, spec, reverse);
             reverse = !reverse;
             if (spec.expectedPrimary) {
@@ -1611,10 +1650,10 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         int firstPrimaryAlignmentStart = -1;
         String secondPrimarySequence = null;
         int secondPrimaryAlignmentStart = -1;
-        for (final SAMRecord rec: reader) {
+        for (final SAMRecord rec : reader) {
             Assert.assertTrue(rec.getReadPairedFlag());
             if (rec.getFirstOfPairFlag()) ++numFirstRecords;
-            else if (rec.getSecondOfPairFlag()) ++ numSecondRecords;
+            else if (rec.getSecondOfPairFlag()) ++numSecondRecords;
             else Assert.fail("unpossible!");
             if (!rec.getReadUnmappedFlag() && !rec.getNotPrimaryAlignmentFlag()) {
                 if (rec.getFirstOfPairFlag()) {
@@ -1684,19 +1723,19 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         }
     }
 
-    @DataProvider(name="testMostDistantStrategy")
+    @DataProvider(name = "testMostDistantStrategy")
     public Object[][] testMostDistantStrategyDataProvider() {
         /**
          * @param testName
          * @param firstEndSpecs
          * @param secondEndSpecs
          */
-        return new Object[][] {
+        return new Object[][]{
                 {
                         // There are two ties: {chr1:1 - chr1:89} and {chr4:2 -chr4:90}
                         // That are disambiguated by MAPQ.
                         "multipleAlignmentsBothEnds",
-                        new MostDistantStrategyAlignmentSpec[] {
+                        new MostDistantStrategyAlignmentSpec[]{
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 1, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr2", 1, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 1, 20),
@@ -1706,7 +1745,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 3, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr4", 4, 20),
                         },
-                        new MostDistantStrategyAlignmentSpec[] {
+                        new MostDistantStrategyAlignmentSpec[]{
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 1, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr2", 2, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 3, 20),
@@ -1717,7 +1756,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 },
                 {
                         "multipleAlignmentsAllChimeric",
-                        new MostDistantStrategyAlignmentSpec[] {
+                        new MostDistantStrategyAlignmentSpec[]{
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 1, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr2", 2, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 3, 20),
@@ -1727,7 +1766,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 60, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr2", 70, 20),
                         },
-                        new MostDistantStrategyAlignmentSpec[] {
+                        new MostDistantStrategyAlignmentSpec[]{
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 1, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr4", 2, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 3, 20),
@@ -1738,7 +1777,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 },
                 {
                         "multipleAlignmentsFirstEnd",
-                        new MostDistantStrategyAlignmentSpec[] {
+                        new MostDistantStrategyAlignmentSpec[]{
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 10, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr2", 10, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 10, 20),
@@ -1753,7 +1792,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 {
                         "multipleAlignmentsSecondEnd",
                         new MostDistantStrategyAlignmentSpec[0],
-                        new MostDistantStrategyAlignmentSpec[] {
+                        new MostDistantStrategyAlignmentSpec[]{
                                 new MostDistantStrategyAlignmentSpec(false, "chr1", 10, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr2", 10, 20),
                                 new MostDistantStrategyAlignmentSpec(false, "chr3", 10, 20),
@@ -1767,14 +1806,14 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         };
     }
 
-    @DataProvider(name="UnmappedReadStrategies")
-    public Object[][]  UnmappedReadStrategiesProvider() {
-        return new Object[][] {
-                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE,         "contam.expected.NO_CHANGE.sam"},
+    @DataProvider(name = "UnmappedReadStrategies")
+    public Object[][] UnmappedReadStrategiesProvider() {
+        return new Object[][]{
+                {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE, "contam.expected.NO_CHANGE.sam"},
                 {AbstractAlignmentMerger.UnmappingReadStrategy.DO_NOT_CHANGE_INVALID, "contam.expected.NO_CHANGE_INVALID.sam"},
-                {null,                                                                "contam.expected.NO_CHANGE.sam"},
-                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG,           "contam.expected.COPY_TO_TAG.sam"},
-                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG,           "contam.expected.MOVE_TO_TAG.sam"}
+                {null, "contam.expected.NO_CHANGE.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.COPY_TO_TAG, "contam.expected.COPY_TO_TAG.sam"},
+                {AbstractAlignmentMerger.UnmappingReadStrategy.MOVE_TO_TAG, "contam.expected.MOVE_TO_TAG.sam"}
         };
     }
 
@@ -1986,11 +2025,11 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
     @DataProvider(name = "mappedReadInUnmappedBamDataProvider")
     Object[][] mappedReadInUnmappedBamDataProvider() {
-        return new Object[][] {
-            {false, false, false, true},
-            {true, true, false, true},
-            {true, false, true, true},
-            {true, true, true, false}
+        return new Object[][]{
+                {false, false, false, true},
+                {true, true, false, true},
+                {true, false, true, true},
+                {true, true, true, false}
         };
     }
 

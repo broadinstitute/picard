@@ -832,9 +832,7 @@ public abstract class AbstractAlignmentMerger {
     }
 
     static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
-        final int readPosition;
         final Cigar oldCigar = rec.getCigar();
-        final int oldStart = rec.getAlignmentStart();
         final Cigar newCigar = new Cigar();
         final List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements());
         int posShift = 0;
@@ -860,11 +858,26 @@ public abstract class AbstractAlignmentMerger {
         // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
         rec.setCigar(newCigar);
         // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
-        // also to be moved forward bye posShift so that it's still querying the same base.
-        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+        // also to be moved forward by posShift so that it's still querying the same base.
+        final int readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, true);
+
+        // if this returns zero, it means that there's a deletion at the position of the desired base,
+        // if the read is on the positive strand readPosition should be incremented by one to get the
+        // base __following__ the deletion rather than the one preceding it (which is what returnLastBaseIfDeleted argument in
+        // getReadPositionAtReferencePosition will do)
+        final int readPositionZeroOnDeletion = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+
         rec.setCigar(oldCigar);
 
-        return readPosition;
+        final boolean refPositionOnDeletion = readPositionZeroOnDeletion == 0 && readPosition != 0;
+
+        final boolean incrementReadPosition = refPositionOnDeletion &&
+                !rec.getReadNegativeStrandFlag() && // only needed for positive-strand reads
+                readPosition < rec.getReadLength(); // protection against the possibility that getReadPositionAtReferencePosition
+        // would return the last base of a read when it ends in a deletion (it currently doesn't)
+
+        return incrementReadPosition ? readPosition + 1 : readPosition;
+
     }
 
     private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
