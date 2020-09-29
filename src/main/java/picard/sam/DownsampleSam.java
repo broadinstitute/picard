@@ -239,7 +239,7 @@ public class DownsampleSam extends CommandLineProgram {
                             //are the random seeds the same?
                             if (RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
                                 throw new PicardException("Attempting to downsample using STRATEGY " + STRATEGY + " on data that has already been downsampled using STRATEGY " + previousDownsample.STRATEGY + " and same " +
-                                        "RANDOM_SEED  " + RANDOM_SEED + ".  In order to downsample this data further, you must either supply a different RANDOM_SEED, or use STRATEGY HighAccuracy");
+                                        "RANDOM_SEED  " + RANDOM_SEED + ".  In order to downsample this data further, you must either supply a different RANDOM_SEED, or use STRATEGY HighAccuracy or Chained");
                             }
                         }
                     }

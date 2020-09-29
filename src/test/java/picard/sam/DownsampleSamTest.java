@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.Chained;
-import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.ConstantMemory;
-import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.HighAccuracy;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.*;
 
 
 /**
@@ -126,10 +124,10 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     // test removing some reads from a sparse, single tile bam
     @Test(dataProvider = "ValidArgumentsTestProvider")
     public void testDownsampleStrategies(final double fraction, final Strategy strategy, final Integer seed) throws IOException {
-            testDownsampleWorker(tempSamFile, fraction, strategy.name(), seed);
+            testDownsampleWorker(tempSamFile, fraction, strategy.name(), seed, false);
     }
 
-    private void testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed) throws IOException {
+    private File testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed, final boolean doesItThrow) throws IOException {
 
         final File downsampled = File.createTempFile("DownsampleSam", ".bam", tempDir);
         final String[] args = new String[]{
@@ -141,6 +139,10 @@ public class DownsampleSamTest extends CommandLineProgramTest {
                 "CREATE_INDEX=true"
         };
 
+        if (doesItThrow) {
+            Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
+            return null;
+        }
         // make sure results is successful
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -156,20 +158,23 @@ public class DownsampleSamTest extends CommandLineProgramTest {
             TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
             TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
         }
+        return downsampled;
     }
+
+
 
     @DataProvider(name = "RepeatedDownsamplingProvider")
     public Object[][] repeatedDownsamplingProvider() {
         final List<Object[]> rets = new ArrayList<>();
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(2,1), Arrays.asList(false, false)}); //ok, different seeds
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(2,1), Arrays.asList(false, false)}); //ok, different seeds
         rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
         rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
         rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3), Arrays.asList(false, false)}); //ok, different seeds
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, chained comes second
-        rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok HighAccuracy
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok HighAccuracy
-        rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1), Arrays.asList(false, false)});
-        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1), Arrays.asList(false, false)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, Chained comes second
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, HighAccuracy
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, HighAccuracy
+        rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); // ok, Chained
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); 
         rets.add(new Object[]{Arrays.asList(HighAccuracy, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
         rets.add(new Object[]{Arrays.asList(Chained, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
 
@@ -205,30 +210,14 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "RepeatedDownsamplingProvider")
-    public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds, List<Boolean> doesItThrow) throws IOException {
-
+    public void testRepeatedDownsamplingCheck(List<Strategy> strategies, List<Integer> seeds, List<Boolean> doesItThrow) throws IOException {
         File input = tempSamFile;
 
         for (int i = 0 ; i < strategies.size(); i++) {
-            final File downsampled = File.createTempFile("DownsampleSam", ".sam", tempDir);
-            downsampled.deleteOnExit();
-            final Strategy strategy = strategies.get(i);
-            final Integer seed = seeds.get(i);
-            final String[] args = new String[]{
-                    "INPUT=" + input.getAbsolutePath(),
-                    "OUTPUT=" + downsampled.getAbsolutePath(),
-                    "PROBABILITY=0.5",
-                    "STRATEGY=" + strategy,
-                    "RANDOM_SEED=" + seed,
-                    "CREATE_INDEX=true"
-            };
-            if (doesItThrow.get(i)) {
-                Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
+            input = testDownsampleWorker(input, 0.5, strategies.get(i).toString(), seeds.get(i), doesItThrow.get(i));
+            if (input == null) {
                 break;
             }
-
-            runPicardCommandLine(args);
-            input = downsampled;
         }
     }
 }
