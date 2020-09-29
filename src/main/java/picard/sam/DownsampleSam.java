@@ -235,12 +235,22 @@ public class DownsampleSam extends CommandLineProgram {
                                 new LegacyCommandLineArgumentParser(previousDownsample) : new CommandLineArgumentParser(previousDownsample);
                         previousParser.parseArguments(System.err, previousArgs);
 
-                        if (previousDownsample.STRATEGY == Strategy.ConstantMemory || previousDownsample.STRATEGY == Strategy.Chained) {
-                            //are the random seeds the same?
-                            if (RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
-                                throw new PicardException("Attempting to downsample using STRATEGY " + STRATEGY + " on data that has already been downsampled using STRATEGY " + previousDownsample.STRATEGY + " and same " +
-                                        "RANDOM_SEED  " + RANDOM_SEED + ".  In order to downsample this data further, you must either supply a different RANDOM_SEED, or use STRATEGY HighAccuracy or Chained");
-                            }
+                        if (previousDownsample.STRATEGY == Strategy.ConstantMemory && RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
+                            /*
+                            we need to decrease PROBABILITY by the value of the previously used PROBABILITY, since reads which passed
+                            the previous downsampling will hash to values uniformly distributed between 0 and previous PROBABILITY instead
+                            of between 0 and 1.
+                             */
+                            PROBABILITY *= previousDownsample.PROBABILITY;
+                        }
+
+                        if (previousDownsample.STRATEGY == Strategy.Chained && RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
+                            /*
+                            In this case we must fail, since the hash downsampling in the Chained strategy is adjusted dynamically, so we don't know how
+                            the hashes of the reads that previously passed are distributed.
+                             */
+                            throw new PicardException("Attempting to downsample using STRATEGY " + STRATEGY + " on data that has already been downsampled using STRATEGY " + previousDownsample.STRATEGY + " and same " +
+                                    "RANDOM_SEED  " + RANDOM_SEED + ".  In order to downsample this data further, you must either supply a different RANDOM_SEED, or use STRATEGY HighAccuracy or Chained");
                         }
                     }
                 }

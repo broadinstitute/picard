@@ -167,14 +167,14 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     public Object[][] repeatedDownsamplingProvider() {
         final List<Object[]> rets = new ArrayList<>();
         rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(2,1), Arrays.asList(false, false)}); //ok, different seeds
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, PROBABILITY will be adjusted internally
         rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
         rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3), Arrays.asList(false, false)}); //ok, different seeds
         rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, Chained comes second
         rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, HighAccuracy
         rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, HighAccuracy
         rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); // ok, Chained
-        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); 
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1), Arrays.asList(false, false)});
         rets.add(new Object[]{Arrays.asList(HighAccuracy, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
         rets.add(new Object[]{Arrays.asList(Chained, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
 
@@ -199,7 +199,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
                     break;
                 }
 
-                if (strategy == ConstantMemory || strategy == Chained) {
+                if (strategy == Chained) {
                     previouslyUsedSeeds.add(seed);
                 }
             }
@@ -210,7 +210,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "RepeatedDownsamplingProvider")
-    public void testRepeatedDownsamplingCheck(List<Strategy> strategies, List<Integer> seeds, List<Boolean> doesItThrow) throws IOException {
+    public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds, List<Boolean> doesItThrow) throws IOException {
         File input = tempSamFile;
 
         for (int i = 0 ; i < strategies.size(); i++) {
