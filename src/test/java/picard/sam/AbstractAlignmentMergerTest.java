@@ -60,9 +60,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final String sharedQualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         final String r1ClippedQualities10 = default120LongR1BaseQualities.substring(default120LongR1BaseQualities.length() - 10);
-        final String r2ClippedQualities10 = new StringBuilder(default120LongR2BaseQualities.substring(0, 10)).reverse().toString();
+        final String r2ClippedQualities10 = StringUtil.reverseString(default120LongR2BaseQualities.substring(0, 10));
         final String r1ClippedQualities20 = default120LongR1BaseQualities.substring(default120LongR1BaseQualities.length() - 20);
-        final String r2ClippedQualities20 = new StringBuilder(default120LongR2BaseQualities.substring(0, 20)).reverse().toString();
+        final String r2ClippedQualities20 = StringUtil.reverseString(default120LongR2BaseQualities.substring(0, 20));
 
 
         return new Object[][]{
@@ -247,7 +247,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {27, false, 18, 14, "18M9S", "8S3M1D16M", false, true, 18, 18, "16M11S", "11S16M",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //                  MMMMMMMMMMMMMMMMMMsssssssss>
@@ -260,7 +260,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {27, false, 18, 12, "18M9S", "8S3M3D16M", false, true, 18, 18, "16M11S", "11S16M",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //     <ssssssssMMMMMMMMMMMMMMMMMMM
@@ -273,7 +273,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {27, false, 14, 18, "8S19M", "15M1D3M9S", true, false, 18, 18, "12S15M", "15M12S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
 
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
@@ -287,7 +287,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {27, false, 14, 18, "8S19M", "15M3D3M9S", true, false, 18, 18, "12S15M", "15M12S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //     <ssssssssMMMMMMMMMMMMMMMMMMM
@@ -296,11 +296,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //     <ssssssssSSSSMMMMMMMMMMMMMMM
                 //                  MMMMMMMMMMMMMMSSSSsssssssss>
-
-
                 {27, false, 14, 18, "8S19M", "14M3D4M9S", true, false, 18, 18, "12S15M", "14M13S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
                 // 123456789.123456789.123456789.12-3456789.123456789.123456789.123456789.123456789
                 //     <ssssssssMMMMMMMMMMMMMMMMMMM
@@ -309,10 +307,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //     <ssssssssMMMMMMMMMMMMMMMMMMM
                 //      MMMMMMMMMMMMMMMMMMMMMMMMMMM->  ## deletion right at the end
-                    {27, false, 14, 6, "8S19M", "27M1D", true, false, 14, 6, "8S19M", "27M1D",
+                {27, false, 14, 6, "8S19M", "27M1D", true, false, 14, 6, "8S19M", "27M1D",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
-
 
 
                 //                  123456789.123456--789.123456789.123456789.123456789.123456789.123456789.123456789
@@ -325,7 +322,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //                          <sssssSSSSSMMMMMMMMMMMMMMMMM
                 {27, false, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10S", "10S17M",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
 
                 //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
@@ -336,11 +333,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
-
-
-                {27, false, 14, 18, "7S20M", "17M2I1M7S", true, false, 18, 18,"11S16M","16M11S",
+                {27, false, 14, 18, "7S20M", "17M2I1M7S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
-                        default27LongR1Qualities, default27LongR2Qualities,default27LongR1Qualities, default27LongR2Qualities , null,null },
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
 
                 //       123456789.123456789.123456789.123--456789.123456789.123456789.123456789.123456789
@@ -351,8 +346,6 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
-
-
                 {27, false, 14, 18, "7S20M", "16M2I2M7S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
@@ -362,12 +355,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //            <sssssssMMMMMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMiMMMsssssss>
                 //                                        ^
-                //        with an insertion of one bases here should become
+                //        with an insertion of one base here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <ssssssSSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSsssssss>
-
-
                 {27, false, 14, 18, "7S20M", "16M1I3M7S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
@@ -376,26 +367,203 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 //            <sssssssMMMMMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMMiiMMssssss>
                 //                                         ^^
-                //         with an insertion of one bases here should become
+                //         with an insertion of two bases here should become
                 //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
                 //            <sssssssSSSSMMMMMMMMMMMMMMMM
                 //                        MMMMMMMMMMMMMMMMSSSSSssssss>
-
                 {27, false, 14, 18, "7S20M", "17M2I2M6S", true, false, 18, 18, "11S16M", "16M11S",
                         default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
                         default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
 
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMMMsssssssss>
+                //     <ssssssssMMM-MMMMMMMMMMMMMMMM
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMHHHHHHHHHHH>
+                //      <HHHHHHHHHHHMMMMMMMMMMMMMMMM
+                {27, true, 18, 14, "18M9S", "8S3M1D16M", false, true, 18, 18, "16M11H", "11H16M",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(0, 16), default27LongR2Bases.substring(11, 27),
+                        default27LongR1Bases.substring(16, 27), SequenceUtil.reverseComplement(default27LongR2Bases.substring(0, 11)),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(0, 16), default27LongR2Qualities.substring(11, 27),
+                        default27LongR1Qualities.substring(16, 27), StringUtil.reverseString(default27LongR2Qualities.substring(0, 11)),
+                },
+
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMMMsssssssss>
+                //   <ssssssssMMM---MMMMMMMMMMMMMMMM
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                  MMMMMMMMMMMMMMMMHHHHHHHHHHH>
+                //      <HHHHHHHHHHHMMMMMMMMMMMMMMMM
+                {27, true, 18, 12, "18M9S", "8S3M3D16M", false, true, 18, 18, "16M11H", "11H16M",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(0, 16), default27LongR2Bases.substring(11, 27),
+                        default27LongR1Bases.substring(16, 27), SequenceUtil.reverseComplement(default27LongR2Bases.substring(0, 11)),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(0, 16), default27LongR2Qualities.substring(11, 27),
+                        default27LongR1Qualities.substring(16, 27), StringUtil.reverseString(default27LongR2Qualities.substring(0, 11))
+                },
+
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssSSSSMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMMSSSsssssssss>
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <HHHHHHHHHHHHMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMMHHHHHHHHHHHH>
+                {27, true, 14, 18, "8S19M", "15M1D3M9S", true, false, 18, 18, "12H15M", "15M12H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(12, 27), default27LongR2Bases.substring(0, 15),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 12)), default27LongR2Bases.substring(15, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(12, 27), default27LongR2Qualities.substring(0, 15),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 12)), default27LongR2Qualities.substring(15, 27)},
+
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMM---MMMsssssssss>
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <HHHHHHHHHHHHMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMMHHHHHHHHHHHH>
+                {27, true, 14, 18, "8S19M", "15M3D3M9S", true, false, 18, 18, "12H15M", "15M12H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(12, 27), default27LongR2Bases.substring(0, 15),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 12)), default27LongR2Bases.substring(15, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(12, 27), default27LongR2Qualities.substring(0, 15),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 12)), default27LongR2Qualities.substring(15, 27)},
+
+
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMM---MMMMsssssssss>
+                //          should become
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <HHHHHHHHHHHHMMMMMMMMMMMMMMM
+                //                  MMMMMMMMMMMMMMSHHHHHHHHHHHH>
+                {27, true, 14, 18, "8S19M", "14M3D4M9S", true, false, 18, 18, "12H15M", "14M1S12H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(12, 27), default27LongR2Bases.substring(0, 15),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 12)), default27LongR2Bases.substring(15, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(12, 27), default27LongR2Qualities.substring(0, 15),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 12)), default27LongR2Qualities.substring(15, 27)},
+
+
+                // 123456789.123456789.123456789.12-3456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //      MMMMMMMMMMMMMMMMMMMMMMMMMMM-> ## deletion right at the end
+                //          should remain
+                // 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //     <ssssssssMMMMMMMMMMMMMMMMMMM
+                //      MMMMMMMMMMMMMMMMMMMMMMMMMMM->  ## deletion right at the end
+                {27, true, 14, 6, "8S19M", "27M1D", true, false, 14, 6, "8S19M", "27M1D",
+                        default27LongR1Bases, default27LongR2Bases, default27LongR1Bases, default27LongR2Bases, null, null,
+                        default27LongR1Qualities, default27LongR2Qualities, default27LongR1Qualities, default27LongR2Qualities, null, null},
+
+
+                //                  123456789.123456--789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                                     MMMMMMMMMMMMMMMMMMsssssssss>
+                //                          <sssssMMiiMMMMMMMMMMMMMMMMMM
+                //                                  ^^
+                //   with an insertion of two bases here should become
+                //                    123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //                                     MMMMMMMMMMMMMMMMMHHHHHHHHHH>
+                //                          <HHHHHHHHHHMMMMMMMMMMMMMMMMM
+                {27, true, 18, 15, "18M9S", "5S2M2I18M", false, true, 18, 18, "17M10H", "10H17M",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(0, 17), default27LongR2Bases.substring(10, 27),
+                        default27LongR1Bases.substring(17, 27), SequenceUtil.reverseComplement(default27LongR2Bases.substring(0, 10)),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(0, 17), default27LongR2Qualities.substring(10, 27),
+                        default27LongR1Qualities.substring(17, 27), StringUtil.reverseString(default27LongR2Qualities.substring(0, 10))},
+
+
+                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMMiiMsssssss>
+                //                                         ^^
+                //         with an insertion of two bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <HHHHHHHHHHHMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMHHHHHHHHHHH>
+                {27, true, 14, 18, "7S20M", "17M2I1M7S", true, false, 18, 18, "11H16M", "16M11H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(11, 27), default27LongR2Bases.substring(0, 16),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 11)), default27LongR2Bases.substring(16, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(11, 27), default27LongR2Qualities.substring(0, 16),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 11)), default27LongR2Qualities.substring(16, 27)},
+
+
+                //       123456789.123456789.123456789.123--456789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMiiMMsssssss>
+                //                                        ^^
+                //        with an insertion of two bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <sssssssSSSSMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMSSSSsssssss>
+                {27, true, 14, 18, "7S20M", "16M2I2M7S", true, false, 18, 18, "11H16M", "16M11H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(11, 27), default27LongR2Bases.substring(0, 16),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 11)), default27LongR2Bases.substring(16, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(11, 27), default27LongR2Qualities.substring(0, 16),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 11)), default27LongR2Qualities.substring(16, 27)},
+
+
+                //       123456789.123456789.123456789.123-456789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMiMMMsssssss>
+                //                                        ^
+                //        with an insertion of one base here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <HHHHHHHHHHHMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMHHHHHHHHHHH>
+                {27, true, 14, 18, "7S20M", "16M1I3M7S", true, false, 18, 18, "11H16M", "16M11H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(11, 27), default27LongR2Bases.substring(0, 16),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 11)), default27LongR2Bases.substring(16, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(11, 27), default27LongR2Qualities.substring(0, 16),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 11)), default27LongR2Qualities.substring(16, 27)},
+
+
+                //       123456789.123456789.123456789.1234--56789.123456789.123456789.123456789.123456789
+                //            <sssssssMMMMMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMMiiMMssssss>
+                //                                         ^^
+                //         with an insertion of two bases here should become
+                //       123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789
+                //            <HHHHHHHHHHHMMMMMMMMMMMMMMMM
+                //                        MMMMMMMMMMMMMMMMHHHHHHHHHHH>
+                {27, true, 14, 18, "7S20M", "17M2I2M6S", true, false, 18, 18, "11H16M", "16M11H",
+                        default27LongR1Bases, default27LongR2Bases,
+                        default27LongR1Bases.substring(11, 27), default27LongR2Bases.substring(0, 16),
+                        SequenceUtil.reverseComplement(default27LongR1Bases.substring(0, 11)), default27LongR2Bases.substring(16, 27),
+                        default27LongR1Qualities, default27LongR2Qualities,
+                        default27LongR1Qualities.substring(11, 27), default27LongR2Qualities.substring(0, 16),
+                        StringUtil.reverseString(default27LongR1Qualities.substring(0, 11)), default27LongR2Qualities.substring(16, 27)},
         };
     }
 
     @DataProvider
-    public Iterator<Object[]> overlapReadDataWithSwaps(){
+    public Iterator<Object[]> overlapReadDataWithSwaps() {
         List<Object[]> tests = new LinkedList<>();
 
         for (Object[] inputs : overlapReadData()) {
             tests.add(inputs);
             final Object[] swappedInputs = new Object[inputs.length];
-            swappedInputs[0] = inputs[0]; //read length
+            swappedInputs[0] = inputs[0]; // read length
             swappedInputs[1] = inputs[1]; // hard_clip
 
             for (int i = 2; i < inputs.length; i += 2) {
@@ -409,18 +577,18 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "overlapReadDataWithSwaps")
     public void testOverlappedReadClipping(
-                                           final int readLength,final boolean hardClipOverlappingReads,
-                                           final int start1, final int start2,
-                                           final String cigar1, final String cigar2,
-                                           final boolean strand1, final boolean strand2,
-                                           final int r1ExpectedAlignmentStart, final int r2ExpectedAlignmentStart,
-                                           final String expectedR1Cigar, final String expectedR2Cigar,
-                                           final String read1Bases, final String read2Bases,
-                                           final String expectedR1Bases, final String expectedR2Bases,
-                                           final String expectedR1ClippedBases, final String expectedR2ClippedBases,
-                                           final String read1Qualities, final String read2Qualities,
-                                           final String expectedR1Qualities, final String expectedR2Qualities,
-                                           final String expectedR1ClippedQualities, final String expectedR2ClippedQualities) {
+            final int readLength, final boolean hardClipOverlappingReads,
+            final int start1, final int start2,
+            final String cigar1, final String cigar2,
+            final boolean strand1, final boolean strand2,
+            final int r1ExpectedAlignmentStart, final int r2ExpectedAlignmentStart,
+            final String expectedR1Cigar, final String expectedR2Cigar,
+            final String read1Bases, final String read2Bases,
+            final String expectedR1Bases, final String expectedR2Bases,
+            final String expectedR1ClippedBases, final String expectedR2ClippedBases,
+            final String read1Qualities, final String read2Qualities,
+            final String expectedR1Qualities, final String expectedR2Qualities,
+            final String expectedR1ClippedQualities, final String expectedR2ClippedQualities) {
 
         final SAMRecordSetBuilder set = new SAMRecordSetBuilder();
         set.setReadLength(readLength);
