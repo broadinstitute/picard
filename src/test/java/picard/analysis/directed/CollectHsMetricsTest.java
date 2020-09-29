@@ -249,7 +249,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         IOUtil.deleteDirectoryTree(dir);
 
-        Assert.assertEquals(highCoverageWithIndel.MEAN_TARGET_COVERAGE, 97500.0);  // 100X over 180/200 bases due to deletion
+        Assert.assertEquals(highCoverageWithIndel.MEAN_TARGET_COVERAGE, 97500.0);  // Average coverge at 975000 due to deleltion 
         Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_100X, 1.0);  // 100% of bases covered at 100X coverage
         Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_1000X, 1.0);  // 100% of bases covered at 1000X coverage
         Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_10000X, 1.0);  // 100% of bases covered at 10000X coverage
