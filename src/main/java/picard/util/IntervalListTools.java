@@ -238,7 +238,8 @@ public class IntervalListTools extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
                     "result of merging the inputs. Supported formats are interval_list and VCF." +
-                    "If file extension is unrecognized, assumes file is interval_list", minElements = 1)
+                    "If file extension is unrecognized, assumes file is interval_list" +
+                    "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
     public List<File> INPUT;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
