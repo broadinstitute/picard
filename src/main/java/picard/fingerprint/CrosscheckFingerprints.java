@@ -28,6 +28,7 @@ package picard.fingerprint;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -158,15 +159,15 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
         summary =
                 "Checks that all data in the set of input files appear to come from the same " +
                         "individual. Can be used to cross-check readgroups, libraries, samples, or files. " +
-                        "Operates on bams/sams/crams and vcfs (including gvcfs). " +
+                        "Operates on SAM/BAM/CRAM and VCF (including gVCF and gzipped-VCF). " +
                         "\n" +
                         "<h3>Summary</h3>\n" +
                         "Checks if all the genetic data within a set of files appear to come from the same individual. " +
-                        "It quickly determines whether a group's genotype matches that of an input SAM/BAM/CRAM/VCF by selective sampling, " +
-                        "and has been designed to work well for low-depth SAM/BAMs (as well as high depth ones and VCFs.) " +
+                        "It quickly determines whether a group's genotype matches that of an input file by selective sampling, " +
+                        "and has been designed to work well for low-depth SAM (as well as high depth ones and VCFs.) " +
                         "The tool collects fingerprints (essentially, genotype information from different parts of the genome) " +
-                        "at the finest level available in the data (readgroup for SAM files " +
-                        "and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
+                        "at the finest level available in the data (readgroup for read-data files " +
+                        "and sample for variant-data files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
                         "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are " +
                         "emitted into a CrosscheckMetric metric file. " +
                         "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
@@ -178,16 +179,16 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         "as a follow-up step to running CrosscheckFingerprints.\n " +
                         "\n" +
                         "There are cases where one would like to identify a few groups out of a collection of many possible groups (say " +
-                        "to link a bam to it's correct sample in a multi-sample vcf. In this case one would not case for the cross-checking " +
-                        "of the various samples in the VCF against each other, but only in checking the identity of the bam against the various " +
-                        "samples in the vcf. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints " +
+                        "to link a SAM to its correct sample in a multi-sample VCF. In this case one would not case for the cross-checking " +
+                        "of the various samples in the VCF against each other, but only in checking the identity of the SAM against the various " +
+                        "samples in the VCF. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints " +
                         "does the following:\n" +
                         " - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. \n" +
                         " - aggregation of data happens at the SAMPLE level \n" +
                         " - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n" +
                         " - MATRIX_OUTPUT is disabled. " +
                         "\n" +
-                        "In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or " +
+                        "In some cases, the groups collected may not have any observations (calls for a VCF, reads for a SAM) at fingerprinting sites, or " +
                         "a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode " +
                         "with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with " +
                         "no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other " +
@@ -266,7 +267,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "Need only to include the samples that change. " +
             "Values in column 1 should be unique even in union with the remaining unmapped samples. " +
             "Values in column 2 should be unique in the file. " +
-            "Will error if more than one sample is found in a file (multi-sample vcf) pointed to in column 2. " +
+            "Will error if more than one sample is found in a file (multi-sample VCF) pointed to in column 2. " +
             "Should only be used in the presence of SECOND_INPUT. ", optional = true, mutex = {"INPUT_SAMPLE_MAP"})
     public File INPUT_SAMPLE_FILE_MAP;
 
@@ -444,7 +445,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         extensions.add(SamReader.Type.BAM_TYPE.fileExtension());
         extensions.add(SamReader.Type.SAM_TYPE.fileExtension());
         extensions.add(SamReader.Type.CRAM_TYPE.fileExtension());
-        extensions.addAll(Arrays.asList(IOUtil.VCF_EXTENSIONS));
+        extensions.addAll(FileExtensions.VCF_LIST);
 
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
 
