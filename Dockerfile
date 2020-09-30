@@ -6,7 +6,7 @@ ARG jar_name=picard.jar
 
 # Install ant, git for building
 RUN apt-get update && \
-    apt-get --no-install-recommends install -y --force-yes \
+    apt-get --no-install-recommends install -y \
         git \
         r-base \
         ant && \
