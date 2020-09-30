@@ -446,7 +446,7 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.addAll(headers);
     }
 
-    public void addPGRecordToHeader(final SAMFileHeader header) {
+    public SAMProgramRecord getPGRecord(final SAMFileHeader header) {
         final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
 
         final String pgProgramName = getClass().getSimpleName();
@@ -455,7 +455,7 @@ public abstract class CommandLineProgram {
         programRecord.setProgramName(pgProgramName);
         programRecord.setCommandLine(getCommandLine());
         programRecord.setProgramVersion(getVersion());
-        header.addProgramRecord(programRecord);
+        return programRecord;
     }
 
     public List<Header> getDefaultHeaders() {

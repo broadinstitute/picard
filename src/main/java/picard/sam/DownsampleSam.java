@@ -191,6 +191,8 @@ public class DownsampleSam extends CommandLineProgram {
 
     private final Log log = Log.getInstance(DownsampleSam.class);
 
+    public static final String RANDOM_SEED_TAG = "rs";
+
     @Override
     protected String[] customCommandLineValidation() {
         if (PROBABILITY < 0 || PROBABILITY > 1)
@@ -226,38 +228,16 @@ public class DownsampleSam extends CommandLineProgram {
             //if running using ConstantMemory strategy, need to check if we have previously run using either ConstantMemory or Chained strategy on this data
             for (final SAMProgramRecord pg : header.getProgramRecords()) {
                 if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
-                    final String previousCommandLine = pg.getCommandLine();
-                    if (previousCommandLine != null) {
-                        final String[] previousCmdSplit = previousCommandLine.split("\\s+");
-                        final String[] previousArgs = Arrays.copyOfRange(previousCmdSplit, 1, previousCmdSplit.length);
-                        final DownsampleSam previousDownsample = new DownsampleSam();
-                        final CommandLineParser previousParser = CommandLineSyntaxTranslater.isLegacyPicardStyle(previousArgs) ?
-                                new LegacyCommandLineArgumentParser(previousDownsample) : new CommandLineArgumentParser(previousDownsample);
-                        previousParser.parseArguments(System.err, previousArgs);
-
-                        if (previousDownsample.STRATEGY == Strategy.ConstantMemory && RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
-                            /*
-                            we need to decrease PROBABILITY by the value of the previously used PROBABILITY, since reads which passed
-                            the previous downsampling will hash to values uniformly distributed between 0 and previous PROBABILITY instead
-                            of between 0 and 1.
-                             */
-                            PROBABILITY *= previousDownsample.PROBABILITY;
-                        }
-
-                        if (previousDownsample.STRATEGY == Strategy.Chained && RANDOM_SEED.equals(previousDownsample.RANDOM_SEED)) {
-                            /*
-                            In this case we must fail, since the hash downsampling in the Chained strategy is adjusted dynamically, so we don't know how
-                            the hashes of the reads that previously passed are distributed.
-                             */
-                            throw new PicardException("Attempting to downsample using STRATEGY " + STRATEGY + " on data that has already been downsampled using STRATEGY " + previousDownsample.STRATEGY + " and same " +
-                                    "RANDOM_SEED  " + RANDOM_SEED + ".  In order to downsample this data further, you must either supply a different RANDOM_SEED, or use STRATEGY HighAccuracy or Chained");
-                        }
+                    final int previousSeed = Integer.parseInt(pg.getAttribute(RANDOM_SEED_TAG));
+                    if (previousSeed == RANDOM_SEED) {
+                        RANDOM_SEED *= 2;
                     }
                 }
             }
         }
 
-        addPGRecordToHeader(header);
+        SAMProgramRecord pgRecord = getPGRecord(header);
+        pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);

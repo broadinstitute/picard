@@ -124,10 +124,10 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     // test removing some reads from a sparse, single tile bam
     @Test(dataProvider = "ValidArgumentsTestProvider")
     public void testDownsampleStrategies(final double fraction, final Strategy strategy, final Integer seed) throws IOException {
-            testDownsampleWorker(tempSamFile, fraction, strategy.name(), seed, false);
+            testDownsampleWorker(tempSamFile, fraction, strategy.name(), seed);
     }
 
-    private File testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed, final boolean doesItThrow) throws IOException {
+    private File testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed) throws IOException {
 
         final File downsampled = File.createTempFile("DownsampleSam", ".bam", tempDir);
         final String[] args = new String[]{
@@ -139,10 +139,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
                 "CREATE_INDEX=true"
         };
 
-        if (doesItThrow) {
-            Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
-            return null;
-        }
         // make sure results is successful
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -166,58 +162,44 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @DataProvider(name = "RepeatedDownsamplingProvider")
     public Object[][] repeatedDownsamplingProvider() {
         final List<Object[]> rets = new ArrayList<>();
-        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(2,1), Arrays.asList(false, false)}); //ok, different seeds
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, PROBABILITY will be adjusted internally
-        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, true)}); //throws exception
-        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3), Arrays.asList(false, false)}); //ok, different seeds
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, Chained comes second
-        rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, HighAccuracy
-        rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)}); //ok, HighAccuracy
-        rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1), Arrays.asList(false, false)}); // ok, Chained
-        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1), Arrays.asList(false, false)});
-        rets.add(new Object[]{Arrays.asList(HighAccuracy, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
-        rets.add(new Object[]{Arrays.asList(Chained, HighAccuracy), Arrays.asList(1,1), Arrays.asList(false, false)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(2,1)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, HighAccuracy), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, HighAccuracy), Arrays.asList(1,1)});
 
         //randomly generate some sequences to test out
         final Strategy[] availableStratagies = Strategy.values();
         final Random random = new Random(12345);
         for (int i =0; i<20; i++) {
-            final Set<Integer> previouslyUsedSeeds = new HashSet<>();
             final List<Strategy> strategies = new ArrayList<>();
             final List<Integer> seeds = new ArrayList<>();
-            final List<Boolean> throwStatusList = new ArrayList<>();
 
             while (strategies.size() < 5) {
                 final int seed = random.nextInt(3);
                 final Strategy strategy = availableStratagies[random.nextInt(availableStratagies.length)];
-                final Boolean throwStatus = strategy == ConstantMemory && previouslyUsedSeeds.contains(seed);
 
                 seeds.add(seed);
                 strategies.add(strategy);
-                throwStatusList.add(throwStatus);
-                if (throwStatus) {
-                    break;
-                }
-
-                if (strategy == Chained) {
-                    previouslyUsedSeeds.add(seed);
-                }
             }
-            rets.add(new Object[]{strategies, seeds, throwStatusList});
+            rets.add(new Object[]{strategies, seeds});
         }
 
         return rets.toArray(new Object[0][]);
     }
 
     @Test(dataProvider = "RepeatedDownsamplingProvider")
-    public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds, List<Boolean> doesItThrow) throws IOException {
+    public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds) throws IOException {
         File input = tempSamFile;
 
         for (int i = 0 ; i < strategies.size(); i++) {
-            input = testDownsampleWorker(input, 0.5, strategies.get(i).toString(), seeds.get(i), doesItThrow.get(i));
-            if (input == null) {
-                break;
-            }
+            input = testDownsampleWorker(input, 0.5, strategies.get(i).toString(), seeds.get(i));
         }
     }
 }
