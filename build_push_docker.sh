@@ -21,5 +21,5 @@ echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     docker build -t ${PICARD_CLOUD_TAG} --build-arg build_command=cloudJar --build-arg jar_name=picardcloud.jar .
-    gcloud docker -- push ${PICARD_CLOUD_TAG}
+    docker push ${PICARD_CLOUD_TAG}
 fi
