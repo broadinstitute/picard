@@ -192,7 +192,7 @@
       "options": []
     },
     {
-      "summary": "One or more interval lists. If multiple interval lists are provided the output is theresult of merging the inputs. Supported formats are interval_list and VCF.",
+      "summary": "One or more interval lists. If multiple interval lists are provided the output is theresult of merging the inputs. Supported formats are interval_list and VCF.If file extension is unrecognized, assumes file is interval_listFor standard input (stdin), write /dev/stdin as the input file",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "List[File]",
