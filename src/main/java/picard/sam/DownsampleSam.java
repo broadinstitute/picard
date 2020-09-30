@@ -31,16 +31,11 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineArgumentParser;
-import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineSyntaxTranslater;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
@@ -48,8 +43,9 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * <h3>Summary</h3>
@@ -224,15 +220,19 @@ public class DownsampleSam extends CommandLineProgram {
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
         final SAMFileHeader header = in.getFileHeader().clone();
 
-        if (STRATEGY == Strategy.ConstantMemory) {
-            //if running using ConstantMemory strategy, need to check if we have previously run using either ConstantMemory or Chained strategy on this data
+        if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
+            //if running using ConstantMemory or Chained strategy, need to check if we have previously run with the same random seed
+            //collect previously used seeds
+            final Set<Integer> previousSeeds = new HashSet<>();
             for (final SAMProgramRecord pg : header.getProgramRecords()) {
                 if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
                     final int previousSeed = Integer.parseInt(pg.getAttribute(RANDOM_SEED_TAG));
-                    if (previousSeed == RANDOM_SEED) {
-                        RANDOM_SEED *= 2;
-                    }
+                    previousSeeds.add(previousSeed);
                 }
+            }
+
+            while (previousSeeds.contains(RANDOM_SEED)) {
+                RANDOM_SEED *= 2;
             }
         }
 
