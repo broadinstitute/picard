@@ -68,7 +68,31 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         return new Object[][]{
                 {110, false, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overhanging reads
+                {110, false, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, false, 100, 300, "110M", "110M", false, true, 100, 300, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads
+                {110, false, 100, 300, "110M", "110M", false, true, 100, 300, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, false, 100, 210, "110M", "110M", true, false, 100, 210, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads, offset by 1
+                {110, false, 100, 210, "110M", "110M", true, false, 100, 210, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, false, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overhanging reads
+                {110, false, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
                 {110, true, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
@@ -744,10 +768,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 {9, 6, false}, {9, 6, true},
                 {10, 7, false}, {10, 7, true},
                 {11, 8, false}, {11, 8, true},
-                {12, 9, false}, {12, 8, true},
-                {13, 9, false}, {13, 8, true},
-                {14, 9, false}, {14, 8, true},
-                {15, 9, false}, {15, 8, true},
+                {12, 8, false}, {12, 8, true},
+                {13, 8, false}, {13, 8, true},
+                {14, 8, false}, {14, 8, true},
+                {15, 8, false}, {15, 8, true},
                 {16, 9, false}, {16, 9, true},
                 {17, 10, false}, {17, 10, true},
                 {18, 11, false}, {18, 11, true},
@@ -756,10 +780,10 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                 {21, 18, false}, {21, 18, true},
                 {22, 19, false}, {22, 19, true},
                 {23, 20, false}, {23, 20, true},
-                {24, 21, false}, {24, 20, true},
-                {25, 21, false}, {25, 20, true},
-                {26, 21, false}, {26, 20, true},
-                {27, 21, false}, {27, 20, true},
+                {24, 20, false}, {24, 20, true},
+                {25, 20, false}, {25, 20, true},
+                {26, 20, false}, {26, 20, true},
+                {27, 20, false}, {27, 20, true},
                 {28, 21, false}, {28, 21, true},
                 {29, 22, false}, {29, 22, true},
                 {30, 23, false}, {30, 23, true},

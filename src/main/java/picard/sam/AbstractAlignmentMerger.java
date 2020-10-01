@@ -796,36 +796,36 @@ public abstract class AbstractAlignmentMerger {
      * starts and ends of each read are the same.
      */
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
-        // If both reads are mapped, see if we need to clip the ends due to small insert size
-        if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
-            if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
-                final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
-                final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
+        // Only clip if both reads are mapped, on opposite strands, overlapping
+        if (!read1.getReadUnmappedFlag() && !read2.getReadUnmappedFlag() &&
+                read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag() &&
+                read1.overlaps(read2)) {
+            final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
+            final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
 
-                // Innies only -- do we need to do anything else about jumping libraries?
-                if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
-                    // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
-                    clip3primeEndsTo5primeEnds(pos, neg, false, false);
+            // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
+            clip3primeEndsTo5primeEnds(pos, neg, false, false);
 
-                    if (useHardClipping) {
-                        // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
-                        clip3primeEndsTo5primeEnds(pos, neg, true, true);
-                    }
-                }
+            if (useHardClipping) {
+                // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
+                clip3primeEndsTo5primeEnds(pos, neg, true, true);
             }
         }
     }
+
 
     private static void clip3primeEndsTo5primeEnds(final SAMRecord pos, final SAMRecord neg, final boolean hardClipReads, final boolean useUnclippedEnds) {
         final int negEnd = useUnclippedEnds? neg.getUnclippedEnd() : neg.getEnd();
         final int posStart = useUnclippedEnds? pos.getUnclippedStart() : pos.getStart();
         //for positive strand reads, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to
-        final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd) + 1;
+        final int posLastUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+
         int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
         negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
 
-        if(posClipFrom > 0) {
-            clip3PrimeEndOfRead(pos, posClipFrom, hardClipReads);
+
+        if(posLastUnclipped > 0 && posLastUnclipped < pos.getReadLength()) {
+            clip3PrimeEndOfRead(pos, posLastUnclipped + 1, hardClipReads);
         }
         if(negClipFrom > 0) {
             clip3PrimeEndOfRead(neg, negClipFrom, hardClipReads);
