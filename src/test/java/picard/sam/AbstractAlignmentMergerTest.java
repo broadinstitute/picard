@@ -82,8 +82,15 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
                 {110, false, 100, 210, "110M", "110M", true, false, 100, 210, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
-                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads, offset by 1
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads, outies, abutting
                 {110, false, 100, 210, "110M", "110M", true, false, 100, 210, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
+
+                {110, false, 100, 210, "110M", "110M", false, true, 100, 210, "110M", "110M",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // Non overlapping reads, innies, abutting
+                {110, false, 100, 210, "110M", "110M", false, true, 100, 210, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
