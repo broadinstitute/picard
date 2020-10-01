@@ -94,6 +94,13 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
 
+                {110, false, 100, 209, "110M", "110M", true, false, 209, 209, "109S1M", "1M109S",
+                        default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null}, // overlap by one base only
+                {110, true, 100, 209, "110M", "110M", true, false, 209, 209, "109H1M", "1M109H",
+                        default110LongR1Bases, default110LongR2Bases, "T", "G", SequenceUtil.reverseComplement(default110LongR1Bases.substring(0, default110LongR1Bases.length() - 1)), default110LongR2Bases.substring(1),
+                        default110LongR1BaseQualities, default110LongR2BaseQualities, "F", "F", StringUtil.reverseString(default110LongR1BaseQualities.substring(0, default110LongR1BaseQualities.length() - 1)), default110LongR2BaseQualities.substring(1)},
+
                 {110, true, 100, 200, "110M", "110M", false, true, 100, 200, "110M", "110M",
                         default110LongR1Bases, default110LongR2Bases, default110LongR1Bases, default110LongR2Bases, null, null,
                         default110LongR1BaseQualities, default110LongR2BaseQualities, default110LongR1BaseQualities, default110LongR2BaseQualities, null, null},
