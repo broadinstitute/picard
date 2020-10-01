@@ -160,6 +160,11 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     public Object[][] repeatedDownsamplingProvider() {
         final List<Object[]> rets = new ArrayList<>();
         rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(2,1)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(0,0)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MAX_VALUE,Integer.MAX_VALUE)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MIN_VALUE,Integer.MIN_VALUE)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MIN_VALUE,Integer.MAX_VALUE)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MAX_VALUE,0)});
         rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1)});
         rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1)});
         rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3)});
@@ -194,9 +199,15 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @Test(dataProvider = "RepeatedDownsamplingProvider")
     public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds) throws IOException {
         File input = tempSamFile;
-
+        final long nReadsOriginal = SamTestUtil.countSamTotalRecord(input);
+        double totalFraction = 1;
         for (int i = 0 ; i < strategies.size(); i++) {
             input = testDownsampleWorker(input, 0.5, strategies.get(i).toString(), seeds.get(i));
+            totalFraction *= 0.5;
+
+            final long nReadsNow = SamTestUtil.countSamTotalRecord(input);
+            Assert.assertTrue(nReadsNow > 0.8 * totalFraction * nReadsOriginal);
+            Assert.assertTrue(nReadsNow < 1.2 * totalFraction * nReadsOriginal);
         }
     }
 }

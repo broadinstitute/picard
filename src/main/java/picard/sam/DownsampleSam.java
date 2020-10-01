@@ -33,6 +33,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
@@ -171,7 +172,9 @@ public class DownsampleSam extends CommandLineProgram {
     public Strategy STRATEGY = Strategy.ConstantMemory;
 
     @Argument(shortName = "R", doc = "Random seed used for deterministic results. " +
-            "Setting to null will cause multiple invocations to produce different results.")
+            "Setting to null will cause multiple invocations to produce different results.  The header if the file will be checked for any previous runs " +
+            "of DownsampleSam.  If DownsampleSam has been run before on this data with the same seed, the seed will be updated in a deterministic fashion " +
+            "so the DownsampleSam will perform correctly, and still deterministically.")
     public Integer RANDOM_SEED = 1;
 
     @Argument(shortName = "P", doc = "The probability of keeping any individual read, between 0 and 1.")
@@ -226,13 +229,27 @@ public class DownsampleSam extends CommandLineProgram {
             final Set<Integer> previousSeeds = new HashSet<>();
             for (final SAMProgramRecord pg : header.getProgramRecords()) {
                 if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
-                    final int previousSeed = Integer.parseInt(pg.getAttribute(RANDOM_SEED_TAG));
+                    final String previousSeedString = pg.getAttribute(RANDOM_SEED_TAG);
+                    if (previousSeedString == null) {
+                        /* The previous seed was not recorded.  In this case, the current seed may be the same as the previous seed,
+                        so we will change it to a randomly selected seed, which is very likely to be unique
+                         */
+                        RANDOM_SEED = new Random().nextInt();
+                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The current seed has been set to " + RANDOM_SEED + " to avoid using the " +
+                                "same seed as previously.");
+                        break;
+                    }
+                    final int previousSeed = Integer.parseInt(previousSeedString);
                     previousSeeds.add(previousSeed);
                 }
             }
 
+            final Random rnd = new Random(RANDOM_SEED);
             while (previousSeeds.contains(RANDOM_SEED)) {
-                RANDOM_SEED *= 2;
+                final int previousSeed = RANDOM_SEED;
+                RANDOM_SEED = rnd.nextInt();
+                log.warn("DownsampleSam has been run before on this data with the seed. " + previousSeed + "  The random seed has been set to " + RANDOM_SEED + " to avoid using the " +
+                        "same seed as previously.");
             }
         }
 
