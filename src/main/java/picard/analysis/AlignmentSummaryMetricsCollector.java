@@ -115,7 +115,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
      * @return the amount of soft-clipping that the read has on its 3' end (the later read cycles)
      */
     @VisibleForTesting
-    static public int get3PrimeSoftClippedBases(final Cigar cigar, final boolean negativeStrand) {
+    static protected int get3PrimeSoftClippedBases(final Cigar cigar, final boolean negativeStrand) {
         List<CigarElement> cigarElements = cigar.getCigarElements();
 
         boolean foundNonSoftClipOperator = false;
