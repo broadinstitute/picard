@@ -829,14 +829,14 @@ public abstract class AbstractAlignmentMerger {
          the queried base when the queried base is in a deletion on a negative strand read
          */
 
-        int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
-        negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
+        int negFirstBaseToClip = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
+        negFirstBaseToClip = negFirstBaseToClip > 0 ? (neg.getReadLength() + 1) - negFirstBaseToClip : 0;
 
         if(posLastUnclipped > 0 && posLastUnclipped < pos.getReadLength()) {
             clip3PrimeEndOfRead(pos, posLastUnclipped + 1, hardClipReads);
         }
-        if(negClipFrom > 0) {
-            clip3PrimeEndOfRead(neg, negClipFrom, hardClipReads);
+        if(negFirstBaseToClip > 0) {
+            clip3PrimeEndOfRead(neg, negFirstBaseToClip, hardClipReads);
         }
     }
 
