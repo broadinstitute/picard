@@ -816,8 +816,18 @@ public abstract class AbstractAlignmentMerger {
     private static void clip3primeEndsTo5primeEnds(final SAMRecord pos, final SAMRecord neg, final boolean hardClipReads, final boolean useUnclippedEnds) {
         final int negEnd = useUnclippedEnds? neg.getUnclippedEnd() : neg.getEnd();
         final int posStart = useUnclippedEnds? pos.getUnclippedStart() : pos.getStart();
-        //for positive strand reads, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to clip
+        /*
+          For the positive strand, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to clip.
+          We do this because getReadPositionAtReferencePositionIgnoreSoftClips will return the base before a deletion, so will return the 3' most base before
+          the queried base when the queried base is in a deletion on a positive strand read
+         */
+
         final int posLastUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+
+        /*
+        For the negative strand, we ask for the position of the 5' most base to clip.  getReadPositionAtReferencePositionIgnoreSoftClips will return the 5' most base before
+         the queried base when the queried base is in a deletion on a negative strand read
+         */
 
         int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
         negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
