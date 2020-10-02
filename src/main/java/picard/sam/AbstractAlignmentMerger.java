@@ -821,16 +821,16 @@ public abstract class AbstractAlignmentMerger {
           We do this because getReadPositionAtReferencePositionIgnoreSoftClips will return the base before a deletion, so will return the 3' most base before
           the queried base when the queried base is in a deletion on a positive strand read
 
-            3'<SSSSSSSSMMMMMMMMMMMM5'
-                     5'MMMMMMMMMMMMSSSSSSSS>3'
-                                  ||
-                                  ||---> 5' most base to clip
-                                  |
-                                  |---> 3' most base not to clip
+            3' <SSSSSSSSMMMMMMMMMMMM 5'
+                     5' MMMMMMMMMMMMSSSSSSSS> 3'
+                                   ||
+                                   ||---> 5' most base to clip
+                                   |
+                                   |---> 3' most base not to clip
          */
 
         final int pos3PrimeMostUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
-        if(pos3PrimeMostUnclipped > 0 && pos3PrimeMostUnclipped < pos.getReadLength()) {
+        if (pos3PrimeMostUnclipped > 0 && pos3PrimeMostUnclipped < pos.getReadLength()) {
             final int pos5PrimeMostClipped = pos3PrimeMostUnclipped + 1;
             clip3PrimeEndOfRead(pos, pos5PrimeMostClipped, hardClipReads);
         }
@@ -840,13 +840,13 @@ public abstract class AbstractAlignmentMerger {
          the queried base when the queried base is in a deletion on a negative strand read.
          */
 
-        //this is the position counting from the aligned start of the read
+        // this is the position counting from the aligned start of the read
         final int neg5PrimeMostBaseToClipPositionFromStart = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
 
-        //this is the position counting from the 5' end of the read
+        // this is the position counting from the 5' end of the read
         final int negFirstBaseFrom5PrimeEndToClip = neg5PrimeMostBaseToClipPositionFromStart > 0 ? (neg.getReadLength() + 1) - neg5PrimeMostBaseToClipPositionFromStart : 0;
 
-        if(negFirstBaseFrom5PrimeEndToClip > 0) {
+        if (negFirstBaseFrom5PrimeEndToClip > 0) {
             clip3PrimeEndOfRead(neg, negFirstBaseFrom5PrimeEndToClip, hardClipReads);
         }
     }
