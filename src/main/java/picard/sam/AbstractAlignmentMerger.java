@@ -829,27 +829,32 @@ public abstract class AbstractAlignmentMerger {
                                   |---> 3' most base not to clip
          */
 
-        final int posLastUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+        final int pos3PrimeMostUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+        if(pos3PrimeMostUnclipped > 0 && pos3PrimeMostUnclipped < pos.getReadLength()) {
+            final int pos5PrimeMostClipped = pos3PrimeMostUnclipped + 1;
+            clip3PrimeEndOfRead(pos, pos5PrimeMostClipped, hardClipReads);
+        }
 
         /*
         For the negative strand, we ask for the position of the 5' most base to clip.  getReadPositionAtReferencePositionIgnoreSoftClips will return the 5' most base before
-         the queried base when the queried base is in a deletion on a negative strand read
+         the queried base when the queried base is in a deletion on a negative strand read.
          */
 
-        int negFirstBaseToClip = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
-        negFirstBaseToClip = negFirstBaseToClip > 0 ? (neg.getReadLength() + 1) - negFirstBaseToClip : 0;
+        //this is the position counting from the aligned start of the read
+        final int neg5PrimeMostBaseToClipPositionFromStart = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
 
-        if(posLastUnclipped > 0 && posLastUnclipped < pos.getReadLength()) {
-            clip3PrimeEndOfRead(pos, posLastUnclipped + 1, hardClipReads);
-        }
-        if(negFirstBaseToClip > 0) {
-            clip3PrimeEndOfRead(neg, negFirstBaseToClip, hardClipReads);
+        //this is the position counting from the 5' end of the read
+        final int negFirstBaseFrom5PrimeEndToClip = neg5PrimeMostBaseToClipPositionFromStart > 0 ? (neg.getReadLength() + 1) - neg5PrimeMostBaseToClipPositionFromStart : 0;
+
+        if(negFirstBaseFrom5PrimeEndToClip > 0) {
+            clip3PrimeEndOfRead(neg, negFirstBaseFrom5PrimeEndToClip, hardClipReads);
         }
     }
 
     /**
-     * Gets the read position that corresponds to a particular position on the reference.  If the position on the reference
-     * falls in a deletion in the alignment of the read, the position before the deletion will be returned.
+     * Gets the 1-based read position that corresponds to a particular position on the reference.  If the position on the reference
+     * falls in a deletion in the alignment of the read, the position before the deletion will be returned.  Returns 0 if the position on
+     * the reference does not overlap the read.  In this method, soft-clips are considered to be aligned as matches to the reference.
      * @param rec
      * @param pos
      * @return
