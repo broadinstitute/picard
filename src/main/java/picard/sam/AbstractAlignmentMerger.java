@@ -820,6 +820,13 @@ public abstract class AbstractAlignmentMerger {
           For the positive strand, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to clip.
           We do this because getReadPositionAtReferencePositionIgnoreSoftClips will return the base before a deletion, so will return the 3' most base before
           the queried base when the queried base is in a deletion on a positive strand read
+
+            3'<SSSSSSSSMMMMMMMMMMMM5'
+                     5'MMMMMMMMMMMMSSSSSSSS>3'
+                                  ||
+                                  ||---> 5' most base to clip
+                                  |
+                                  |---> 3' most base not to clip
          */
 
         final int posLastUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
