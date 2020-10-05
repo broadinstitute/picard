@@ -276,6 +276,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 }
 
                 if (doRefMetrics) {
+                    final double totalBases = readLengthHistogram.getSum();
                     metrics.PCT_PF_READS_ALIGNED = MathUtil.divide(metrics.PF_READS_ALIGNED, (double) metrics.PF_READS);
                     metrics.PCT_READS_ALIGNED_IN_PAIRS = MathUtil.divide(metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
                     metrics.PCT_PF_READS_IMPROPER_PAIRS = MathUtil.divide(metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
@@ -285,8 +286,8 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.PF_MISMATCH_RATE = MathUtil.divide(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
                     metrics.PF_HQ_ERROR_RATE = MathUtil.divide(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
 
-                    metrics.PCT_HARDCLIP = MathUtil.divide(numHardClipped, (double) metrics.PF_ALIGNED_BASES);
-                    metrics.PCT_SOFTCLIP = MathUtil.divide(numSoftClipped, (double) metrics.PF_ALIGNED_BASES);
+                    metrics.PCT_HARDCLIP = MathUtil.divide(numHardClipped, totalBases);
+                    metrics.PCT_SOFTCLIP = MathUtil.divide(numSoftClipped, totalBases);
                     metrics.AVERAGE_NON_ZERO_3PRIME_SOFTCLIP = MathUtil.divide(num3PrimeSoftClippedBases, (double) numReadsWith3PrimeSoftClips);
 
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
