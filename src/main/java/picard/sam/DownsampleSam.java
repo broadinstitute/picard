@@ -225,6 +225,7 @@ public class DownsampleSam extends CommandLineProgram {
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
             //if running using ConstantMemory or Chained strategy, need to check if we have previously run with the same random seed
             //collect previously used seeds
+            final int USER_SEED = RANDOM_SEED;
             final Set<Integer> previousSeeds = new HashSet<>();
             for (final SAMProgramRecord pg : header.getProgramRecords()) {
                 if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
@@ -233,10 +234,9 @@ public class DownsampleSam extends CommandLineProgram {
                         /* The previous seed was not recorded.  In this case, the current seed may be the same as the previous seed,
                         so we will change it to a randomly selected seed, which is very likely to be unique
                          */
-                        RANDOM_SEED = new Random().nextInt();
-                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The current seed has been set to " + RANDOM_SEED + " to avoid using the " +
-                                "same seed as previously.");
-                        break;
+                        RANDOM_SEED = new Random(pg.hashCode()).nextInt();
+                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using the" +
+                                " same seed as in a previous run.");
                     }
                     final int previousSeed = Integer.parseInt(previousSeedString);
                     previousSeeds.add(previousSeed);
@@ -247,8 +247,11 @@ public class DownsampleSam extends CommandLineProgram {
             while (previousSeeds.contains(RANDOM_SEED)) {
                 final int previousSeed = RANDOM_SEED;
                 RANDOM_SEED = rnd.nextInt();
-                log.warn("DownsampleSam has been run before on this data with the seed. " + previousSeed + "  The random seed has been set to " + RANDOM_SEED + " to avoid using the " +
+                log.warn("DownsampleSam has been run before on this data with the seed .  The random seed will be changed to avoid using the " +
                         "same seed as previously.");
+            }
+            if (USER_SEED != RANDOM_SEED) {
+                log.warn("RANDOM_SEED has been changed to " + RANDOM_SEED + ".");
             }
         }
 

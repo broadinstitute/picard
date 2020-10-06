@@ -22,7 +22,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.*;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.Chained;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.ConstantMemory;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.HighAccuracy;
 
 
 /**
