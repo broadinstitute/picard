@@ -222,7 +222,6 @@ public class DownsampleSam extends CommandLineProgram {
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
         final SAMFileHeader header = in.getFileHeader().clone();
 
-
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
             //if running using ConstantMemory or Chained strategy, need to check if we have previously run with the same random seed
             //collect previously used seeds
