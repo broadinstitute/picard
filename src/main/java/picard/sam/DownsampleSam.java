@@ -237,8 +237,9 @@ public class DownsampleSam extends CommandLineProgram {
                         RANDOM_SEED = new Random(pg.hashCode()).nextInt();
                         log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using" +
                                 " the same seed as in a previous run.");
+                    } else {
+                        previousSeeds.add(Integer.parseInt(previousSeedString));
                     }
-                    previousSeeds.add(Integer.parseInt(previousSeedString));
                 }
             }
 
