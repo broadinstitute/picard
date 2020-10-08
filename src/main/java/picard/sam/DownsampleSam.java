@@ -225,7 +225,7 @@ public class DownsampleSam extends CommandLineProgram {
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
             //if running using ConstantMemory or Chained strategy, need to check if we have previously run with the same random seed
             //collect previously used seeds
-            final int USER_SEED = RANDOM_SEED;
+            final Integer userSeed = RANDOM_SEED;
             final Set<Integer> previousSeeds = new HashSet<>();
             for (final SAMProgramRecord pg : header.getProgramRecords()) {
                 if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
@@ -247,10 +247,10 @@ public class DownsampleSam extends CommandLineProgram {
             while (previousSeeds.contains(RANDOM_SEED)) {
                 final int previousSeed = RANDOM_SEED;
                 RANDOM_SEED = rnd.nextInt();
-                log.warn("DownsampleSam has been run before on this data with the seed .  The random seed will be changed to avoid using the " +
+                log.warn("DownsampleSam has been run before on this data with the seed " + RANDOM_SEED + ".  The random seed will be changed to avoid using the " +
                         "same seed as previously.");
             }
-            if (USER_SEED != RANDOM_SEED) {
+            if (!userSeed.equals(RANDOM_SEED)) {
                 log.warn("RANDOM_SEED has been changed to " + RANDOM_SEED + ".");
             }
         }

@@ -156,8 +156,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         return downsampled;
     }
 
-
-
     @DataProvider(name = "RepeatedDownsamplingProvider")
     public Object[][] repeatedDownsamplingProvider() {
         final List<Object[]> rets = new ArrayList<>();
@@ -181,7 +179,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         //randomly generate some sequences to test out
         final Strategy[] availableStratagies = Strategy.values();
         final Random random = new Random(12345);
-        for (int i =0; i<20; i++) {
+        for (int i=0; i<20; i++) {
             final List<Strategy> strategies = new ArrayList<>();
             final List<Integer> seeds = new ArrayList<>();
 
