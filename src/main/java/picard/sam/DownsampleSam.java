@@ -222,6 +222,7 @@ public class DownsampleSam extends CommandLineProgram {
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
         final SAMFileHeader header = in.getFileHeader().clone();
 
+
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
             //if running using ConstantMemory or Chained strategy, need to check if we have previously run with the same random seed
             //collect previously used seeds
@@ -235,8 +236,7 @@ public class DownsampleSam extends CommandLineProgram {
                         so we will change it to a randomly selected seed, which is very likely to be unique
                          */
                         RANDOM_SEED = new Random(pg.hashCode()).nextInt();
-                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using the" +
-                                " same seed as in a previous run.");
+                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using the same seed as in a previous run.");
                     }
                     final int previousSeed = Integer.parseInt(previousSeedString);
                     previousSeeds.add(previousSeed);
@@ -245,7 +245,6 @@ public class DownsampleSam extends CommandLineProgram {
 
             final Random rnd = new Random(RANDOM_SEED);
             while (previousSeeds.contains(RANDOM_SEED)) {
-                final int previousSeed = RANDOM_SEED;
                 RANDOM_SEED = rnd.nextInt();
                 log.warn("DownsampleSam has been run before on this data with the seed " + RANDOM_SEED + ".  The random seed will be changed to avoid using the " +
                         "same seed as previously.");
@@ -255,7 +254,7 @@ public class DownsampleSam extends CommandLineProgram {
             }
         }
 
-        SAMProgramRecord pgRecord = getPGRecord(header);
+        final SAMProgramRecord pgRecord = getPGRecord(header);
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
