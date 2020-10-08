@@ -235,10 +235,10 @@ public class DownsampleSam extends CommandLineProgram {
                         so we will change it to a randomly selected seed, which is very likely to be unique
                          */
                         RANDOM_SEED = new Random(pg.hashCode()).nextInt();
-                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using the same seed as in a previous run.");
+                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using" +
+                                " the same seed as in a previous run.");
                     }
-                    final int previousSeed = Integer.parseInt(previousSeedString);
-                    previousSeeds.add(previousSeed);
+                    previousSeeds.add(Integer.parseInt(previousSeedString));
                 }
             }
 
