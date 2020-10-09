@@ -650,8 +650,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @DataProvider
     Object[][] fileForTestReadLengthHistogram(){
         return new Object[][]{
-                new Object[]{"summary_alignment_stats_test3.sam"},
-                new Object[]{"summary_alignment_stats_test3.sam"},
+                new Object[]{"summary_alignment_stats_test.sam"},
+                new Object[]{"summary_alignment_stats_test2.sam"},
                 new Object[]{"summary_alignment_stats_test3.sam"}
         };
     }
