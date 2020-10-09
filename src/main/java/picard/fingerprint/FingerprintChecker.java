@@ -640,6 +640,8 @@ public class FingerprintChecker {
             executorCompletionService.submit(() -> {
 
                 final Map<FingerprintIdDetails, Fingerprint> oneFileFingerprints;
+                log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
+
                 if (CheckFingerprint.fileContainsReads(p)) {
                     oneFileFingerprints = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
                 } else {
@@ -651,7 +653,6 @@ public class FingerprintChecker {
                 }
                 retval.putAll(oneFileFingerprints);
 
-                log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
                 if (filesRead.incrementAndGet() % 100 == 0) {
                     log.info("Processed " + filesRead.get() + " out of " + files.size());
                 }
