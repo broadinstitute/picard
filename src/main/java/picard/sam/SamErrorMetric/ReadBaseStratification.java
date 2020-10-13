@@ -480,6 +480,31 @@ public class ReadBaseStratification {
             return "tile";
         }
     }
+    /**
+     * Stratifies base based on location within each tile
+     */
+    public static class FlowCellLocationStratifier extends RecordStratifier<String> {
+        private static OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
+
+        @Override
+        public String stratify(final SAMRecord sam) {
+            try {
+                final PhysicalLocation location = new PhysicalLocationInt();
+                opticalDuplicateFinder.addLocationInformation(sam.getReadName(), location);
+                String tile = Integer.toString(location.getTile());
+                String x = Integer.toString(location.getX());
+                String y = Integer.toString(location.getY());
+                return (tile + "_" + x + "_" + y);
+            } catch (final IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        @Override
+        public String getSuffix() {
+            return "location";
+        }
+    }
 
     /**
      * Stratifies according to the number of matching cigar operators (from CIGAR string) that the read has.
@@ -639,6 +664,12 @@ public class ReadBaseStratification {
     public static final FlowCellTileStratifier flowCellTileStratifier = new FlowCellTileStratifier();
 
     /**
+     * Stratifies base into their read's location which is parsed from the read-name.
+     */
+    public static final FlowCellLocationStratifier flowCellLocationStratifier = new FlowCellLocationStratifier();
+
+
+    /**
      * Stratifies to the readgroup id of the read.
      */
     public static final RecordStratifier<String> readgroupStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyReadGroup, "read_group");
@@ -757,6 +788,7 @@ public class ReadBaseStratification {
         //using a lazy initializer to enable the value of LONG_HOMOPOLYMER to be used;
         BINNED_HOMOPOLYMER(binnedHomopolymerStratifier::get, "The scale of homopolymer (long or short), the base that the homopolymer is comprised of, and the reference base."),
         FLOWCELL_TILE(() -> flowCellTileStratifier, "The flowcell and tile where the base was read (taken from the read name)."),
+        FLOWCELL_LOCATION(() -> flowCellLocationStratifier, "The tile and coordiantes where the base was read (taken from the read name)."),
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
