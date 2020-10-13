@@ -197,7 +197,7 @@
       "options": []
     },
     {
-      "summary": "Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.",
+      "summary": "Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.  The header if the file will be checked for any previous runs of DownsampleSam.  If DownsampleSam has been run before on this data with the same seed, the seed will be updated in a deterministic fashion so the DownsampleSam will perform correctly, and still deterministically.",
       "name": "--RANDOM_SEED",
       "synonyms": "-R",
       "type": "Integer",

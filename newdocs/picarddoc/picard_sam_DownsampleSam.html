@@ -614,7 +614,7 @@ java -jar picard.jar DownsampleSam \
 					</td>
 					<!--<td>Integer</td> -->
 					<td>1</td>
-					<td>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.</td>
+					<td>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.  The header if the file will be checked for any previous runs of DownsampleSam.  If DownsampleSam has been run before on this data with the same seed, the seed will be updated in a deterministic fashion so the DownsampleSam will perform correctly, and still deterministically.</td>
 				</tr>
 				<tr>
 					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
@@ -906,7 +906,7 @@ java -jar picard.jar DownsampleSam \
 			 / <small>-R</small>
 		</h3>
 		<p class="args">
-			<b>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.</b><br />
+			<b>Random seed used for deterministic results. Setting to null will cause multiple invocations to produce different results.  The header if the file will be checked for any previous runs of DownsampleSam.  If DownsampleSam has been run before on this data with the same seed, the seed will be updated in a deterministic fashion so the DownsampleSam will perform correctly, and still deterministically.</b><br />
 			
 		</p>
 		<p>
@@ -1068,7 +1068,7 @@ java -jar picard.jar DownsampleSam \
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.6-SNAPSHOT built at 30-25-2020 04:25:26.
+        <p class="version">Picard version 2.23.7-SNAPSHOT built at 13-24-2020 11:24:46.
         </p>
 
 	</div>
