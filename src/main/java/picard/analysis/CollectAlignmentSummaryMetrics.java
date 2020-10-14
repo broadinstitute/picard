@@ -140,14 +140,12 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         if (HISTOGRAM_FILE != null) {
             if (!METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS)) {
-                log.warn("ReadLength histogram is calculated on all reads only, but ALL_READS were not " +
-                        "included in the Metric Accumulation Levels. Adding ALL_READS so that you get the output you asked for.");
-                // This tools is called from "Collect Multiple Metrics" and so changing the METRIC_ACCUMULATION_LEVEL directly can
-                // have unintended consequences....only changing it for this tool.
-                METRIC_ACCUMULATION_LEVEL = new HashSet<>(METRIC_ACCUMULATION_LEVEL);
-                METRIC_ACCUMULATION_LEVEL.add(MetricAccumulationLevel.ALL_READS);
+                log.error("ReadLength histogram is calculated on all reads only, but ALL_READS were not " +
+                        "included in the Metric Accumulation Levels. Histogram will not be generated.");
+                HISTOGRAM_FILE=null;
+            } else {
+                IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
             }
-            IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
         }
 
         if (header.getSequenceDictionary().isEmpty()) {
@@ -176,10 +174,12 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector =
                 (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
 
-        addAllHistogramToMetrics(file, "PAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
-        addAlignedHistogramToMetrics(file, "PAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
-        addAllHistogramToMetrics(file, "UNPAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
-        addAlignedHistogramToMetrics(file, "UNPAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+        if (allReadsGroupCollector != null) {
+            addAllHistogramToMetrics(file, "PAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
+            addAlignedHistogramToMetrics(file, "PAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
+            addAllHistogramToMetrics(file, "UNPAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+            addAlignedHistogramToMetrics(file, "UNPAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+        }
 
         file.write(OUTPUT);
 
