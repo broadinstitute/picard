@@ -796,22 +796,19 @@ public abstract class AbstractAlignmentMerger {
      * starts and ends of each read are the same.
      */
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
-        // If both reads are mapped, see if we need to clip the ends due to small insert size
-        if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
-            if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
-                final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
-                final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
+        // Only clip if both reads are mapped, on opposite strands, overlapping
+        if (!read1.getReadUnmappedFlag() && !read2.getReadUnmappedFlag() &&
+                read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag() &&
+                read1.overlaps(read2)) {
+            final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
+            final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
 
-                // Innies only -- do we need to do anything else about jumping libraries?
-                if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
-                    // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
-                    clip3primeEndsTo5primeEnds(pos, neg, false, false);
+            // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
+            clip3primeEndsTo5primeEnds(pos, neg, false, false);
 
-                    if (useHardClipping) {
-                        // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
-                        clip3primeEndsTo5primeEnds(pos, neg, true, true);
-                    }
-                }
+            if (useHardClipping) {
+                // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
+                clip3primeEndsTo5primeEnds(pos, neg, true, true);
             }
         }
     }
@@ -819,18 +816,49 @@ public abstract class AbstractAlignmentMerger {
     private static void clip3primeEndsTo5primeEnds(final SAMRecord pos, final SAMRecord neg, final boolean hardClipReads, final boolean useUnclippedEnds) {
         final int negEnd = useUnclippedEnds? neg.getUnclippedEnd() : neg.getEnd();
         final int posStart = useUnclippedEnds? pos.getUnclippedStart() : pos.getStart();
-        final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd + 1);
-        int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
-        negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
+        /*
+          For the positive strand, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to clip.
+          We do this because getReadPositionAtReferencePositionIgnoreSoftClips will return the base before a deletion, so will return the 3' most base before
+          the queried base when the queried base is in a deletion on a positive strand read
 
-        if(posClipFrom > 0) {
-            clip3PrimeEndOfRead(pos, posClipFrom, hardClipReads);
+            3' <SSSSSSSSMMMMMMMMMMMM 5'
+                     5' MMMMMMMMMMMMSSSSSSSS> 3'
+                                   ||
+                                   ||---> 5' most base to clip
+                                   |
+                                   |---> 3' most base not to clip
+         */
+
+        final int pos3PrimeMostUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+        if (pos3PrimeMostUnclipped > 0 && pos3PrimeMostUnclipped < pos.getReadLength()) {
+            final int pos5PrimeMostClipped = pos3PrimeMostUnclipped + 1;
+            clip3PrimeEndOfRead(pos, pos5PrimeMostClipped, hardClipReads);
         }
-        if(negClipFrom > 0) {
-            clip3PrimeEndOfRead(neg, negClipFrom, hardClipReads);
+
+        /*
+        For the negative strand, we ask for the position of the 5' most base to clip.  getReadPositionAtReferencePositionIgnoreSoftClips will return the 5' most base before
+         the queried base when the queried base is in a deletion on a negative strand read.
+         */
+
+        // this is the position counting from the aligned start of the read
+        final int neg5PrimeMostBaseToClipPositionFromStart = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
+
+        // this is the position counting from the 5' end of the read
+        final int negFirstBaseFrom5PrimeEndToClip = neg5PrimeMostBaseToClipPositionFromStart > 0 ? (neg.getReadLength() + 1) - neg5PrimeMostBaseToClipPositionFromStart : 0;
+
+        if (negFirstBaseFrom5PrimeEndToClip > 0) {
+            clip3PrimeEndOfRead(neg, negFirstBaseFrom5PrimeEndToClip, hardClipReads);
         }
     }
 
+    /**
+     * Gets the 1-based read position that corresponds to a particular position on the reference.  If the position on the reference
+     * falls in a deletion in the alignment of the read, the position before the deletion will be returned.  Returns 0 if the position on
+     * the reference does not overlap the read.  In this method, soft-clips are considered to be aligned as matches to the reference.
+     * @param rec
+     * @param pos
+     * @return
+     */
     static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
         final Cigar oldCigar = rec.getCigar();
         final Cigar newCigar = new Cigar();
@@ -861,22 +889,9 @@ public abstract class AbstractAlignmentMerger {
         // also to be moved forward by posShift so that it's still querying the same base.
         final int readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, true);
 
-        // if this returns zero, it means that there's a deletion at the position of the desired base,
-        // if the read is on the positive strand readPosition should be incremented by one to get the
-        // base __following__ the deletion rather than the one preceding it (which is what returnLastBaseIfDeleted argument in
-        // getReadPositionAtReferencePosition will do)
-        final int readPositionZeroOnDeletion = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
-
         rec.setCigar(oldCigar);
 
-        final boolean refPositionOnDeletion = readPositionZeroOnDeletion == 0 && readPosition != 0;
-
-        final boolean incrementReadPosition = refPositionOnDeletion &&
-                !rec.getReadNegativeStrandFlag() && // only needed for positive-strand reads
-                readPosition < rec.getReadLength(); // protection against the possibility that getReadPositionAtReferencePosition
-        // would return the last base of a read when it ends in a deletion (it currently doesn't)
-
-        return incrementReadPosition ? readPosition + 1 : readPosition;
+        return readPosition;
 
     }
 
