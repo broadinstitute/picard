@@ -878,6 +878,7 @@ public class FingerprintChecker {
     }
 
     public void setReferenceFasta(final File referenceFasta) {
+        log.debug("setting reference to be " + referenceFasta);
         this.referenceFasta = referenceFasta;
     }
 
