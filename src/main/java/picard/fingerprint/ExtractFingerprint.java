@@ -97,7 +97,7 @@ public class ExtractFingerprint extends CommandLineProgram {
         }
 
         checker.setLocusMaxReads(LOCUS_MAX_READS);
-        checker.setReferenceFasta(REFERENCE_SEQUENCE);
+        checker.setReferenceFasta(referenceSequence.getReferenceFile());
         checker.setValidationStringency(VALIDATION_STRINGENCY);
 
         if (SAMPLE_ALIAS != null) {
