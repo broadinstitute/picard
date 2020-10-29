@@ -25,6 +25,7 @@
 package picard.arrays.illumina;
 
 import org.apache.commons.io.IOUtils;
+import picard.PicardException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,6 +38,8 @@ import java.io.InputStream;
  * A class to provide methods for accessing Illumina Infinium Data Files.
  */
 public abstract class InfiniumDataFile {
+
+    public static final int MAX_UNSIGNED_SHORT = 65535;
 
     private String identifier;
     private int numberOfEntries;
@@ -57,15 +60,26 @@ public abstract class InfiniumDataFile {
 
     /**
      * Utility method for reading a string of data. (Reads from the current offset)
+     * See https://msdn.microsoft.com/en-us/library/yzxa6408(v=vs.100).aspx
+     *     for additional details on string format.
      *
      * @return The parsed string.
      * @throws java.io.IOException is thrown when there is a problem reading the stream.
      */
     String parseString() throws IOException {
         final String dataString;
-        final byte strLen = stream.readByte();
-        if (strLen != 0) {
-            final byte[] stringBytes = new byte[strLen];
+
+        int totalLength = 0;
+        byte partialLength = stream.readByte();
+        int numBytes = 0;
+        while ((partialLength & 0x80) > 0) {
+            totalLength += (partialLength & 0x7F) << (7 * numBytes);
+            partialLength = stream.readByte();
+            numBytes += 1;
+        }
+        totalLength += partialLength << (7 * numBytes);
+        if (totalLength != 0) {
+            final byte[] stringBytes = new byte[totalLength];
             final int bytesRead = stream.read(stringBytes);
             if (bytesRead != stringBytes.length) {
                 throw new IOException("Did not fully read string. Read " + bytesRead + " out of "
@@ -95,9 +109,23 @@ public abstract class InfiniumDataFile {
      */
     byte[] parseByteArray(final InfiniumFileTOC toc) throws IOException {
         stream.skipBytes(toc.getOffset());
-        final int arrayLen = Integer.reverseBytes(stream.readInt());
+        final int arrayLen = parseInt();
         final byte[] byteArray = new byte[arrayLen];
         for (int i = 0; i < arrayLen; i++) {
+            byteArray[i] = stream.readByte();
+        }
+        return byteArray;
+    }
+
+    /**
+     * Utility method for parsing an array of bytes values - returned as ints.
+     *
+     * @return An array of byte values - cast to int
+     * @throws java.io.IOException is thrown when there is a problem reading the stream.
+     */
+    int[] parseByteArrayAsInts(final int numValues) throws IOException {
+        int[] byteArray = new int[numValues];
+        for (int i = 0; i < numValues; i++) {
             byteArray[i] = stream.readByte();
         }
         return byteArray;
@@ -178,11 +206,15 @@ public abstract class InfiniumDataFile {
     }
 
     /**
-     * Utility method for writing a short value to an outputStream.
+     * Utility method for writing an unsigned short value to an outputStream.
+     * Note that Java has no unsigned short value, so we pass it as an int and size-validate here.
      * Writes in Illumina (little-endian) format
      */
-    static void writeShort(final DataOutputStream outputStream, final short value) throws IOException {
-        final byte[] byteArray = shortToByteArray(value);
+    static void writeUnsignedShort(final DataOutputStream outputStream, final int value) throws IOException {
+        if (value < 0 || value > MAX_UNSIGNED_SHORT) {
+            throw new PicardException("Value " + value + " is out of range for a unsigned short");
+        }
+        final byte[] byteArray = shortToByteArray((short) (value & 0x0000ffff));
         outputStream.write(byteArray);
     }
 
@@ -232,10 +264,10 @@ public abstract class InfiniumDataFile {
 
     int parseShort(final InfiniumFileTOC toc) throws IOException {
         stream.skipBytes(toc.getOffset());
-        return readShort();
+        return parseShort();
     }
 
-    int readShort() throws IOException {
+    int parseShort() throws IOException {
         final byte[] shortBytes = new byte[2];
         stream.readFully(shortBytes);
         return byteArrayToInt(shortBytes);
@@ -340,6 +372,10 @@ public abstract class InfiniumDataFile {
 
     int parseInt() throws IOException {
         return Integer.reverseBytes(stream.readInt());
+    }
+
+    byte parseByte() throws IOException {
+        return stream.readByte();
     }
 
     void skipFloats(int numFloats) throws IOException {

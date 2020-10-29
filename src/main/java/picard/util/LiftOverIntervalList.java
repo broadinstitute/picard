@@ -24,12 +24,12 @@
 package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -44,7 +44,8 @@ import java.util.List;
  * This tool adjusts the coordinates in an interval list on one reference to its homologous interval list on another
  * reference, based on a chain file that describes the correspondence between the two references. It is based on the
  * <a href="http://genome.ucsc.edu/cgi-bin/hgLiftOver">UCSC LiftOver tool</a> and uses a UCSC chain file to guide its operation.
- * It accepts both Picard interval_list files or VCF files as interval inputs.
+ * It accepts a Picard interval_list file as an input. See {@link IntervalListTools} documentation for information on
+ * interval_list format. Note: for lifting over VCF files use LiftoverVcf tool.
  * <br />
  * <h3>Usage example:</h3>
  * <pre>
@@ -80,7 +81,8 @@ public class LiftOverIntervalList extends CommandLineProgram {
             "interval list on another " +
             "reference, based on a chain file that describes the correspondence between the two references. It is based on the " +
             "UCSC LiftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation. " +
-            "It accepts both Picard interval_list files or VCF files as interval inputs.\n" +
+            "It accepts a Picard interval_list file as an input. See IntervalListTools documentation for information on interval_list format." +
+            "Note: for lifting over VCF files use LiftoverVcf tool. \n" +
             "\n" +
             "<h3>Usage example:</h3>" +
             "java -jar picard.jar LiftOverIntervalList \\\n" +
@@ -108,7 +110,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
     @Argument(doc = "The output interval list file.", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Argument(doc = "Sequence dictionary to place in the output interval list. (This should be the dictionary of the target reference.)",
+    @Argument(doc = "Sequence dictionary to place in the output interval list. (This should be any file from which the dictionary of the target reference can be extracted.)",
             shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME)
     public File SEQUENCE_DICTIONARY;
 
@@ -147,7 +149,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
         LOG.info("Lifting over " + intervalList.getIntervals().size() + " intervals, encompassing " +
                 baseCount + " bases.");
 
-        final SAMFileHeader toHeader = SamReaderFactory.makeDefault().getFileHeader(SEQUENCE_DICTIONARY);
+        final SAMFileHeader toHeader = new SAMFileHeader(SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath()));
         liftOver.validateToSequences(toHeader.getSequenceDictionary());
         final IntervalList toIntervals = new IntervalList(toHeader);
         for (final Interval fromInterval : intervalList) {

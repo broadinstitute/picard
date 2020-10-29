@@ -6,6 +6,6 @@
 ##INFO=<ID=ReverseComplementedAlleles,Number=0,Type=Flag,Description="The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the previous reference to the current one was on the negative strand.">
 ##contig=<ID=chr1,length=540>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
-chr1	421	.	CA	C	724.43	PASS	ReverseComplementedAlleles	GT	0/1
-chr1	468	chr1_73_G_T	A	C	100	PASS	SwappedAlleles;ReverseComplementedAlleles	GT:AD:PL	1/1:11,10:60,0,50
-chr1	539	.	A	AAGGG	15676.17	PASS	ReverseComplementedAlleles	GT	0/0
+chr1	468	chr1_73_T_G	A	C	100	PASS	ReverseComplementedAlleles	GT:AD:PL	0/0:10,11:50,0,60
+chr1	478	chr1_61_TC_T	AG	A	724.43	PASS	ReverseComplementedAlleles	GT	0/1
+chr1	539	chr1_1_C_CCCCT	A	AAGGG	15676.17	PASS	ReverseComplementedAlleles	GT	0/0

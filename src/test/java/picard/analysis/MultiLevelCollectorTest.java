@@ -25,7 +25,7 @@ import static htsjdk.samtools.util.CollectionUtil.makeSet;
 
 public class MultiLevelCollectorTest {
 
-    public static File TESTFILE = new File("testdata/picard/sam/summary_alignment_stats_test_multiple.sam");
+    public static File TEST_FILE = new File(CollectAlignmentSummaryMetricsTest.TEST_DATA_DIR, "summary_alignment_stats_test_multiple.sam");
 
     public String noneOrStr(final String str) {
         final String out;
@@ -166,7 +166,7 @@ public class MultiLevelCollectorTest {
 
     @Test(dataProvider = "variedAccumulationLevels")
     public void multilevelCollectorTest(final Set<MetricAccumulationLevel> accumulationLevels) {
-        final SamReader in = SamReaderFactory.makeDefault().open(TESTFILE);
+        final SamReader in = SamReaderFactory.makeDefault().open(TEST_FILE);
         final RecordCountMultiLevelCollector collector = new RecordCountMultiLevelCollector(accumulationLevels, in.getFileHeader().getReadGroups());
 
         for (final SAMRecord rec : in) {

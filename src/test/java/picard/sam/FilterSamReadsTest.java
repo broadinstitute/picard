@@ -23,7 +23,12 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -53,7 +58,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
 
 
     @BeforeTest
-    public void setUp() throws IOException {
+    public void setUp() {
         builder.setReadLength(READ_LENGTH);
 
         builder.addPair("mapped_pair_chr1", 0, 1, 151); //should be kept in first test, filtered out in third
@@ -170,7 +175,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         temp.deleteOnExit();
 
         final String[] args = new String[]{
-                "INPUT=testdata/picard/sam/aligned.sam",
+                "INPUT=" + TEST_DIR + "aligned.sam",
                 String.format("OUTPUT=%s", temp.getAbsolutePath()),
                 String.format("FILTER=%s", filter.toString()),
                 String.format("%s=%s", fileArgument, dummyFile.getAbsoluteFile()),
@@ -191,18 +196,18 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     @DataProvider(name = "dataTestPairedIntervalFilter")
     public Object[][] dataTestPairedIntervalFilter() {
         return new Object[][]{
-                {TEST_DIR + "FilterSamReads/filter1.interval_list", 4},
-                {TEST_DIR + "FilterSamReads/filter2.interval_list", 0}
+                {"FilterSamReads/filter1.interval_list", 4},
+                {"FilterSamReads/filter2.interval_list", 0}
         };
     }
 
     @DataProvider(name = "dataTestTagFilter")
     public Object[][] dataTestTagFilter() {
         return new Object[][]{
-                {"testdata/picard/sam/aligned.sam", "RG", "0", true, 8},
-                {"testdata/picard/sam/aligned.sam", "RG", "0", false, 0},
-                {"testdata/picard/sam/aligned.sam", "CB", "ACG", false, 3},
-                {"testdata/picard/sam/aligned.sam", "CB", "ACG", true, 5}
+                {TEST_DIR + "aligned.sam", "RG", "0", true, 8},
+                {TEST_DIR + "aligned.sam", "RG", "0", false, 0},
+                {TEST_DIR + "aligned.sam", "CB", "ACG", false, 3},
+                {TEST_DIR + "aligned.sam", "CB", "ACG", true, 5}
         };
     }
 
@@ -239,7 +244,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         }
         writer.close();
 
-        final File intervalFile = new File(intervalFilename);
+        final File intervalFile = new File(TEST_DIR,intervalFilename);
 
         FilterSamReads filterTest = setupProgram(intervalFile, inputSam, FilterSamReads.Filter.includePairedIntervals);
 
@@ -265,8 +270,8 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
     @Test(dataProvider = "dataTestDebugOption")
     public void testDebugOption(Boolean writeDebugReads, boolean isDebugFileExpected) throws Exception {
         // input as SAM file
-        final File inputSam = new File("testdata/picard/sam/aligned.sam");
-        final File javascriptFile = new File("testdata/picard/sam/FilterSamReads/filterOddStarts.js");
+        final File inputSam = new File(TEST_DIR + "aligned.sam");
+        final File javascriptFile = new File(TEST_DIR + "FilterSamReads/filterOddStarts.js");
 
         FilterSamReads filterTest = setupProgram(javascriptFile, inputSam, FilterSamReads.Filter.includeJavascript, writeDebugReads);
         Assert.assertEquals(filterTest.doWork(), 0);
