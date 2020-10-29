@@ -25,6 +25,7 @@
 package picard.arrays;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
@@ -213,7 +214,7 @@ public class GtcToVcf extends CommandLineProgram {
         final SAMSequenceDictionary sequenceDictionary = refSeq.getSequenceDictionary();
         final String assembly = sequenceDictionary.getSequence(0).getAssembly();
         if (assembly == null) {
-            return new String[]{"Assembly tag ('" + ASSEMBLY_TAG + "') is required in the sequence dictionary)."};
+            return new String[]{"Assembly tag ('" + SAMSequenceRecord.ASSEMBLY_TAG + "') is required in the sequence dictionary)."};
         }
         if (!assembly.equals("GRCh37")) {
             return new String[]{"The selected reference sequence ('" + assembly + "') is not supported.  This tool is currently only implemented to support NCBI Build 37 / HG19 Reference Sequence."};
