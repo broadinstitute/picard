@@ -58,6 +58,7 @@ public class ReadBaseStratification {
     // instances.
     private static int LONG_HOMOPOLYMER = 6;
     private static int GC_CACHE_SIZE = 1000;
+    private static int LOCATION_BIN_SIZE = 2500;
 
 
     /* ***** SETTERS ********** */
@@ -72,6 +73,11 @@ public class ReadBaseStratification {
     public static void setLongHomopolymer(int longHomopolymer) {
         LONG_HOMOPOLYMER = longHomopolymer;
     }
+
+    /**
+     * defaults to 2500
+     **/
+    public static void setLocationBinSize(int locationBinSize) { LOCATION_BIN_SIZE = locationBinSize; }
 
     /* ******* general-use classes, for defining and creating new stratifiers ***********/
 
@@ -480,10 +486,13 @@ public class ReadBaseStratification {
             return "tile";
         }
     }
+
+
     /**
      * Stratifies base based on location within each tile
      */
     public static class FlowCellLocationStratifier extends RecordStratifier<String> {
+        final int locationBinSize;
         private static OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
 
         @Override
@@ -492,13 +501,18 @@ public class ReadBaseStratification {
                 final PhysicalLocation location = new PhysicalLocationInt();
                 opticalDuplicateFinder.addLocationInformation(sam.getReadName(), location);
                 String tile = Integer.toString(location.getTile());
-                String x = Integer.toString(location.getX());
-                String y = Integer.toString(location.getY());
+                String x = Integer.toString(location.getX() / LOCATION_BIN_SIZE);
+                String y = Integer.toString(location.getY() / LOCATION_BIN_SIZE);
                 return (tile + "_" + x + "_" + y);
             } catch (final IllegalArgumentException ignored) {
                 return null;
             }
         }
+
+        FlowCellLocationStratifier(final int locationBinSize) {
+            this.locationBinSize = locationBinSize;
+        }
+
 
         @Override
         public String getSuffix() {
@@ -663,11 +677,10 @@ public class ReadBaseStratification {
      */
     public static final FlowCellTileStratifier flowCellTileStratifier = new FlowCellTileStratifier();
 
-    /**
+       /**
      * Stratifies base into their read's location which is parsed from the read-name.
      */
-    public static final FlowCellLocationStratifier flowCellLocationStratifier = new FlowCellLocationStratifier();
-
+    public static final FlowCellLocationStratifier flowCellLocationStratifier = new FlowCellLocationStratifier(LOCATION_BIN_SIZE);
 
     /**
      * Stratifies to the readgroup id of the read.
