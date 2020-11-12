@@ -25,9 +25,16 @@ import java.util.stream.IntStream;
 public class ReadBaseStratificationTest {
 
     @BeforeClass
-    public void setup() {
+    public void setupLH() {
         ReadBaseStratification.setLongHomopolymer(6);
     }
+
+    @BeforeClass
+    public void setupLBS() {
+        ReadBaseStratification.setLocationBinSize(1000);
+    }
+
+
 
     @DataProvider
     public Object[][] baseStratifierData() {
@@ -262,6 +269,10 @@ public class ReadBaseStratificationTest {
                 {1, false, (Math.round(100.0 * 5 / 8)) / 100.0, ReadBaseStratification.gcContentStratifier},
 
                 {1, false, 93, ReadBaseStratification.flowCellTileStratifier},
+
+                {1, false, 3981 / 1000, ReadBaseStratification.flowCellXStratifier},
+
+                {1, false, 7576 / 1000, ReadBaseStratification.flowCellYStratifier},
 
                 {1, false, "rgID", ReadBaseStratification.readgroupStratifier},
 
