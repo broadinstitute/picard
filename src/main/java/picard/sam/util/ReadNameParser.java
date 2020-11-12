@@ -3,6 +3,8 @@ package picard.sam.util;
 import htsjdk.samtools.util.Log;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +28,8 @@ public class ReadNameParser implements Serializable {
      * Illumina technology.
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
+
+    private Map<String, PhysicalLocation> locationMap = new HashMap<>();
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
@@ -76,7 +80,7 @@ public class ReadNameParser implements Serializable {
      * @param loc the object to add tile/x/y to
      * @return true if the read name contained the information in parsable form, false otherwise
      */
-    public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
+    private boolean readLocationInformation(final String readName, final PhysicalLocation loc) {
         try {
             // Optimized version if using the default read name regex (== used on purpose):
             if (this.useOptimizedDefaultParsing) {
@@ -127,6 +131,25 @@ public class ReadNameParser implements Serializable {
             return false;
         }
     }
+
+    public boolean addLocationInformation(final String readName, final PhysicalLocation loc){
+        if (!locationMap.containsKey(readName)) {
+            final boolean b = readLocationInformation(readName, loc);
+            if (b) {
+                locationMap.put(readName, loc);
+            }
+            return b;
+        } else {
+            PhysicalLocation location = locationMap.get(readName);
+            loc.setTile(location.getTile());
+            loc.setX(location.getX());
+            loc.setY(location.getY());
+            return true;
+        }
+
+    }
+
+
 
     /**
      * Given a string, splits the string by the delimiter, and returns the the last three fields parsed as integers.  Parsing a field

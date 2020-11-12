@@ -37,6 +37,7 @@ import picard.sam.markduplicates.util.OpticalDuplicateFinder;
 import picard.sam.util.Pair;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationInt;
+import picard.sam.util.ReadNameParser;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -102,6 +103,19 @@ public class ReadBaseStratification {
         public T stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
             return stratify(recordAndOffset.getRecord());
         }
+
+        abstract T stratify(final SAMRecord sam);
+    }
+
+    /**
+     * A simple position based stratifier for cases when only the record suffices
+     */
+    abstract static class PositionBasedStratifier<T extends Comparable<T>> implements RecordAndOffsetStratifier<T> {
+        @Override
+        public T stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
+            return stratify(recordAndOffset.getRecord());
+        }
+        static ReadNameParser readNameParser = new ReadNameParser();
 
         abstract T stratify(final SAMRecord sam);
     }
@@ -467,14 +481,13 @@ public class ReadBaseStratification {
     /**
      * Stratifies base into their read's tile which is parsed from the read-name.
      */
-    public static class FlowCellTileStratifier extends RecordStratifier<Integer> {
-        private static OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
+    public static class FlowCellTileStratifier extends PositionBasedStratifier<Integer> {
 
         @Override
         public Integer stratify(final SAMRecord sam) {
             try {
                 final PhysicalLocation location = new PhysicalLocationInt();
-                opticalDuplicateFinder.addLocationInformation(sam.getReadName(), location);
+                readNameParser.addLocationInformation(sam.getReadName(), location);
                 return (int) location.getTile();
             } catch (final IllegalArgumentException ignored) {
                 return null;
@@ -487,19 +500,63 @@ public class ReadBaseStratification {
         }
     }
 
+    /**
+     * Stratifies base into their read's Y coordinate which is parsed from the read-name.
+     */
+    public static class FlowCellYStratifier extends PositionBasedStratifier<Integer> {
+
+        @Override
+        public Integer stratify(final SAMRecord sam) {
+            try {
+                final PhysicalLocation location = new PhysicalLocationInt();
+                readNameParser.addLocationInformation(sam.getReadName(), location);
+                return location.getY() / LOCATION_BIN_SIZE;
+            } catch (final IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+
+        @Override
+        public String getSuffix() {
+            return "y";
+        }
+    }
+
+    /**
+     * Stratifies base into their read's X coordinate which is parsed from the read-name.
+     */
+    public static class FlowCellXStratifier extends PositionBasedStratifier<Integer> {
+
+        @Override
+        public Integer stratify(final SAMRecord sam) {
+            try {
+                final PhysicalLocation location = new PhysicalLocationInt();
+                readNameParser.addLocationInformation(sam.getReadName(), location);
+                return location.getX() / LOCATION_BIN_SIZE;
+            } catch (final IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        @Override
+        public String getSuffix() {
+            return "x";
+        }
+    }
 
     /**
      * Stratifies base based on location within each tile
      */
     public static class FlowCellLocationStratifier extends RecordStratifier<String> {
         final int locationBinSize;
-        private static OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
+        private static ReadNameParser readNameParser = new ReadNameParser();
 
         @Override
         public String stratify(final SAMRecord sam) {
             try {
                 final PhysicalLocation location = new PhysicalLocationInt();
-                opticalDuplicateFinder.addLocationInformation(sam.getReadName(), location);
+                readNameParser.addLocationInformation(sam.getReadName(), location);
                 String tile = Integer.toString(location.getTile());
                 String x = Integer.toString(location.getX() / LOCATION_BIN_SIZE);
                 String y = Integer.toString(location.getY() / LOCATION_BIN_SIZE);
@@ -677,10 +734,16 @@ public class ReadBaseStratification {
      */
     public static final FlowCellTileStratifier flowCellTileStratifier = new FlowCellTileStratifier();
 
-       /**
-     * Stratifies base into their read's location which is parsed from the read-name.
+    /**
+     * Stratifies base into their read's tile which is parsed from the read-name.
      */
-    public static final FlowCellLocationStratifier flowCellLocationStratifier = new FlowCellLocationStratifier(LOCATION_BIN_SIZE);
+    public static final FlowCellXStratifier flowCellXStratifier = new FlowCellXStratifier();
+
+    /**
+     * Stratifies base into their read's tile which is parsed from the read-name.
+     */
+    public static final FlowCellYStratifier flowCellYStratifier = new FlowCellYStratifier();
+
 
     /**
      * Stratifies to the readgroup id of the read.
@@ -801,7 +864,8 @@ public class ReadBaseStratification {
         //using a lazy initializer to enable the value of LONG_HOMOPOLYMER to be used;
         BINNED_HOMOPOLYMER(binnedHomopolymerStratifier::get, "The scale of homopolymer (long or short), the base that the homopolymer is comprised of, and the reference base."),
         FLOWCELL_TILE(() -> flowCellTileStratifier, "The flowcell and tile where the base was read (taken from the read name)."),
-        FLOWCELL_LOCATION(() -> flowCellLocationStratifier, "The tile and coordiantes where the base was read (taken from the read name)."),
+        FLOWCELL_Y(() -> flowCellYStratifier, "The y-coordinate of the read (taken from the read name)"),
+        FLOWCELL_X(() -> flowCellXStratifier, "The x-coordinate of the read (taken from the read name)"),
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
