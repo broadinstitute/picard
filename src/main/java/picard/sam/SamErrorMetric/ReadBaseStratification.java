@@ -546,38 +546,6 @@ public class ReadBaseStratification {
     }
 
     /**
-     * Stratifies base based on location within each tile
-     */
-    public static class FlowCellLocationStratifier extends RecordStratifier<String> {
-        final int locationBinSize;
-        private static ReadNameParser readNameParser = new ReadNameParser();
-
-        @Override
-        public String stratify(final SAMRecord sam) {
-            try {
-                final PhysicalLocation location = new PhysicalLocationInt();
-                readNameParser.addLocationInformation(sam.getReadName(), location);
-                String tile = Integer.toString(location.getTile());
-                String x = Integer.toString(location.getX() / LOCATION_BIN_SIZE);
-                String y = Integer.toString(location.getY() / LOCATION_BIN_SIZE);
-                return (tile + "_" + x + "_" + y);
-            } catch (final IllegalArgumentException ignored) {
-                return null;
-            }
-        }
-
-        FlowCellLocationStratifier(final int locationBinSize) {
-            this.locationBinSize = locationBinSize;
-        }
-
-
-        @Override
-        public String getSuffix() {
-            return "location";
-        }
-    }
-
-    /**
      * Stratifies according to the number of matching cigar operators (from CIGAR string) that the read has.
      */
     public static class CigarOperatorsInReadStratifier extends RecordStratifier<Integer> {
