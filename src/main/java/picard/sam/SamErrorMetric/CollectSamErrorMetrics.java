@@ -190,7 +190,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
     @Argument(shortName = "LH", doc = "Shortest homopolymer which is considered long.  Used by the BINNED_HOMOPOLYMER stratifier.", optional = true)
     public int LONG_HOMOPOLYMER = 6;
 
-    @Argument(shortName = "LBS", doc = "Size of location bins. Used by the FLOWCELL_LOCATION stratifier", optional = true)
+    @Argument(shortName = "LBS", doc = "Size of location bins. Used by the FLOWCELL_X and FLOWCELL_Y stratifiers", optional = true)
     public int LOCATION_BIN_SIZE = 2500;
 
     @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling).", optional = true)
