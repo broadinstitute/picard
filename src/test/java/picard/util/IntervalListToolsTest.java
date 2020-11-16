@@ -438,6 +438,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             final List<String> args = new ArrayList<>();
             args.add("INPUT=" + abutting);
             args.add("OUTPUT=" + ilOut);
+            args.add("ACTION=CONCAT"); // optional, will work without this
             args.add("UNIQUE="+true); //Note: do not use ACTION=UNION or it will by default combine abutting intervals
             args.add("DONT_COMBINE_ABUTTING="+true);
             Assert.assertEquals(runPicardCommandLine(args), 0);
