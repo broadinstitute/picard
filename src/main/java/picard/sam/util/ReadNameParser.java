@@ -1,13 +1,8 @@
 package picard.sam.util;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +29,7 @@ public class ReadNameParser implements Serializable {
 
     private String readNameStored = null;
 
-    private PhysicalLocation physicalLocationStored = null;
+    private PhysicalLocation physicalLocationStored = new PhysicalLocationInt();
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
