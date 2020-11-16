@@ -32,7 +32,7 @@ public class ReadNameParser implements Serializable {
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
-    private Cache<String, PhysicalLocation> locationCache = CacheBuilder.newBuilder().build();
+    private Cache<String, PhysicalLocation> locationCache = CacheBuilder.newBuilder().maximumSize(20).build();
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 

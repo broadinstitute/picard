@@ -12,8 +12,6 @@ import org.testng.annotations.Test;
 import picard.sam.AbstractAlignmentMerger;
 import picard.sam.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,8 +31,6 @@ public class ReadBaseStratificationTest {
     public void setupLBS() {
         ReadBaseStratification.setLocationBinSize(1000);
     }
-
-
 
     @DataProvider
     public Object[][] baseStratifierData() {
