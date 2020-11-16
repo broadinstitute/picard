@@ -32,9 +32,9 @@ public class ReadNameParser implements Serializable {
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
-    private String readNameStored = new String();
+    private String readNameStored = null;
 
-    private PhysicalLocation physicalLocationStored = new PhysicalLocationInt();
+    private PhysicalLocation physicalLocationStored = null;
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
@@ -138,11 +138,12 @@ public class ReadNameParser implements Serializable {
     }
 
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc){
-        if (readName != readNameStored) {
-            boolean b = readLocationInformation(readName, loc);
-            if (b) {
+        if (!readName.equals(readNameStored)) {
+            if (readLocationInformation(readName, loc)) {
                 readNameStored = readName;
-                physicalLocationStored = loc;
+                physicalLocationStored.setX(loc.getX());
+                physicalLocationStored.setY(loc.getY());
+                physicalLocationStored.setTile(loc.getTile());
                 return true;
             }
             // return false if read name cannot be parsed
