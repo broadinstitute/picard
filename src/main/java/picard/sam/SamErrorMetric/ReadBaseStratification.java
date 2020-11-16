@@ -117,7 +117,8 @@ public class ReadBaseStratification {
         public T stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
             return stratify(recordAndOffset.getRecord());
         }
-        static ReadNameParser readNameParser = new ReadNameParser();
+        //Static ReadNameParser so that cache of read names/ PhysicalLocations is shared between all PositionBasedStratifiers
+        static final ReadNameParser readNameParser = new ReadNameParser();
 
         abstract T stratify(final SAMRecord sam);
     }

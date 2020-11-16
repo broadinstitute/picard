@@ -1,5 +1,8 @@
 package picard.sam.util;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
 
 import java.io.Serializable;
@@ -29,7 +32,7 @@ public class ReadNameParser implements Serializable {
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
-    private Map<String, PhysicalLocation> locationMap = new HashMap<>();
+    private Cache<String, PhysicalLocation> locationCache = CacheBuilder.newBuilder().build();
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
@@ -133,23 +136,21 @@ public class ReadNameParser implements Serializable {
     }
 
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc){
-        if (!locationMap.containsKey(readName)) {
-            final boolean b = readLocationInformation(readName, loc);
-            if (b) {
-                locationMap.put(readName, loc);
+        final PhysicalLocation location = locationCache.getIfPresent(readName);
+        if (location == null) {
+            if (readLocationInformation(readName, loc)) {
+                locationCache.put(readName, loc);
+                return true;
             }
-            return b;
+            // return false if read name cannot be parsed
+            return false;
         } else {
-            PhysicalLocation location = locationMap.get(readName);
             loc.setTile(location.getTile());
             loc.setX(location.getX());
             loc.setY(location.getY());
             return true;
         }
-
     }
-
-
 
     /**
      * Given a string, splits the string by the delimiter, and returns the the last three fields parsed as integers.  Parsing a field
