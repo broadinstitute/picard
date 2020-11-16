@@ -233,6 +233,16 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
+                    " <h4>5. Combine overlapping intervals but NOT abutting intervals:</h4>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=CONCAT \\\n" +
+                    "       UNIQUE=true \\\n" +
+                    "       DONT_COMBINE_ABUTTING=true \\\n" +
+                    "       I=input1.interval_list \\\n" +
+                    "       O=new.interval_list" +
+                    " </pre>" +
+                    "" +
                     "";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
