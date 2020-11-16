@@ -412,7 +412,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(timeOut = 40_000)
     public void testCombineAbuttingIntervals() throws IOException {
-
+        // Test the default behavior of UNION, which is to combine abutting and overlapping intervals.
         //gather
         final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();
@@ -430,7 +430,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
     @Test(timeOut = 40_000)
     public void testDontCombineAbuttingIntervals() throws IOException {
-
+        // Test the new functionality for abutting intervals: no action but UNIQUE=true and DONT_COMBINE_ABUTTING=true, to uniqify but keep abutting intervals separate.
         //gather
         final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();
@@ -449,7 +449,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
     @Test(timeOut = 40_000)
     public void testCombineAbuttingIntervalsError() throws IOException {
-
+        // Test that no error is thrown with ACTION=UNION but DONT_COMBINE_ABUTTING=false
         final IntervalListTools intervalListTools = new IntervalListTools();
 
         for (IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
@@ -458,7 +458,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             String[] errors = intervalListTools.customCommandLineValidation();
             Assert.assertNull(errors);
         }
-
+        // Test that an error IS thrown with ACTION=UNION but DONT_COMBINE_ABUTTING=true
         final IntervalListTools intervalListTools2 = new IntervalListTools();
 
         for (IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
