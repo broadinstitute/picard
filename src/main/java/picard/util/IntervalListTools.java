@@ -254,6 +254,9 @@ public class IntervalListTools extends CommandLineProgram {
     @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.")
     public boolean UNIQUE = false;
 
+    @Argument(doc = "If false, do not merge abutting intervals (keep them separate). Note: abutting intervals are combined by default with the UNION action.", optional = true)
+    public boolean DONT_COMBINE_ABUTTING = false;
+
     @Argument(doc = "If true, sort the resulting interval list by coordinate.")
     public boolean SORT = true;
 
@@ -402,7 +405,7 @@ public class IntervalListTools extends CommandLineProgram {
         final IntervalList result = ACTION.act(lists, secondLists);
 
         if (INVERT) {
-            SORT = false; // no need to sort, since return will be sorted by definition.
+            SORT = false; // no need to sort, since uniqued() output will be sorted by definition.
             UNIQUE = true;
         }
 
@@ -410,7 +413,10 @@ public class IntervalListTools extends CommandLineProgram {
         final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult) : possiblySortedResult;
 
         //only get unique if this has been asked unless inverting (since the invert will return a unique list)
-        List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+//        List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+        final boolean CONCATENATE_NAMES = true;
+        final boolean ENFORCE_SAME_STRANDS = false;
+        List<Interval> finalIntervals = UNIQUE ? IntervalList.getUniqueIntervals(possiblyInvertedResult, !DONT_COMBINE_ABUTTING, CONCATENATE_NAMES, ENFORCE_SAME_STRANDS) : possiblyInvertedResult.getIntervals();
 
         if (BREAK_BANDS_AT_MULTIPLES_OF > 0) {
             finalIntervals = IntervalList.breakIntervalsAtBandMultiples(finalIntervals, BREAK_BANDS_AT_MULTIPLES_OF);
@@ -512,6 +518,9 @@ public class IntervalListTools extends CommandLineProgram {
         }
         if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
+        }
+        if (ACTION == Action.UNION && DONT_COMBINE_ABUTTING) {
+            errorMsgs.add("ACTION=UNION action combines abutting intervals by default, so it is incompatible with DONT_COMBINE_ABUTTING=true.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[0]);

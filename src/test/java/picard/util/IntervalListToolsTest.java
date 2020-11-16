@@ -52,6 +52,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private final File scatterableStdin = new File(TEST_DATA_DIR, "scatterable_stdin");
     private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
     private final File largeScatterable = new File(TEST_DATA_DIR, "large_scatterable.interval_list");
+    private final File abutting = new File(TEST_DATA_DIR, "abutting.interval_list");
+    private final File abutting_combined = new File(TEST_DATA_DIR, "abutting_combined.interval_list");
+    private final File abutting_notcombined = new File(TEST_DATA_DIR, "abutting_notcombined.interval_list");
 
     @Test
     public void testSecondInputValidation() {
@@ -405,5 +408,64 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         final IntervalList original = IntervalList.fromFile(largeScatterable).uniqued();
 
         Assert.assertEquals(gather, original);
+    }
+
+    @Test(timeOut = 40_000)
+    public void testCombineAbuttingIntervals() throws IOException {
+
+        //gather
+        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
+        ilOut.deleteOnExit();
+        {
+            final List<String> args = new ArrayList<>();
+            args.add("INPUT=" + abutting);
+            args.add("OUTPUT=" + ilOut);
+            args.add("ACTION=UNION"); // Note: ACTION=UNION is equivalent to UNIQUE=true and DONT_COMBINE_ABUTTING=false, or defaults
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+        }
+        final IntervalList gather = IntervalList.fromFile(ilOut);
+        final IntervalList original = IntervalList.fromFile(abutting_combined);
+
+        Assert.assertEquals(gather, original); // equal to expected output
+    }
+    @Test(timeOut = 40_000)
+    public void testDontCombineAbuttingIntervals() throws IOException {
+
+        //gather
+        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
+        ilOut.deleteOnExit();
+        {
+            final List<String> args = new ArrayList<>();
+            args.add("INPUT=" + abutting);
+            args.add("OUTPUT=" + ilOut);
+            args.add("UNIQUE="+true); //Note: do not use ACTION=UNION or it will by default combine abutting intervals
+            args.add("DONT_COMBINE_ABUTTING="+true);
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+        }
+        final IntervalList gather = IntervalList.fromFile(ilOut);
+        final IntervalList original = IntervalList.fromFile(abutting_notcombined);
+
+        Assert.assertEquals(gather, original); // equal to expected output
+    }
+    @Test(timeOut = 40_000)
+    public void testCombineAbuttingIntervalsError() throws IOException {
+
+        final IntervalListTools intervalListTools = new IntervalListTools();
+
+        for (IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
+            intervalListTools.ACTION= IntervalListTools.Action.UNION;
+            intervalListTools.DONT_COMBINE_ABUTTING=false;
+            String[] errors = intervalListTools.customCommandLineValidation();
+            Assert.assertNull(errors);
+        }
+
+        final IntervalListTools intervalListTools2 = new IntervalListTools();
+
+        for (IntervalListTools.Output output_value : IntervalListTools.Output.values()) {
+            intervalListTools2.ACTION= IntervalListTools.Action.UNION;
+            intervalListTools2.DONT_COMBINE_ABUTTING=true;
+            String[] errors = intervalListTools2.customCommandLineValidation();
+            Assert.assertNotNull(errors);
+        }
     }
 }
