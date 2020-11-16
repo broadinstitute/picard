@@ -78,7 +78,9 @@ public class ReadBaseStratification {
     /**
      * defaults to 2500
      **/
-    public static void setLocationBinSize(int locationBinSize) { LOCATION_BIN_SIZE = locationBinSize; }
+    public static void setLocationBinSize(int locationBinSize) { 
+       LOCATION_BIN_SIZE = locationBinSize; 
+    }
 
     /* ******* general-use classes, for defining and creating new stratifiers ***********/
 
