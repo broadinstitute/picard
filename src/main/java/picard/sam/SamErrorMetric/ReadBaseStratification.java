@@ -33,7 +33,6 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator.RecordAndOffset;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
-import picard.sam.markduplicates.util.OpticalDuplicateFinder;
 import picard.sam.util.Pair;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationInt;
@@ -112,15 +111,15 @@ public class ReadBaseStratification {
     /**
      * A simple position based stratifier for cases when only the record suffices
      */
-    abstract static class PositionBasedStratifier<T extends Comparable<T>> implements RecordAndOffsetStratifier<T> {
+    abstract static class PositionBasedStratifier implements RecordAndOffsetStratifier<Integer> {
         @Override
-        public T stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
+        public Integer stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
             return stratify(recordAndOffset.getRecord());
         }
         //Static ReadNameParser so that cache of read names/ PhysicalLocations is shared between all PositionBasedStratifiers
         static final ReadNameParser readNameParser = new ReadNameParser();
 
-        abstract T stratify(final SAMRecord sam);
+        abstract Integer stratify(final SAMRecord sam);
     }
 
     /**
@@ -484,7 +483,7 @@ public class ReadBaseStratification {
     /**
      * Stratifies base into their read's tile which is parsed from the read-name.
      */
-    public static class FlowCellTileStratifier extends PositionBasedStratifier<Integer> {
+    public static class FlowCellTileStratifier extends PositionBasedStratifier {
 
         @Override
         public Integer stratify(final SAMRecord sam) {
@@ -506,7 +505,7 @@ public class ReadBaseStratification {
     /**
      * Stratifies base into their read's Y coordinate which is parsed from the read-name.
      */
-    public static class FlowCellYStratifier extends PositionBasedStratifier<Integer> {
+    public static class FlowCellYStratifier extends PositionBasedStratifier {
 
         @Override
         public Integer stratify(final SAMRecord sam) {
@@ -529,7 +528,7 @@ public class ReadBaseStratification {
     /**
      * Stratifies base into their read's X coordinate which is parsed from the read-name.
      */
-    public static class FlowCellXStratifier extends PositionBasedStratifier<Integer> {
+    public static class FlowCellXStratifier extends PositionBasedStratifier {
 
         @Override
         public Integer stratify(final SAMRecord sam) {
