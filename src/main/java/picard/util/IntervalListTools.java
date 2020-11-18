@@ -338,10 +338,11 @@ public class IntervalListTools extends CommandLineProgram {
 
         UNION("Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, " +
                 "with overlapping and abutting intervals merged into one.", false) {
-            @Override
-            IntervalList act(final IntervalList firstList, final IntervalList ignored) {
-                return super.act(firstList.sorted().uniqued(), ignored);
-            }
+//            @Override
+//            IntervalList act(final IntervalList firstList, final IntervalList ignored) {
+////                return super.act(firstList.sorted().uniqued(), ignored);
+//                return super.act(IntervalListTools.uniqued(firstList.sorted(), false), ignored);
+//            } // Before I delete this code block: I'm removing this in order to move this functionality down to the "doWork()" subroutine, so that it works with "DONT_MERGE_ABUTTING".
         },
 
         INTERSECT("The sorted and merged set of all loci that are contained in all of the INPUTs.", false) {
@@ -373,7 +374,6 @@ public class IntervalListTools extends CommandLineProgram {
 
         final String helpdoc;
         final boolean takesSecondInput;
-
         Action(final String helpdoc, boolean takesSecondInput) {
             this.helpdoc = helpdoc;
             this.takesSecondInput = takesSecondInput;
@@ -419,14 +419,19 @@ public class IntervalListTools extends CommandLineProgram {
             UNIQUE = true;
         }
 
+        if (ACTION == Action.UNION) { // UNION is basically Action.CONCAT with SORT and UNIQUE
+            SORT = true;
+            UNIQUE = true;
+        }
+
         final IntervalList possiblySortedResult = SORT ? result.sorted() : result;
         final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult) : possiblySortedResult;
 
         //only get unique if this has been asked unless inverting (since the invert will return a unique list)
-//        List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
-        final boolean CONCATENATE_NAMES = true;
-        final boolean ENFORCE_SAME_STRANDS = false;
-        List<Interval> finalIntervals = UNIQUE ? IntervalList.getUniqueIntervals(possiblyInvertedResult, !DONT_COMBINE_ABUTTING, CONCATENATE_NAMES, ENFORCE_SAME_STRANDS) : possiblyInvertedResult.getIntervals();
+//        final boolean CONCATENATE_NAMES = true;
+//        final boolean ENFORCE_SAME_STRANDS = false;
+//        List<Interval> finalIntervals = UNIQUE ? IntervalList.getUniqueIntervals(possiblyInvertedResult, !DONT_COMBINE_ABUTTING, CONCATENATE_NAMES, ENFORCE_SAME_STRANDS) : possiblyInvertedResult.getIntervals();
+        List<Interval> finalIntervals = UNIQUE? IntervalListTools.uniqued(possiblyInvertedResult, DONT_COMBINE_ABUTTING).getIntervals() : possiblyInvertedResult.getIntervals();
 
         if (BREAK_BANDS_AT_MULTIPLES_OF > 0) {
             finalIntervals = IntervalList.breakIntervalsAtBandMultiples(finalIntervals, BREAK_BANDS_AT_MULTIPLES_OF);
@@ -509,6 +514,16 @@ public class IntervalListTools extends CommandLineProgram {
                 .map(f->IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING))
                 .reduce(accumulator)
                 .orElse(null);
+    }
+
+    private static IntervalList uniqued(IntervalList non_unique, boolean DONT_COMBINE_ABUTTING) {
+        // A subroutine to replace htsjdk's IntervalList "unique()" method, which combines abutting intervals by default.
+        final boolean CONCATENATE_NAMES = true;
+        final boolean ENFORCE_SAME_STRANDS = false;
+        List<Interval> newIntervals = IntervalList.getUniqueIntervals(non_unique, !DONT_COMBINE_ABUTTING, CONCATENATE_NAMES, ENFORCE_SAME_STRANDS);
+        IntervalList newList = new IntervalList(non_unique.getHeader());
+        newList.addall(newIntervals);
+        return newList;
     }
 
     @Override
