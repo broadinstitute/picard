@@ -48,6 +48,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.IntervalArgumentCollection;
@@ -208,6 +209,15 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SamReader in = getSamReader();
         final AbstractLocusIterator iterator = getLocusIterator(in);
+
+        // Verify the reference sequences match
+        if (!this.header.getSequenceDictionary().isEmpty()) {
+            try {
+                SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
+            } catch (SequenceUtil.SequenceListsDifferException e) {
+                throw new PicardException("The given input bam is aligned to a different reference sequence than the reference sequence passed in", e);
+            }
+        }
 
         final List<SamRecordFilter> filters = new ArrayList<>();
         final CountingFilter adapterFilter = new CountingAdapterFilter();
