@@ -210,12 +210,12 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         final SamReader in = getSamReader();
         final AbstractLocusIterator iterator = getLocusIterator(in);
 
-        // Verify the reference sequences match
+        // Verify the sequence dictionaries match
         if (!this.header.getSequenceDictionary().isEmpty()) {
             try {
                 SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
             } catch (SequenceUtil.SequenceListsDifferException e) {
-                throw new PicardException("The given input bam is aligned to a different reference sequence than the reference sequence passed in", e);
+                throw new PicardException("The given input bam and reference sequence don't have matching sequence dictionaries", e);
             }
         }
 

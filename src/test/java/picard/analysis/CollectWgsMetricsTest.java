@@ -531,7 +531,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
     }
 
     @Test(expectedExceptions = PicardException.class)
-    public void testFailDifferentReferenceSequences() throws IOException {
+    public void testFailDifferentSequenceDictionaries() throws IOException {
         final File input = new File(TEST_DIR, "forMetrics.sam");
         final File outfile = getTempOutputFile("test", ".wgs_metrics");
         final String[] args = new String[]{
