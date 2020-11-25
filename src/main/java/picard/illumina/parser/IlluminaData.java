@@ -50,14 +50,6 @@ interface QualityData extends IlluminaData {
     public byte [][] getQualities();
 }
 
-interface NoiseData extends IlluminaData {
-    public FourChannelIntensityData [] getNoise();
-}
-
-interface RawIntensityData extends IlluminaData{
-    public FourChannelIntensityData [] getRawIntensities();
-}
-
 interface PfData extends IlluminaData {
     public boolean isPf();
 }
