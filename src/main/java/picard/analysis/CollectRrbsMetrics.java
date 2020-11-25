@@ -222,6 +222,8 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
             errorMsgs.add("MINIMUM_READ_LENGTH must be > 0");
         }
 
+        checkRInstallation(R_SCRIPT != null, R_SCRIPT);
+
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 }

@@ -120,6 +120,12 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/wgsHistogram.R");
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected SamReader getSamReader() {
         if (this.samReader == null) {
             this.samReader = super.getSamReader();

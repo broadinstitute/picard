@@ -99,6 +99,12 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
     private final Log log = Log.getInstance(CollectBaseDistributionByCycle.class);
 
     @Override
+    protected String[] customCommandLineValidation() {
+        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/baseDistributionByCycle.R");
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();

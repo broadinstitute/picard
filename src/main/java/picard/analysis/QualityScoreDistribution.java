@@ -99,6 +99,12 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
     @Override
+    protected String[] customCommandLineValidation() {
+        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/qualityScoreDistribution.R");
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(CHART_OUTPUT);

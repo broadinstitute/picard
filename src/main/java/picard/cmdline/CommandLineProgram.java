@@ -50,10 +50,12 @@ import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
+import picard.PicardException;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PathProvider;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -496,5 +498,15 @@ public abstract class CommandLineProgram {
      */
     public static String getFaqLink() {
         return "To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp";
+    }
+
+    public static void checkRInstallation(final boolean chart_output, final String r_script) {
+        if(chart_output) {
+            try {
+                RExecutor.executeFromClasspath(r_script);
+            } catch (htsjdk.samtools.SAMException e) {
+                throw new PicardException("R is not installed on this machine. It is required for creating the chart.");
+            }
+        }
     }
 }

@@ -135,6 +135,11 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private AlignmentSummaryMetricsCollector collector;
 
+    protected String[] customCommandLineValidation() {
+        checkRInstallation(HISTOGRAM_FILE != null, HISTOGRAM_R_SCRIPT);
+        return super.customCommandLineValidation();
+    }
+
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);

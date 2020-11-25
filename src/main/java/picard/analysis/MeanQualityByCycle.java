@@ -168,6 +168,12 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/meanQualityByCycle.R");
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
         // If we're working with a single library, assign that library's name
