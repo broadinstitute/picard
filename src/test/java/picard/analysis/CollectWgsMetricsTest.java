@@ -34,6 +34,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -527,5 +528,18 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.0);
         }
+    }
+
+    @Test(expectedExceptions = SequenceUtil.SequenceListsDifferException.class)
+    public void testFailDifferentSequenceDictionaries() throws IOException {
+        final File input = new File(TEST_DIR, "forMetrics.sam");
+        final File outfile = getTempOutputFile("test", ".wgs_metrics");
+        final File ref = new File("testdata/picard/reference/", "test.fasta");
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 1);
     }
 }
