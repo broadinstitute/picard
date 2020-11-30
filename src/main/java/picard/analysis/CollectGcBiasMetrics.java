@@ -149,7 +149,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        checkRInstallation(CHART_OUTPUT != null, R_SCRIPT);
+        checkRInstallation(CHART_OUTPUT != null);
         return super.customCommandLineValidation();
     }
 

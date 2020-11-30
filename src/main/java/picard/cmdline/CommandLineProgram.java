@@ -64,7 +64,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -500,10 +499,14 @@ public abstract class CommandLineProgram {
         return "To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp";
     }
 
-    public static void checkRInstallation(final boolean chart_output, final String r_script) {
-        if(chart_output) {
+    /**
+     * Check if R is installed
+     * @param has_chart_output
+     */
+    public static void checkRInstallation(final boolean has_chart_output) {
+        if(has_chart_output) {
             try {
-                RExecutor.executeFromClasspath(r_script);
+                RExecutor.executeFromClasspath("picard/analysis/checkRInstallation.R");
             } catch (htsjdk.samtools.SAMException e) {
                 throw new PicardException("R is not installed on this machine. It is required for creating the chart.");
             }

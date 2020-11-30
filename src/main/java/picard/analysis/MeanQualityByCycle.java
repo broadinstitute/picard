@@ -169,7 +169,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/meanQualityByCycle.R");
+        checkRInstallation(CHART_OUTPUT != null);
         return super.customCommandLineValidation();
     }
 

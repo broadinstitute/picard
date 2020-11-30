@@ -100,7 +100,7 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/baseDistributionByCycle.R");
+        checkRInstallation(CHART_OUTPUT != null);
         return super.customCommandLineValidation();
     }
 

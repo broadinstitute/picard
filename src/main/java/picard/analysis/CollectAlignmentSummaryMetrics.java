@@ -136,7 +136,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     private AlignmentSummaryMetricsCollector collector;
 
     protected String[] customCommandLineValidation() {
-        checkRInstallation(HISTOGRAM_FILE != null, HISTOGRAM_R_SCRIPT);
+        checkRInstallation(HISTOGRAM_FILE != null);
         return super.customCommandLineValidation();
     }
 

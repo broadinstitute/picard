@@ -100,7 +100,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/qualityScoreDistribution.R");
+        checkRInstallation(CHART_OUTPUT != null);
         return super.customCommandLineValidation();
     }
 

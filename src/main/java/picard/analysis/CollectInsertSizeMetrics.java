@@ -132,7 +132,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
              return new String[]{"MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded."};
          }
 
-         checkRInstallation(Histogram_R_SCRIPT != null, Histogram_R_SCRIPT);
+         checkRInstallation(Histogram_R_SCRIPT != null);
 
          return super.customCommandLineValidation();
     }

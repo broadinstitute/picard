@@ -146,7 +146,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
 
-        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/rnaSeqCoverage.R");
+        checkRInstallation(CHART_OUTPUT != null);
 
         return super.customCommandLineValidation();
     }

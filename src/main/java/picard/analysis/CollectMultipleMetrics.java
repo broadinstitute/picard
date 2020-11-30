@@ -669,6 +669,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         }
         programsToRun = new LinkedHashSet<>(PROGRAM);
 
+        checkRInstallation(true);
+
         return super.customCommandLineValidation();
     }
 

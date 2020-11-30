@@ -121,7 +121,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     @Override
     protected String[] customCommandLineValidation() {
-        checkRInstallation(CHART_OUTPUT != null, "picard/analysis/wgsHistogram.R");
+        checkRInstallation(CHART_OUTPUT != null);
         return super.customCommandLineValidation();
     }
 
