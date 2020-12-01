@@ -664,14 +664,17 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        final List<String> errorMsgs = new ArrayList<String>();
         if (PROGRAM.isEmpty()) {
-            return new String[]{"No programs specified with PROGRAM"};
+            errorMsgs.add("No programs specified with PROGRAM");
         }
         programsToRun = new LinkedHashSet<>(PROGRAM);
 
-        checkRInstallation(true);
+        if (!checkRInstallation(true)) {
+            errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
+        }
 
-        return super.customCommandLineValidation();
+        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 
     /**

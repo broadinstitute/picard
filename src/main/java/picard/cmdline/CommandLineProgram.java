@@ -502,14 +502,16 @@ public abstract class CommandLineProgram {
     /**
      * Check if R is installed
      * @param has_chart_output
+     * @return true if R is installed
      */
-    public static void checkRInstallation(final boolean has_chart_output) {
-        if(has_chart_output) {
+    public static boolean checkRInstallation(final boolean has_chart_output) {
+        if (has_chart_output) {
             try {
                 RExecutor.executeFromClasspath("picard/analysis/checkRInstallation.R");
             } catch (htsjdk.samtools.SAMException e) {
-                throw new PicardException("R is not installed on this machine. It is required for creating the chart.");
+                return false;
             }
         }
+        return true;
     }
 }
