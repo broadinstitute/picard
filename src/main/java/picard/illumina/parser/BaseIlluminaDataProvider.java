@@ -1,6 +1,8 @@
 package picard.illumina.parser;
 
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
 
 /**
@@ -78,4 +80,12 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
     }
 
     abstract void seekToTile(int seekAfterFirstRead);
+
+    public static Integer fileToTile(final String fileName) {
+        final Matcher matcher = Pattern.compile("^s_\\d+_(\\d{1,5}).+").matcher(fileName);
+        if (!matcher.matches()) {
+            return null;
+        }
+        return Integer.parseInt(matcher.group(1));
+    }
 }

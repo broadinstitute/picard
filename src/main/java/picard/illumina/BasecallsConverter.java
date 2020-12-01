@@ -1,5 +1,6 @@
 package picard.illumina;
 
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
@@ -12,8 +13,10 @@ import java.io.File;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+
     private static final Log log = Log.getInstance(BasecallsConverter.class);
 
     final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
@@ -126,9 +129,10 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         void close();
     }
 
-    /**
-     * A comparator for tile numbers, which are not necessarily ordered by the number's value.
-     */
+    public static File[] getTiledFiles(final File baseDirectory, final Pattern pattern) {
+        return IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
+    }
+
     public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
         final String s1 = integer1.toString();
         final String s2 = integer2.toString();

@@ -28,7 +28,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
-import picard.illumina.NewIlluminaBasecallsConverter;
+import picard.illumina.BasecallsConverter;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 import static htsjdk.samtools.util.CollectionUtil.makeSet;
-import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
+import static picard.illumina.BasecallsConverter.getTiledFiles;
 
 /**
  * IlluminaDataProviderFactory accepts options for parsing Illumina data files for a lane and creates an
@@ -188,7 +188,7 @@ public class IlluminaDataProviderFactory {
         if (availableTiles.isEmpty()) {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
-        availableTiles.sort(NewIlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR);
+        availableTiles.sort(BasecallsConverter.TILE_NUMBER_COMPARATOR);
 
         //fill in available tiles for run based files
         formatToDataTypes.keySet().stream().map(fileUtil::getUtil)
@@ -226,7 +226,7 @@ public class IlluminaDataProviderFactory {
         }
 
         IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
-        tiles.sort(NewIlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR);
+        tiles.sort(BasecallsConverter.TILE_NUMBER_COMPARATOR);
         availableTiles = tiles;
     }
 
@@ -263,7 +263,7 @@ public class IlluminaDataProviderFactory {
      * @param filterFiles A list of the pf filter files to use when creating this data provider.
      * @return An iterator for reading the Illumina basecall output for the lane specified in the ctor.
      */
-    public NewIlluminaDataProvider makeDataProvider(List<File> cbcls,
+    public BaseIlluminaDataProvider makeDataProvider(List<File> cbcls,
                                                     List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
                                                     File[] filterFiles, int tileNum, File barcodeFile) {
         return new NewIlluminaDataProvider(cbcls, locs, filterFiles, lane, tileNum, outputMapping, barcodeFile);

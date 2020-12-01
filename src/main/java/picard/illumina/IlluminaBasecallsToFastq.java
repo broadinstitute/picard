@@ -272,23 +272,17 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             demultiplex = true;
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
-        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-            if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
-            basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
-                    TMP_DIR, NUM_PROCESSORS,
-                    FIRST_TILE, TILE_LIMIT, queryNameComparator,
-                    new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                            readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()),
-                    FastqRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
-        } else {
-            basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster), TMP_DIR, NUM_PROCESSORS,
-                    FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
-                    new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                            readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
-                    this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
-        }
+
+        basecallsConverter = new BasecallsConverterFactory<FastqRecordsForCluster>().getConverter(
+                BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
+                sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
+                TMP_DIR, NUM_PROCESSORS,
+                FIRST_TILE, TILE_LIMIT, queryNameComparator,
+                new FastqRecordsForClusterCodec(readStructure.templates.length(),
+                        readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()),
+                FastqRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES,
+                APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, FORCE_GC
+        );
 
         basecallsConverter.setConverter(
                 new ClusterToFastqRecordsForClusterConverter(

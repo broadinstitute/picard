@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     private static final Log log = Log.getInstance(NewIlluminaBasecallsConverter.class);
     private final List<File> cbcls;
     private final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
@@ -137,10 +137,6 @@ public class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Baseca
         }
 
         setTileLimits(firstTile, tileLimit);
-    }
-
-    public static File[] getTiledFiles(final File baseDirectory, final Pattern pattern) {
-        return IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
     }
 
     @Override

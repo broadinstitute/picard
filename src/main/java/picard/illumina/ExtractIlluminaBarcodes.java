@@ -72,7 +72,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
+import static picard.illumina.BasecallsConverter.getTiledFiles;
 
 /**
  * Determine the barcode for each read in an Illumina lane.
