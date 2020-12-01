@@ -1,20 +1,33 @@
 package picard.illumina;
 
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+
     private static final Log log = Log.getInstance(BasecallsConverter.class);
+    public static final IlluminaDataType[] DATA_TYPES_NO_BARCODE =
+            {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
+    private static final IlluminaDataType[] DATA_TYPES_WITH_BARCODE = Arrays.copyOf(DATA_TYPES_NO_BARCODE, DATA_TYPES_NO_BARCODE.length + 1);
+
+    static {
+        DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length - 1] = IlluminaDataType.Barcodes;
+    }
 
     final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     final int maxReadsInRamPerTile;
@@ -126,9 +139,10 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         void close();
     }
 
-    /**
-     * A comparator for tile numbers, which are not necessarily ordered by the number's value.
-     */
+    public static File[] getTiledFiles(final File baseDirectory, final Pattern pattern) {
+        return IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
+    }
+
     public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
         final String s1 = integer1.toString();
         final String s2 = integer2.toString();
@@ -143,4 +157,16 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         }
         return s1.compareTo(s2);
     };
+
+    /**
+     * Given a read structure return the data types that need to be parsed for this run
+     */
+    protected static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
+                                                                    final boolean demultiplex) {
+        if (!readStructure.hasSampleBarcode() || !demultiplex) {
+            return DATA_TYPES_NO_BARCODE;
+        } else {
+            return DATA_TYPES_WITH_BARCODE;
+        }
+    }
 }

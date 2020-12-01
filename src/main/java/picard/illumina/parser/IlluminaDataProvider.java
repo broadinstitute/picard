@@ -38,7 +38,7 @@ import java.util.Set;
  *
  * @author jburke@broadinstitute.org
  */
-public class IlluminaDataProvider extends BaseIlluminaDataProvider {
+class IlluminaDataProvider extends BaseIlluminaDataProvider {
 
     /**
      * contains QSeqs, bcls, or other Illumina file types that will be parsed by this class

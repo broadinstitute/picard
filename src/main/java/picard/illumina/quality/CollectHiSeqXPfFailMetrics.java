@@ -314,7 +314,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
             this.pWriteDetailed = pWriteDetailed;
-            this.provider = factory.makeDataProvider(Arrays.asList(tile));
+            this.provider = factory.makeDataProvider(tile);
         }
 
         public Exception getException() { return this.exception; }

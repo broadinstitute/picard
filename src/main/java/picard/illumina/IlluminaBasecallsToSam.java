@@ -306,20 +306,15 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         final boolean demultiplex = readStructure.hasSampleBarcode();
-        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-            if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
-            basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
-                    TMP_DIR, NUM_PROCESSORS,
-                    FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
-                    new Codec(numOutputRecords),
-                    SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
-        } else {
-            basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
-                    FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                    bclQualityEvaluationStrategy, APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
-        }
+        basecallsConverter = new BasecallsConverterFactory<SAMRecordsForCluster>().getConverter(
+                BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
+                barcodeSamWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
+                TMP_DIR, NUM_PROCESSORS,
+                FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
+                new Codec(numOutputRecords),
+                SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES,
+                APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS
+        );
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).

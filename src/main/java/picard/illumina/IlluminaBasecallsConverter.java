@@ -64,7 +64,24 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  *
  * @param <CLUSTER_OUTPUT_RECORD> The class to which a ClusterData is converted in preparation for writing.
  */
-public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+    /**
+     * A comparator for tile numbers, which are not necessarily ordered by the number's value.
+     */
+    public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
+        final String s1 = integer1.toString();
+        final String s2 = integer2.toString();
+        // Because a the tile number is followed by a colon, a tile number that
+        // is a prefix of another tile number should sort after. (e.g. 10 sorts after 100).
+        if (s1.length() < s2.length()) {
+            if (s2.startsWith(s1)) {
+                return 1;
+            }
+        } else if (s2.length() < s1.length() && s1.startsWith(s2)) {
+            return -1;
+        }
+        return s1.compareTo(s2);
+    };
     final boolean includeNonPfReads;
 
     /**
@@ -84,14 +101,6 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
     }
 
     private static final Log log = Log.getInstance(IlluminaBasecallsConverter.class);
-
-    public static final IlluminaDataType[] DATA_TYPES_NO_BARCODE =
-            {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
-    private static final IlluminaDataType[] DATA_TYPES_WITH_BARCODE = Arrays.copyOf(DATA_TYPES_NO_BARCODE, DATA_TYPES_NO_BARCODE.length + 1);
-
-    static {
-        DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length - 1] = IlluminaDataType.Barcodes;
-    }
 
     // If FORCE_GC, this is non-null.  For production this is not necessary because it will run until the JVM
     // ends, but for unit testing it is desirable to stop the task when done with this instance.
@@ -460,7 +469,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
          * this tile.
          */
         public void process() {
-            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(Collections.singletonList(this.tile.getNumber()));
+            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(this.tile.getNumber());
             log.debug(String.format("Reading data from tile %s ...", tile.getNumber()));
 
             while (dataProvider.hasNext()) {
@@ -783,17 +792,4 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
             this.prioritizingThreadPool.shutdownNow();
         }
     }
-
-    /**
-     * Given a read structure return the data types that need to be parsed for this run
-     */
-    private static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
-                                                                    final boolean demultiplex) {
-        if (!readStructure.hasSampleBarcode() || !demultiplex) {
-            return DATA_TYPES_NO_BARCODE;
-        } else {
-            return DATA_TYPES_WITH_BARCODE;
-        }
-    }
-
 }

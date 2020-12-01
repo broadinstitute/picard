@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * Parse cbcls Illumina Basecall files, and use them the to populate
  * ClusterData objects.
  */
-public class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
+class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
     private final CbclReader reader;
     private BarcodeFileReader barcodeReader = null;
 
@@ -72,13 +72,5 @@ public class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
         addReadData(cluster, numReads, cbclData);
 
         return cluster;
-    }
-
-    public static Integer fileToTile(final String fileName) {
-        final Matcher matcher = Pattern.compile("^s_\\d+_(\\d{1,5}).+").matcher(fileName);
-        if (!matcher.matches()) {
-            return null;
-        }
-        return Integer.parseInt(matcher.group(1));
     }
 }

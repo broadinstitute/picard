@@ -65,9 +65,9 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
 
     @Test
     public void testTileNumberComparator() {
-        Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
-        Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
-        Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
+        Assert.assertTrue(BasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
+        Assert.assertTrue(BasecallsConverter.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
+        Assert.assertTrue(BasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
     }
 
 

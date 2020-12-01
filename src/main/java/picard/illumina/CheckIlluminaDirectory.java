@@ -38,8 +38,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
-import static picard.illumina.NewIlluminaBasecallsConverter.getTiledFiles;
-import static picard.illumina.parser.NewIlluminaDataProvider.fileToTile;
+import static picard.illumina.BasecallsConverter.getTiledFiles;
+import static picard.illumina.parser.BaseIlluminaDataProvider.fileToTile;
 
 /**
  * Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and
@@ -116,7 +116,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     protected int doWork() {
         final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
         if (DATA_TYPES.isEmpty()) {
-            DATA_TYPES.addAll(Arrays.asList(IlluminaBasecallsConverter.DATA_TYPES_NO_BARCODE));
+            DATA_TYPES.addAll(Arrays.asList(BasecallsConverter.DATA_TYPES_NO_BARCODE));
         }
 
         final List<Integer> failingLanes = new ArrayList<>();
