@@ -32,9 +32,9 @@ import java.util.regex.Pattern;
 
 class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     private static final Log log = Log.getInstance(NewIlluminaBasecallsConverter.class);
-    private final List<File> cbcls;
+   // private final List<File> cbcls;
     private final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-    private final File[] filterFiles;
+    //private final File[] filterFiles;
     private final Map<String, ThreadPoolExecutorWithExceptions> barcodeWriterThreads = new HashMap<>();
     private final Map<Integer, List<RecordWriter>> completedWork = Collections.synchronizedMap(new HashMap<>());
     private final Map<Integer, File> barcodesFiles = new HashMap<>();
@@ -75,41 +75,12 @@ class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConv
         super(barcodeRecordWriterMap, maxReadsInRamPerTile, tmpDirs, codecPrototype, ignoreUnexpectedBarcodes,
                 demultiplex, outputRecordComparator, bclQualityEvaluationStrategy,
                 outputRecordClass, numProcessors, new IlluminaDataProviderFactory(basecallsDir,
-                        barcodesDir, lane, readStructure, bclQualityEvaluationStrategy));
+                        barcodesDir, lane, readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex)));
         this.tiles = new ArrayList<>();
-
-        barcodeRecordWriterMap.keySet().forEach(barcode -> barcodeWriterThreads.put(barcode, new ThreadPoolExecutorWithExceptions(1)));
-
         final File laneDir = new File(basecallsDir, IlluminaFileUtil.longLaneStr(lane));
-
-        final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
-
-        //CBCLs
-        cbcls = new ArrayList<>();
-        Arrays.asList(cycleDirs)
-                .forEach(cycleDir -> cbcls.addAll(
-                        Arrays.asList(IOUtil.getFilesMatchingRegexp(
-                                cycleDir, "^" + IlluminaFileUtil.longLaneStr(lane) + "_(\\d{1,5}).cbcl$"))));
-
-        if (cbcls.size() == 0) {
-            throw new PicardException("No CBCL files found.");
-        }
-
-        IOUtil.assertFilesAreReadable(cbcls);
-
-        //locs
-        final File locsFile = new File(basecallsDir.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-        try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
-            while (locsFileReader.hasNext()) {
-                locs.add(locsFileReader.next());
-            }
-        }
-        IOUtil.assertFileIsReadable(locsFile);
-        //filter
-
         final Pattern filterRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                 ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
-        filterFiles = getTiledFiles(laneDir, filterRegex);
+        File[] filterFiles = getTiledFiles(laneDir, filterRegex);
         for (final File filterFile : filterFiles) {
             final Matcher tileMatcher = filterRegex.matcher(filterFile.getName());
             if (tileMatcher.matches()) {
@@ -118,12 +89,14 @@ class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConv
         }
         IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
         tiles.sort(TILE_NUMBER_COMPARATOR);
+        setTileLimits(firstTile, tileLimit);
+        barcodeRecordWriterMap.keySet().forEach(barcode -> barcodeWriterThreads.put(barcode, new ThreadPoolExecutorWithExceptions(1)));
 
         if (demultiplex) {
             final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                     ParameterizedFileUtil.makeBarcodeRegex(lane)));
             final File[] barcodeTileFiles = getTiledFiles(barcodesDir, barcodeRegex);
-            if (barcodeTileFiles.length != tiles.size()) {
+            if (barcodeTileFiles.length < tiles.size()) {
                 throw new PicardException(String.format(
                         "Barcode files are required for each tile. Found %d expected %d.",
                         barcodeTileFiles.length, tiles.size()));
@@ -136,7 +109,7 @@ class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConv
             }
         }
 
-        setTileLimits(firstTile, tileLimit);
+
     }
 
     @Override
@@ -228,7 +201,7 @@ class NewIlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConv
 
         @Override
         public void run() {
-            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(cbcls, locs, filterFiles, tileNum, barcodeFile);
+            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(tileNum, barcodeFile);
 
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();

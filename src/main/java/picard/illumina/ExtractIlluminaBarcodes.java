@@ -271,77 +271,22 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final ThreadPoolExecutor pool = new ThreadPoolExecutorWithExceptions(numProcessors);
 
         final List<PerTileBarcodeExtractor> extractors = new ArrayList<>(factory.getAvailableTiles().size());
-
-        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-            final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
-
-            final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
-
-            //CBCLs
-            final List<File> cbcls = Arrays.stream(cycleDirs)
-                    .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
-                            "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
-
-            if (cbcls.size() == 0) {
-                throw new PicardException("No CBCL files found.");
-            }
-
-            IOUtil.assertFilesAreReadable(cbcls);
-
-            //locs
-            final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-            final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-            IOUtil.assertFileIsReadable(locsFile);
-            try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
-                while (locsFileReader.hasNext()) {
-                    locs.add(locsFileReader.next());
-                }
-            }
-
-            //filter
-            final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                    ParameterizedFileUtil.makeLaneTileRegex(".filter", LANE)));
-            final File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
-
-            IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
-
-            for (final int tile : factory.getAvailableTiles()) {
-                final PerTileBarcodeExtractor extractor = new PerTileBarcodeExtractor(
-                        tile,
-                        getBarcodeFile(tile),
-                        barcodeToMetrics,
-                        barcodeLookupMap,
-                        noMatchMetric,
-                        factory,
-                        MINIMUM_BASE_QUALITY,
-                        MAX_NO_CALLS,
-                        MAX_MISMATCHES,
-                        MIN_MISMATCH_DELTA,
-                        cbcls,
-                        locs,
-                        filterFiles,
-                        DISTANCE_MODE
-                );
-                extractors.add(extractor);
-            }
-        } else {
-            // TODO: This is terribly inefficient; we're opening a huge number of files via the extractor constructor and we never close them.
-            for (final int tile : factory.getAvailableTiles()) {
-                final PerTileBarcodeExtractor extractor = new PerTileBarcodeExtractor(
-                        tile,
-                        getBarcodeFile(tile),
-                        barcodeToMetrics,
-                        barcodeLookupMap,
-                        noMatchMetric,
-                        factory,
-                        MINIMUM_BASE_QUALITY,
-                        MAX_NO_CALLS,
-                        MAX_MISMATCHES,
-                        MIN_MISMATCH_DELTA,
-                        DISTANCE_MODE
-                );
-                extractors.add(extractor);
-            }
+        // TODO: This is terribly inefficient; we're opening a huge number of files via the extractor constructor and we never close them.
+        for (final int tile : factory.getAvailableTiles()) {
+            final PerTileBarcodeExtractor extractor = new PerTileBarcodeExtractor(
+                    tile,
+                    getBarcodeFile(tile),
+                    barcodeToMetrics,
+                    barcodeLookupMap,
+                    noMatchMetric,
+                    factory,
+                    MINIMUM_BASE_QUALITY,
+                    MAX_NO_CALLS,
+                    MAX_MISMATCHES,
+                    MIN_MISMATCH_DELTA,
+                    DISTANCE_MODE
+            );
+            extractors.add(extractor);
         }
 
         for (final PerTileBarcodeExtractor extractor : extractors) {
@@ -468,11 +413,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final IlluminaDataType[] datatypes = (MINIMUM_BASE_QUALITY > 0) ?
                 new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores} :
                 new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF};
-        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, OUTPUT_DIR, LANE, readStructure, bclQualityEvaluationStrategy);
-        } else {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, bclQualityEvaluationStrategy, datatypes);
-        }
+        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, bclQualityEvaluationStrategy, datatypes);
 
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);
@@ -776,7 +717,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
             this.barcodeLookupMap = barcodeLookupMap;
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
-            this.provider = factory.makeDataProvider(Collections.singletonList(tile));
+            this.provider = factory.makeDataProvider(tile);
             this.outputReadStructure = factory.getOutputReadStructure();
             this.distanceMode = distanceMode;
         }
@@ -801,7 +742,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             try {
                 //delayed instantiation for new provider
                 if (this.provider == null) {
-                    this.provider = factory.makeDataProvider(cbcls, locs, filterFiles, tile, null);
+                    this.provider = factory.makeDataProvider(tile);
                 }
                 LOG.info("Extracting barcodes for tile " + tile);
 

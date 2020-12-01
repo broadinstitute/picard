@@ -7,9 +7,12 @@ import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,13 @@ import java.util.regex.Pattern;
 public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
     private static final Log log = Log.getInstance(BasecallsConverter.class);
+    public static final IlluminaDataType[] DATA_TYPES_NO_BARCODE =
+            {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
+    private static final IlluminaDataType[] DATA_TYPES_WITH_BARCODE = Arrays.copyOf(DATA_TYPES_NO_BARCODE, DATA_TYPES_NO_BARCODE.length + 1);
+
+    static {
+        DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length - 1] = IlluminaDataType.Barcodes;
+    }
 
     final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     final int maxReadsInRamPerTile;
@@ -147,4 +157,16 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         }
         return s1.compareTo(s2);
     };
+
+    /**
+     * Given a read structure return the data types that need to be parsed for this run
+     */
+    protected static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
+                                                                    final boolean demultiplex) {
+        if (!readStructure.hasSampleBarcode() || !demultiplex) {
+            return DATA_TYPES_NO_BARCODE;
+        } else {
+            return DATA_TYPES_WITH_BARCODE;
+        }
+    }
 }

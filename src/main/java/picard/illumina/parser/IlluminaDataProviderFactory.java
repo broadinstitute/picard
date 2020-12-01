@@ -32,6 +32,7 @@ import picard.illumina.BasecallsConverter;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 import static htsjdk.samtools.util.CollectionUtil.makeSet;
@@ -81,9 +83,9 @@ public class IlluminaDataProviderFactory {
          * see determineFormats
          */
         DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.BaseCalls, makeList(
-                SupportedIlluminaFormat.MultiTileBcl, SupportedIlluminaFormat.Bcl));
+                SupportedIlluminaFormat.MultiTileBcl, SupportedIlluminaFormat.Bcl, SupportedIlluminaFormat.Cbcl));
         DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.QualityScores, makeList(
-                SupportedIlluminaFormat.MultiTileBcl, SupportedIlluminaFormat.Bcl));
+                SupportedIlluminaFormat.MultiTileBcl, SupportedIlluminaFormat.Bcl, SupportedIlluminaFormat.Cbcl));
         DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.PF, makeList(
                 SupportedIlluminaFormat.MultiTileFilter, SupportedIlluminaFormat.Filter));
         DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.Position, makeList(
@@ -98,7 +100,6 @@ public class IlluminaDataProviderFactory {
      * basecallDirectory holds QSeqs or bcls *
      */
     private final File basecallDirectory;
-    private final File barcodesDirectory;
     private final int lane;
 
     /**
@@ -117,7 +118,7 @@ public class IlluminaDataProviderFactory {
     private final IlluminaFileUtil fileUtil;
 
 
-    private List<Integer> availableTiles;
+    private final List<Integer> availableTiles;
 
     private final OutputMapping outputMapping;
     private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
@@ -156,7 +157,6 @@ public class IlluminaDataProviderFactory {
                                        final ReadStructure readStructure,
                                        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final IlluminaDataType... dataTypesArg) {
         this.basecallDirectory = basecallDirectory;
-        this.barcodesDirectory = barcodesDirectory;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         this.lane = lane;
@@ -197,39 +197,6 @@ public class IlluminaDataProviderFactory {
         outputMapping = new OutputMapping(readStructure);
     }
 
-    public IlluminaDataProviderFactory(File basecallDirectory, File barcodesDirectory, int lane,
-                                       ReadStructure readStructure,
-                                       BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
-        this.basecallDirectory = basecallDirectory;
-        this.barcodesDirectory = barcodesDirectory;
-        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
-
-        this.lane = lane;
-
-        this.formatToDataTypes = null;
-        this.availableTiles = null;
-        this.fileUtil = null;
-
-        outputMapping = new OutputMapping(readStructure);
-
-        Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
-        File laneDir = new File(basecallDirectory, IlluminaFileUtil.longLaneStr(lane));
-
-        List<Integer> tiles = new ArrayList<>();
-        File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
-        for (File filterFile : filterFiles) {
-            Matcher tileMatcher = laneTileRegex.matcher(filterFile.getName());
-            if (tileMatcher.matches()) {
-                tiles.add(Integer.valueOf(tileMatcher.group(1)));
-            }
-        }
-
-        IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
-        tiles.sort(BasecallsConverter.TILE_NUMBER_COMPARATOR);
-        availableTiles = tiles;
-    }
-
     /**
      * Sometimes (in the case of skipped reads) the logical read structure of the output cluster data is different from the input
      * readStructure
@@ -256,21 +223,16 @@ public class IlluminaDataProviderFactory {
         this.applyEamssFiltering = applyEamssFiltering;
     }
 
-    /**
-     * Call this method to create a ClusterData iterator over all clusters for a given tile.
-     *
-     * @param cbcls       A list of cbcls to use when creating this data provider.
-     * @param filterFiles A list of the pf filter files to use when creating this data provider.
-     * @return An iterator for reading the Illumina basecall output for the lane specified in the ctor.
-     */
-    public BaseIlluminaDataProvider makeDataProvider(List<File> cbcls,
-                                                    List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
-                                                    File[] filterFiles, int tileNum, File barcodeFile) {
-        return new NewIlluminaDataProvider(cbcls, locs, filterFiles, lane, tileNum, outputMapping, barcodeFile);
+    public BaseIlluminaDataProvider makeDataProvider() {
+        return makeDataProvider((List<Integer>) null,null);
     }
 
-    public BaseIlluminaDataProvider makeDataProvider() {
-        return makeDataProvider(null);
+    public BaseIlluminaDataProvider makeDataProvider(Integer requestedTile) {
+        return makeDataProvider(Collections.singletonList(requestedTile), null);
+    }
+
+    public BaseIlluminaDataProvider makeDataProvider(Integer requestedTile, File barcodeFile) {
+        return makeDataProvider(Collections.singletonList(requestedTile), barcodeFile);
     }
 
     /**
@@ -278,7 +240,7 @@ public class IlluminaDataProviderFactory {
      *
      * @return An iterator for reading the Illumina basecall output for the lane specified in the constructor.
      */
-    public BaseIlluminaDataProvider makeDataProvider(List<Integer> requestedTiles) {
+    public BaseIlluminaDataProvider makeDataProvider(List<Integer> requestedTiles, File barcodeFile) {
         if (requestedTiles == null) {
             requestedTiles = availableTiles;
         } else {
@@ -286,15 +248,50 @@ public class IlluminaDataProviderFactory {
                 throw new PicardException("Zero length tile list supplied to makeDataProvider, you must specify at least 1 tile OR pass NULL to use all available tiles");
             }
         }
+        if (IlluminaFileUtil.hasCbcls(basecallDirectory, lane)) {
+            final File laneDir = new File(basecallDirectory, IlluminaFileUtil.longLaneStr(lane));
 
-        final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataType = new HashMap<>();
-        for (final Map.Entry<SupportedIlluminaFormat, Set<IlluminaDataType>> fmToDt : formatToDataTypes.entrySet()) {
-            parsersToDataType.put(makeParser(fmToDt.getKey(), requestedTiles), fmToDt.getValue());
+            final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+
+            //CBCLs
+            final List<File> cbcls = Arrays.stream(cycleDirs)
+                    .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
+                            "^" + IlluminaFileUtil.longLaneStr(lane) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
+
+            if (cbcls.size() == 0) {
+                throw new PicardException("No CBCL files found.");
+            }
+
+            IOUtil.assertFilesAreReadable(cbcls);
+
+            //locs
+            final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
+            final File locsFile = new File(basecallDirectory.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
+            IOUtil.assertFileIsReadable(locsFile);
+            try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
+                while (locsFileReader.hasNext()) {
+                    locs.add(locsFileReader.next());
+                }
+            }
+
+            //filter
+            final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
+                    ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
+            final File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
+
+            IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
+            //UGH new provider does not support multiple tiles at a time.
+            return new NewIlluminaDataProvider(cbcls, locs, filterFiles, lane, requestedTiles.get(0), outputMapping, barcodeFile);
+        } else {
+            final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataType = new HashMap<>();
+            for (final Map.Entry<SupportedIlluminaFormat, Set<IlluminaDataType>> fmToDt : formatToDataTypes.entrySet()) {
+                parsersToDataType.put(makeParser(fmToDt.getKey(), requestedTiles), fmToDt.getValue());
+            }
+
+            log.debug("The following parsers will be used by IlluminaDataProvider: " + StringUtil.join("," + parsersToDataType.keySet()));
+
+            return new IlluminaDataProvider(outputMapping, parsersToDataType, basecallDirectory, lane);
         }
-
-        log.debug("The following parsers will be used by IlluminaDataProvider: " + StringUtil.join("," + parsersToDataType.keySet()));
-
-        return new IlluminaDataProvider(outputMapping, parsersToDataType, basecallDirectory, lane);
     }
 
     /**

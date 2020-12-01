@@ -102,14 +102,6 @@ class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConvert
 
     private static final Log log = Log.getInstance(IlluminaBasecallsConverter.class);
 
-    public static final IlluminaDataType[] DATA_TYPES_NO_BARCODE =
-            {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
-    private static final IlluminaDataType[] DATA_TYPES_WITH_BARCODE = Arrays.copyOf(DATA_TYPES_NO_BARCODE, DATA_TYPES_NO_BARCODE.length + 1);
-
-    static {
-        DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length - 1] = IlluminaDataType.Barcodes;
-    }
-
     // If FORCE_GC, this is non-null.  For production this is not necessary because it will run until the JVM
     // ends, but for unit testing it is desirable to stop the task when done with this instance.
     private final TimerTask gcTimerTask;
@@ -477,7 +469,7 @@ class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConvert
          * this tile.
          */
         public void process() {
-            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(Collections.singletonList(this.tile.getNumber()));
+            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(this.tile.getNumber());
             log.debug(String.format("Reading data from tile %s ...", tile.getNumber()));
 
             while (dataProvider.hasNext()) {
@@ -800,17 +792,4 @@ class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConvert
             this.prioritizingThreadPool.shutdownNow();
         }
     }
-
-    /**
-     * Given a read structure return the data types that need to be parsed for this run
-     */
-    private static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
-                                                                    final boolean demultiplex) {
-        if (!readStructure.hasSampleBarcode() || !demultiplex) {
-            return DATA_TYPES_NO_BARCODE;
-        } else {
-            return DATA_TYPES_WITH_BARCODE;
-        }
-    }
-
 }

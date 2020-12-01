@@ -39,26 +39,16 @@ import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
-import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ParameterizedFileUtil;
 import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.illumina.parser.readers.LocsFileReader;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 /**
@@ -174,10 +164,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                     barcodeToMetricCounts.put(barcode.toString(), new IlluminaMetricCounts(barcode.toString(), barcodeName, LANE));
                 }
             }
-            if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure, bclQualityEvaluationStrategy);
-            } else {
-                factory = barcodeToMetricCounts.isEmpty()
+            factory = barcodeToMetricCounts.isEmpty()
                         ? new IlluminaDataProviderFactory(
                         BASECALLS_DIR,
                         BARCODES_DIR,
@@ -195,60 +182,20 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                         IlluminaDataType.PF,
                         IlluminaDataType.Position,
                         IlluminaDataType.Barcodes);
-            }
         }
 
         unmatchedBarcode = StringUtil.repeatCharNTimes('N', barcodeLength);
 
         //Initialize data provider, iterate over clusters, and collect statistics
-        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-            setupNewDataProvider(factory);
-        } else {
-            final BaseIlluminaDataProvider provider = factory.makeDataProvider();
-
-            while (provider.hasNext()) {
-                final ClusterData cluster = provider.next();
-                addCluster(cluster);
-            }
-        }
+        setupDataProvider(factory);
 
         onComplete();
         return 0;
     }
 
-    private void setupNewDataProvider(final IlluminaDataProviderFactory factory) {
+    private void setupDataProvider(final IlluminaDataProviderFactory factory) {
         if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
-        final File laneDir = new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(LANE));
 
-        final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
-
-        //CBCLs
-        final List<File> cbcls = Arrays.stream(cycleDirs)
-                .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
-                        "^" + IlluminaFileUtil.longLaneStr(LANE) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
-
-        if (cbcls.size() == 0) {
-            throw new PicardException("No CBCL files found.");
-        }
-
-        IOUtil.assertFilesAreReadable(cbcls);
-
-        //locs
-        final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-        final File locsFile = new File(BASECALLS_DIR.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-        IOUtil.assertFileIsReadable(locsFile);
-        try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
-            while (locsFileReader.hasNext()) {
-                locs.add(locsFileReader.next());
-            }
-        }
-
-        //filter
-        final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                ParameterizedFileUtil.makeLaneTileRegex(".filter", LANE)));
-        final File[] filterFiles = NewIlluminaBasecallsConverter.getTiledFiles(laneDir, laneTileRegex);
-
-        IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
         final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                 ParameterizedFileUtil.makeBarcodeRegex(LANE)));
 
@@ -263,7 +210,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
 
         factory.getAvailableTiles().forEach(tile -> {
             final File barcodeFile = barcodesFiles.get(tile);
-            final BaseIlluminaDataProvider provider = factory.makeDataProvider(cbcls, locs, filterFiles, tile, barcodeFile);
+            final BaseIlluminaDataProvider provider = factory.makeDataProvider(tile, barcodeFile);
             while (provider.hasNext()) {
                 addCluster(provider.next());
             }
