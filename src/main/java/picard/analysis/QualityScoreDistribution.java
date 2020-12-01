@@ -100,7 +100,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        if (checkRInstallation(CHART_OUTPUT != null)) {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
         return super.customCommandLineValidation();
