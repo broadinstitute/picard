@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private final File basecallsDir;
-    private final int lane;
+    private final int[] lanes;
     private final ReadStructure readStructure;
     private final Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
     private Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
@@ -45,15 +45,15 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * Constructs a new builder used for creating BasecallsConverter objects.
      *
      * @param basecallsDir           Where to read basecalls from.
-     * @param lane                   What lane to process.
+     * @param lanes                  What lanes to process.
      * @param readStructure          How to interpret each cluster.
      * @param barcodeRecordWriterMap Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
      *                               one writer stored with key=null.
      */
-    public BasecallsConverterBuilder(final File basecallsDir, final Integer lane, final ReadStructure readStructure,
+    public BasecallsConverterBuilder(final File basecallsDir, final int[] lanes, final ReadStructure readStructure,
                                      Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap) {
         this.basecallsDir = basecallsDir;
-        this.lane = lane;
+        this.lanes = lanes;
         this.readStructure = readStructure;
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
     }
@@ -88,7 +88,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      */
     public BasecallsConverter<CLUSTER_OUTPUT_RECORD> build() {
         if (outputRecordComparator != null && codecPrototype != null && outputRecordClass != null && tmpDirs != null) {
-            return new SortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
+            return new SortedBasecallsConverter<>(basecallsDir, barcodesDir, lanes, readStructure,
                     barcodeRecordWriterMap, demultiplex, maxReadsInRamPerThread,
                     tmpDirs, numProcessors,
                     firstTile, tileLimit, outputRecordComparator,
@@ -96,7 +96,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
                     outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering,
                     includeNonPfReads, writerPool);
         } else {
-            return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
+            return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lanes, readStructure,
                     barcodeRecordWriterMap, demultiplex, firstTile, tileLimit,
                     bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads,
                     writerPool);
