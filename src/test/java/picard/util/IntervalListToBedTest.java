@@ -13,17 +13,29 @@ import java.util.List;
  */
 public class IntervalListToBedTest {
     private static final String TEST_DATA_DIR = "testdata/picard/util/";
+
+    // This interval list has a dictionary with chr5 __before__ chr4 but the intervals themselves are
+    // in "natural order"
     private final File INTERVAL_LIST = new File(TEST_DATA_DIR, "interval_list_to_bed_test.interval_list");
+
+    // this interval list has a dictionary with chr5 __before__ chr4 and in addition the intervals themselves are
+    // in "random" order
     private final File UNSORTED_INTERVAL_LIST = new File(TEST_DATA_DIR, "unsorted_interval_list_to_bed_test.interval_list");
+
+    // Since the interval-lists dictionary has the chr4 and chr5 out of karyotype order (chr4 is __after__ chr5)
+    // this bed file has the chr4 line after the chr5 ones
     private final File BED_FILE = new File(TEST_DATA_DIR, "interval_list_to_bed_test.bed");
+
+    // This bed file is sorted in "natural order", since it should be the result of the "no-sort" conversion
+    // of INTERVAL_LIST.
     private final File NO_SORT_BED_FILE = new File(TEST_DATA_DIR, "no_sort_interval_list_to_bed_test.bed");
 
     @DataProvider()
     Object[][] testConvertILToBedData() {
         return new Object[][]{
-                {INTERVAL_LIST, BED_FILE, true},
-                {INTERVAL_LIST, NO_SORT_BED_FILE, false},
-                {UNSORTED_INTERVAL_LIST, BED_FILE, true},
+                {INTERVAL_LIST, BED_FILE, true}, // sort the intervals resulting in chr5 before chr4
+                {UNSORTED_INTERVAL_LIST, BED_FILE, true}, // sort this messy file, resulting in the same sorted result as in the previous case.
+                {INTERVAL_LIST, NO_SORT_BED_FILE, false}, // do not sort the intervals, resulting in the original, natural order
         };
     }
 
