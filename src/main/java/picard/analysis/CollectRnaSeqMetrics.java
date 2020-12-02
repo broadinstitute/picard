@@ -145,6 +145,11 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if ( RIBOSOMAL_INTERVALS == null && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
+
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+
         return super.customCommandLineValidation();
     }
 
