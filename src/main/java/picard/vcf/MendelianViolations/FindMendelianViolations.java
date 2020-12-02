@@ -175,7 +175,7 @@ public class FindMendelianViolations extends CommandLineProgram {
 
     @Argument(doc = "List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 & HG38 coordinates.",
     shortName = "PAR")
-    public Set<String> PSEUDO_AUTOSOMAL_REGIONS = CollectionUtil.makeSet("X:60001-2699520", "X:154931044-155260560", "chrX:10000-2781479", "chrX:155701383-156030895");
+    public Set<String> PSEUDO_AUTOSOMAL_REGIONS = CollectionUtil.makeSet("X:60001-2699520", "X:154931044-155260560", "chrX:10001-2781479", "chrX:155701383-156030895");
 
     @Argument(doc = "The number of threads that will be used to collect the metrics. ")
     public int THREAD_COUNT = 1;
