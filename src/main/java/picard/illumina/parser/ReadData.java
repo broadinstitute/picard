@@ -31,8 +31,6 @@ package picard.illumina.parser;
 public class ReadData {
     private byte[] bases;
     private byte[] qualities;
-    private FourChannelIntensityData rawIntensities;
-    private FourChannelIntensityData noise;
     private ReadType readType;
 
     public ReadData() {
@@ -54,17 +52,6 @@ public class ReadData {
     }
 
     /**
-     * @return Noise values as produced by Illumina software, converted to shorts.
-     */
-    public FourChannelIntensityData getNoise() {
-        return noise;
-    }
-
-    public void setNoise(final FourChannelIntensityData noise) {
-        this.noise = noise;
-    }
-
-    /**
      * @return Phred-binary scaled qualities.  E.g. Q20 is the byte with value==20.
      */
     public byte[] getQualities() {
@@ -73,17 +60,6 @@ public class ReadData {
 
     public void setQualities(final byte[] qualities) {
         this.qualities = qualities;
-    }
-
-    /**
-     * @return Raw intensity values as produced by Illumina software, converted to shorts.
-     */
-    public FourChannelIntensityData getRawIntensities() {
-        return rawIntensities;
-    }
-
-    public void setRawIntensities(final FourChannelIntensityData rawIntensities) {
-        this.rawIntensities = rawIntensities;
     }
 
     public ReadType getReadType() {

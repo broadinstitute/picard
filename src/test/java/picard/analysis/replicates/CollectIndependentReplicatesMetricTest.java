@@ -46,7 +46,7 @@ public class CollectIndependentReplicatesMetricTest {
     @BeforeTest
     public void prepareBams() throws IOException {
 
-        sams.keySet().stream().forEach(key -> {
+        sams.keySet().forEach(key -> {
             try {
                 bams.put(key, convertSamToBam(sams.get(key)));
                 bams.get(key).deleteOnExit();

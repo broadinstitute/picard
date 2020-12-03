@@ -222,6 +222,10 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
             errorMsgs.add("MINIMUM_READ_LENGTH must be > 0");
         }
 
+        if (!checkRInstallation(R_SCRIPT != null)) {
+            errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
+        }
+
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 }

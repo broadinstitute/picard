@@ -128,11 +128,16 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
-         if (MINIMUM_PCT < 0 || MINIMUM_PCT > 0.5) {
-             return new String[]{"MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded."};
-         }
+        final List<String> errorMsgs = new ArrayList<String>();
+        if (MINIMUM_PCT < 0 || MINIMUM_PCT > 0.5) {
+            errorMsgs.add("MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded.");
+        }
 
-         return super.customCommandLineValidation();
+        if (!checkRInstallation(Histogram_FILE != null)) {
+            errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
+        }
+
+        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 
     @Override protected boolean usesNoRefReads() { return false; }

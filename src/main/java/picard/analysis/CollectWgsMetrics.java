@@ -209,6 +209,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         final SamReader in = getSamReader();
         final AbstractLocusIterator iterator = getLocusIterator(in);
 
+        // Verify the sequence dictionaries match
+        if (!this.header.getSequenceDictionary().isEmpty()) {
+            SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
+        }
+
         final List<SamRecordFilter> filters = new ArrayList<>();
         final CountingFilter adapterFilter = new CountingAdapterFilter();
         final CountingFilter mapqFilter = new CountingMapQFilter(MINIMUM_MAPPING_QUALITY);
