@@ -515,9 +515,9 @@ public class IntervalListTools extends CommandLineProgram {
         // Outputs:
         //  - an IntervalList that is uniqued with overlapping intervals merged, and abutting intervals handled per the boolean flag.
         // TODO: Move this to htsjdk eventually
-        final boolean CONCATENATE_NAMES = true;
-        final boolean ENFORCE_SAME_STRANDS = false;
-        List<Interval> newIntervals = IntervalList.getUniqueIntervals(nonUnique, mergeAbutting, CONCATENATE_NAMES, ENFORCE_SAME_STRANDS);
+        final boolean concatenateNames = true;
+        final boolean enforceSameStrands = false;
+        List<Interval> newIntervals = IntervalList.getUniqueIntervals(nonUnique, mergeAbutting, concatenateNames, enforceSameStrands);
         IntervalList newList = new IntervalList(nonUnique.getHeader());
         newList.addall(newIntervals);
         return newList;
