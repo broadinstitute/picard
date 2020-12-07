@@ -38,7 +38,6 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.BaseCallingProgramGroup;
-import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.AdapterPair;
@@ -306,15 +305,25 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         final boolean demultiplex = readStructure.hasSampleBarcode();
-        basecallsConverter = new BasecallsConverterFactory<SAMRecordsForCluster>().getConverter(
-                BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                barcodeSamWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
-                TMP_DIR, NUM_PROCESSORS,
-                FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
-                new Codec(numOutputRecords),
-                SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES,
-                APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS
-        );
+        basecallsConverter = new BasecallsConverterBuilder<SAMRecordsForCluster>(BASECALLS_DIR)
+                .barcodesDir(BARCODES_DIR)
+                .lane(LANE)
+                .readStructure(readStructure)
+                .withDemultiplex(demultiplex)
+                .maxReadsInRamPerTile(Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords))
+                .tmpDirs(TMP_DIR)
+                .numProcessors(NUM_PROCESSORS)
+                .firstTile(FIRST_TILE)
+                .tileLimit(TILE_LIMIT)
+                .barcodeRecordWriterMap(barcodeSamWriterMap)
+                .outputRecordComparator(new QueryNameComparator())
+                .codecPrototype(new Codec(numOutputRecords))
+                .outputRecordClass(SAMRecordsForCluster.class)
+                .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy)
+                .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
+                .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
+                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
+                .build();
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).

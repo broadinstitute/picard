@@ -200,7 +200,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                 ParameterizedFileUtil.makeBarcodeRegex(LANE)));
 
         final Map<Integer, File> barcodesFiles = new HashMap<>();
-        for (final File barcodeFile : NewIlluminaBasecallsConverter.getTiledFiles(BARCODES_DIR, barcodeRegex)) {
+        for (final File barcodeFile : BasecallsConverter.getTiledFiles(BARCODES_DIR, barcodeRegex)) {
             final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
             if (tileMatcher.matches()) {
                 IOUtil.assertFileIsReadable(barcodeFile);

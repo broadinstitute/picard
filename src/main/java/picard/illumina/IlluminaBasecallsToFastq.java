@@ -46,7 +46,6 @@ import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
 import picard.illumina.parser.ClusterData;
-import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -273,16 +272,27 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
 
-        basecallsConverter = new BasecallsConverterFactory<FastqRecordsForCluster>().getConverter(
-                BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
-                TMP_DIR, NUM_PROCESSORS,
-                FIRST_TILE, TILE_LIMIT, queryNameComparator,
-                new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                        readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()),
-                FastqRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES,
-                APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS
-        );
+        basecallsConverter = new BasecallsConverterBuilder<FastqRecordsForCluster>(BASECALLS_DIR)
+                .barcodesDir(BARCODES_DIR)
+                .lane(LANE)
+                .readStructure(readStructure)
+                .withDemultiplex(demultiplex)
+                .maxReadsInRamPerTile(Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster))
+                .tmpDirs(TMP_DIR)
+                .numProcessors(NUM_PROCESSORS)
+                .firstTile(FIRST_TILE)
+                .tileLimit(TILE_LIMIT)
+                .barcodeRecordWriterMap(sampleBarcodeFastqWriterMap)
+                .outputRecordComparator(queryNameComparator)
+                .codecPrototype(new FastqRecordsForClusterCodec(readStructure.templates.length(),
+                        readStructure.sampleBarcodes.length(),
+                        readStructure.molecularBarcode.length()))
+                .outputRecordClass(FastqRecordsForCluster.class)
+                .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy)
+                .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
+                .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
+                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
+                .build();
 
         basecallsConverter.setConverter(
                 new ClusterToFastqRecordsForClusterConverter(
@@ -448,7 +458,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * Passed to IlluminaBaseCallsConverter to do the conversion from input format to output format.
      */
     class ClusterToFastqRecordsForClusterConverter
-            implements IlluminaBasecallsConverter.ClusterDataConverter<FastqRecordsForCluster> {
+            implements BasecallsConverter.ClusterDataConverter<FastqRecordsForCluster> {
 
         private final int[] templateIndices;
         private final int[] sampleBarcodeIndicies;
