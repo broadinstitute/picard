@@ -265,7 +265,7 @@ public class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
         @Override
         public void run() {
-            log.info("Writing out barcode " + barcode);
+            log.debug("Writing out barcode " + barcode);
             for (final CLUSTER_OUTPUT_RECORD record : recordCollection) {
                 writer.write(record);
                 writeProgressLogger.record(null, 0);
@@ -288,7 +288,7 @@ public class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
         @Override
         public void run() {
-            log.info("Closing writer for barcode " + barcode);
+            log.debug("Closing writer for barcode " + barcode);
             this.writer.close();
         }
     }

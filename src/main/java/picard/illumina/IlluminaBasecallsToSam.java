@@ -225,10 +225,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             optional = true)
     public Integer PROCESS_SINGLE_TILE;
 
-    @Argument(doc = "If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed " +
-            "is larger than the available memory.")
-    public Boolean FORCE_GC = true;
-
     @Argument(doc = "Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads" +
             " and convert their quality scores to Q2.")
     public boolean APPLY_EAMSS_FILTER = true;
@@ -305,20 +301,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         final boolean demultiplex = readStructure.hasSampleBarcode();
-        basecallsConverter = new BasecallsConverterBuilder<SAMRecordsForCluster>(BASECALLS_DIR)
+        basecallsConverter = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, barcodeSamWriterMap)
                 .barcodesDir(BARCODES_DIR)
-                .lane(LANE)
-                .readStructure(readStructure)
                 .withDemultiplex(demultiplex)
-                .maxReadsInRamPerTile(Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords))
-                .tmpDirs(TMP_DIR)
                 .numProcessors(NUM_PROCESSORS)
                 .firstTile(FIRST_TILE)
                 .tileLimit(TILE_LIMIT)
-                .barcodeRecordWriterMap(barcodeSamWriterMap)
-                .outputRecordComparator(new QueryNameComparator())
-                .codecPrototype(new Codec(numOutputRecords))
-                .outputRecordClass(SAMRecordsForCluster.class)
+                .withSorting(new QueryNameComparator(),
+                        new Codec(numOutputRecords),
+                        SAMRecordsForCluster.class,
+                        Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
+                        TMP_DIR)
                 .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy)
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)

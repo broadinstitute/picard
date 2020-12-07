@@ -211,8 +211,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
     private final FastqWriterFactory fastqWriterFactory = new FastqWriterFactory();
     private ReadNameEncoder readNameEncoder;
-    private static final Comparator<FastqRecordsForCluster> queryNameComparator = (r1, r2) -> SAMRecordQueryNameComparator.compareReadNames(r1.templateRecords[0].getReadHeader(),
-            r2.templateRecords[0].getReadHeader());
+    private static final Comparator<FastqRecordsForCluster> queryNameComparator = (r1, r2) ->
+            SAMRecordQueryNameComparator.compareReadNames(
+                    r1.templateRecords[0].getReadName(),
+                    r2.templateRecords[0].getReadName());
 
     @Override
     protected int doWork() {
@@ -272,22 +274,18 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
 
-        basecallsConverter = new BasecallsConverterBuilder<FastqRecordsForCluster>(BASECALLS_DIR)
+        basecallsConverter = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, sampleBarcodeFastqWriterMap)
                 .barcodesDir(BARCODES_DIR)
-                .lane(LANE)
-                .readStructure(readStructure)
                 .withDemultiplex(demultiplex)
-                .maxReadsInRamPerTile(Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster))
-                .tmpDirs(TMP_DIR)
                 .numProcessors(NUM_PROCESSORS)
                 .firstTile(FIRST_TILE)
                 .tileLimit(TILE_LIMIT)
-                .barcodeRecordWriterMap(sampleBarcodeFastqWriterMap)
-                .outputRecordComparator(queryNameComparator)
-                .codecPrototype(new FastqRecordsForClusterCodec(readStructure.templates.length(),
+                .withSorting(queryNameComparator, new FastqRecordsForClusterCodec(readStructure.templates.length(),
                         readStructure.sampleBarcodes.length(),
-                        readStructure.molecularBarcode.length()))
-                .outputRecordClass(FastqRecordsForCluster.class)
+                        readStructure.molecularBarcode.length()),
+                        FastqRecordsForCluster.class,
+                        Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
+                        TMP_DIR)
                 .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy)
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)

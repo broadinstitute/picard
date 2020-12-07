@@ -1,36 +1,46 @@
 package picard.illumina;
 
+import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.util.SortingCollection;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
+
     File basecallsDir;
     File barcodesDir;
     int lane;
     ReadStructure readStructure;
-    Map<String, ? extends BasecallsConverter.ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
-    boolean demultiplex;
-    int maxReadsInRamPerTile;
-    List<File> tmpDirs;
-    int numProcessors;
-    Integer firstTile;
-    Integer tileLimit;
+
     Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
-    BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
+
+    Map<String, ? extends BasecallsConverter.ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
+    boolean demultiplex = false;
+    int maxReadsInRamPerTile = 1200000;
+    List<File> tmpDirs = Collections.singletonList(new File(System.getProperty("java.io.tmpdir")));
+    int numProcessors = Runtime.getRuntime().availableProcessors();
+    Integer firstTile = null;
+    Integer tileLimit = null;
+    BclQualityEvaluationStrategy bclQualityEvaluationStrategy =
+            new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);;
     boolean ignoreUnexpectedBarcodes = false;
     boolean applyEamssFiltering = false;
     boolean includeNonPfReads = false;
 
-    public BasecallsConverterBuilder(final File basecallsDir) {
+    public BasecallsConverterBuilder(final File basecallsDir, final Integer lane, final ReadStructure readStructure,
+                                     Map<String, ? extends BasecallsConverter.ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap) {
         this.basecallsDir = basecallsDir;
+        this.lane = lane;
+        this.readStructure = readStructure;
+        this.barcodeRecordWriterMap = barcodeRecordWriterMap;
     }
 
     public BasecallsConverter<CLUSTER_OUTPUT_RECORD> build() {
@@ -62,18 +72,17 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
         return this;
     }
 
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> outputRecordComparator(Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator) {
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withSorting(
+            Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
+            SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
+            Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+            Integer maxReadsInRamPerTile,
+            List<File> tmpDirs) {
         this.outputRecordComparator = outputRecordComparator;
-        return this;
-    }
-
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> codecPrototype(SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype) {
         this.codecPrototype = codecPrototype;
-        return this;
-    }
-
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> outputRecordClass(Class<CLUSTER_OUTPUT_RECORD> outputRecordClass) {
         this.outputRecordClass = outputRecordClass;
+        this.maxReadsInRamPerTile = maxReadsInRamPerTile;
+        this.tmpDirs = tmpDirs;
         return this;
     }
 
@@ -92,16 +101,6 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
         return this;
     }
 
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> tmpDirs(List<File> tmpDirs) {
-        this.tmpDirs = tmpDirs;
-        return this;
-    }
-
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> maxReadsInRamPerTile(Integer maxReadsInRamPerTile) {
-        this.maxReadsInRamPerTile = maxReadsInRamPerTile;
-        return this;
-    }
-
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withDemultiplex(boolean demultiplex) {
         this.demultiplex = demultiplex;
         return this;
@@ -113,20 +112,8 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
         return this;
     }
 
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> readStructure(ReadStructure readStructure) {
-        this.readStructure = readStructure;
-        return this;
-    }
-
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> lane(Integer lane) {
-        this.lane = lane;
-        return this;
-    }
-
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> barcodesDir(File barcodesDir) {
         this.barcodesDir = (barcodesDir == null) ? basecallsDir : barcodesDir;
         return this;
     }
-
-
 }
