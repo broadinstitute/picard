@@ -79,7 +79,7 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
         clusterData.setY(cbclData.getPositionInfo().yQseqCoord);
     }
 
-    abstract void seekToTile(int seekAfterFirstRead);
+    abstract void seekToTile(Integer seekAfterFirstRead);
 
     public static Integer fileToTile(final String fileName) {
         final Matcher matcher = Pattern.compile("^s_\\d+_(\\d{1,5}).+").matcher(fileName);

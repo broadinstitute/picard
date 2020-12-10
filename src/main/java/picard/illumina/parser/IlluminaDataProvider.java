@@ -160,7 +160,7 @@ class IlluminaDataProvider extends BaseIlluminaDataProvider {
      * Jump so that the next record returned will be from the specified tile.
      */
     @Override
-    public void seekToTile(final int oneBasedTileNumber) {
+    public void seekToTile(final Integer oneBasedTileNumber) {
         for (final IlluminaParser parser : parsers) {
             parser.seekToTile(oneBasedTileNumber);
         }

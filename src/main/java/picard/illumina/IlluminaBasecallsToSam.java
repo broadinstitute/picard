@@ -260,7 +260,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "Should the barcode quality be included when the sample barcode is included?")
     public boolean INCLUDE_BARCODE_QUALITY = false;
 
-    private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<>();
+    private Map<String, SAMFileWriterWrapper> barcodeSamWriterMap;
     private ReadStructure readStructure;
     private BasecallsConverter<SAMRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
@@ -268,7 +268,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Override
     protected int doWork() {
         initialize();
-        basecallsConverter.doTileProcessing();
+        basecallsConverter.processTilesAndWritePerSampleOutputs(barcodeSamWriterMap.keySet());
         return 0;
     }
 
@@ -276,7 +276,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
-        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
@@ -287,6 +286,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         if (OUTPUT != null) {
+            barcodeSamWriterMap = new HashMap<>(1, 1.0f);
             barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), true));
         } else {
             populateWritersFromLibraryParams();
@@ -307,16 +307,15 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 .numProcessors(NUM_PROCESSORS)
                 .firstTile(FIRST_TILE)
                 .tileLimit(TILE_LIMIT)
-                .withSorting(new QueryNameComparator(),
-                        new Codec(numOutputRecords),
-                        SAMRecordsForCluster.class,
-                        Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
-                        TMP_DIR)
-                .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy)
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
                 .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
-                .build();
+                .buildSortingBasecallsConverter(
+                        new QueryNameComparator(),
+                        new Codec(numOutputRecords),
+                        SAMRecordsForCluster.class,
+                        Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
+                        TMP_DIR);
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).
@@ -403,7 +402,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Set<String> rgTagColumns = findAndFilterExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
         checkRgTagColumns(rgTagColumns);
 
-        for (final TabbedTextFileWithHeaderParser.Row row : libraryParamsParser) {
+        List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
+        barcodeSamWriterMap = new HashMap<>(rows.size(), 1);
+
+        for (final TabbedTextFileWithHeaderParser.Row row : rows) {
             List<String> barcodeValues = null;
 
             if (!barcodeColumnLabels.isEmpty()) {
@@ -555,7 +557,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     }
 
     private static final class SAMFileWriterWrapper
-            implements BasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {
+            implements SortedBasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {
         public final SAMFileWriter writer;
 
         private SAMFileWriterWrapper(final SAMFileWriter writer) {

@@ -16,6 +16,7 @@ import java.util.zip.GZIPInputStream;
 public class BaseBclReader {
     private static final byte BASE_MASK = 0x0003;
     private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
+    private static final byte NO_CALL_BASE = (byte) '.';
     final InputStream[] streams;
     final File[] streamFiles;
     final int[] outputLengths;
@@ -89,8 +90,8 @@ public class BaseBclReader {
 
     void decodeBasecall(final BclData bclData, final int read, final int cycle, final int byteToDecode) {
         if (byteToDecode == 0) {
-            bclData.bases[read][cycle] = (byte) '.';
-            bclData.qualities[read][cycle] = (byte) 2;
+            bclData.bases[read][cycle] = NO_CALL_BASE;
+            bclData.qualities[read][cycle] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
         } else {
             bclData.bases[read][cycle] = BASE_LOOKUP[byteToDecode & BASE_MASK];
             bclData.qualities[read][cycle] = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte) (byteToDecode >>> 2));
@@ -100,8 +101,8 @@ public class BaseBclReader {
     void decodeQualityBinnedBasecall(final BclData bclData, final int read, final int cycle, final int byteToDecode,
                                      final CycleData cycleData) {
         if (byteToDecode == 0) {
-            bclData.bases[read][cycle] = (byte) '.';
-            bclData.qualities[read][cycle] = 2;
+            bclData.bases[read][cycle] = NO_CALL_BASE;
+            bclData.qualities[read][cycle] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
         } else {
             bclData.bases[read][cycle] = BASE_LOOKUP[byteToDecode & BASE_MASK];
             bclData.qualities[read][cycle] = cycleData.qualityBins[byteToDecode >>> 2];

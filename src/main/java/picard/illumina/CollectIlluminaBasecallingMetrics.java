@@ -194,23 +194,8 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     }
 
     private void setupDataProvider(final IlluminaDataProviderFactory factory) {
-        if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
-
-        final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                ParameterizedFileUtil.makeBarcodeRegex(LANE)));
-
-        final Map<Integer, File> barcodesFiles = new HashMap<>();
-        for (final File barcodeFile : BasecallsConverter.getTiledFiles(BARCODES_DIR, barcodeRegex)) {
-            final Matcher tileMatcher = barcodeRegex.matcher(barcodeFile.getName());
-            if (tileMatcher.matches()) {
-                IOUtil.assertFileIsReadable(barcodeFile);
-                barcodesFiles.put(Integer.valueOf(tileMatcher.group(1)), barcodeFile);
-            }
-        }
-
         factory.getAvailableTiles().forEach(tile -> {
-            final File barcodeFile = barcodesFiles.get(tile);
-            final BaseIlluminaDataProvider provider = factory.makeDataProvider(tile, barcodeFile);
+            final BaseIlluminaDataProvider provider = factory.makeDataProvider(tile);
             while (provider.hasNext()) {
                 addCluster(provider.next());
             }

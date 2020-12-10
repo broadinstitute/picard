@@ -24,15 +24,12 @@
 
 package picard.illumina.parser;
 
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
-import picard.illumina.BasecallsConverter;
+import picard.illumina.SortedBasecallsConverter;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
-import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,13 +43,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 import static htsjdk.samtools.util.CollectionUtil.makeSet;
-import static picard.illumina.BasecallsConverter.getTiledFiles;
 
 /**
  * IlluminaDataProviderFactory accepts options for parsing Illumina data files for a lane and creates an
@@ -145,13 +138,14 @@ public class IlluminaDataProviderFactory {
     /**
      * Create factory with the specified options, one that favors using QSeqs over all other files
      *
-     * @param basecallDirectory The baseCalls directory of a complete Illumina directory.  Files are found by searching relative to this folder (some of them higher up in the directory tree).
-     * @param barcodesDirectory The barcodesDirectory with barcode files extracted by 'ExtractIlluminaBarcodes' (optional, use basecallDirectory if not specified)
-     * @param lane              Which lane to iterate over.
-     * @param readStructure     The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
-     *                          the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
-     *                          in a run's QSeq files
-     * @param dataTypesArg      Which data types to read
+     * @param basecallDirectory            The baseCalls directory of a complete Illumina directory.  Files are found by searching relative to this folder (some of them higher up in the directory tree).
+     * @param barcodesDirectory            The barcodesDirectory with barcode files extracted by 'ExtractIlluminaBarcodes' (optional, use basecallDirectory if not specified)
+     * @param lane                         Which lane to iterate over.
+     * @param readStructure                The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
+     *                                     the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
+     *                                     in a run's QSeq files
+     * @param bclQualityEvaluationStrategy The basecall quality evaluation strategy that is applyed to decoded base calls.
+     * @param dataTypesArg                 Which data types to read
      */
     public IlluminaDataProviderFactory(final File basecallDirectory, File barcodesDirectory, final int lane,
                                        final ReadStructure readStructure,
@@ -188,7 +182,7 @@ public class IlluminaDataProviderFactory {
         if (availableTiles.isEmpty()) {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
-        availableTiles.sort(BasecallsConverter.TILE_NUMBER_COMPARATOR);
+        availableTiles.sort(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR);
 
         //fill in available tiles for run based files
         formatToDataTypes.keySet().stream().map(fileUtil::getUtil)
@@ -224,15 +218,11 @@ public class IlluminaDataProviderFactory {
     }
 
     public BaseIlluminaDataProvider makeDataProvider() {
-        return makeDataProvider((List<Integer>) null,null);
+        return makeDataProvider((List<Integer>) null);
     }
 
-    public BaseIlluminaDataProvider makeDataProvider(Integer requestedTile) {
-        return makeDataProvider(Collections.singletonList(requestedTile), null);
-    }
-
-    public BaseIlluminaDataProvider makeDataProvider(Integer requestedTile, File barcodeFile) {
-        return makeDataProvider(Collections.singletonList(requestedTile), barcodeFile);
+   public BaseIlluminaDataProvider makeDataProvider(Integer requestedTile) {
+        return makeDataProvider(Collections.singletonList(requestedTile));
     }
 
     /**
@@ -240,7 +230,7 @@ public class IlluminaDataProviderFactory {
      *
      * @return An iterator for reading the Illumina basecall output for the lane specified in the constructor.
      */
-    public BaseIlluminaDataProvider makeDataProvider(List<Integer> requestedTiles, File barcodeFile) {
+    public BaseIlluminaDataProvider makeDataProvider(List<Integer> requestedTiles) {
         if (requestedTiles == null) {
             requestedTiles = availableTiles;
         } else {
@@ -249,39 +239,7 @@ public class IlluminaDataProviderFactory {
             }
         }
         if (IlluminaFileUtil.hasCbcls(basecallDirectory, lane)) {
-            final File laneDir = new File(basecallDirectory, IlluminaFileUtil.longLaneStr(lane));
-
-            final File[] cycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
-
-            //CBCLs
-            final List<File> cbcls = Arrays.stream(cycleDirs)
-                    .flatMap(cycleDir -> Arrays.stream(IOUtil.getFilesMatchingRegexp(cycleDir,
-                            "^" + IlluminaFileUtil.longLaneStr(lane) + "_(\\d{1,5}).cbcl$"))).collect(Collectors.toList());
-
-            if (cbcls.size() == 0) {
-                throw new PicardException("No CBCL files found.");
-            }
-
-            IOUtil.assertFilesAreReadable(cbcls);
-
-            //locs
-            final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = new ArrayList<>();
-            final File locsFile = new File(basecallDirectory.getParentFile(), AbstractIlluminaPositionFileReader.S_LOCS_FILE);
-            IOUtil.assertFileIsReadable(locsFile);
-            try (LocsFileReader locsFileReader = new LocsFileReader(locsFile)) {
-                while (locsFileReader.hasNext()) {
-                    locs.add(locsFileReader.next());
-                }
-            }
-
-            //filter
-            final Pattern laneTileRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
-                    ParameterizedFileUtil.makeLaneTileRegex(".filter", lane)));
-            final File[] filterFiles = getTiledFiles(laneDir, laneTileRegex);
-
-            IOUtil.assertFilesAreReadable(Arrays.asList(filterFiles));
-            //UGH new provider does not support multiple tiles at a time.
-            return new NewIlluminaDataProvider(cbcls, locs, filterFiles, lane, requestedTiles.get(0), outputMapping, barcodeFile);
+            return new NewIlluminaDataProvider(outputMapping, basecallDirectory, lane, requestedTiles);
         } else {
             final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataType = new HashMap<>();
             for (final Map.Entry<SupportedIlluminaFormat, Set<IlluminaDataType>> fmToDt : formatToDataTypes.entrySet()) {

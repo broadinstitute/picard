@@ -37,8 +37,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
-import static picard.illumina.BasecallsConverter.getTiledFiles;
+import static picard.illumina.SortedBasecallsConverter.TILE_NUMBER_COMPARATOR;
+import static picard.illumina.SortedBasecallsConverter.getTiledFiles;
 import static picard.illumina.parser.BaseIlluminaDataProvider.fileToTile;
 
 /**
@@ -116,7 +116,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     protected int doWork() {
         final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
         if (DATA_TYPES.isEmpty()) {
-            DATA_TYPES.addAll(Arrays.asList(BasecallsConverter.DATA_TYPES_WITH_BARCODE));
+            DATA_TYPES.addAll(Arrays.asList(SortedBasecallsConverter.DATA_TYPES_WITHOUT_BARCODE));
         }
 
         final List<Integer> failingLanes = new ArrayList<>();
@@ -169,34 +169,36 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 for (final File filterFile : filterFiles) {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
-                try (CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
-                        tiles.get(0), locs, outputMapping.getOutputCycles(), true)) {
-                    reader.getAllTiles().forEach((key, value) -> {
-                        //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
-                        String emptyCycleString = value.stream()
-                                .filter(cycle -> cycle.getCompressedBlockSize() <= 2)
-                                .map(BaseBclReader.TileData::getTileNum)
-                                .map(Object::toString)
-                                .collect(Collectors.joining(", "));
+                for (Integer tile: tiles) {
+                    try (CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
+                            tile, locs, outputMapping.getOutputCycles(), true)) {
+                        reader.getAllTiles().forEach((key, value) -> {
+                            //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
+                            String emptyCycleString = value.stream()
+                                    .filter(cycle -> cycle.getCompressedBlockSize() <= 2)
+                                    .map(BaseBclReader.TileData::getTileNum)
+                                    .map(Object::toString)
+                                    .collect(Collectors.joining(", "));
 
-                        int cycle = outputCycles[key-1];
-                        if (emptyCycleString.length() > 0) {
-                            log.warn("The following tiles have no data for cycle " + cycle);
-                            log.warn(emptyCycleString);
-                        }
+                            int cycle = outputCycles[key-1];
+                            if (emptyCycleString.length() > 0) {
+                                log.warn("The following tiles have no data for cycle " + cycle);
+                                log.warn(emptyCycleString);
+                            }
 
-                        final List<File> fileForCycle = reader.getFilesForCycle(cycle);
-                        final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
-                        final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
-                        
-                        log.debug(String.format("Key: %d; Cycle: %d; File: %s; Expected size: %d; Actual size: %d",
-                                key, cycle, fileForCycle, expectedFileSize, totalFilesSize));
+                            final List<File> fileForCycle = reader.getFilesForCycle(cycle);
+                            final long totalFilesSize = fileForCycle.stream().mapToLong(file -> file.length() - reader.getHeaderSize()).sum();
+                            final long expectedFileSize = value.stream().mapToLong(BaseBclReader.TileData::getCompressedBlockSize).sum();
 
-                        if (expectedFileSize != totalFilesSize) {
-                            throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
-                                    fileForCycle, expectedFileSize, totalFilesSize));
-                        }
-                    });
+                            log.debug(String.format("Key: %d; Cycle: %d; File: %s; Expected size: %d; Actual size: %d",
+                                    key, cycle, fileForCycle, expectedFileSize, totalFilesSize));
+
+                            if (expectedFileSize != totalFilesSize) {
+                                throw new PicardException(String.format("File %s is not the expected size of %d instead it is %d",
+                                        fileForCycle, expectedFileSize, totalFilesSize));
+                            }
+                        });
+                    }
                 }
             } else {
                 IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);

@@ -33,7 +33,6 @@ import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.BaseCallingProgramGroup;
@@ -41,14 +40,11 @@ import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
-import picard.illumina.parser.IlluminaFileUtil;
-import picard.illumina.parser.ParameterizedFileUtil;
 import picard.illumina.parser.ReadDescriptor;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.illumina.parser.readers.LocsFileReader;
 import picard.util.BarcodeEditDistanceQuery;
 import picard.util.IlluminaUtil;
 import picard.util.TabbedTextFileWithHeaderParser;
@@ -60,8 +56,6 @@ import java.io.File;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,10 +63,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static picard.illumina.BasecallsConverter.getTiledFiles;
 
 /**
  * Determine the barcode for each read in an Illumina lane.
