@@ -108,7 +108,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
 
     /**
-     * returns The sum of lengths of a particular cigar operator in the provided cigar
+     * returns the length of the soft clip on the 3' end
      *
      * @param cigar The input Cigar of the read
      * @param negativeStrand the negativeStrandFlag of the read
@@ -487,4 +487,3 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         }
     }
 }
-
