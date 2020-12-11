@@ -28,6 +28,7 @@ public class AlignmentSummaryMetricsCollectorTest {
                 {"20M2S", false, 2},
 
                 {"20M2S4S", false, 6},
+                {"20M2S4S", true, 0},
 
                 {"2S20M5S", false, 5},
                 {"2S20M4S", true, 2},
