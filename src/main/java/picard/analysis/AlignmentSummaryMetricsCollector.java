@@ -288,7 +288,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                     metrics.PCT_HARDCLIP = MathUtil.divide(numHardClipped, totalBases);
                     metrics.PCT_SOFTCLIP = MathUtil.divide(numSoftClipped, totalBases);
-                    metrics.AVERAGE_NON_ZERO_3PRIME_SOFTCLIP = MathUtil.divide(num3PrimeSoftClippedBases, (double) numReadsWith3PrimeSoftClips);
+                    metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH = MathUtil.divide(num3PrimeSoftClippedBases, (double) numReadsWith3PrimeSoftClips);
 
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                 }

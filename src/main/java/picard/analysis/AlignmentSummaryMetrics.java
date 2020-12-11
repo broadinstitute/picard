@@ -191,6 +191,5 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      * the amount by which the insert-size must be increased in order to obtain a significant reduction in bases
      * lost due to reading off the end of the insert.
      */
-    public double AVERAGE_NON_ZERO_3PRIME_SOFTCLIP;
-
+    public double AVG_POS_3PRIME_SOFTCLIP_LENGTH;
 }

@@ -719,11 +719,11 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
             if (metrics.CATEGORY != AlignmentSummaryMetrics.Category.SECOND_OF_PAIR) {
                 Assert.assertEquals(metrics.PCT_HARDCLIP, 10 / (double) 66, 0.0001);
                 Assert.assertEquals(metrics.PCT_SOFTCLIP, 23 / (double) 66, 0.0001);
-                Assert.assertEquals(metrics.AVERAGE_NON_ZERO_3PRIME_SOFTCLIP, 22 / (double) 2, 0.0001);
+                Assert.assertEquals(metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH, 22 / (double) 2, 0.0001);
             } else {
                 Assert.assertEquals(metrics.PCT_HARDCLIP, 0D);
                 Assert.assertEquals(metrics.PCT_SOFTCLIP, 0D);
-                Assert.assertEquals(metrics.AVERAGE_NON_ZERO_3PRIME_SOFTCLIP, 0D);
+                Assert.assertEquals(metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH, 0D);
             }
         }
 
