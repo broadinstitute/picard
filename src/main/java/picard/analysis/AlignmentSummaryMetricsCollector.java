@@ -24,6 +24,7 @@
 
 package picard.analysis;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -41,8 +42,11 @@ import htsjdk.samtools.util.SequenceUtil;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
+import picard.util.CollectionUtils;
 import picard.util.MathUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -89,6 +93,58 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         if (!rec.isSecondaryOrSupplementary()) {
             super.acceptRecord(rec, ref);
         }
+    }
+
+    /**
+     * returns The sum of lengths of a particular cigar operator in the provided cigar
+     *
+     * @param cigar The input Cigar of the read
+     * @param op    The operator that is being looked for
+     * @return Sum of lengths of the Cigar elements in cigar that are of the operator op
+     */
+    static private int getTotalCigarOperatorCount(final Cigar cigar, final CigarOperator op) {
+        return cigar.getCigarElements().stream()
+                .filter(e -> e.getOperator().equals(op))
+                .mapToInt(CigarElement::getLength)
+                .reduce(Integer::sum).orElse(0);
+    }
+
+
+    /**
+     * returns the length of the soft clip on the 3' end
+     *
+     * If there are no-non-clipping operators, method will return 0 as it is unclear which clips should be considered on the
+     * "3'" end.
+     *
+     * @param cigar          The input Cigar of the read
+     * @param negativeStrand the negativeStrandFlag of the read
+     * @return the amount of soft-clipping that the read has on its 3' end (the later read cycles)
+     */
+    @VisibleForTesting
+    static protected int get3PrimeSoftClippedBases(final Cigar cigar, final boolean negativeStrand) {
+
+        final List<CigarElement> cigarElements;
+        if (!negativeStrand) {
+            cigarElements = cigar.getCigarElements();
+        } else {
+            // flip the order of the operators, so that we can always just look for the softclip at the end
+            cigarElements = CollectionUtils.ReversedView.of(cigar.getCigarElements());
+        }
+
+        boolean foundNonSoftClipOperator = false;
+        int softclipsFound = 0;
+        // sum up the last softclips as long they are after non-clipping ops
+        for (CigarElement cigarElement : cigarElements) {
+            if (!cigarElement.getOperator().isClipping()) {
+                foundNonSoftClipOperator = true;
+                continue;
+            }
+            if (foundNonSoftClipOperator && cigarElement.getOperator().equals(CigarOperator.SOFT_CLIP)) {
+                softclipsFound += cigarElement.getLength();
+            }
+        }
+
+        return softclipsFound;
     }
 
     public class GroupAlignmentSummaryMetricsPerUnitMetricCollector implements PerUnitMetricCollector<AlignmentSummaryMetrics, Integer, SAMRecordAndReference> {
@@ -169,6 +225,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         private long indels;
 
         private long numSoftClipped;
+        private long num3PrimeSoftClippedBases;
+        private long numReadsWith3PrimeSoftClips;
+
         private long numHardClipped;
 
         private long nonBisulfiteAlignedBases;
@@ -219,17 +278,19 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 }
 
                 if (doRefMetrics) {
-                    metrics.PCT_PF_READS_ALIGNED = MathUtil.divide((double) metrics.PF_READS_ALIGNED, (double) metrics.PF_READS);
-                    metrics.PCT_READS_ALIGNED_IN_PAIRS = MathUtil.divide((double) metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
-                    metrics.PCT_PF_READS_IMPROPER_PAIRS = MathUtil.divide((double) metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
+                    final double totalBases = readLengthHistogram.getSum();
+                    metrics.PCT_PF_READS_ALIGNED = MathUtil.divide(metrics.PF_READS_ALIGNED, (double) metrics.PF_READS);
+                    metrics.PCT_READS_ALIGNED_IN_PAIRS = MathUtil.divide(metrics.READS_ALIGNED_IN_PAIRS, (double) metrics.PF_READS_ALIGNED);
+                    metrics.PCT_PF_READS_IMPROPER_PAIRS = MathUtil.divide(metrics.PF_READS_IMPROPER_PAIRS, (double) metrics.PF_READS_ALIGNED);
                     metrics.STRAND_BALANCE = MathUtil.divide(numPositiveStrand, (double) metrics.PF_READS_ALIGNED);
                     metrics.PCT_CHIMERAS = MathUtil.divide(chimeras, (double) chimerasDenominator);
                     metrics.PF_INDEL_RATE = MathUtil.divide(indels, (double) metrics.PF_ALIGNED_BASES);
                     metrics.PF_MISMATCH_RATE = MathUtil.divide(mismatchHistogram.getSum(), (double) nonBisulfiteAlignedBases);
                     metrics.PF_HQ_ERROR_RATE = MathUtil.divide(hqMismatchHistogram.getSum(), (double) hqNonBisulfiteAlignedBases);
 
-                    metrics.PCT_HARDCLIP = numHardClipped / (double) metrics.PF_ALIGNED_BASES;
-                    metrics.PCT_SOFTCLIP = numSoftClipped / (double) metrics.PF_ALIGNED_BASES;
+                    metrics.PCT_HARDCLIP = MathUtil.divide(numHardClipped, totalBases);
+                    metrics.PCT_SOFTCLIP = MathUtil.divide(numSoftClipped, totalBases);
+                    metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH = MathUtil.divide(num3PrimeSoftClippedBases, (double) numReadsWith3PrimeSoftClips);
 
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                 }
@@ -255,19 +316,6 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     .reduce(Integer::sum).orElse(0);
         }
 
-        /**
-         * returns The sum of lengths of a particular cigar operator in the provided cigar
-         *
-         * @param cigar The input Cigar of the read
-         * @param op The operator that is being looked for
-         * @return Sum of lengths of the Cigar elements in cigar that are of the operator op
-         */
-        private int getTotalCigarOperatorCount(final Cigar cigar, final CigarOperator op) {
-            return cigar.getCigarElements().stream()
-                    .filter(e -> e.getOperator().equals(op))
-                    .mapToInt(CigarElement::getLength)
-                    .reduce(Integer::sum).orElse(0);
-        }
 
         private void collectReadData(final SAMRecord record) {
             // NB: for read count metrics, do not include supplementary records, but for base count metrics, do include supplementary records.
@@ -295,6 +343,12 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                 if (!record.getReadUnmappedFlag()) {
                     numSoftClipped += getTotalCigarOperatorCount(record.getCigar(), CigarOperator.SOFT_CLIP);
+
+                    final int threePrimeSoftClippedBases = get3PrimeSoftClippedBases(record.getCigar(), record.getReadNegativeStrandFlag());
+                    if (threePrimeSoftClippedBases > 0) {
+                        num3PrimeSoftClippedBases += threePrimeSoftClippedBases;
+                        numReadsWith3PrimeSoftClips++;
+                    }
                     if (doRefMetrics) {
 
                         metrics.PF_READS_ALIGNED++;
@@ -412,7 +466,6 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         }
 
 
-
         private boolean isNoiseRead(final SAMRecord record) {
             final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
             return (noiseAttribute != null && noiseAttribute.equals(1));
@@ -436,4 +489,3 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         }
     }
 }
-
