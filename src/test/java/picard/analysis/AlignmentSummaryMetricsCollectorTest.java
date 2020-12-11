@@ -14,6 +14,11 @@ public class AlignmentSummaryMetricsCollectorTest {
                 {"20M", true, 0},
                 {"20M", false, 0},
 
+                {"5H2S", true, 0},
+                {"5H2S", false, 0},
+                {"5H2S6H", false, 0},
+                {"5H2S6H", true, 0},
+
                 {"2H20M", true, 0},
                 {"2H20M", false, 0},
 
@@ -21,6 +26,8 @@ public class AlignmentSummaryMetricsCollectorTest {
                 {"2S20M", true, 2},
                 {"20M2S", true, 0},
                 {"20M2S", false, 2},
+
+                {"20M2S4S", false, 6},
 
                 {"2S20M5S", false, 5},
                 {"2S20M4S", true, 2},

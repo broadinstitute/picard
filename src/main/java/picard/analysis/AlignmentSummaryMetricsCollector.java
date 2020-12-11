@@ -42,8 +42,11 @@ import htsjdk.samtools.util.SequenceUtil;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
+import picard.util.CollectionUtils;
 import picard.util.MathUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -96,7 +99,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
      * returns The sum of lengths of a particular cigar operator in the provided cigar
      *
      * @param cigar The input Cigar of the read
-     * @param op The operator that is being looked for
+     * @param op    The operator that is being looked for
      * @return Sum of lengths of the Cigar elements in cigar that are of the operator op
      */
     static private int getTotalCigarOperatorCount(final Cigar cigar, final CigarOperator op) {
@@ -110,39 +113,38 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
     /**
      * returns the length of the soft clip on the 3' end
      *
-     * @param cigar The input Cigar of the read
+     * If there are no-non-clipping operators, method will return 0 as it is unclear which clips should be considered on the
+     * "3'" end.
+     *
+     * @param cigar          The input Cigar of the read
      * @param negativeStrand the negativeStrandFlag of the read
      * @return the amount of soft-clipping that the read has on its 3' end (the later read cycles)
      */
     @VisibleForTesting
     static protected int get3PrimeSoftClippedBases(final Cigar cigar, final boolean negativeStrand) {
-        List<CigarElement> cigarElements = cigar.getCigarElements();
+
+        final List<CigarElement> cigarElements;
+        if (!negativeStrand) {
+            cigarElements = cigar.getCigarElements();
+        } else {
+            // flip the order of the operators, so that we can always just look for the softclip at the end
+            cigarElements = CollectionUtils.ReversedView.of(cigar.getCigarElements());
+        }
 
         boolean foundNonSoftClipOperator = false;
-        int softClipLength = 0;
-        if (negativeStrand) {
-            //return the first softclip as long it is before non-clipping
-            for (CigarElement cigarElement : cigarElements) {
-                if (!cigarElement.getOperator().isClipping()) {
-                    return softClipLength;
-                }
-                if (cigarElement.getOperator().equals(CigarOperator.SOFT_CLIP)) {
-                    softClipLength = cigarElement.getLength();
-                }
+        int softclipsFound = 0;
+        // sum up the last softclips as long they are after non-clipping ops
+        for (CigarElement cigarElement : cigarElements) {
+            if (!cigarElement.getOperator().isClipping()) {
+                foundNonSoftClipOperator = true;
+                continue;
             }
-        } else {
-            //return the last softclip as long it is after non-clipping
-            for (CigarElement cigarElement : cigarElements) {
-                if (!cigarElement.getOperator().isClipping()) {
-                    foundNonSoftClipOperator = true;
-                    continue;
-                }
-                if (foundNonSoftClipOperator && cigarElement.getOperator().equals(CigarOperator.SOFT_CLIP)) {
-                    return cigarElement.getLength();
-                }
+            if (foundNonSoftClipOperator && cigarElement.getOperator().equals(CigarOperator.SOFT_CLIP)) {
+                softclipsFound += cigarElement.getLength();
             }
         }
-        return 0;
+
+        return softclipsFound;
     }
 
     public class GroupAlignmentSummaryMetricsPerUnitMetricCollector implements PerUnitMetricCollector<AlignmentSummaryMetrics, Integer, SAMRecordAndReference> {
@@ -462,7 +464,6 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 }
             }
         }
-
 
 
         private boolean isNoiseRead(final SAMRecord record) {
