@@ -120,6 +120,14 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected SamReader getSamReader() {
         if (this.samReader == null) {
             this.samReader = super.getSamReader();
