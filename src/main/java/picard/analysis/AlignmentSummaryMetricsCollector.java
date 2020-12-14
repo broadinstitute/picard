@@ -25,6 +25,7 @@
 package picard.analysis;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -42,11 +43,8 @@ import htsjdk.samtools.util.SequenceUtil;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
-import picard.util.CollectionUtils;
 import picard.util.MathUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -128,7 +126,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             cigarElements = cigar.getCigarElements();
         } else {
             // flip the order of the operators, so that we can always just look for the softclip at the end
-            cigarElements = CollectionUtils.ReversedView.of(cigar.getCigarElements());
+            cigarElements = Lists.reverse(cigar.getCigarElements());
         }
 
         boolean foundNonSoftClipOperator = false;
