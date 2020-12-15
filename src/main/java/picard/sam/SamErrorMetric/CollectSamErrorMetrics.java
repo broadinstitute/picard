@@ -533,7 +533,10 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
         for (final ErrorMetric metric : locusAggregator.getMetrics()) {
             metric.calculateDerivedFields();
-            file.addMetric(metric);
+            // For simple error metrics. strata with 0 total bases above MIN_BASE_Q are not included in final output
+            if (metric.TOTAL_BASES != 0){
+                file.addMetric(metric);
+            }
         }
 
         file.write(new File(OUTPUT + "." + locusAggregator.getSuffix()));
@@ -610,11 +613,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             return;
 
         for (final BaseErrorAggregation aggregation : aggregatorList) {
-            final int baseQuality = rao.getRecord().getBaseQualities()[rao.getOffset()];
-            final int mappingQuality = rao.getRecord().getMappingQuality();
-            if (baseQuality >= MIN_BASE_Q && mappingQuality >= MIN_MAPPING_Q) {
-                aggregation.addBase(rao, info);
-            }
+            aggregation.addBase(rao, info);
         }
     }
 
