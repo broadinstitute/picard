@@ -534,7 +534,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         for (final ErrorMetric metric : locusAggregator.getMetrics()) {
             metric.calculateDerivedFields();
             // For simple error metrics. strata with 0 total bases above MIN_BASE_Q are not included in final output
-            if (metric.TOTAL_BASES != 0){
+            final boolean isSimpleError = locusAggregator.getSuffix().startsWith("error");
+            if (!(metric.TOTAL_BASES == 0 && isSimpleError)){
                 file.addMetric(metric);
             }
         }
