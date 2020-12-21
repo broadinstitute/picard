@@ -396,7 +396,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * Container for various FastqWriters, one for each template read, one for each sample barcode read,
      * and one for each molecular barcode read.
      */
-    private static final class FastqRecordsWriter implements SortedBasecallsConverter.ConvertedClusterDataWriter<FastqRecordsForCluster> {
+    private static final class FastqRecordsWriter implements BasecallsConverter.ConvertedClusterDataWriter<FastqRecordsForCluster> {
         final FastqWriter[] templateWriters;
         final FastqWriter[] sampleBarcodeWriters;
         final FastqWriter[] molecularBarcodeWriters;
@@ -459,7 +459,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * Passed to IlluminaBaseCallsConverter to do the conversion from input format to output format.
      */
     class ClusterToFastqRecordsForClusterConverter
-            implements SortedBasecallsConverter.ClusterDataConverter<FastqRecordsForCluster> {
+            implements BasecallsConverter.ClusterDataConverter<FastqRecordsForCluster> {
 
         private final int[] templateIndices;
         private final int[] sampleBarcodeIndicies;

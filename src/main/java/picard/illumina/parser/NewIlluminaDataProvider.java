@@ -12,8 +12,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static picard.illumina.SortedBasecallsConverter.TILE_NUMBER_COMPARATOR;
-import static picard.illumina.SortedBasecallsConverter.getTiledFiles;
+import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
+import static picard.illumina.BasecallsConverter.getTiledFiles;
 
 /**
  * Parse cbcls Illumina Basecall files, and use them the to populate
@@ -29,10 +29,10 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
     /**
      * Construct a NewIlluminaDataProvider to create a ClusterData iterator over all clusters for a given tile.
      *
-     * @param outputMapping
-     * @param basecallDirectory
-     * @param lane
-     * @param requestedTiles
+     * @param outputMapping     Mapping of reads types to be output.
+     * @param basecallDirectory The baseCalls directory of a complete Illumina directory.
+     * @param lane              The lane that to provide data for.
+     * @param requestedTiles    The list of tiles that data is requested for.
      */
     NewIlluminaDataProvider(final OutputMapping outputMapping,
                             final File basecallDirectory, final int lane, List<Integer> requestedTiles) {

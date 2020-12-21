@@ -557,7 +557,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     }
 
     private static final class SAMFileWriterWrapper
-            implements SortedBasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {
+            implements BasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {
         public final SAMFileWriter writer;
 
         private SAMFileWriterWrapper(final SAMFileWriter writer) {

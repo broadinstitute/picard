@@ -27,7 +27,7 @@ package picard.illumina.parser;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
-import picard.illumina.SortedBasecallsConverter;
+import picard.illumina.BasecallsConverter;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
@@ -182,7 +182,7 @@ public class IlluminaDataProviderFactory {
         if (availableTiles.isEmpty()) {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
-        availableTiles.sort(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR);
+        availableTiles.sort(BasecallsConverter.TILE_NUMBER_COMPARATOR);
 
         //fill in available tiles for run based files
         formatToDataTypes.keySet().stream().map(fileUtil::getUtil)
