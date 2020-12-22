@@ -713,19 +713,33 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         }
 
         Assert.assertFalse(output.getMetrics().isEmpty());
+
+
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             if (metrics.CATEGORY != AlignmentSummaryMetrics.Category.SECOND_OF_PAIR) {
-                Assert.assertEquals(metrics.PCT_HARDCLIP, 10 / (double) metrics.PF_ALIGNED_BASES,0.0001);
-                Assert.assertEquals(metrics.PCT_SOFTCLIP, 23 / (double) metrics.PF_ALIGNED_BASES,0.0001);
+                Assert.assertEquals(metrics.PCT_HARDCLIP, 10 / (double) 66, 0.0001);
+                Assert.assertEquals(metrics.PCT_SOFTCLIP, 23 / (double) 66, 0.0001);
+                Assert.assertEquals(metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH, 22 / (double) 2, 0.0001);
             } else {
                 Assert.assertEquals(metrics.PCT_HARDCLIP, 0D);
                 Assert.assertEquals(metrics.PCT_SOFTCLIP, 0D);
+                Assert.assertEquals(metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH, 0D);
             }
         }
 
         Assert.assertFalse(output.getAllHistograms().isEmpty());
 
         for (final Histogram<Integer> histogram : output.getAllHistograms()) {
+            switch (histogram.getValueLabel()) {
+                case "PAIRED_TOTAL_LENGTH_COUNT":
+                case "UNPAIRED_TOTAL_LENGTH_COUNT":
+                    Assert.assertEquals(histogram.getSum(), 66D); //1+2+11+10+42
+                    break;
+                case "PAIRED_ALIGNED_LENGTH_COUNT":
+                case "UNPAIRED_ALIGNED_LENGTH_COUNT":
+                    Assert.assertEquals(histogram.getSum(), 43D); //1+2+10+10+10+10;
+                    break;
+            }
 
             Assert.assertFalse(histogram.isEmpty());
             if (histogram.getValueLabel().equals("PAIRED_TOTAL_LENGTH_COUNT")) {
