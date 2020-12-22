@@ -104,8 +104,11 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
-    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
+    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat", mutex = {"GTF"})
     public File REF_FLAT;
+
+    @Argument(doc="Gene annotations in GTF form.  Format described here: http://mblab.wustl.edu/GTF2.html", mutex = {"REF_FLAT"})
+    public File GTF;
 
     @Argument(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
@@ -157,6 +160,10 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     protected void setup(final SAMFileHeader header, final File samFile) {
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
+
+        if (GTF != null) {
+            REF_FLAT = new GtfToRefflat(GTF).getRefflat();
+        }
 
         final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
