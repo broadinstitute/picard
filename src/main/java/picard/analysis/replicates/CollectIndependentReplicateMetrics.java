@@ -24,7 +24,6 @@
 
 package picard.analysis.replicates;
 
-
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.QueryInterval;
@@ -46,6 +45,8 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -58,10 +59,11 @@ import htsjdk.variant.vcf.VCFContigHeaderLine;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingPairedFilter;
@@ -105,13 +107,31 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
 @DocumentedFeature
 @ExperimentalFeature
 @CommandLineProgramProperties(
-        summary = "Estimates the rate of independent replication rate of reads within a bam. \n" +
-                "That is, it estimates the fraction of the reads which would be marked as duplicates but " +
-                "are actually biological replicates, independent observations of the data. ",
-        oneLineSummary = "Estimates the rate of independent replication of reads within a bam.",
+        summary = CollectIndependentReplicateMetrics.USAGE_SUMMARY + CollectIndependentReplicateMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectIndependentReplicateMetrics.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 public class CollectIndependentReplicateMetrics extends CommandLineProgram {
+
+    static final String USAGE_SUMMARY = "Estimates the rate of independent replication rate of reads within a bam. \n";
+    static final String USAGE_DETAILS = "<p>" +
+            "This tool estimates the fraction of the input reads which would be marked as duplicates but " +
+            "are actually biological replicates, independent observations of the data. " +
+            "<p>" +
+            "The tools examines duplicate sets of size 2 and 3 that overlap known heterozygous sites of the sample. " +
+            "The tool classifies these duplicate sets into heterogeneous and homogeneous sets (those that contain the " +
+            "two alleles that are present in the variant and those that only contain one of them). From this the tool" +
+            "estimates the fraction of duplicates that arose from different original molecules, i.e. independently. " +
+            "<p>" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectIndependentReplicateMetrics \\\n" +
+            "    I=input.bam \\\n" +
+            "    V=input.vcf \\\n" +
+            "    O=output.independent_replicates_metrics \\\n" +
+            "</pre> ";
+
+
     private static final int DOUBLETON_SIZE = 2, TRIPLETON_SIZE = 3;
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM file.")
@@ -151,6 +171,17 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     @Argument(shortName = "MBQ", doc = "minimal value for the base quality of all the bases in a molecular barcode, for it to be used.", optional = true)
     public Integer MINIMUM_BARCODE_BQ = 30;
 
+    @Argument(shortName = "FUR", doc = "Whether to filter unpaired reads from the input.", optional = true)
+    public boolean FILTER_UNPAIRED_READS=true;
+
+    @Argument(
+            fullName = "PROGRESS_STEP_INTERVAL",
+            doc = "The interval between which progress will be displayed.",
+            optional = true
+    )
+    public int PROGRESS_STEP_INTERVAL = 100000;
+
+
     private static final Log log = Log.getInstance(CollectIndependentReplicateMetrics.class);
 
     @Override
@@ -159,12 +190,26 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(VCF);
         IOUtil.assertFileIsReadable(INPUT);
 
+        // get an iterator to reads that overlap the heterozygous sites
+        final SamReader in = SamReaderFactory.makeDefault()
+                .referenceSequence(REFERENCE_SEQUENCE)
+                .open(INPUT);
+
+        if (!in.hasIndex()) {
+            throw new PicardException("INPUT file must have an index.");
+        }
+
         IOUtil.assertFileIsWritable(OUTPUT);
-        if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+        if (MATRIX_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+        }
 
         final VCFFileReader vcf = new VCFFileReader(VCF, false);
-
         final VCFHeader vcfFileHeader = vcf.getFileHeader();
+
+
+        SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(), vcfFileHeader.getSequenceDictionary());
+
         final List<String> samples = vcfFileHeader.getSampleNamesInOrder();
 
         if (SAMPLE == null) {
@@ -192,30 +237,29 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final Iterator<QueryInterval> queryIntervalIterator = intervalAlleleMap.keySet().iterator();
 
         log.info("Found " + intervalAlleleMap.size() + " heterozygous sites in VCF.");
-
-        // get an iterator to reads that overlap the heterozygous sites
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
-
         log.info("Querying BAM for sites.");
 
-        final SAMRecordIterator samRecordIterator = in.query(intervalAlleleMap.keySet().toArray(new QueryInterval[intervalAlleleMap.size()]), false);
+        final SAMRecordIterator samRecordIterator = in.query(QueryInterval.optimizeIntervals(intervalAlleleMap.keySet().toArray(new QueryInterval[0])), false);
         final List<SamRecordFilter> samFilters = CollectionUtil.makeList(
                 new AlignedFilter(true),
-                new CountingPairedFilter(),
                 new SecondaryOrSupplementaryFilter(),
                 new MappingQualityFilter(MINIMUM_MQ)
         );
+
+        if (FILTER_UNPAIRED_READS) {
+            samFilters.add(new CountingPairedFilter());
+        }
 
         final FilteringSamIterator filteredSamRecordIterator = new FilteringSamIterator(samRecordIterator, new AggregateFilter(samFilters));
         log.info("Queried BAM, getting duplicate sets.");
 
         // get duplicate iterator from iterator above
-        final DuplicateSetIterator duplicateSets = new DuplicateSetIterator(filteredSamRecordIterator, in.getFileHeader());
+        final DuplicateSetIterator duplicateSets = new DuplicateSetIterator(filteredSamRecordIterator, in.getFileHeader(),false, null, log);
 
         QueryInterval queryInterval = null;
 
         log.info("Starting iteration on reads");
-        final ProgressLogger progress = new ProgressLogger(log, 10000000, "examined", "duplicate sets");
+        final ProgressLogger progress = new ProgressLogger(log, PROGRESS_STEP_INTERVAL, "examined", "duplicate sets");
 
         IndependentReplicateMetric locusData = new IndependentReplicateMetric();
         boolean useLocus = true;
@@ -276,13 +320,17 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             newLocus = true;
 
             // shouldn't happen, but being safe.
-            if (queryInterval == null) break;
+            if (queryInterval == null) {
+                break;
+            }
 
             final int setSize = set.size();
 
             locusData.nTotalReads += setSize;
 
-            if (setSize > 1) locusData.nDuplicateSets++;
+            if (setSize > 1) {
+                locusData.nDuplicateSets++;
+            }
             if (setSize == DOUBLETON_SIZE) {
                 locusData.nExactlyDouble++;
             } else if (setSize == TRIPLETON_SIZE) {
@@ -333,7 +381,9 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             locusData.nAlternateReads += nAlt;
             locusData.nReferenceReads += nRef;
 
-            if ( setSize == 1 || setSize > TRIPLETON_SIZE) continue;
+            if ( setSize == 1 || setSize > TRIPLETON_SIZE) {
+                continue;
+            }
             // From here on there should only be 2 or 3 reads in the set
 
             final SetClassification classification = classifySet(nRef, nAlt, nOther);
@@ -341,17 +391,21 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             log.debug("Classification of set is: " + classification);
             if (setSize == DOUBLETON_SIZE) {
 
-                final boolean useBarcodes = !set.getRecords().stream()
+                final boolean useBarcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_BQ))
-                        .map(string -> string == null ? "" : string).map(string ->
+                        .map(string -> string == null ? "" : string).noneMatch(string ->
                         {
                             final byte[] bytes = SAMUtils.fastqToPhred(string);
                             return IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
-                        }).anyMatch(a -> a);
+                        });
 
                 log.debug("using barcodes?" + useBarcodes);
 
-                if(useBarcodes) locusData.nGoodBarcodes++; else locusData.nBadBarcodes++;
+                if (useBarcodes) {
+                    locusData.nGoodBarcodes++;
+                } else {
+                    locusData.nBadBarcodes++;
+                }
 
                 final List<String> barcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_TAG))
@@ -359,7 +413,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
                 log.debug("found UMIs:" + barcodes);
                 final boolean hasMultipleOrientations = set.getRecords().stream()
-                        .map(SAMRecord::getFirstOfPairFlag) //must be paired, due to filter on sam Iterator
+                        .map(rec->!rec.getReadPairedFlag() || rec.getFirstOfPairFlag())
                         .distinct().count() != 1;
                 log.debug("reads have multiple orientation?" + hasMultipleOrientations);
 
@@ -378,24 +432,36 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                     if (useBarcodes) {
                         umiEditDistanceInDiffBiDups.increment(editDistance);
 
-                        if(editDistance == 0) locusData.nMatchingUMIsInDiffBiDups++; else locusData.nMismatchingUMIsInDiffBiDups++;
+                        if (editDistance == 0) {
+                            locusData.nMatchingUMIsInDiffBiDups++;
+                        } else {
+                            locusData.nMismatchingUMIsInDiffBiDups++;
+                        }
                     }
 
                     // we're going to toss out this locus.
                 } else if (classification == SetClassification.MISMATCHING_ALLELE) {
                     locusData.nMismatchingAllelesBiDups++;
                 } else { // the classification is either ALTERNATE_ALLELE or REFERENCE_ALLELE if we've reached here
-                    if (classification == SetClassification.ALTERNATE_ALLELE) locusData.nAlternateAllelesBiDups++;
-                    else locusData.nReferenceAllelesBiDups++;
+                    if (classification == SetClassification.ALTERNATE_ALLELE) {
+                        locusData.nAlternateAllelesBiDups++;
+                    } else {
+                        locusData.nReferenceAllelesBiDups++;
+                    }
 
                     if (useBarcodes) {
-
                         umiEditDistanceInSameBiDups.increment(editDistance);
                         final ComparableTuple<String, String> key = new ComparableTuple<>(barcodes.get(0), barcodes.get(1));
                         umiConfusionMatrix.increment(key);
-                        if (!umiConfusionMatrixEditDistance.containsKey(key)) umiConfusionMatrixEditDistance.increment(key, editDistance);
+                        if (!umiConfusionMatrixEditDistance.containsKey(key)) {
+                            umiConfusionMatrixEditDistance.increment(key, editDistance);
+                        }
 
-                        if (editDistance == 0) locusData.nMatchingUMIsInSameBiDups++; else  locusData.nMismatchingUMIsInSameBiDups++;
+                        if (editDistance == 0) {
+                            locusData.nMatchingUMIsInSameBiDups++;
+                        } else {
+                            locusData.nMismatchingUMIsInSameBiDups++;
+                        }
                     }
                 }
             }
@@ -417,7 +483,9 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                         throw new IllegalStateException("Un possible!");
                 }
             }
-            if (STOP_AFTER > 0 && progress.getCount() > STOP_AFTER) break;
+            if (STOP_AFTER > 0 && progress.getCount() > STOP_AFTER) {
+                break;
+            }
         }
         if (useLocus && newLocus) {
             metric.merge(locusData);
@@ -472,16 +540,24 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     private static SetClassification classifySet(final int nRef, final int nAlt, final int nOther) {
         // if we found any "other" alleles, this is a mismatching set
-        if (nOther != 0) return SetClassification.MISMATCHING_ALLELE;
+        if (nOther != 0) {
+            return SetClassification.MISMATCHING_ALLELE;
+        }
 
         // if we found both ref and alt alleles, this is a heterogeneous set
-        if (nAlt > 0 && nRef > 0) return SetClassification.DIFFERENT_ALLELES;
+        if (nAlt > 0 && nRef > 0) {
+            return SetClassification.DIFFERENT_ALLELES;
+        }
 
         // if we found no reference alleles, this is an "alternate" set
-        if (nRef == 0) return SetClassification.ALTERNATE_ALLELE;
+        if (nRef == 0) {
+            return SetClassification.ALTERNATE_ALLELE;
+        }
 
         // if we found no alternate alleles, this is a "reference" set.
-        if (nAlt == 0) return SetClassification.REFERENCE_ALLELE;
+        if (nAlt == 0) {
+            return SetClassification.REFERENCE_ALLELE;
+        }
 
         throw new IllegalAccessError("shouldn't be here!");
     }
@@ -492,7 +568,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     /** Gives the edit distance between this barcode and another of the same length. */
     private static byte calculateEditDistance(final String lhs, final String rhs) {
-        assert(lhs.length()==rhs.length());
+        ValidationUtils.validateArg(lhs.length() == rhs.length(), () -> "lengths of strings must equal, found '" + lhs + "' and '" + rhs + "'.");
         byte tmp = 0;
         for (int i = 0; i < rhs.length(); ++i) {
             if (rhs.charAt(i) != lhs.charAt(i)) ++tmp;

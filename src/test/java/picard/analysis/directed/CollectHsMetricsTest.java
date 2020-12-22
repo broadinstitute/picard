@@ -216,4 +216,44 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(insWithoutIndelHandling.PCT_USABLE_BASES_ON_TARGET, 200/250d); // 50/250 inserted bases are not counted as on target
         Assert.assertEquals(insWithIndelHandling.PCT_USABLE_BASES_ON_TARGET,   1.0d);      // inserted bases are counted as on target
     }
+
+
+    @Test
+    public void testHsMetricsHighTargetCoverage() throws IOException {
+        final SAMRecordSetBuilder highCoverage = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final IntervalList targets = new IntervalList(highCoverage.getHeader());
+        final IntervalList baits   = new IntervalList(highCoverage.getHeader());
+        targets.add(new Interval("chr1", 1000, 1199, false, "t1"));
+        baits.add(new Interval("chr1", 950,  1049, false, "b1"));
+        baits.add(new Interval("chr1", 1050, 1149, false, "b2"));
+        baits.add(new Interval("chr1", 1150, 1249, false, "b3"));
+
+        // Generate 100000 reads that fully cover the the target in each BAM
+        for (int i=0; i<50000; ++i) {
+            highCoverage.addFrag( "r" + i, 0, 1000, false, false, "100M100M", null, 30);
+            highCoverage.addFrag( "d" + i, 0, 1000, false, false, "100M10D90M", null, 30);
+        }
+
+        // Write things out to file
+        final File dir = IOUtil.createTempDir("hsmetrics.", ".test");
+        final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
+        final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
+        baits.write(bs);
+        targets.write(ts);
+        final File withHighCovBam = writeBam(highCoverage, new File(dir, "high_coverage.bam"));
+
+        // Now run CollectHsMetrics
+        final File out = Files.createTempFile("hsmetrics_high_coverage.", ".txt").toFile();
+        runPicardCommandLine(Arrays.asList("SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withHighCovBam.getAbsolutePath()));
+        final HsMetrics highCoverageWithIndel = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
+
+        Assert.assertEquals(highCoverageWithIndel.MEAN_TARGET_COVERAGE, 97500.0);  // Average coverge at 975000 due to deleltion 
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_100X, 1.0);  // 100% of bases covered at 100X coverage
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_1000X, 1.0);  // 100% of bases covered at 1000X coverage
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_10000X, 1.0);  // 100% of bases covered at 10000X coverage
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_100000X, 0.95);  // 95% of bases covered at 100000X coverage due to deletion
+
+    }
 }

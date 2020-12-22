@@ -2,6 +2,7 @@ package picard.sam.util;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.utils.ValidationUtils;
 
 import java.io.File;
 
@@ -11,7 +12,7 @@ import java.io.File;
 public class SamTestUtil {
     public static long countSamTotalRecord(final File samFile) {
         final SamReader reader = SamReaderFactory.make().open(samFile);
-        assert reader.hasIndex();
+        ValidationUtils.validateArg(reader.hasIndex(),"Reader should have an index.");
         long total = 0;
 
         for (int i = 0; i < reader.getFileHeader().getSequenceDictionary().size(); i++) {

@@ -325,24 +325,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             while (iterator.hasNext()) {
                 final SAMRecord rec = iterator.next();
 
-                final String library = LibraryIdGenerator.getLibraryName(header, rec);
-                DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
-                if (metrics == null) {
-                    metrics = new DuplicationMetrics();
-                    metrics.LIBRARY = library;
-                    libraryIdGenerator.addMetricsByLibrary(library, metrics);
-                }
-
-                // First bring the simple metrics up to date
-                if (rec.getReadUnmappedFlag()) {
-                    ++metrics.UNMAPPED_READS;
-                } else if (rec.isSecondaryOrSupplementary()) {
-                    ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-                } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                    ++metrics.UNPAIRED_READS_EXAMINED;
-                } else {
-                    ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-                }
+                DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator);
 
                 // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
                 // if the query name has changed.
@@ -355,15 +338,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 if (isDuplicate) {
                     rec.setDuplicateReadFlag(true);
 
-                    // only update duplicate counts for "decider" reads, not tag-a-long reads
-                    if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-                        // Update the duplication metrics
-                        if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                            ++metrics.UNPAIRED_READ_DUPLICATES;
-                        } else {
-                            ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
-                        }
-                    }
+                    AbstractMarkDuplicatesCommandLineProgram.addDuplicateReadToMetrics(rec, metrics);
                 } else {
                     rec.setDuplicateReadFlag(false);
                 }
@@ -469,7 +444,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         reportMemoryStats("After output close");
 
         // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator);
+        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
 
         return 0;
     }
@@ -533,7 +508,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
         final SAMFileHeader header = headerAndIterator.header;
-        final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
+        final ReadEndsForMarkDuplicatesMap tmp = assumedSortOrder == SAMFileHeader.SortOrder.queryname ?
+                new MemoryBasedReadEndsForMarkDuplicatesMap() :  new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
         long index = 0;
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;

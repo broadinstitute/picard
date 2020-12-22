@@ -39,6 +39,7 @@ import htsjdk.samtools.util.Histogram;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
 import picard.sam.util.PGTagArgumentCollection;
@@ -90,7 +91,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
     @Argument(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
     public ScoringStrategy DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
-    
+
     @Argument(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
             doc = "The program record ID for the @PG record(s) created by this program. Set to null to disable " +
                     "PG record creation.  This string may have a suffix appended to avoid collision with other " +
@@ -117,9 +118,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             optional = true)
     public List<String> COMMENT = new ArrayList<>();
 
-    /** The program groups that have been seen during the course of examining the input records. */
+    /**
+     * The program groups that have been seen during the course of examining the input records.
+     */
     protected final Set<String> pgIdsSeen = new HashSet<>();
-
 
     /**
      * We have to re-chain the program groups based on this algorithm.  This returns the map from existing program group ID
@@ -154,17 +156,21 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     }
 
     /**
-     * Writes the metrics given by the libraryIdGenerator to the METRICS_FILE.
+     * Writes the metrics given by the libraryIdGenerator to the outputFile.
      *
-     * @param libraryIdGenerator
+     * @param libraryIdGenerator A {@link LibraryIdGenerator} object that contains the map from library to {@link DuplicationMetrics} for
+     *                           that library
+     * @param metricsFile        An empty {@link MetricsFile} object that will be filled, with "finalized" metrics and written out.
+     *                           It needs to be generated from a non-static context so that various commandline information is
+     *                           added to the header when {@link CommandLineProgram#getMetricsFile()} is called.
+     * @param outputFile         The file to write the metrics to
      */
-    protected void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator) {
+    static public void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator, final MetricsFile<DuplicationMetrics, Double> metricsFile, final File outputFile) {
         final Map<String, DuplicationMetrics> metricsByLibrary = libraryIdGenerator.getMetricsByLibraryMap();
         final Histogram<Short> opticalDuplicatesByLibraryId = libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap();
         final Map<String, Short> libraryIds = libraryIdGenerator.getLibraryIdsMap();
 
         // Write out the metrics
-        final MetricsFile<DuplicationMetrics, Double> file = getMetricsFile();
         for (final Map.Entry<String, DuplicationMetrics> entry : metricsByLibrary.entrySet()) {
             final String libraryName = entry.getKey();
             final DuplicationMetrics metrics = entry.getValue();
@@ -181,22 +187,58 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                 }
             }
             metrics.calculateDerivedFields();
-            file.addMetric(metrics);
+            metricsFile.addMetric(metrics);
         }
 
         if (metricsByLibrary.size() == 1) {
-            file.setHistogram(metricsByLibrary.values().iterator().next().calculateRoiHistogram());
+            metricsFile.setHistogram(metricsByLibrary.values().iterator().next().calculateRoiHistogram());
         }
 
         // Add set size histograms - the set size counts are printed on adjacent columns to the ROI metric.
-        file.addHistogram(libraryIdGenerator.getDuplicateCountHist());
-        file.addHistogram(libraryIdGenerator.getOpticalDuplicateCountHist());
-        file.addHistogram(libraryIdGenerator.getNonOpticalDuplicateCountHist());
+        metricsFile.addHistogram(libraryIdGenerator.getDuplicateCountHist());
+        metricsFile.addHistogram(libraryIdGenerator.getOpticalDuplicateCountHist());
+        metricsFile.addHistogram(libraryIdGenerator.getNonOpticalDuplicateCountHist());
 
-        file.write(METRICS_FILE);
+        metricsFile.write(outputFile);
     }
 
-    /** Little class used to package up a header and an iterable/iterator. */
+    public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator) {
+        final String library = LibraryIdGenerator.getLibraryName(header, rec);
+        DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
+        if (metrics == null) {
+            metrics = new DuplicationMetrics();
+            metrics.LIBRARY = library;
+            libraryIdGenerator.addMetricsByLibrary(library, metrics);
+        }
+
+        // First bring the simple metrics up to date
+        if (rec.getReadUnmappedFlag()) {
+            ++metrics.UNMAPPED_READS;
+        } else if (rec.isSecondaryOrSupplementary()) {
+            ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+        } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+            ++metrics.UNPAIRED_READS_EXAMINED;
+        } else {
+            ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
+        }
+        return metrics;
+    }
+
+    public static void addDuplicateReadToMetrics(final SAMRecord rec, final DuplicationMetrics metrics) {
+        // only update duplicate counts for "decider" reads, not tag-a-long reads
+        if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
+            // Update the duplication metrics
+            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+                ++metrics.UNPAIRED_READ_DUPLICATES;
+            } else {
+                ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
+            }
+        }
+    }
+
+    /**
+     * Little class used to package up a header and an iterable/iterator.
+     */
     public static final class SamHeaderAndIterator {
         public final SAMFileHeader header;
         public final CloseableIterator<SAMRecord> iterator;
@@ -308,9 +350,9 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     /**
      * Looks through the set of reads and identifies how many of the duplicates are
      * in fact optical duplicates, and stores the data in the instance level histogram.
-     * 
-     * We expect only reads with FR or RF orientations, not a mixture of both. 
-     * 
+     *
+     * We expect only reads with FR or RF orientations, not a mixture of both.
+     *
      * In PCR duplicate detection, a duplicates can be a have FR and RF when fixing the orientation order to the first end of the mate.  In
      * optical duplicate detection, we do not consider them duplicates if one read as FR and the other RF when we order orientation by the
      * first mate sequenced (read #1 of the pair).
@@ -322,7 +364,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         final boolean[] opticalDuplicateFlags = opticalDuplicateFinder.findOpticalDuplicates(list, keeper);
 
         int opticalDuplicates = 0;
-        for (int i=0; i<opticalDuplicateFlags.length; ++i) {
+        for (int i = 0; i < opticalDuplicateFlags.length; ++i) {
             if (opticalDuplicateFlags[i]) {
                 ++opticalDuplicates;
                 list.get(i).isOpticalDuplicate = true;

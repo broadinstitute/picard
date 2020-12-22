@@ -24,6 +24,7 @@
 
 package picard.arrays;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.arrays.illumina.InfiniumVcfFields;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
@@ -76,6 +77,7 @@ import static picard.arrays.illumina.InfiniumVcfFields.ALLELE_B;
         oneLineSummary = "Program to merge a single-sample ped file from zCall into a single-sample VCF.",
         programGroup = picard.cmdline.programgroups.GenotypingArraysProgramGroup.class
 )
+@DocumentedFeature
 public class MergePedIntoVcf extends CommandLineProgram {
 
     static final String USAGE_DETAILS = "MergePedIntoVcf takes a single-sample ped file output from zCall and merges " +

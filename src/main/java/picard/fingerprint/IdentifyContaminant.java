@@ -24,8 +24,6 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
@@ -33,7 +31,6 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
-import java.util.Map;
 
 /**
  * Program to create a fingerprint for the <b>contaminating</b> sample when the level of contamination is both known and
@@ -71,7 +68,7 @@ public class IdentifyContaminant extends CommandLineProgram {
     public int LOCUS_MAX_READS = 200;
 
     @Argument(doc = "Extract a fingerprint for the contaminated sample (instead of the contaminant). Setting to true changes the effect of SAMPLE_ALIAS when null. " +
-            "It names the sample in the VCF <SAMPLE>-contaminated, using the SM value from the SAM header.")
+            "It names the sample in the VCF <SAMPLE>, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
 
     @Override
@@ -79,45 +76,23 @@ public class IdentifyContaminant extends CommandLineProgram {
         return true;
     }
 
-    private final Log log = Log.getInstance(IdentifyContaminant.class);
-
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
-        final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
+        final ExtractFingerprint extractFingerprint = new ExtractFingerprint();
 
-        // if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
-        if (EXTRACT_CONTAMINATED) CONTAMINATION = 1 - CONTAMINATION;
+        extractFingerprint.INPUT = INPUT;
+        extractFingerprint.OUTPUT = OUTPUT;
+        extractFingerprint.EXTRACT_CONTAMINATION = !EXTRACT_CONTAMINATED;
+        extractFingerprint.HAPLOTYPE_MAP = HAPLOTYPE_MAP;
+        extractFingerprint.CONTAMINATION = CONTAMINATION;
+        extractFingerprint.LOCUS_MAX_READS = LOCUS_MAX_READS;
+        extractFingerprint.SAMPLE_ALIAS = SAMPLE_ALIAS;
+        extractFingerprint.VALIDATION_STRINGENCY = VALIDATION_STRINGENCY;
+        extractFingerprint.VERBOSITY = VERBOSITY;
+        extractFingerprint.referenceSequence = referenceSequence;
 
-        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION, LOCUS_MAX_READS);
-
-        if (fingerprintMap.size() != 1) {
-            log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());
-            throw new IllegalArgumentException("Expected exactly 1 fingerprint in Input file, found " + fingerprintMap.size());
-        }
-
-        final Map.Entry<String, Fingerprint> soleEntry = fingerprintMap.entrySet().iterator().next();
-
-        final String sampleToUse = getSampleToUse(soleEntry.getKey());
-
-        try {
-            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, REFERENCE_SEQUENCE, sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
-        } catch (Exception e) {
-            log.error(e);
-        }
+        extractFingerprint.doWork();
         return 0;
-    }
-
-    private String getSampleToUse(final String fpSample) {
-
-        if (SAMPLE_ALIAS == null) {
-            return String.format("%s-%s", fpSample, EXTRACT_CONTAMINATED ? "contaminated" : "contamination");
-        } else {
-            return SAMPLE_ALIAS;
-        }
     }
 }

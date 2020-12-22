@@ -122,8 +122,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
-    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
-    "These reads are not counted as ")
+    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. " +
+    "These reads are not counted towards any metrics, except for the PF_BASES field.", optional = true)
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
     @Argument(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
@@ -145,6 +145,11 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if ( RIBOSOMAL_INTERVALS == null && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
+
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+
         return super.customCommandLineValidation();
     }
 

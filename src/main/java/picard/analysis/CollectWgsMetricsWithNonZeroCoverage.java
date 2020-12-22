@@ -32,11 +32,12 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.utils.ValidationUtils;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
@@ -61,9 +62,9 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             "with non-zero (>0) coverage." +
             "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage Example:</h4>" +
-            "<pre>"  +
+            "<pre>" +
             "java -jar picard.jar CollectWgsMetricsWithNonZeroCoverage \\<br /> " +
-            "      I=input.bam \\<br /> "+
+            "      I=input.bam \\<br /> " +
             "      O=collect_wgs_metrics.txt \\<br /> " +
             "      CHART=collect_wgs_metrics.pdf  \\<br /> " +
             "      R=reference_sequence.fasta " +
@@ -83,11 +84,15 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     private SamReader samReader = null;
 
-    /** Metrics for evaluating the performance of whole genome sequencing experiments. */
+    /**
+     * Metrics for evaluating the performance of whole genome sequencing experiments.
+     */
     public static class WgsMetricsWithNonZeroCoverage extends WgsMetrics {
-        public enum Category { WHOLE_GENOME, NON_ZERO_REGIONS }
+        public enum Category {WHOLE_GENOME, NON_ZERO_REGIONS}
 
-        /** One of either WHOLE_GENOME or NON_ZERO_REGIONS */
+        /**
+         * One of either WHOLE_GENOME or NON_ZERO_REGIONS
+         */
         @MergeByAssertEquals
         public Category CATEGORY;
 
@@ -112,6 +117,14 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByAdapter, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
                     pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
         }
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
     }
 
     @Override
@@ -186,7 +199,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     @Override
     protected WgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
-        assert(coverageCap == this.collector.coverageCap);
+        ValidationUtils.validateArg(coverageCap == this.collector.coverageCap, () -> "coverageCap has to be the same as the internal coverageCap, found " + coverageCap + " and " + this.collector.coverageCap);
         return this.collector;
     }
 
@@ -195,7 +208,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         Histogram<Integer> highQualityDepthHistogramNonZero;
 
         public WgsMetricsWithNonZeroCoverageCollector(final CollectWgsMetricsWithNonZeroCoverage metrics,
-                final int coverageCap, final IntervalList intervals) {
+                                                      final int coverageCap, final IntervalList intervals) {
             super(metrics, coverageCap, intervals);
         }
 

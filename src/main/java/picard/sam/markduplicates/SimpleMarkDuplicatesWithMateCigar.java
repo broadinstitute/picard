@@ -220,7 +220,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         log.info("Marking " + numDuplicates + " records as duplicates.");
 
         // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator);
+        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
 
         return 0;
     }

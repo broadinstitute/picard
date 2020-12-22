@@ -44,9 +44,9 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.pedigree.PedFile;
@@ -173,8 +173,9 @@ public class FindMendelianViolations extends CommandLineProgram {
     @Argument(doc = "List of possible names for female sex chromosome(s)")
     public Set<String> FEMALE_CHROMS = CollectionUtil.makeSet("X", "chrX");
 
-    @Argument(doc = "List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 & HG38 coordinates.")
-    public Set<String> PSEUDO_AUTOSOMAL_REGIONS = CollectionUtil.makeSet("X:10001-2649520", "X:59034050-59373566", "chrX:10000-2781479", "chrX:155701382-156030895");
+    @Argument(doc = "List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 & HG38 coordinates.",
+    shortName = "PAR")
+    public Set<String> PSEUDO_AUTOSOMAL_REGIONS = CollectionUtil.makeSet("X:60001-2699520", "X:154931044-155260560", "chrX:10001-2781479", "chrX:155701383-156030895");
 
     @Argument(doc = "The number of threads that will be used to collect the metrics. ")
     public int THREAD_COUNT = 1;
@@ -209,24 +210,27 @@ public class FindMendelianViolations extends CommandLineProgram {
         }
         return intervals;
     }
-     /**
+
+    /**
      * Validates that the sex chromosomes don't overlap and parses the pseudo-autosomal regions into usable
      * objects to ensure their parsability
-     *
-     * @return
      */
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<>();
 
         // Check that the sex chromosomes are not overlapping
-        final Set<String> sexChroms = new HashSet<>();
-        sexChroms.addAll(FEMALE_CHROMS);
+        final Set<String> sexChroms = new HashSet<>(FEMALE_CHROMS);
         sexChroms.retainAll(MALE_CHROMS);
-        if (!sexChroms.isEmpty()) errors.add("The following chromosomes were listed as both male and female sex chromosomes: " + sexChroms);
+        if (!sexChroms.isEmpty()) {
+            errors.add("The following chromosomes were listed as both male and female sex chromosomes: " + sexChroms);
+        }
 
-        if (errors.isEmpty()) return null;
-        else return errors.toArray(new String[errors.size()]);
+        if (errors.isEmpty()) {
+            return null;
+        } else {
+            return errors.toArray(new String[0]);
+        }
     }
 
     @Override
@@ -238,7 +242,9 @@ public class FindMendelianViolations extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(TRIOS);
         IOUtil.assertFileIsWritable(OUTPUT);
-        if (outputVcfs) IOUtil.assertDirectoryIsWritable(VCF_DIR);
+        if (outputVcfs) {
+            IOUtil.assertDirectoryIsWritable(VCF_DIR);
+        }
 
         LOG.info("Loading and filtering trios.");
 

@@ -18,8 +18,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.Chained;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.ConstantMemory;
+import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.HighAccuracy;
 
 
 /**
@@ -121,7 +126,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
             testDownsampleWorker(tempSamFile, fraction, strategy.name(), seed);
     }
 
-    private void testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed) throws IOException {
+    private File testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed) throws IOException {
 
         final File downsampled = File.createTempFile("DownsampleSam", ".bam", tempDir);
         final String[] args = new String[]{
@@ -147,6 +152,62 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         if (seed!=null) {
             TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
             TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
+        }
+        return downsampled;
+    }
+
+    @DataProvider(name = "RepeatedDownsamplingProvider")
+    public Object[][] repeatedDownsamplingProvider() {
+        final List<Object[]> rets = new ArrayList<>();
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(2,1)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(0,0)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MAX_VALUE,Integer.MAX_VALUE)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MIN_VALUE,Integer.MIN_VALUE)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MIN_VALUE,Integer.MAX_VALUE)});
+        rets.add(new Object[]{Arrays.asList(DownsamplingIteratorFactory.Strategy.ConstantMemory, ConstantMemory), Arrays.asList(Integer.MAX_VALUE,0)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, ConstantMemory), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, ConstantMemory), Arrays.asList(1,3)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, Chained), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, ConstantMemory), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(ConstantMemory, HighAccuracy), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, Chained), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, Chained), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(HighAccuracy, HighAccuracy), Arrays.asList(1,1)});
+        rets.add(new Object[]{Arrays.asList(Chained, HighAccuracy), Arrays.asList(1,1)});
+
+        //randomly generate some sequences to test out
+        final Strategy[] availableStratagies = Strategy.values();
+        final Random random = new Random(12345);
+        for (int i=0; i<20; i++) {
+            final List<Strategy> strategies = new ArrayList<>();
+            final List<Integer> seeds = new ArrayList<>();
+
+            while (strategies.size() < 5) {
+                final int seed = random.nextInt(3);
+                final Strategy strategy = availableStratagies[random.nextInt(availableStratagies.length)];
+
+                seeds.add(seed);
+                strategies.add(strategy);
+            }
+            rets.add(new Object[]{strategies, seeds});
+        }
+
+        return rets.toArray(new Object[0][]);
+    }
+
+    @Test(dataProvider = "RepeatedDownsamplingProvider")
+    public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds) throws IOException {
+        File input = tempSamFile;
+        final long nReadsOriginal = SamTestUtil.countSamTotalRecord(input);
+        double totalFraction = 1;
+        for (int i = 0 ; i < strategies.size(); i++) {
+            input = testDownsampleWorker(input, 0.5, strategies.get(i).toString(), seeds.get(i));
+            totalFraction *= 0.5;
+
+            final long nReadsNow = SamTestUtil.countSamTotalRecord(input);
+            Assert.assertTrue(nReadsNow > 0.8 * totalFraction * nReadsOriginal);
+            Assert.assertTrue(nReadsNow < 1.2 * totalFraction * nReadsOriginal);
         }
     }
 }
