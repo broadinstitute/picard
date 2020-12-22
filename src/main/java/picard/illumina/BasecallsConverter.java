@@ -39,9 +39,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             Arrays.copyOfRange(DATA_TYPES_WITH_BARCODE, 0, DATA_TYPES_WITH_BARCODE.length - 1);
 
     protected final IlluminaDataProviderFactory factory;
-    protected final int maxReadsInRamPerTile;
     protected final boolean demultiplex;
-    protected final List<File> tmpDirs;
     protected final boolean ignoreUnexpectedBarcodes;
     protected final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
     protected final boolean includeNonPfReads;
@@ -78,8 +76,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             final ReadStructure readStructure,
             final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
             final boolean demultiplex,
-            final int maxReadsInRamPerTile,
-            final List<File> tmpDirs, final int numProcessors,
+            final int numProcessors,
             final Integer firstTile,
             final Integer tileLimit,
             final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
@@ -88,8 +85,6 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             final boolean includeNonPfReads
     ) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
-        this.maxReadsInRamPerTile = maxReadsInRamPerTile;
-        this.tmpDirs = tmpDirs;
         this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
         this.demultiplex = demultiplex;
 

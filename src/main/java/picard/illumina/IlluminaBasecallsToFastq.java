@@ -176,6 +176,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             "is larger than the available memory.")
     public Boolean FORCE_GC = true;
 
+    @Argument(doc = "If true, the output records are sorted by read name. Otherwise they are unsorted.")
+    public Boolean SORT = true;
+
     @Argument(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
             " run, each SortingCollection gets this value/number of indices.")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;
@@ -274,7 +277,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
 
-        basecallsConverter = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, sampleBarcodeFastqWriterMap)
+        BasecallsConverterBuilder<FastqRecordsForCluster> converterBuilder = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, sampleBarcodeFastqWriterMap)
                 .barcodesDir(BARCODES_DIR)
                 .withDemultiplex(demultiplex)
                 .numProcessors(NUM_PROCESSORS)
@@ -282,15 +285,16 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 .tileLimit(TILE_LIMIT)
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
-                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
-                .buildSortingBasecallsConverter(
+                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES);
+
+        basecallsConverter = SORT ? converterBuilder.buildSortingBasecallsConverter(
                         queryNameComparator,
                         new FastqRecordsForClusterCodec(readStructure.templates.length(),
                                 readStructure.sampleBarcodes.length(),
                                 readStructure.molecularBarcode.length()),
                         FastqRecordsForCluster.class,
                         Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
-                        TMP_DIR);
+                        TMP_DIR) : converterBuilder.build();
 
         basecallsConverter.setConverter(
                 new ClusterToFastqRecordsForClusterConverter(

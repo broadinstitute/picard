@@ -260,6 +260,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "Should the barcode quality be included when the sample barcode is included?")
     public boolean INCLUDE_BARCODE_QUALITY = false;
 
+    @Argument(doc = "If true, the output records are sorted by read name. Otherwise they are unsorted.")
+    public Boolean SORT = true;
+
     private Map<String, SAMFileWriterWrapper> barcodeSamWriterMap;
     private ReadStructure readStructure;
     private BasecallsConverter<SAMRecordsForCluster> basecallsConverter;
@@ -301,7 +304,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         final boolean demultiplex = readStructure.hasSampleBarcode();
-        basecallsConverter = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, barcodeSamWriterMap)
+        BasecallsConverterBuilder<SAMRecordsForCluster> converterBuilder = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, barcodeSamWriterMap)
                 .barcodesDir(BARCODES_DIR)
                 .withDemultiplex(demultiplex)
                 .numProcessors(NUM_PROCESSORS)
@@ -309,13 +312,14 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 .tileLimit(TILE_LIMIT)
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
-                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
+                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES);
+        basecallsConverter = SORT ? converterBuilder
                 .buildSortingBasecallsConverter(
                         new QueryNameComparator(),
                         new Codec(numOutputRecords),
                         SAMRecordsForCluster.class,
                         Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
-                        TMP_DIR);
+                        TMP_DIR) : converterBuilder.build();
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).

@@ -56,7 +56,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @param outputRecordClass      Class needed to create SortingCollections.
      * @param maxReadsInRamPerTile   Configures number of reads each tile will store in RAM before spilling to disk.
      * @param tmpDirs                For SortingCollection spilling.
-     * @return A basecalls conveter that will output sorted records.
+     * @return A basecalls converter that will output sorted records.
      */
     public BasecallsConverter<CLUSTER_OUTPUT_RECORD> buildSortingBasecallsConverter(Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
                                                                                     SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
@@ -69,6 +69,17 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
                 firstTile, tileLimit, outputRecordComparator,
                 codecPrototype,
                 outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+    }
+
+    /**
+     * Builds a basecalls converter without sorting
+     *
+     * @return A basecalls converter that will output unsorted records.
+     */
+    public BasecallsConverter<CLUSTER_OUTPUT_RECORD> build() {
+        return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
+                barcodeRecordWriterMap, demultiplex, numProcessors, firstTile, tileLimit,
+                bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
     }
 
     /**

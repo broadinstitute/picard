@@ -34,6 +34,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     private final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     private final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
+    private final int maxReadsInRamPerTile;
+    private final List<File> tmpDirs;
     private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
     private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
     private final Map<Integer, List<SortedRecordToWriterPump>> completedWork = new HashMap<>();
@@ -85,9 +87,11 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final boolean includeNonPfReads
     ) {
         super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
-                maxReadsInRamPerTile, tmpDirs, numProcessors, firstTile, tileLimit, bclQualityEvaluationStrategy,
+                numProcessors, firstTile, tileLimit, bclQualityEvaluationStrategy,
                 ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
 
+        this.tmpDirs = tmpDirs;
+        this.maxReadsInRamPerTile = maxReadsInRamPerTile;
         this.codecPrototype = codecPrototype;
         this.outputRecordComparator = outputRecordComparator;
         this.outputRecordClass = outputRecordClass;
