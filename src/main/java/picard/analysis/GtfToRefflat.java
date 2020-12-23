@@ -107,12 +107,7 @@ public class GtfToRefflat {
                         }
                         if (type.equals("stop_codon")) {
                             codingEnd = feature.getEnd();
-                        }
-                        if (type.equals("cds") && codingStart == -1) {
-                            codingStart = feature.getStart();
-                        }
-                        if (type.equals("cds")) {
-                            codingEnd = feature.getEnd();
+                            has_stopCodon = true;
                         }
                     } else {
                         if (type.equals("stop_codon")) {
@@ -122,12 +117,12 @@ public class GtfToRefflat {
                             codingEnd = feature.getEnd();
                             has_stopCodon = true;
                         }
-                        if (type.equals("cds") && codingStart == -1) {
-                            codingStart = feature.getStart();
-                        }
-                        if (type.equals("cds") && !has_stopCodon) {
-                            codingEnd = feature.getEnd();
-                        }
+                    }
+                    if (type.equals("cds") && codingStart == -1) {
+                        codingStart = feature.getStart();
+                    }
+                    if (type.equals("cds") && !has_stopCodon) {
+                        codingEnd = feature.getEnd();
                     }
 
                     transcriptId = currentTranscriptId;
@@ -153,7 +148,7 @@ public class GtfToRefflat {
         Collections.sort(exonEnds);
         exonEnds = exonEnds.stream().distinct().collect(Collectors.toList());
 
-        codingStart = codingStart == -1 ? exonStarts.get(exonStarts.size() - 1) : codingStart - 1;
+        codingStart = codingStart == -1 ? exonStarts.get(0) : codingStart - 1;
         codingEnd = codingEnd == -1 ? exonEnds.get(exonEnds.size() - 1) : codingEnd;
 
         rows.add(String.join(
@@ -245,22 +240,16 @@ public class GtfToRefflat {
                     resultAttributes.add("transcript_id=" + attributes[i + 1].replace("\"", ""));
                     i++;
                     break;
-                case "gene_name":
-                    resultAttributes.add("Name=" + attributes[i + 1].replace("\"", ""));
-                    i++;
-                    break;
                 default:
                     break;
             }
         }
 
         String newAttributes = String.join("", resultAttributes);
-        String newRow = String.join(COLUMN_DELIMITER, resultValues);
-        newAttributes = StringUtils.chop(newAttributes);
+        resultValues.add(StringUtils.chop(newAttributes));
 
-        String newValues = newRow.concat(COLUMN_DELIMITER + newAttributes);
+        return String.join(COLUMN_DELIMITER, resultValues);
 
-        return newValues;
     }
 
 }
