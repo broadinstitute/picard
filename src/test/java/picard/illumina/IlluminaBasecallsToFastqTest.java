@@ -29,7 +29,6 @@ import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -150,19 +149,21 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
         runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
     }
 
-    private void compareFastqs(File testDataDir, File outputSam, String filename) {
-        File f1 = new File(outputSam.getParentFile(), filename);
-        File f2 = new File(testDataDir, filename);
-        FastqReader reader1 = new FastqReader(f1);
-        List<FastqRecord> reads = new ArrayList<>();
-        FastqReader reader2 = new FastqReader(f2);
-        for (FastqRecord record : reader1) {
-            reads.add(record);
-        }
+    private void compareFastqs(File actual, File expected) {
+        List<FastqRecord> actualReads = slurpReads(actual);
+        List<FastqRecord> expectedReads = slurpReads(expected);
 
-        for (FastqRecord record : reader2) {
-            Assert.assertTrue(reads.contains(record));
-        }
+        actualReads.sort((a, b) -> a.getReadName().compareTo(b.getReadName()));
+        expectedReads.sort((a, b) -> a.getReadName().compareTo(b.getReadName()));
+        Assert.assertEquals(actualReads, expectedReads);
+    }
+
+    private List<FastqRecord> slurpReads(final File f) {
+        final FastqReader in = new FastqReader(f);
+        final List<FastqRecord> recs = new ArrayList<>();
+        for (final FastqRecord r : in) recs.add(r);
+        in.close();
+        return recs;
     }
 
     /**
@@ -194,31 +195,48 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             final List<File> outputPrefixes = new ArrayList<File>();
             convertParamsFile(libraryParamsFile, concatNColumnFields, testDataDir, outputDir, libraryParams, outputPrefixes);
 
+            for (final boolean sort : new boolean[]{false, true}) {
+                runPicardCommandLine(new String[]{
+                        "BASECALLS_DIR=" + baseCallsDir,
+                        "LANE=" + lane,
+                        "RUN_BARCODE=HiMom",
+                        "READ_STRUCTURE=" + readStructureString,
+                        "MULTIPLEX_PARAMS=" + libraryParams,
+                        "MACHINE_NAME=machine1",
+                        "FLOWCELL_BARCODE=abcdeACXX",
+                        "MAX_READS_IN_RAM_PER_TILE=100", //force spill to disk to test encode/decode,
+                        "SORT=" + sort
+                });
 
-            runPicardCommandLine(new String[]{
-                    "BASECALLS_DIR=" + baseCallsDir,
-                    "LANE=" + lane,
-                    "RUN_BARCODE=HiMom",
-                    "READ_STRUCTURE=" + readStructureString,
-                    "MULTIPLEX_PARAMS=" + libraryParams,
-                    "MACHINE_NAME=machine1",
-                    "FLOWCELL_BARCODE=abcdeACXX",
-                    "MAX_READS_IN_RAM_PER_TILE=100" //force spill to disk to test encode/decode
-            });
-
-            final ReadStructure readStructure = new ReadStructure(readStructureString);
-            for (final File outputSam : outputPrefixes) {
-                for (int i = 1; i <= readStructure.templates.length(); ++i) {
-                    final String filename = outputSam.getName() + "." + i + ".fastq";
-                    IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
-                }
-                for (int i = 1; i <= readStructure.sampleBarcodes.length(); ++i) {
-                    final String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
-                    IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
-                }
-                for (int i = 1; i <= readStructure.molecularBarcode.length(); ++i) {
-                    final String filename = outputSam.getName() + ".index_" + i + ".fastq";
-                    IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
+                final ReadStructure readStructure = new ReadStructure(readStructureString);
+                for (final File prefix : outputPrefixes) {
+                    for (int i = 1; i <= readStructure.templates.length(); ++i) {
+                        final String filename = prefix.getName() + "." + i + ".fastq";
+                        if (sort) {
+                            IOUtil.assertFilesEqual(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
+                        }
+                        else {
+                            compareFastqs(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
+                        }
+                    }
+                    for (int i = 1; i <= readStructure.sampleBarcodes.length(); ++i) {
+                        final String filename = prefix.getName() + ".barcode_" + i + ".fastq";
+                        if (sort) {
+                            IOUtil.assertFilesEqual(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
+                        }
+                        else {
+                            compareFastqs(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
+                        }
+                    }
+                    for (int i = 1; i <= readStructure.molecularBarcode.length(); ++i) {
+                        final String filename = prefix.getName() + ".index_" + i + ".fastq";
+                        if (sort) {
+                            IOUtil.assertFilesEqual(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
+                        }
+                        else {
+                            compareFastqs(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
+                        }
+                    }
                 }
             }
         } finally {

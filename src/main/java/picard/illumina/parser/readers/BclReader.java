@@ -39,7 +39,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Queue;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -72,7 +74,9 @@ import java.util.zip.GZIPInputStream;
  */
 public class BclReader extends BaseBclReader implements CloseableIterator<BclData> {
     private static final int HEADER_SIZE = 4;
-    protected BclData queue = null;
+    private static final int QUEUE_SIZE = 128;
+    private final Queue<BclData> queue  = new ArrayDeque<>(QUEUE_SIZE);
+    private final byte[] buffer         = new byte[QUEUE_SIZE];
 
     public BclReader(final List<File> bclsForOneTile, final int[] outputLengths,
                      final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean seekable) {
@@ -194,10 +198,11 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
 
     @Override
     public boolean hasNext() {
-        if (queue == null) {
+        if (queue.isEmpty()) {
             advance();
         }
-        return queue != null;
+
+        return !queue.isEmpty();
     }
 
     protected void assertProperFileStructure(final File file) {
@@ -209,13 +214,8 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
     }
 
     public BclData next() {
-        if (queue == null) {
-            advance();
-        }
-
-        final BclData data = queue;
-        queue = null;
-        return data;
+        if (!hasNext()) throw new IllegalStateException("next() called on BclReader that has no more items.");
+        return queue.remove();
     }
 
     @Override
@@ -224,35 +224,43 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
     }
 
     void advance() {
-        int totalCycleCount = 0;
-        final BclData data = new BclData(outputLengths);
-        for (int read = 0; read < outputLengths.length; read++) {
-            for (int cycle = 0; cycle < outputLengths[read]; ++cycle) {
-                try {
+        try {
+            // See how many clusters we can read and then make BclData objects for them
+            final int clustersRead   = this.streams[0].read(buffer);
+            if (clustersRead == -1) return;
 
-                    final int readByte;
-                    try {
-                        readByte = this.streams[totalCycleCount].read();
-                    } catch (IOException e) {
-                        // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
-                        throw new IOException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
-                                (totalCycleCount+1), this.streamFiles[totalCycleCount].getAbsolutePath()), e);
-                    }
-
-                    if (readByte == -1) {
-                        queue = null;
-                        return;
-                    }
-
-                    decodeBasecall(data, read, cycle, readByte);
-                    totalCycleCount++;
-                } catch (final IOException ioe) {
-                    throw new RuntimeIOException(ioe);
-                }
-
+            final BclData[] bclDatas = new BclData[clustersRead];
+            for (int i=0; i<clustersRead; ++i) {
+                bclDatas[i] = new BclData(outputLengths);
             }
+
+            int totalCycleCount = 0;
+
+            for (int read = 0; read < numReads; ++read) {
+                final int readLen = this.outputLengths[read];
+
+                for (int cycle = 0; cycle < readLen; ++cycle) {
+                    if (totalCycleCount > 0) {
+                        final int n = this.streams[totalCycleCount].read(buffer, 0, clustersRead);
+                        assert n == clustersRead;
+                    }
+                    totalCycleCount += 1;
+
+                    for (int dataIdx=0; dataIdx<clustersRead; ++dataIdx) {
+                        final BclData data = bclDatas[dataIdx];
+                        final int b = Byte.toUnsignedInt(buffer[dataIdx]);
+                        decodeBasecall(data.bases[read], data.qualities[read], cycle, b);
+                    }
+                }
+            }
+
+            for (final BclData data : bclDatas) this.queue.add(data);
         }
-        this.queue = data;
+        catch (final IOException ioe) {
+//            throw new RuntimeIOException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
+//                                    (totalCycleCount), this.streamFiles[totalCycleCount].getAbsolutePath()), ioe);
+            throw new RuntimeIOException(ioe);
+        }
     }
 
     public static BclReader makeSeekable(final List<File> files, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final int[] outputLengths) {

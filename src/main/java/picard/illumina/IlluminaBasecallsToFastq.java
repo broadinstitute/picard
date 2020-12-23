@@ -23,28 +23,22 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.fastq.BasicFastqWriter;
-import htsjdk.samtools.fastq.FastqReader;
-import htsjdk.samtools.fastq.FastqRecord;
-import htsjdk.samtools.fastq.FastqWriter;
-import htsjdk.samtools.fastq.FastqWriterFactory;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.fastq.*;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.BaseCallingProgramGroup;
 import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
+import picard.illumina.BasecallsConverter.ConvertedClusterDataWriter;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
@@ -52,20 +46,9 @@ import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.IlluminaUtil;
 import picard.util.TabbedTextFileWithHeaderParser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @CommandLineProgramProperties(
         summary = IlluminaBasecallsToFastq.USAGE_SUMMARY + IlluminaBasecallsToFastq.USAGE_DETAILS,
@@ -208,9 +191,12 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         CASAVA_1_8, ILLUMINA
     }
 
-    private Map<String, FastqRecordsWriter> sampleBarcodeFastqWriterMap;
+    /** One of these maps will get populated and the other will remain empty depending on if we are sorting or not. */
+    private final Map<String, FastqRecordsWriter> sampleBarcodeFastqWriterMap = new HashMap<>(1, 0.5f);
+    private final Map<String, ClusterWriter> sampleBarcodeClusterWriterMap    = new HashMap<>(1, 0.5f);
+
     private ReadStructure readStructure;
-    private BasecallsConverter<FastqRecordsForCluster> basecallsConverter;
+    private BasecallsConverter<?> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
     private final FastqWriterFactory fastqWriterFactory = new FastqWriterFactory();
     private ReadNameEncoder readNameEncoder;
@@ -222,7 +208,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Override
     protected int doWork() {
         initialize();
-        basecallsConverter.processTilesAndWritePerSampleOutputs(sampleBarcodeFastqWriterMap.keySet());
+        final Set<String> barcodes = sampleBarcodeFastqWriterMap.isEmpty() ? sampleBarcodeClusterWriterMap.keySet()
+                : sampleBarcodeFastqWriterMap.keySet();
+        basecallsConverter.processTilesAndWritePerSampleOutputs(barcodes);
         return 0;
     }
 
@@ -268,8 +256,12 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final boolean demultiplex;
         if (OUTPUT_PREFIX != null) {
-            sampleBarcodeFastqWriterMap = new HashMap<>(1,1.0f);
-            sampleBarcodeFastqWriterMap.put(null, buildWriter(OUTPUT_PREFIX));
+            if (SORT) {
+                sampleBarcodeFastqWriterMap.put(null, (FastqRecordsWriter) buildWriter(OUTPUT_PREFIX));
+            }
+            else {
+                sampleBarcodeClusterWriterMap.put(null, (ClusterWriter) buildWriter(OUTPUT_PREFIX));
+            }
             demultiplex = false;
         } else {
             populateWritersFromMultiplexParams();
@@ -277,7 +269,30 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
 
-        BasecallsConverterBuilder<FastqRecordsForCluster> converterBuilder = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, sampleBarcodeFastqWriterMap)
+        if (SORT) {
+            BasecallsConverterBuilder<FastqRecordsForCluster> converterBuilder = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, sampleBarcodeFastqWriterMap)
+                    .barcodesDir(BARCODES_DIR)
+                    .withDemultiplex(demultiplex)
+                    .numProcessors(NUM_PROCESSORS)
+                    .firstTile(FIRST_TILE)
+                    .tileLimit(TILE_LIMIT)
+                    .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
+                    .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
+                    .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES);
+
+            final BasecallsConverter<FastqRecordsForCluster> converter = converterBuilder.buildSortingBasecallsConverter(
+                    queryNameComparator,
+                    new FastqRecordsForClusterCodec(readStructure.templates.length(),
+                            readStructure.sampleBarcodes.length(),
+                            readStructure.molecularBarcode.length()),
+                    FastqRecordsForCluster.class,
+                    Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
+                    TMP_DIR);
+            converter.setConverter(new ClusterToFastqRecordsForClusterConverter(converter.getFactory().getOutputReadStructure()));
+            this.basecallsConverter = converter;
+        }
+        else {
+            BasecallsConverterBuilder<ClusterData> converterBuilder = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, sampleBarcodeClusterWriterMap)
                 .barcodesDir(BARCODES_DIR)
                 .withDemultiplex(demultiplex)
                 .numProcessors(NUM_PROCESSORS)
@@ -287,18 +302,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
                 .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES);
 
-        basecallsConverter = SORT ? converterBuilder.buildSortingBasecallsConverter(
-                        queryNameComparator,
-                        new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                                readStructure.sampleBarcodes.length(),
-                                readStructure.molecularBarcode.length()),
-                        FastqRecordsForCluster.class,
-                        Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster),
-                        TMP_DIR) : converterBuilder.build();
-
-        basecallsConverter.setConverter(
-                new ClusterToFastqRecordsForClusterConverter(
-                        basecallsConverter.getFactory().getOutputReadStructure()));
+            final BasecallsConverter<ClusterData> converter = converterBuilder.build();
+            converter.setConverter(new NoOpClusterConverter());
+            this.basecallsConverter = converter;
+        }
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
     }
@@ -339,7 +346,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         assertExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
 
         List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
-        sampleBarcodeFastqWriterMap = new HashMap<>(rows.size(), 1);
+        final Set<String> seenBarcodes = new HashSet<>();
 
         for (final TabbedTextFileWithHeaderParser.Row row : rows) {
             List<String> sampleBarcodeValues = null;
@@ -352,15 +359,23 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             }
 
             final String key = (sampleBarcodeValues == null || sampleBarcodeValues.contains("N")) ? null : StringUtil.join("", sampleBarcodeValues);
-            if (sampleBarcodeFastqWriterMap.containsKey(key)) {    //This will catch the case of having more than 1 line in a non-barcoded MULTIPLEX_PARAMS file
-                throw new PicardException("Row for barcode " + key + " appears more than once in MULTIPLEX_PARAMS file " +
-                        MULTIPLEX_PARAMS);
+            if (seenBarcodes.contains(key)) {    //This will catch the case of having more than 1 line in a non-barcoded MULTIPLEX_PARAMS file
+                throw new PicardException("Row for barcode " + key + " appears more than once in MULTIPLEX_PARAMS file " + MULTIPLEX_PARAMS);
+            }
+            else {
+                seenBarcodes.add(key);
             }
 
-            final FastqRecordsWriter writer = buildWriter(new File(row.getField("OUTPUT_PREFIX")));
-            sampleBarcodeFastqWriterMap.put(key, writer);
+            if (SORT) {
+                sampleBarcodeFastqWriterMap.put(key, (FastqRecordsWriter) buildWriter(new File(row.getField("OUTPUT_PREFIX"))));
+            }
+            else {
+                sampleBarcodeClusterWriterMap.put(key, (ClusterWriter) buildWriter(new File(row.getField("OUTPUT_PREFIX"))));
+            }
+
         }
-        if (sampleBarcodeFastqWriterMap.isEmpty()) {
+
+        if (seenBarcodes.isEmpty()) {
             throw new PicardException("MULTIPLEX_PARAMS file " + MULTIPLEX_PARAMS + " does have any data rows.");
         }
         libraryParamsParser.close();
@@ -370,30 +385,42 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * @return FastqRecordsWriter that contains one or more FastqWriters (amount depends on read structure), all using
      * outputPrefix to determine the filename(s).
      */
-    private FastqRecordsWriter buildWriter(final File outputPrefix) {
+    private ConvertedClusterDataWriter<?> buildWriter(final File outputPrefix) {
         final File outputDir = outputPrefix.getAbsoluteFile().getParentFile();
         IOUtil.assertDirectoryIsWritable(outputDir);
         final String prefixString = outputPrefix.getName();
         final String suffixString = COMPRESS_OUTPUTS ? "fastq.gz" : "fastq";
+
+        final File[] templateFiles         = new File[readStructure.templates.length()];
+        final File[] sampleBarcodeFiles    = new File[readStructure.sampleBarcodes.length()];
+        final File[] molecularBarcodeFiles = new File[readStructure.molecularBarcode.length()];
+
         final FastqWriter[] templateWriters = new FastqWriter[readStructure.templates.length()];
         final FastqWriter[] sampleBarcodeWriters = new FastqWriter[readStructure.sampleBarcodes.length()];
         final FastqWriter[] molecularBarcodeWriters = new FastqWriter[readStructure.molecularBarcode.length()];
 
         for (int i = 0; i < templateWriters.length; ++i) {
-            final String filename = String.format("%s.%d.%s", prefixString, i + 1, suffixString);
-            templateWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
+            templateFiles[i] = new File(outputDir, String.format("%s.%d.%s", prefixString, i + 1, suffixString));
         }
 
         for (int i = 0; i < sampleBarcodeWriters.length; ++i) {
-            final String filename = String.format("%s.barcode_%d.%s", prefixString, i + 1, suffixString);
-            sampleBarcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
+            sampleBarcodeFiles[i] = new File(outputDir, String.format("%s.barcode_%d.%s", prefixString, i + 1, suffixString));
         }
 
         for (int i = 0; i < molecularBarcodeWriters.length; ++i) {
-            final String filename = String.format("%s.index_%d.%s", prefixString, i + 1, suffixString);
-            molecularBarcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
+            molecularBarcodeFiles[i] = new File(outputDir, String.format("%s.index_%d.%s", prefixString, i + 1, suffixString));
         }
-        return new FastqRecordsWriter(templateWriters, sampleBarcodeWriters, molecularBarcodeWriters);
+
+        if (SORT) {
+            return new FastqRecordsWriter(
+                Arrays.stream(templateFiles).map(fastqWriterFactory::newWriter).toArray(FastqWriter[]::new),
+                Arrays.stream(sampleBarcodeFiles).map(fastqWriterFactory::newWriter).toArray(FastqWriter[]::new),
+                Arrays.stream(molecularBarcodeFiles).map(fastqWriterFactory::newWriter).toArray(FastqWriter[]::new)
+            );
+        }
+        else {
+            return new ClusterWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles);
+        }
     }
 
     /**
@@ -503,6 +530,116 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             }
         }
     }
+
+    /** Trivial class to avoid converting ClusterData to another type when not sorting outputs. */
+    private static final class NoOpClusterConverter implements BasecallsConverter.ClusterDataConverter<ClusterData> {
+        @Override
+        public ClusterData convertClusterToOutputRecord(ClusterData cluster) {
+            return cluster;
+        }
+    }
+
+    /** An optimized writer for writing ClusterData directly to a set of Fastq files. */
+    private final class ClusterWriter implements BasecallsConverter.ConvertedClusterDataWriter<ClusterData> {
+        private static final byte PERIOD = (byte) '.';
+        private static final byte N      = (byte) 'N';
+
+        private final OutputStream[] templateOut;
+        private final OutputStream[] sampleBarcodeOut;
+        private final OutputStream[] molecularBarcodeOut;
+        private final boolean appendTemplateNumber;
+        private final boolean appendMolecularBarcodeNumber;
+        private final int numReads;
+
+        public ClusterWriter(final File[] templateFiles,
+                             final File[] sampleBarcodeFiles,
+                             final File[] molecularBarcodeFiles) {
+
+            this.templateOut = Arrays.stream(templateFiles).map(this::makeWriter).toArray(OutputStream[]::new);
+            this.sampleBarcodeOut = Arrays.stream(sampleBarcodeFiles).map(this::makeWriter).toArray(OutputStream[]::new);
+            this.molecularBarcodeOut = Arrays.stream(molecularBarcodeFiles).map(this::makeWriter).toArray(OutputStream[]::new);
+            this.appendTemplateNumber = this.templateOut.length > 1;
+            this.appendMolecularBarcodeNumber = this.molecularBarcodeOut.length > 1;
+            this.numReads = templateOut.length + sampleBarcodeOut.length + molecularBarcodeOut.length;
+        }
+
+        private OutputStream makeWriter(final File file) {
+            OutputStream os = Defaults.CREATE_MD5 ? IOUtil.openFileForMd5CalculatingWriting(file) : IOUtil.openFileForWriting(file);
+            os = IOUtil.maybeBufferOutputStream(os);
+            return os;
+        }
+
+        @Override
+        public void write(final ClusterData rec) {
+            int templateIndex = 0;
+            int sampleBarcodeIndex = 0;
+            int molecularBarcodeIndex = 0;
+
+            for (int i=0; i<this.numReads; ++i) {
+                final ReadData read = rec.getRead(i);
+                final OutputStream out;
+                final String name;
+
+                switch (read.getReadType()) {
+                    case T:
+                        out = templateOut[templateIndex++];
+                        name = readNameEncoder.generateReadName(rec, appendTemplateNumber ? templateIndex : null);
+                        break;
+                    case B:
+                        out = sampleBarcodeOut[sampleBarcodeIndex++];
+                        name = readNameEncoder.generateReadName(rec, null);
+                        break;
+                    case M:
+                        out = molecularBarcodeOut[molecularBarcodeIndex++];
+                        name = readNameEncoder.generateReadName(rec, appendMolecularBarcodeNumber ? molecularBarcodeIndex : null);
+                        break;
+                    default:
+                        throw new IllegalStateException("Read type other than T/B/M encountered.");
+                }
+
+                writeSingle(out, name, read);
+            }
+        }
+
+        /** Writes out a single read to a single FASTQ's output stream. */
+        private void writeSingle(final OutputStream out, final String name, final ReadData read) {
+            try {
+                final byte[] bases = read.getBases();
+                final byte[] quals = read.getQualities();
+                final int len = bases.length;
+                for (int i=0; i<len; ++i) {
+                    if (bases[i] == PERIOD) bases[i] = N;
+                    quals[i] = (byte) (quals[i] + 33);
+                }
+
+                out.write('@');
+                out.write(name.getBytes(StandardCharsets.UTF_8));
+                out.write('\n');
+                out.write(bases);
+                out.write('\n');
+                out.write('+');
+                out.write('\n');
+                out.write(quals);
+                out.write('\n');
+            }
+            catch (IOException ioe) {
+                throw new RuntimeIOException(ioe);
+            }
+        }
+
+        @Override
+        public void close() {
+            try {
+                for (final OutputStream out : templateOut) out.close();
+                for (final OutputStream out : sampleBarcodeOut) out.close();
+                for (final OutputStream out : molecularBarcodeOut) out.close();
+            }
+            catch (IOException ioe) {
+                throw new RuntimeIOException(ioe);
+            }
+        }
+    }
+
 
     /**
      * Codec passed to IlluminaBasecallsConverter for use in SortingCollections of output records.

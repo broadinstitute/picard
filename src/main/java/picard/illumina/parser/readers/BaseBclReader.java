@@ -16,16 +16,18 @@ import java.util.zip.GZIPInputStream;
 public class BaseBclReader {
     private static final byte BASE_MASK = 0x0003;
     private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
-    private static final byte NO_CALL_BASE = (byte) '.';
+    public static final byte NO_CALL_BASE = (byte) '.';
     final InputStream[] streams;
     final File[] streamFiles;
     final int[] outputLengths;
-    private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
+    final int numReads;
+    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
     final int[] numClustersPerCycle;
     final int cycles;
 
     BaseBclReader(int[] outputLengths, BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
         this.outputLengths = outputLengths;
+        this.numReads = outputLengths.length;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         int cycles = 0;
@@ -40,17 +42,7 @@ public class BaseBclReader {
     }
 
     BaseBclReader(int[] outputLengths) {
-        this.outputLengths = outputLengths;
-
-        int cycles = 0;
-        for (final int outputLength : outputLengths) {
-            cycles += outputLength;
-        }
-
-        this.cycles = cycles;
-        this.streams = new InputStream[cycles];
-        this.streamFiles = new File[cycles];
-        this.numClustersPerCycle = new int[cycles];
+        this(outputLengths, null);
     }
 
     int getNumClusters() {
@@ -88,13 +80,13 @@ public class BaseBclReader {
         }
     }
 
-    void decodeBasecall(final BclData bclData, final int read, final int cycle, final int byteToDecode) {
+    final void decodeBasecall(final byte[] bases, final byte[] quals, final int cycle, final int byteToDecode) {
         if (byteToDecode == 0) {
-            bclData.bases[read][cycle] = NO_CALL_BASE;
-            bclData.qualities[read][cycle] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+            bases[cycle] = NO_CALL_BASE;
+            quals[cycle] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
         } else {
-            bclData.bases[read][cycle] = BASE_LOOKUP[byteToDecode & BASE_MASK];
-            bclData.qualities[read][cycle] = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte) (byteToDecode >>> 2));
+            bases[cycle] = BASE_LOOKUP[byteToDecode & BASE_MASK];
+            quals[cycle] = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte) (byteToDecode >>> 2));
         }
     }
 
