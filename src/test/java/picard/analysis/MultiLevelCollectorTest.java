@@ -62,16 +62,16 @@ public class MultiLevelCollectorTest {
             setup(accumulationLevels, samRgRecords);
         }
 
-        //The number of times records were accepted by a RecordCountPerUnitCollectors (note since the same
-        //samRecord might be aggregated by multiple PerUnit collectors, this may be greater than the number of
-        //records in the file
+        // The number of times records were accepted by a RecordCountPerUnitCollectors (note since the same
+        // samRecord might be aggregated by multiple PerUnit collectors, this may be greater than the number of
+        // records in the file
         private int numProcessed = 0;
 
         public int getNumProcessed() {
             return numProcessed;
         }
 
-        private final Map<String, TotalNumberMetric> unitsToMetrics = new HashMap<String, TotalNumberMetric>();
+        private final Map<String, TotalNumberMetric> unitsToMetrics = new HashMap<>();
 
         public Map<String, TotalNumberMetric> getUnitsToMetrics() {
             return unitsToMetrics;
@@ -126,25 +126,25 @@ public class MultiLevelCollectorTest {
         }
     }
 
-    public static final Map<MetricAccumulationLevel, Map<String, Integer>> accumulationLevelToPerUnitReads = new HashMap<MetricAccumulationLevel, Map<String, Integer>>();
+    public static final Map<MetricAccumulationLevel, Map<String, Integer>> accumulationLevelToPerUnitReads = new HashMap<>();
     static {
-        HashMap<String, Integer> curMap = new HashMap<String, Integer>();
+        HashMap<String, Integer> curMap = new HashMap<>();
         curMap.put("__", 19);
         accumulationLevelToPerUnitReads.put(MetricAccumulationLevel.ALL_READS, curMap);
 
-        curMap = new HashMap<String, Integer>();
+        curMap = new HashMap<>();
         curMap.put("Ma__", 10);
         curMap.put("Pa__", 9);
         accumulationLevelToPerUnitReads.put(MetricAccumulationLevel.SAMPLE, curMap);
 
-        curMap = new HashMap<String, Integer>();
+        curMap = new HashMap<>();
         curMap.put("Ma_whatever_", 10);
         curMap.put("Pa_lib1_",     4);
         curMap.put("Pa_lib2_",     5);
         accumulationLevelToPerUnitReads.put(MetricAccumulationLevel.LIBRARY, curMap);
 
 
-        curMap = new HashMap<String, Integer>();
+        curMap = new HashMap<>();
         curMap.put("Ma_whatever_me",     10);
         curMap.put("Pa_lib1_myself", 4);
         curMap.put("Pa_lib2_i",      3);
@@ -166,7 +166,7 @@ public class MultiLevelCollectorTest {
 
     @Test(dataProvider = "variedAccumulationLevels")
     public void multilevelCollectorTest(final Set<MetricAccumulationLevel> accumulationLevels) {
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(TEST_FILE);
+        final SamReader in = SamReaderFactory.makeDefault().open(TEST_FILE);
         final RecordCountMultiLevelCollector collector = new RecordCountMultiLevelCollector(accumulationLevels, in.getFileHeader().getReadGroups());
 
         for (final SAMRecord rec : in) {

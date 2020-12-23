@@ -194,7 +194,7 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
 
     @Override
     public void test() {
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(getOutput());
+        final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
         for (final SAMRecord record : reader) {
             // If there are expected assigned UMIs, check to make sure they match
             if (expectedAssignedUmis != null) {

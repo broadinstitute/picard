@@ -171,7 +171,7 @@ public class CollectWgsMetricsTestUtils{
 
     static SamReader createSamReader(final String samExample) {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(samExample.getBytes());
-        return SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(inputStream));
+        return SamReaderFactory.makeDefault().open(SamInputResource.of(inputStream));
     }
 
     static ReferenceSequenceFileWalker getReferenceSequenceFileWalker(final String referenceString){

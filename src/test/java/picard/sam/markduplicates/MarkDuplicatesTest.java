@@ -108,7 +108,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
 
             // Read the MarkDuplicates output file, and get the PG ID for each read.  In this particular test,
             // the PG ID should be the same for both ends of a pair.
-            final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(outputSam);
+            final SamReader reader = SamReaderFactory.makeDefault().open(outputSam);
 
             final Map<String, String> pgIdForReadName = new HashMap<>();
             for (final SAMRecord rec : reader) {

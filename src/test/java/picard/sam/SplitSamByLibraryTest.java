@@ -99,7 +99,7 @@ public class SplitSamByLibraryTest {
     }
 
     private int countReads(File samFile) {
-        SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFile);
+        SamReader reader = SamReaderFactory.makeDefault().open(samFile);
         int count = 0;
         for (Iterator it = reader.iterator(); it.hasNext(); ) {
             it.next();

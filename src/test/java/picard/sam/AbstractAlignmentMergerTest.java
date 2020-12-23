@@ -714,7 +714,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         Assert.assertEquals(mergeBamAlignment.doWork(), 0);
 
         // check that all reads have been unmapped due to bacterial contamination as needed.
-        try (SamReader mergedReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(fileMerged)) {
+        try (SamReader mergedReader = SamReaderFactory.makeDefault().open(fileMerged)) {
             for (SAMRecord mergedRecord : mergedReader) {
                 Assert.assertTrue(mergedRecord.getReadUnmappedFlag(), mergedRecord.toString());
                 Assert.assertTrue(!mergedRecord.getReadPairedFlag() || mergedRecord.getMateUnmappedFlag(), mergedRecord.toString());

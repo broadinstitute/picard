@@ -124,8 +124,8 @@ public class SamComparisonTest {
             final int expectedDupDiffer,
             final boolean areEqual) throws IOException
     {
-        try (final SamReader samReader1 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(new File(TEST_FILES_DIR, f1));
-             final SamReader samReader2 = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(new File(TEST_FILES_DIR, f2)))
+        try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(new File(TEST_FILES_DIR, f1));
+             final SamReader samReader2 = SamReaderFactory.makeDefault().open(new File(TEST_FILES_DIR, f2)))
         {
             final SAMComparisonArgumentCollection argumentCollection = new SAMComparisonArgumentCollection();
             argumentCollection.LENIENT_DUP = lenientDup;

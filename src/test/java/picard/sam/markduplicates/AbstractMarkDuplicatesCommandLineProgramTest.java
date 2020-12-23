@@ -638,7 +638,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.getSamRecordSetBuilder().setReadLength(68);
 
         final File input = new File("testdata/picard/sam/MarkDuplicates/markDuplicatesWithMateCigar.pairSet.swap.sam");
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(input);
+        final SamReader reader = SamReaderFactory.makeDefault().open(input);
         tester.setHeader(reader.getFileHeader());
         for (final SAMRecord record : reader) {
             tester.addRecord(record);

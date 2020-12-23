@@ -279,7 +279,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
                        final boolean permissiveFormat,
                        final boolean useSequentialFastqs) throws IOException {
         final File samFile = convertFile(fastqFilename1, fastqFilename2, version, permissiveFormat, useSequentialFastqs);
-        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFile);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(samFile);
         final SAMRecordIterator iterator = samReader.iterator();
         int actualCount = 0;
         while (iterator.hasNext()) {

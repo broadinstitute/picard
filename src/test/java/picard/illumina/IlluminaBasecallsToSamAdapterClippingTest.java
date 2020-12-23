@@ -80,7 +80,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
         Assert.assertEquals(runPicardCommandLine(illuminaArgv), 0);
 
         // Read the file and confirm it contains what is expected
-        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samFile);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(samFile);
 
         // look for clipped adaptor attribute in lane 3 PE (2) and in lane 6 (1) non-PE
         int count = 0;
