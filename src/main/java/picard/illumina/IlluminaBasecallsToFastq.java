@@ -608,7 +608,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 final byte[] quals = read.getQualities();
                 final int len = bases.length;
                 for (int i=0; i<len; ++i) {
-                    if (bases[i] == PERIOD) bases[i] = N;
                     quals[i] = (byte) (quals[i] + 33);
                 }
 

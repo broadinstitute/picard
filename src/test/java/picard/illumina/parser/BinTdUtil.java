@@ -23,7 +23,7 @@ public class BinTdUtil {
     public static final byte C = (byte) 67;
     public static final byte G = (byte) 71;
     public static final byte T = (byte) 84;
-    public static final byte P = (byte) 46; //dot
+    public static final byte P = (byte) 'N';
     public static final Map<String, List<ClusterData>> goldData = new HashMap<String, List<ClusterData>>();
     public static final Map<String, List<Integer>> goldIndices = new HashMap<String, List<Integer>>();
     public static final Map<String, Integer> goldSizes = new HashMap<String, Integer>();

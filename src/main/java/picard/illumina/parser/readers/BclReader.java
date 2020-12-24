@@ -224,6 +224,8 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
     }
 
     void advance() {
+        int totalCycleCount = 0;
+
         try {
             // See how many clusters we can read and then make BclData objects for them
             final int clustersRead   = this.streams[0].read(buffer);
@@ -234,32 +236,38 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
                 bclDatas[i] = new BclData(outputLengths);
             }
 
-            int totalCycleCount = 0;
+            // Process the data from the first cycle since we had to read it to know how many clusters we'd get
+            updateClusterBclDatas(bclDatas, 0, 0);
+            totalCycleCount += 1;
 
             for (int read = 0; read < numReads; ++read) {
                 final int readLen = this.outputLengths[read];
+                final int firstCycle = (read == 0) ? 1 : 0;  // For the first read we already did the first cycle above
 
-                for (int cycle = 0; cycle < readLen; ++cycle) {
-                    if (totalCycleCount > 0) {
-                        final int n = this.streams[totalCycleCount].read(buffer, 0, clustersRead);
-                        assert n == clustersRead;
-                    }
+                for (int cycle = firstCycle; cycle < readLen; ++cycle) {
+                    final int n = this.streams[totalCycleCount].read(buffer, 0, clustersRead);
+                    assert n == clustersRead;
                     totalCycleCount += 1;
 
-                    for (int dataIdx=0; dataIdx<clustersRead; ++dataIdx) {
-                        final BclData data = bclDatas[dataIdx];
-                        final int b = Byte.toUnsignedInt(buffer[dataIdx]);
-                        decodeBasecall(data.bases[read], data.qualities[read], cycle, b);
-                    }
+                    updateClusterBclDatas(bclDatas, read, cycle);
                 }
             }
 
             for (final BclData data : bclDatas) this.queue.add(data);
         }
         catch (final IOException ioe) {
-//            throw new RuntimeIOException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
-//                                    (totalCycleCount), this.streamFiles[totalCycleCount].getAbsolutePath()), ioe);
-            throw new RuntimeIOException(ioe);
+            throw new RuntimeIOException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
+                                    (totalCycleCount+1), this.streamFiles[totalCycleCount].getAbsolutePath()), ioe);
+        }
+    }
+
+    /** Inserts the bases and quals at `cycle` of `read` in all of the bclDatqs, using data in this.buffer. */
+    private void updateClusterBclDatas(final BclData[] bclDatas, final int read, final int cycle) {
+        final int numClusters = bclDatas.length;
+        for (int dataIdx = 0; dataIdx< numClusters; ++dataIdx) {
+            final BclData data = bclDatas[dataIdx];
+            final int b = Byte.toUnsignedInt(this.buffer[dataIdx]);
+            decodeBasecall(data, read, cycle, b);
         }
     }
 

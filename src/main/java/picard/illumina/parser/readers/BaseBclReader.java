@@ -16,7 +16,7 @@ import java.util.zip.GZIPInputStream;
 public class BaseBclReader {
     private static final byte BASE_MASK = 0x0003;
     private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
-    public static final byte NO_CALL_BASE = (byte) '.';
+    public static final byte NO_CALL_BASE = (byte) 'N';
     final InputStream[] streams;
     final File[] streamFiles;
     final int[] outputLengths;
@@ -24,6 +24,22 @@ public class BaseBclReader {
     private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
     final int[] numClustersPerCycle;
     final int cycles;
+
+    /* Array of base values and quality values that are used to decode values from BCLs efficiently. */
+    private static final byte[] BCL_BASE_LOOKUP = new byte[256];
+    private static final byte[] BCL_QUAL_LOOKUP = new byte[256];
+
+    static {
+        BCL_BASE_LOOKUP[0] = NO_CALL_BASE;
+        BCL_QUAL_LOOKUP[0] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+
+        for (int i=1; i<256; ++i) {
+            // TODO: If we can remove the use of BclQualityEvaluationStrategy then in the lookup we
+            // TODO: can just set the QUAL to max(2, (i >>> 2)) instead.
+            BCL_BASE_LOOKUP[i] = BASE_LOOKUP[i & BASE_MASK];
+            BCL_QUAL_LOOKUP[i] = (byte) Math.max(0, (i >>> 2));
+        }
+    }
 
     BaseBclReader(int[] outputLengths, BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
         this.outputLengths = outputLengths;
@@ -80,23 +96,17 @@ public class BaseBclReader {
         }
     }
 
-    final void decodeBasecall(final byte[] bases, final byte[] quals, final int cycle, final int byteToDecode) {
-        if (byteToDecode == 0) {
-            bases[cycle] = NO_CALL_BASE;
-            quals[cycle] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
-        } else {
-            bases[cycle] = BASE_LOOKUP[byteToDecode & BASE_MASK];
-            quals[cycle] = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte) (byteToDecode >>> 2));
-        }
+    final void decodeBasecall(final BclData bclData, final int read, final int cycle, final int byteToDecode) {
+        bclData.bases[read][cycle] = BCL_BASE_LOOKUP[byteToDecode];
+        bclData.qualities[read][cycle] = this.bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality(BCL_QUAL_LOOKUP[byteToDecode]);
     }
 
     void decodeQualityBinnedBasecall(final BclData bclData, final int read, final int cycle, final int byteToDecode,
                                      final CycleData cycleData) {
+        bclData.bases[read][cycle] = BCL_BASE_LOOKUP[byteToDecode];
         if (byteToDecode == 0) {
-            bclData.bases[read][cycle] = NO_CALL_BASE;
             bclData.qualities[read][cycle] = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
         } else {
-            bclData.bases[read][cycle] = BASE_LOOKUP[byteToDecode & BASE_MASK];
             bclData.qualities[read][cycle] = cycleData.qualityBins[byteToDecode >>> 2];
         }
     }

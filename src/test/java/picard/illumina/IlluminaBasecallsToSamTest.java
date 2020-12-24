@@ -138,7 +138,8 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         if (expectedSam != null) {
             final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
             validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
-            IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, expectedSam));
+            final File expectedSamFile = new File(TEST_DATA_DIR, expectedSam);
+            IOUtil.assertFilesEqual(outputBam, expectedSamFile);
         }
     }
 
