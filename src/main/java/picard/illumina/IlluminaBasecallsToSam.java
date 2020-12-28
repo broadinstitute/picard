@@ -25,12 +25,7 @@
 package picard.illumina;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Iso8601Date;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -48,16 +43,7 @@ import picard.util.TabbedTextFileWithHeaderParser;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into
@@ -230,7 +216,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public boolean APPLY_EAMSS_FILTER = true;
 
     @Argument(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
-            " run, each SortingCollection gets this value/number of indices.")
+            " run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;
 
     @Argument(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
@@ -267,6 +253,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private ReadStructure readStructure;
     private BasecallsConverter<SAMRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
+    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
     @Override
     protected int doWork() {
@@ -279,7 +266,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
-
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
         }
@@ -312,20 +298,25 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 .tileLimit(TILE_LIMIT)
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
-                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES);
-        basecallsConverter = SORT ? converterBuilder
-                .buildSortingBasecallsConverter(
-                        new QueryNameComparator(),
-                        new Codec(numOutputRecords),
-                        SAMRecordsForCluster.class,
-                        Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
-                        TMP_DIR) : converterBuilder.build();
+                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
+                .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
+
+        if (SORT) {
+            converterBuilder = converterBuilder
+                    .withSorting(
+                            new QueryNameComparator(),
+                            new Codec(numOutputRecords),
+                            SAMRecordsForCluster.class,
+                            TMP_DIR);
+        }
+
+        basecallsConverter = converterBuilder.build();
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).
          */
         final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
-                basecallsConverter.getFactory().getOutputReadStructure(), adapters, BARCODE_POPULATION_STRATEGY, INCLUDE_BARCODE_QUALITY )
+                basecallsConverter.getFactory().getOutputReadStructure(), adapters, BARCODE_POPULATION_STRATEGY, INCLUDE_BARCODE_QUALITY)
                 .withMolecularIndexTag(MOLECULAR_INDEX_TAG)
                 .withMolecularIndexQualityTag(MOLECULAR_INDEX_BASE_QUALITY_TAG)
                 .withTagPerMolecularIndex(TAG_PER_MOLECULAR_INDEX);

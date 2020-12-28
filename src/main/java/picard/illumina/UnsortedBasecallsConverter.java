@@ -2,19 +2,12 @@ package picard.illumina;
 
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SortingCollection;
-import picard.PicardException;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.ThreadPoolExecutorUtil;
-import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
-import java.time.Duration;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,7 +16,7 @@ import java.util.Set;
  * from standard Illumina formats to specific output records (FASTA records/SAM records). This data is processed
  * on a tile by tile basis.
  * <p>
- * The underlying IlluminaDataProvider apply several optional transformations that can include EAMSS filtering,
+ * The underlying IlluminaDataProvider applies several optional transformations that can include EAMSS filtering,
  * non-PF read filtering and quality score recoding using a BclQualityEvaluationStrategy.
  * <p>
  * The converter can also limit the scope of data that is converted from the data provider by setting the
@@ -34,8 +27,7 @@ import java.util.Set;
  */
 public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     private static final Log log = Log.getInstance(UnsortedBasecallsConverter.class);
-    private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
-    private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
+    private final ProgressLogger processedLogger = new ProgressLogger(log, 1000000, "Processed");
 
     /**
      * Constructs a new BasecallsConverter object.
@@ -62,7 +54,8 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
             final int lane,
             final ReadStructure readStructure,
             final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
-            final boolean demultiplex, final int numProcessors,
+            final boolean demultiplex,
+            final int numThreads,
             final Integer firstTile,
             final Integer tileLimit,
             final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
@@ -71,7 +64,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
             final boolean includeNonPfReads
     ) {
         super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
-                numProcessors, firstTile, tileLimit, bclQualityEvaluationStrategy,
+                numThreads, firstTile, tileLimit, bclQualityEvaluationStrategy,
                 ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
     }
 
@@ -82,11 +75,10 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
 
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
-                readProgressLogger.record(null, 0);
                 if (cluster.isPf() || includeNonPfReads) {
                     final String barcode = (demultiplex ? cluster.getMatchedBarcode() : null);
                     barcodeRecordWriterMap.get(barcode).write(converter.convertClusterToOutputRecord(cluster));
-                    writeProgressLogger.record(null, 0);
+                    processedLogger.record(null, 0);
                 }
             }
             dataProvider.close();

@@ -5,7 +5,9 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
-import picard.illumina.parser.*;
+import picard.illumina.parser.BaseIlluminaDataProvider;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.ThreadPoolExecutorUtil;
 import picard.util.ThreadPoolExecutorWithExceptions;
@@ -54,8 +56,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      * @param demultiplex                  If true, output is split by barcode, otherwise all are written to the same output stream.
      * @param maxReadsInRamPerTile         Configures number of reads each tile will store in RAM before spilling to disk.
      * @param tmpDirs                      For SortingCollection spilling.
-     * @param numProcessors                Controls number of threads.  If <= 0, the number of threads allocated is
-     *                                     available cores - numProcessors.
+     * @param numThreads                   Controls number of threads.
      * @param firstTile                    (For debugging) If non-null, start processing at this tile.
      * @param tileLimit                    (For debugging) If non-null, process no more than this many tiles.
      * @param outputRecordComparator       For sorting output records within a single tile.
@@ -75,7 +76,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
             final boolean demultiplex,
             final int maxReadsInRamPerTile,
-            final List<File> tmpDirs, final int numProcessors,
+            final List<File> tmpDirs,
+            final int numThreads,
             final Integer firstTile,
             final Integer tileLimit,
             final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
@@ -87,7 +89,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final boolean includeNonPfReads
     ) {
         super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
-                numProcessors, firstTile, tileLimit, bclQualityEvaluationStrategy,
+                numThreads, firstTile, tileLimit, bclQualityEvaluationStrategy,
                 ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
 
         this.tmpDirs = tmpDirs;

@@ -57,10 +57,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      * @param barcodeRecordWriterMap       Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
      *                                     one writer stored with key=null.
      * @param demultiplex                  If true, output is split by barcode, otherwise all are written to the same output stream.
-     * @param maxReadsInRamPerTile         Configures number of reads each tile will store in RAM before spilling to disk.
-     * @param tmpDirs                      For SortingCollection spilling.
-     * @param numProcessors                Controls number of threads.  If <= 0, the number of threads allocated is
-     *                                     available cores - numProcessors.
+     * @param numThreads                   Controls number of threads.
      * @param firstTile                    (For debugging) If non-null, start processing at this tile.
      * @param tileLimit                    (For debugging) If non-null, process no more than this many tiles.
      * @param bclQualityEvaluationStrategy The basecall quality evaluation strategy that is applyed to decoded base calls.
@@ -76,7 +73,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             final ReadStructure readStructure,
             final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
             final boolean demultiplex,
-            final int numProcessors,
+            final int numThreads,
             final Integer firstTile,
             final Integer tileLimit,
             final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
@@ -87,18 +84,10 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
         this.demultiplex = demultiplex;
+        this.numThreads = numThreads;
 
         this.factory = new IlluminaDataProviderFactory(basecallsDir,
                 barcodesDir, lane, readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex));
-
-        if (numProcessors == 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors();
-        } else if (numProcessors < 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
-        } else {
-            this.numThreads = numProcessors;
-        }
-
         this.factory.setApplyEamssFiltering(applyEamssFiltering);
         this.includeNonPfReads = includeNonPfReads;
         this.tiles = factory.getAvailableTiles();

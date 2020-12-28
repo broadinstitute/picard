@@ -1,5 +1,6 @@
 package picard.illumina;
 
+import htsjdk.samtools.SAMFileWriterImpl;
 import htsjdk.samtools.util.SortingCollection;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
@@ -20,10 +21,15 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private final int lane;
     private final ReadStructure readStructure;
     private final Map<String, ? extends BasecallsConverter.ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
-
+    private Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
+    private SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
+    private Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
+    private int maxReadsInRamPerTile = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
+    private List<File> tmpDirs;
     private File barcodesDir;
     private boolean demultiplex = false;
     private int numProcessors = Runtime.getRuntime().availableProcessors();
+    private final int numThreads;
     private Integer firstTile = null;
     private Integer tileLimit = null;
     private BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
@@ -46,6 +52,14 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
         this.lane = lane;
         this.readStructure = readStructure;
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
+
+        if (numProcessors == 0) {
+            this.numThreads = Runtime.getRuntime().availableProcessors();
+        } else if (numProcessors < 0) {
+            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
+        } else {
+            this.numThreads = numProcessors;
+        }
     }
 
     /**
@@ -54,21 +68,18 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @param outputRecordComparator For sorting output records within a single tile.
      * @param codecPrototype         For spilling output records to disk.
      * @param outputRecordClass      Class needed to create SortingCollections.
-     * @param maxReadsInRamPerTile   Configures number of reads each tile will store in RAM before spilling to disk.
      * @param tmpDirs                For SortingCollection spilling.
      * @return A basecalls converter that will output sorted records.
      */
-    public BasecallsConverter<CLUSTER_OUTPUT_RECORD> buildSortingBasecallsConverter(Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
-                                                                                    SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
-                                                                                    Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
-                                                                                    Integer maxReadsInRamPerTile,
-                                                                                    List<File> tmpDirs) {
-        return new SortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
-                barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
-                tmpDirs, numProcessors,
-                firstTile, tileLimit, outputRecordComparator,
-                codecPrototype,
-                outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withSorting(Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
+                                                                        SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
+                                                                        Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+                                                                        List<File> tmpDirs) {
+        this.outputRecordComparator = outputRecordComparator;
+        this.codecPrototype = codecPrototype;
+        this.outputRecordClass = outputRecordClass;
+        this.tmpDirs = tmpDirs;
+        return this;
     }
 
     /**
@@ -77,9 +88,19 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @return A basecalls converter that will output unsorted records.
      */
     public BasecallsConverter<CLUSTER_OUTPUT_RECORD> build() {
-        return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
-                barcodeRecordWriterMap, demultiplex, numProcessors, firstTile, tileLimit,
-                bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+
+        if (outputRecordComparator != null && codecPrototype != null && outputRecordClass != null && tmpDirs != null) {
+            return new SortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
+                    barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
+                    tmpDirs, numThreads,
+                    firstTile, tileLimit, outputRecordComparator,
+                    codecPrototype,
+                    outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+        } else {
+            return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
+                    barcodeRecordWriterMap, demultiplex, numThreads, firstTile, tileLimit,
+                    bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+        }
     }
 
     /**
@@ -181,6 +202,18 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      */
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> barcodesDir(File barcodesDir) {
         this.barcodesDir = (barcodesDir == null) ? basecallsDir : barcodesDir;
+        return this;
+    }
+
+    /**
+     * Specify the max number of records in RAM. This is divided by the number of tile processing threads and
+     * sets the max number of records in RAM per tile.
+     *
+     * @param maxReadsInRam The maximum number of records in RAM to store for each tile before spilling to disk.
+     * @return A builder that will create a converter with the maximum records in RAM set to `maxReadsInRam/numThreads`
+     */
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withMaxRecordsInRam(int maxReadsInRam) {
+        this.maxReadsInRamPerTile = Math.max(1, maxReadsInRam / this.numThreads);
         return this;
     }
 }
