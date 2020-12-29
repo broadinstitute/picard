@@ -43,7 +43,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     private final Map<Integer, List<SortedRecordToWriterPump>> completedWork = new HashMap<>();
     private boolean tileProcessingComplete = false;
     private boolean tileProcessingError = false;
-
+    final ThreadPoolExecutorWithExceptions tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
     /**
      * Constructs a new SortedBaseCallsConverter.
      *
@@ -126,6 +126,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor, Duration.ofMinutes(5));
         tileProcessingComplete = true;
         tileProcessingError = tileProcessingExecutor.hasError();
+
         synchronized (completedWork) {
             log.debug("Final notification of work complete.");
             completedWork.notifyAll();
@@ -147,7 +148,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      * SortedRecordToWriterPump takes a collection of output records and writes them using a
      * ConvertedClusterDataWriter.
      */
-    private class SortedRecordToWriterPump {
+    private class SortedRecordToWriterPump implements Runnable {
         private final SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection;
         private final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer;
 
@@ -157,7 +158,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             this.recordCollection = recordCollection;
         }
 
-        public void writeRecords() {
+        @Override
+        public void run() {
             for (final CLUSTER_OUTPUT_RECORD record : recordCollection) {
                 writer.write(record);
                 writeProgressLogger.record(null, 0);
@@ -279,10 +281,22 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                     }
                     final Integer currentTile = tiles.get(currentTileIndex);
                     if (completedWork.containsKey(currentTile)) {
-                        log.debug("Writing out tile. Tile: " + currentTile);
-                        completedWork.get(currentTile).forEach(SortedRecordToWriterPump::writeRecords);
-                        currentTileIndex++;
+                        if(tileWriteExecutor.getQueue().size() == 0 && tileWriteExecutor.getActiveCount() == 0) {
+                            // tileWriteExecutor will report 0 active workers even though the worker is still tidying up
+                            // so we add a small sleep to ensure it is finished before moving on to the next tile
+                            Thread.sleep(100);
+                            log.debug("Writing out tile. Tile: " + currentTile);
+                            completedWork.get(currentTile).forEach(tileWriteExecutor::submit);
+                            currentTileIndex++;
+                        }
                     }
+                }
+                tileWriteExecutor.shutdown();
+                ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
+                if (tileWriteExecutor.hasError()) {
+                    int tasksStillRunning = tileWriteExecutor.shutdownNow().size();
+                    throw new PicardException("Exceptions in tile processing. There were " + tasksStillRunning
+                            + " tasks were still running or queued and have been cancelled.");
                 }
             }
         }
