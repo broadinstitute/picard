@@ -173,7 +173,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      * SortingCollection as they are read and decoded. This processor also optionally filters non-PF reads.
      * In addition, it will optionally demultiplex by barcode.
      * <p>
-     * After the tile processing is complete it notifies the SortedRecordToWriterPump that data is ready
+     * After the tile processing is complete it notifies the CompletedWorkChecker that data is ready
      * for writing.
      */
     private class TileProcessor implements Runnable {
