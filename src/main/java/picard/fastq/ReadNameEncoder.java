@@ -14,4 +14,13 @@ public interface ReadNameEncoder {
      * @return The read name
      */
     String generateReadName(ClusterData cluster, Integer pairNumber);
+
+    /**
+     * Generates a short read name that includes a minimal amount of information, this is used primarily for read
+     * sorting.
+     *
+     * @param cluster The cluster to generate the short read name from
+     * @return The short read name
+     */
+    String generateShortName(ClusterData cluster);
 }

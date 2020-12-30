@@ -33,7 +33,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
     private static final Log log = Log.getInstance(UnsortedBasecallsConverter.class);
     private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
     private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
-    private final Map<Integer, Queue<ClusterData>> tileReadCache = new ConcurrentHashMap<>();
+    private final Map<Integer, Queue<ClusterData>> tileReadCache = new HashMap<>();
     private boolean tileProcessingComplete = false;
     private boolean tileProcessingError = false;
     private int tilesProcessing = 0;
@@ -149,22 +149,23 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
         }
         @Override
         public void run() {
-            tileReadCache.put(tileNum, new ArrayDeque<>());
+            Queue<ClusterData> queue = new ArrayDeque<>();
             final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(tileNum);
 
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
                 readProgressLogger.record(null, 0);
-                tileReadCache.get(tileNum).add(cluster);
+                queue.add(cluster);
             }
 
             dataProvider.close();
             synchronized (tileReadCache) {
                 log.debug("Notifying completed work. Tile: " + tileNum);
+                tileReadCache.put(tileNum, queue);
                 tileReadCache.notifyAll();
             }
-        }
 
+        }
     }
 
     /**

@@ -64,4 +64,19 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
 
         return builder.toString();
     }
+
+    @Override
+    public String generateShortName(ClusterData cluster) {
+        final StringBuilder builder = new StringBuilder(bufferSize);
+        builder.append(this.base);
+        builder.append(encodeInt(cluster.getLane()));
+        builder.append(SEPARATOR);
+        builder.append(encodeInt(cluster.getTile()));
+        builder.append(SEPARATOR);
+        builder.append(encodeInt(cluster.getX()));
+        builder.append(SEPARATOR);
+        builder.append(encodeInt(cluster.getY()));
+
+        return builder.toString();
+    }
 }

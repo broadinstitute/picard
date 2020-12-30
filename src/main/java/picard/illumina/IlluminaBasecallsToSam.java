@@ -217,7 +217,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Argument(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
             " run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`")
-    public int MAX_READS_IN_RAM_PER_TILE = 1200000;
+    public int MAX_READS_IN_RAM_PER_TILE = -1;
 
     @Argument(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
@@ -516,6 +516,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (BARCODE_PARAMS != null) {
             LIBRARY_PARAMS = BARCODE_PARAMS;
+        }
+
+        // Remove once deprecated parameter is deleted.
+        if(MAX_READS_IN_RAM_PER_TILE != -1) {
+            log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
         }
 
         final ArrayList<String> messages = new ArrayList<>();

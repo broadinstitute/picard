@@ -170,7 +170,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Deprecated
     @Argument(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
             " run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`")
-    public int MAX_READS_IN_RAM_PER_TILE = 1200000;
+    public int MAX_READS_IN_RAM_PER_TILE = -1;
 
     @Argument(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
@@ -219,6 +219,13 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         final LinkedList<String> errors = new LinkedList<>();
+
+        // Remove once deprecated parameter is deleted.
+        if(MAX_READS_IN_RAM_PER_TILE != -1) {
+            log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
+        }
+
         if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && MACHINE_NAME == null) {
             errors.add("MACHINE_NAME is required when using Casava1.8-style read name headers.");
         }
@@ -533,11 +540,18 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         @Override
         public void encode(ClusterData clusterData) {
+            this.binaryCodec.writeInt(clusterData.getNumReads());
             this.binaryCodec.writeInt(clusterData.getLane());
             this.binaryCodec.writeInt(clusterData.getTile());
             this.binaryCodec.writeInt(clusterData.getX());
             this.binaryCodec.writeInt(clusterData.getY());
-            this.binaryCodec.writeInt(clusterData.getNumReads());
+            this.binaryCodec.writeBoolean(clusterData.isPf());
+
+            if (clusterData.getMatchedBarcode() != null) {
+                this.binaryCodec.writeString(clusterData.getMatchedBarcode(), true, true);
+            } else {
+                this.binaryCodec.writeString("", true, true);
+            }
 
             for (int i = 0; i < clusterData.getNumReads(); i++) {
                 ReadData read = clusterData.getRead(i);
@@ -552,35 +566,32 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     this.binaryCodec.writeByte(quals[j]);
                 }
             }
-
-            this.binaryCodec.writeBoolean(clusterData.isPf());
-            if (clusterData.getMatchedBarcode() != null) {
-                this.binaryCodec.writeString(clusterData.getMatchedBarcode(), true, true);
-            } else {
-                this.binaryCodec.writeString("", true, false);
-            }
         }
 
         @Override
         public ClusterData decode() {
-
-            int lane;
-            try {
-                lane = this.binaryCodec.readInt();
-            } catch (final RuntimeEOFException e) {
-                return null;
-            }
-            int tile = this.binaryCodec.readInt();
-            int x = this.binaryCodec.readInt();
-            int y = this.binaryCodec.readInt();
-
-            int numReads = this.binaryCodec.readInt();
+            int numReads;
+            try { numReads = this.binaryCodec.readInt(); }
+            catch (final RuntimeEOFException e) { return null; }
 
             ReadData[] readData = new ReadData[numReads];
+            ClusterData clusterData = new ClusterData(readData);
+            clusterData.setLane(this.binaryCodec.readInt());
+            clusterData.setTile(this.binaryCodec.readInt());
+            clusterData.setX(this.binaryCodec.readInt());
+            clusterData.setY(this.binaryCodec.readInt());
+            clusterData.setPf(this.binaryCodec.readBoolean());
+            String matchedBarcode = this.binaryCodec.readLengthAndString(true);
+            if (matchedBarcode.length() == 0) {
+                clusterData.setMatchedBarcode(null);
+            } else {
+                clusterData.setMatchedBarcode(matchedBarcode);
+            }
+
             for (int i = 0; i < numReads; i++) {
+                ReadData read = new ReadData();
                 int numBases = this.binaryCodec.readInt();
-                String readTypeString = this.binaryCodec.readString(1);
-                ReadType readType = ReadType.valueOf(readTypeString);
+                read.setReadType(ReadType.valueOf(this.binaryCodec.readString(1)));
 
                 byte[] bases = new byte[numBases];
                 byte[] quals = new byte[numBases];
@@ -590,27 +601,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     quals[j] = this.binaryCodec.readByte();
                 }
 
-                ReadData read = new ReadData();
-                read.setReadType(readType);
                 read.setBases(bases);
                 read.setQualities(quals);
 
                 readData[i] = read;
-            }
-
-            boolean pf = this.binaryCodec.readBoolean();
-            String matchedBarcode = this.binaryCodec.readLengthAndString(false);
-
-            ClusterData clusterData = new ClusterData(readData);
-            clusterData.setLane(lane);
-            clusterData.setTile(tile);
-            clusterData.setX(x);
-            clusterData.setY(y);
-            clusterData.setPf(pf);
-            if (matchedBarcode.length() == 0) {
-                clusterData.setMatchedBarcode(null);
-            } else {
-                clusterData.setMatchedBarcode(matchedBarcode);
             }
 
             return clusterData;
@@ -639,7 +633,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         @Override
         public int compare(ClusterData o1, ClusterData o2) {
-            return readNameEncoder.generateReadName(o1, 1).compareTo(readNameEncoder.generateReadName(o2, 1));
+            return readNameEncoder.generateShortName(o1).compareTo(readNameEncoder.generateShortName(o2));
         }
     }
 }
