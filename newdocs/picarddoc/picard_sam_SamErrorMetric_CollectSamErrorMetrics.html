@@ -539,6 +539,14 @@
 					<td>Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will *intersect* inputs if multiple are given. When this argument is supplied, the VCF provided must be *indexed*.</td>
 				</tr>
 				<tr>
+					<td><a href="#--LOCATION_BIN_SIZE">--LOCATION_BIN_SIZE</a><br />
+								&nbsp;<em>-LBS</em>
+					</td>
+					<!--<td>int</td> -->
+					<td>2500</td>
+					<td>Size of location bins. Used by the FLOWCELL_X and FLOWCELL_Y stratifiers</td>
+				</tr>
+				<tr>
 					<td><a href="#--LONG_HOMOPOLYMER">--LONG_HOMOPOLYMER</a><br />
 								&nbsp;<em>-LH</em>
 					</td>
@@ -851,6 +859,20 @@
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--LOCATION_BIN_SIZE">--LOCATION_BIN_SIZE </a>
+			 / <small>-LBS</small>
+		</h3>
+		<p class="args">
+			<b>Size of location bins. Used by the FLOWCELL_X and FLOWCELL_Y stratifiers</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">2500</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LONG_HOMOPOLYMER">--LONG_HOMOPOLYMER </a>
 			 / <small>-LH</small>
 		</h3>
@@ -1051,6 +1073,10 @@
 					<dd class="enum"></dd>
 					<dt class="enum">FLOWCELL_TILE</dt>
 					<dd class="enum"></dd>
+					<dt class="enum">FLOWCELL_Y</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">FLOWCELL_X</dt>
+					<dd class="enum"></dd>
 					<dt class="enum">READ_GROUP</dt>
 					<dd class="enum"></dd>
 					<dt class="enum">CYCLE</dt>
@@ -1208,7 +1234,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.23.8-SNAPSHOT built at 14-39-2020 02:39:50.
+        <p class="version">Picard version 2.24.0-SNAPSHOT built at 04-50-2021 01:50:05.
         </p>
 
 	</div>

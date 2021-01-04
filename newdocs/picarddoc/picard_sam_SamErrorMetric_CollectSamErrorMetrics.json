@@ -180,6 +180,21 @@
       "options": []
     },
     {
+      "summary": "Size of location bins. Used by the FLOWCELL_X and FLOWCELL_Y stratifiers",
+      "name": "--LOCATION_BIN_SIZE",
+      "synonyms": "-LBS",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "2500",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Shortest homopolymer which is considered long.  Used by the BINNED_HOMOPOLYMER stratifier.",
       "name": "--LONG_HOMOPOLYMER",
       "synonyms": "-LH",
@@ -428,6 +443,14 @@
         {
           "summary": "",
           "name": "FLOWCELL_TILE"
+        },
+        {
+          "summary": "",
+          "name": "FLOWCELL_Y"
+        },
+        {
+          "summary": "",
+          "name": "FLOWCELL_X"
         },
         {
           "summary": "",

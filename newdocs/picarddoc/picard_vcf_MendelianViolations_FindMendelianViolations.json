@@ -214,11 +214,11 @@
     {
       "summary": "List of chr:start-end for pseudo-autosomal regions on the female sex chromosome. Defaults to HG19/b37 \u0026 HG38 coordinates.",
       "name": "--PSEUDO_AUTOSOMAL_REGIONS",
-      "synonyms": "NA",
+      "synonyms": "-PAR",
       "type": "Set[String]",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "[chrX:10000-2781479, X:10001-2649520, chrX:155701382-156030895, X:59034050-59373566]",
+      "defaultValue": "[X:154931044-155260560, X:60001-2699520, chrX:10001-2781479, chrX:155701383-156030895]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
