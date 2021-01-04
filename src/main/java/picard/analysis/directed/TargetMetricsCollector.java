@@ -713,7 +713,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             // The "how many target bases at at-least X" calculations.
             // downstream code relies on this array being sorted in ascending order
-            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100};
+            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000};
 
             // counts for how many target bases are at at least X coverage,
             // where X corresponds to the value at the same offset in targetBasesDepth
@@ -772,6 +772,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.PCT_TARGET_BASES_40X  = (double) targetBases[6] / (double) targetBases[0];
             metrics.PCT_TARGET_BASES_50X  = (double) targetBases[7] / (double) targetBases[0];
             metrics.PCT_TARGET_BASES_100X = (double) targetBases[8] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_250X = (double) targetBases[9] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_500X = (double) targetBases[10] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_1000X = (double) targetBases[11] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_2500X = (double) targetBases[12] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_5000X = (double) targetBases[13] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_10000X = (double) targetBases[14] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_25000X = (double) targetBases[15] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_50000X = (double) targetBases[16] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_100000X = (double) targetBases[17] / (double) targetBases[0];
         }
 
         private void calculateTheoreticalHetSensitivity(){

@@ -38,6 +38,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
     private String reportedGender;
     private String fingerprintGender;
     private String autocallGender;
+    private Double gtcCallRate;
     private Iso8601Date autocallDate;
     private Iso8601Date imagingDate;
     private String autocallVersion;
@@ -48,6 +49,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
     private Integer p95Green;
     private Integer p95Red;
     private String scannerName;
+    private String pipelineVersion;
 
     /**
      * A map of sample names to metrics.  If .get() for a not-yet-existing sample name, a metric is generated, inserted into the map,
@@ -67,6 +69,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
                         detail.AUTOCALL_GENDER = autocallGender;
 
                         detail.AUTOCALL_VERSION = autocallVersion;
+                        detail.GTC_CALL_RATE = gtcCallRate;
                         detail.AUTOCALL_DATE = new Iso8601Date(autocallDate);
                         detail.IMAGING_DATE = new Iso8601Date(imagingDate);
                         detail.EXTENDED_MANIFEST_VERSION = extendedIlluminaManifestVersion;
@@ -76,6 +79,7 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
                         detail.P95_GREEN = p95Green;
                         detail.P95_RED = p95Red;
                         detail.SCANNER_NAME = scannerName;
+                        detail.PIPELINE_VERSION = pipelineVersion;
                         return detail;
                     }, true);
 
@@ -85,10 +89,12 @@ class ArraysCallingMetricAccumulator implements VariantProcessor.Accumulator<Arr
 
     public void setup(final VCFHeader vcfHeader) {
         this.sampleAlias = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.SAMPLE_ALIAS);
+        this.pipelineVersion = InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.PIPELINE_VERSION);
         this.analysisVersionNumber = InfiniumVcfFields.getOptionalIntegerFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.ANALYSIS_VERSION_NUMBER);
         this.chipTypeName = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.ARRAY_TYPE);
         this.reportedGender = getOptionalGenderStringFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.EXPECTED_GENDER);
         this.fingerprintGender = getOptionalGenderStringFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.FINGERPRINT_GENDER);
+        this.gtcCallRate = InfiniumVcfFields.getOptionalDoubleFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.GTC_CALL_RATE);
         this.autocallGender = Sex.fromString(InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.AUTOCALL_GENDER)).toSymbol();
         this.autocallVersion = InfiniumVcfFields.getValueFromVcfOtherHeaderLine(vcfHeader, InfiniumVcfFields.AUTOCALL_VERSION);
         final SimpleDateFormat autocallDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");         // of the form '09/21/2016 20:40'

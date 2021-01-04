@@ -233,11 +233,22 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
+                    " <h4>5. Combine overlapping intervals but NOT abutting intervals:</h4>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=UNION \\\n" +
+                    "       DONT_MERGE_ABUTTING=true \\\n" +
+                    "       I=input1.interval_list \\\n" +
+                    "       O=new.interval_list" +
+                    " </pre>" +
+                    "" +
                     "";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
-                    "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)
+                    "result of merging the inputs. Supported formats are interval_list and VCF." +
+                    "If file extension is unrecognized, assumes file is interval_list" +
+                    "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
     public List<File> INPUT;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
@@ -251,6 +262,9 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.")
     public boolean UNIQUE = false;
+
+    @Argument(doc = "If false, do not merge abutting intervals (keep them separate). Note: abutting intervals are combined by default with the UNION action.", optional = true)
+    public boolean DONT_MERGE_ABUTTING = false;
 
     @Argument(doc = "If true, sort the resulting interval list by coordinate.")
     public boolean SORT = true;
@@ -322,12 +336,7 @@ public class IntervalListTools extends CommandLineProgram {
                 "intervals implied. Will result in a possibly unsorted list unless requested otherwise.", false),
 
         UNION("Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, " +
-                "with overlapping and abutting intervals merged into one.", false) {
-            @Override
-            IntervalList act(final IntervalList firstList, final IntervalList ignored) {
-                return super.act(firstList.sorted().uniqued(), ignored);
-            }
-        },
+                "with overlapping and abutting intervals merged into one.", false),
 
         INTERSECT("The sorted and merged set of all loci that are contained in all of the INPUTs.", false) {
             @Override
@@ -358,7 +367,6 @@ public class IntervalListTools extends CommandLineProgram {
 
         final String helpdoc;
         final boolean takesSecondInput;
-
         Action(final String helpdoc, boolean takesSecondInput) {
             this.helpdoc = helpdoc;
             this.takesSecondInput = takesSecondInput;
@@ -400,15 +408,20 @@ public class IntervalListTools extends CommandLineProgram {
         final IntervalList result = ACTION.act(lists, secondLists);
 
         if (INVERT) {
-            SORT = false; // no need to sort, since return will be sorted by definition.
+            SORT = false; // no need to sort, since uniqued() output will be sorted by definition.
+            UNIQUE = true;
+        }
+
+        if (ACTION == Action.UNION) { // UNION is basically Action.CONCAT with SORT and UNIQUE
+            SORT = true;
             UNIQUE = true;
         }
 
         final IntervalList possiblySortedResult = SORT ? result.sorted() : result;
         final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult) : possiblySortedResult;
 
-        //only get unique if this has been asked unless inverting (since the invert will return a unique list)
-        List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+        //only get unique if this has been asked OR if action is UNION, unless inverting (since the invert will return a unique list)
+        List<Interval> finalIntervals = UNIQUE ? IntervalListTools.uniqued(possiblyInvertedResult, !DONT_MERGE_ABUTTING).getIntervals() : possiblyInvertedResult.getIntervals();
 
         if (BREAK_BANDS_AT_MULTIPLES_OF > 0) {
             finalIntervals = IntervalList.breakIntervalsAtBandMultiples(finalIntervals, BREAK_BANDS_AT_MULTIPLES_OF);
@@ -493,6 +506,23 @@ public class IntervalListTools extends CommandLineProgram {
                 .orElse(null);
     }
 
+    private static IntervalList uniqued(IntervalList nonUnique, boolean mergeAbutting) {
+        // A subroutine to replace htsjdk's IntervalList "unique()" method, which combines abutting intervals by default.
+        // Returns an IntervalList.
+        // Inputs:
+        //  - non_unique: an IntervalList to be operated on
+        //  - merge_abutting: a boolean to combine abutting intervals (if true) or not (if false).
+        // Outputs:
+        //  - an IntervalList that is uniqued with overlapping intervals merged, and abutting intervals handled per the boolean flag.
+        // TODO: Move this to htsjdk eventually
+        final boolean concatenateNames = true;
+        final boolean enforceSameStrands = false;
+        List<Interval> newIntervals = IntervalList.getUniqueIntervals(nonUnique, mergeAbutting, concatenateNames, enforceSameStrands);
+        IntervalList newList = new IntervalList(nonUnique.getHeader());
+        newList.addall(newIntervals);
+        return newList;
+    }
+
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errorMsgs = new ArrayList<>();
@@ -511,7 +541,6 @@ public class IntervalListTools extends CommandLineProgram {
         if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
-
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[0]);
     }
 
@@ -596,7 +625,8 @@ public class IntervalListTools extends CommandLineProgram {
                     }
                 }
             }
-            throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
+            LOG.info("Unrecognized file extension, defaulting to .interval_list");
+            return INTERVAL_LIST;
         }
 
         public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {

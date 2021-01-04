@@ -28,7 +28,15 @@ import htsjdk.samtools.filter.FilteringSamIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.CigarUtil;
 import picard.PicardException;
 
 import java.io.File;
@@ -60,6 +68,11 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
+
+    // TODO: Switch to using HTSJDK tags if this gets into hts-spec and implemented
+    static final String HARD_CLIPPED_BASES_TAG = "XB";
+    static final String HARD_CLIPPED_BASE_QUALITIES_TAG = "XQ";
+
     private int crossSpeciesReads = 0;
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
@@ -84,6 +97,7 @@ public abstract class AbstractAlignmentMerger {
     private final SortOrder sortOrder;
     private MultiHitAlignedReadIterator alignedIterator = null;
     private boolean clipOverlappingReads = true;
+    private boolean hardClipOverlappingReads = false;
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
     private boolean keepAlignerProperPairFlags = false;
@@ -694,8 +708,7 @@ public abstract class AbstractAlignmentMerger {
 
             // if there already is a comment, add second comment with a | separator:
             Optional<String> optionalComment = Optional.ofNullable(unaligned.getStringAttribute(SAMTag.CO.name()));
-            unaligned.setAttribute(optionalComment.map(s -> s + " | ").orElse("") +
-                    SAMTag.CO.name(), "Cross-species contamination");
+            unaligned.setAttribute(SAMTag.CO.name(), optionalComment.map(s -> s + " | ").orElse("")  + "Cross-species contamination");
         }
     }
 
@@ -742,7 +755,7 @@ public abstract class AbstractAlignmentMerger {
             transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant, needsSafeReverseComplement);
         }
         if (isClipOverlappingReads()) {
-            clipForOverlappingReads(firstUnaligned, secondUnaligned);
+            clipForOverlappingReads(firstUnaligned, secondUnaligned, hardClipOverlappingReads);
         }
         SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, addMateCigar);
         if (!keepAlignerProperPairFlags) {
@@ -751,54 +764,175 @@ public abstract class AbstractAlignmentMerger {
     }
 
     /**
-     * Checks to see whether the ends of the reads overlap and soft clips reads
-     * them if necessary.
+     * Checks to see whether the ends of the reads overlap and clips reads
+     * if necessary.  For inward facing read pairs, this method will soft clip the 5'
+     * end of each read so that the 5' aligned end of each read does not extend past
+     * the 3' aligned end of its mate.  If useHardClipping is true, this method will
+     * additionally hard clip the 5' end of each read if necessary so that the 5' end of
+     * each read (including soft clipped bases) does not extend past the 3' end of its
+     * mate (including soft clipped bases).  Some examples are illustrative:
+     *
+     *              <-MMMMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMMMM->
+     * will be soft-clipped to
+     *              <-SSSMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMSSS->
+     * and with useHardClip true, this would then be hard-clipped to
+     *              <-HHHMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMHHH->
+     *
+     * A more complicated example
+     *              <-MMMMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMMMMMM->
+     * will be soft-clipped to
+     *              <-SSSMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMSSSSS->
+     * and with useHardClip true, this would then be hard-clipped to
+     *              <-HHHMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMSSHHH->
+     *
+     * Note that the soft-clipping is done such that the clipped starts and ends
+     * of each read are the same, and hard-clipping is done such that the unclipped
+     * starts and ends of each read are the same.
      */
-    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2) {
-        // If both reads are mapped, see if we need to clip the ends due to small
-        // insert size
-        if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
-            if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
-                final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
-                final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
+    protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
+        // Only clip if both reads are mapped, on opposite strands, overlapping
+        if (!read1.getReadUnmappedFlag() && !read2.getReadUnmappedFlag() &&
+                read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag() &&
+                read1.overlaps(read2)) {
+            final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
+            final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
 
-                // Innies only -- do we need to do anything else about jumping libraries?
-                if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
-                    final int posDiff = pos.getAlignmentEnd() - neg.getAlignmentEnd();
-                    final int negDiff = pos.getAlignmentStart() - neg.getAlignmentStart();
+            // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
+            clip3primeEndsTo5primeEnds(pos, neg, false, false);
 
-                    if (posDiff > 0) {
-                        final List<CigarElement> elems = new ArrayList<>(pos.getCigar().getCigarElements());
-                        Collections.reverse(elems);
-                        final int clipped = lengthOfSoftClipping(elems.iterator());
-                        final int clipFrom = pos.getReadLength() - posDiff - clipped + 1;
-                        CigarUtil.softClip3PrimeEndOfRead(pos, Math.min(pos.getReadLength(), clipFrom));
-                    }
-
-                    if (negDiff > 0) {
-                        final int clipped = lengthOfSoftClipping(neg.getCigar().getCigarElements().iterator());
-                        final int clipFrom = neg.getReadLength() - negDiff - clipped + 1;
-                        CigarUtil.softClip3PrimeEndOfRead(neg, Math.min(neg.getReadLength(), clipFrom));
-                    }
-                }
+            if (useHardClipping) {
+                // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
+                clip3primeEndsTo5primeEnds(pos, neg, true, true);
             }
         }
     }
 
-    /** Returns the number of soft-clipped bases until a non-soft-clipping element is encountered. */
-    private static int lengthOfSoftClipping(Iterator<CigarElement> iterator) {
-        int clipped = 0;
-        while (iterator.hasNext()) {
-            final CigarElement elem = iterator.next();
-            if (elem.getOperator() != CigarOperator.SOFT_CLIP && elem.getOperator() != CigarOperator.HARD_CLIP) {
-                break;
-            }
-            if (elem.getOperator() == CigarOperator.SOFT_CLIP) {
-                clipped = elem.getLength();
+    private static void clip3primeEndsTo5primeEnds(final SAMRecord pos, final SAMRecord neg, final boolean hardClipReads, final boolean useUnclippedEnds) {
+        final int negEnd = useUnclippedEnds? neg.getUnclippedEnd() : neg.getEnd();
+        final int posStart = useUnclippedEnds? pos.getUnclippedStart() : pos.getStart();
+        /*
+          For the positive strand, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to clip.
+          We do this because getReadPositionAtReferencePositionIgnoreSoftClips will return the base before a deletion, so will return the 3' most base before
+          the queried base when the queried base is in a deletion on a positive strand read
+
+            3' <SSSSSSSSMMMMMMMMMMMM 5'
+                     5' MMMMMMMMMMMMSSSSSSSS> 3'
+                                   ||
+                                   ||---> 5' most base to clip
+                                   |
+                                   |---> 3' most base not to clip
+         */
+
+        final int pos3PrimeMostUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+        if (pos3PrimeMostUnclipped > 0 && pos3PrimeMostUnclipped < pos.getReadLength()) {
+            final int pos5PrimeMostClipped = pos3PrimeMostUnclipped + 1;
+            clip3PrimeEndOfRead(pos, pos5PrimeMostClipped, hardClipReads);
+        }
+
+        /*
+        For the negative strand, we ask for the position of the 5' most base to clip.  getReadPositionAtReferencePositionIgnoreSoftClips will return the 5' most base before
+         the queried base when the queried base is in a deletion on a negative strand read.
+         */
+
+        // this is the position counting from the aligned start of the read
+        final int neg5PrimeMostBaseToClipPositionFromStart = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
+
+        // this is the position counting from the 5' end of the read
+        final int negFirstBaseFrom5PrimeEndToClip = neg5PrimeMostBaseToClipPositionFromStart > 0 ? (neg.getReadLength() + 1) - neg5PrimeMostBaseToClipPositionFromStart : 0;
+
+        if (negFirstBaseFrom5PrimeEndToClip > 0) {
+            clip3PrimeEndOfRead(neg, negFirstBaseFrom5PrimeEndToClip, hardClipReads);
+        }
+    }
+
+    /**
+     * Gets the 1-based read position that corresponds to a particular position on the reference.  If the position on the reference
+     * falls in a deletion in the alignment of the read, the position before the deletion will be returned.  Returns 0 if the position on
+     * the reference does not overlap the read.  In this method, soft-clips are considered to be aligned as matches to the reference.
+     * @param rec
+     * @param pos
+     * @return
+     */
+    static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
+        final Cigar oldCigar = rec.getCigar();
+        final Cigar newCigar = new Cigar();
+        final List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements());
+        int posShift = 0;
+        boolean foundNonClip = false;
+
+        for (final CigarElement cigarElement : cigarElements) {
+            final CigarOperator op = cigarElement.getOperator();
+
+            // Replace SOFT_CLIPs in the oldCigar with MATCH_OR_MISMATCH in newCigar
+            if (op == CigarOperator.SOFT_CLIP) {
+                newCigar.add(new CigarElement(cigarElement.getLength(), CigarOperator.MATCH_OR_MISMATCH));
+                if (!foundNonClip) {
+                    posShift += cigarElement.getLength();
+                }
+            } else {
+                if (!op.isClipping()) {
+                    foundNonClip = true;
+                }
+                newCigar.add(new CigarElement(cigarElement.getLength(), op));
             }
         }
 
-        return clipped;
+        // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
+        rec.setCigar(newCigar);
+        // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
+        // also to be moved forward by posShift so that it's still querying the same base.
+        final int readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, true);
+
+        rec.setCigar(oldCigar);
+
+        return readPosition;
+
+    }
+
+    private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {
+        // If we are using hard clips, add bases and qualities to SAM tag.
+        if (useHardClipping) {
+            moveClippedBasesToTag(rec, clipFrom);
+        }
+
+        // Actually clip the read
+        CigarUtil.clip3PrimeEndOfRead(rec, clipFrom, useHardClipping ? CigarOperator.HARD_CLIP : CigarOperator.SOFT_CLIP);
+    }
+
+    private static void moveClippedBasesToTag(final SAMRecord rec, final int clipFrom) {
+        if (rec.getAttribute(HARD_CLIPPED_BASES_TAG) != null || rec.getAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG) != null) {
+            throw new PicardException("Record " + rec.getReadName() + " already contains tags for restoring hard-clipped bases.  This operation will permanently erase information if it proceeds.");
+        }
+
+        final byte[] bases = rec.getReadBases();
+        final byte[] baseQualities = rec.getBaseQualities();
+        final int readLength = rec.getReadLength();
+
+        final int clipPositionFrom, clipPositionTo;
+        if (rec.getReadNegativeStrandFlag()) {
+            clipPositionFrom = 0;
+            clipPositionTo = readLength - clipFrom + 1;
+        } else {
+            clipPositionFrom = clipFrom - 1;
+            clipPositionTo = readLength;
+        }
+
+        String basesToKeepInTag = StringUtil.bytesToString(Arrays.copyOfRange(bases, clipPositionFrom, clipPositionTo));
+        String qualitiesToKeepInTag = SAMUtils.phredToFastq(Arrays.copyOfRange(baseQualities, clipPositionFrom, clipPositionTo));
+
+        if (rec.getReadNegativeStrandFlag()) {
+            // Ensures that the qualities and bases in the tags are stored in their original order, as produced by the sequencer
+            basesToKeepInTag = SequenceUtil.reverseComplement(basesToKeepInTag);
+            qualitiesToKeepInTag =  new StringBuilder(qualitiesToKeepInTag).reverse().toString();
+        }
+        rec.setAttribute(HARD_CLIPPED_BASES_TAG, basesToKeepInTag);
+        rec.setAttribute(HARD_CLIPPED_BASE_QUALITIES_TAG, qualitiesToKeepInTag);
     }
 
     /**
@@ -966,6 +1100,10 @@ public abstract class AbstractAlignmentMerger {
 
     public void setClipOverlappingReads(final boolean clipOverlappingReads) {
         this.clipOverlappingReads = clipOverlappingReads;
+    }
+
+    public void setHardClipOverlappingReads(final boolean hardClipOverlappingReads) {
+        this.hardClipOverlappingReads = hardClipOverlappingReads;
     }
 
     public boolean isKeepAlignerProperPairFlags() {

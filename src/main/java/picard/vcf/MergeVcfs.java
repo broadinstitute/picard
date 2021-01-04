@@ -38,6 +38,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -147,6 +148,9 @@ public class MergeVcfs extends CommandLineProgram {
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input files", optional = true)
     public File SEQUENCE_DICTIONARY;
 
+    @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
+    public List<String>  COMMENT = new ArrayList<>();
+
     private final static String SEQ_DICT_REQUIRED = "A sequence dictionary must be available (either through the input file or by setting it explicitly).";
 
     private final Log log = Log.getInstance(MergeVcfs.class);
@@ -198,6 +202,11 @@ public class MergeVcfs extends CommandLineProgram {
                 if (!sampleList.equals(fileHeader.getSampleNamesInOrder())) {
                     throw new IllegalArgumentException("Input file " + file.getAbsolutePath() + " has sample entries that don't match the other files.");
                 }
+            }
+            
+            // add comments in the first header
+            if (headers.isEmpty()) {
+                COMMENT.stream().forEach(C -> fileHeader.addMetaDataLine(new VCFHeaderLine("MergeVcfs.comment", C)));
             }
 
             headers.add(fileHeader);

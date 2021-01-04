@@ -252,16 +252,6 @@ public class BinTdUtil {
         return rds;
     }
 
-    private static FourChannelIntensityData copyIntensities(final FourChannelIntensityData toCopy, final int start, final int length) {
-        final FourChannelIntensityData fcid = new FourChannelIntensityData(length);
-
-        System.arraycopy(toCopy.getA(), start, fcid.getA(), 0, length);
-        System.arraycopy(toCopy.getC(), start, fcid.getC(), 0, length);
-        System.arraycopy(toCopy.getG(), start, fcid.getG(), 0, length);
-        System.arraycopy(toCopy.getT(), start, fcid.getT(), 0, length);
-        return fcid;
-    }
-
     public static ClusterData selectiveCopyCd(final ClusterData toCopy, final String readStructure, final IlluminaDataType... dataTypes) {
         final ReadStructure rs = new ReadStructure(readStructure);
         final ReadData[] rd = copyReadData(rs, dataTypes, toCopy);

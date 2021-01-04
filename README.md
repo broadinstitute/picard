@@ -1,3 +1,12 @@
+***User Support:***
+
+
+For user questions please look for answers and ask first in the [GATK forum](https://gatk.broadinstitute.org/hc/en-us/community/topics).
+
+
+----
+
+
 [![Coverage Status](https://coveralls.io/repos/github/broadinstitute/picard/badge.svg?branch=master)](https://coveralls.io/github/broadinstitute/picard?branch=master)
 [![Build Status](https://travis-ci.com/broadinstitute/picard.svg?branch=master)](https://travis-ci.com/broadinstitute/picard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/broadinstitute/picard/blob/master/LICENSE.txt)

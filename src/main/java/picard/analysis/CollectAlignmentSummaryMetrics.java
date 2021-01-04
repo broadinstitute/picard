@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2020 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,17 +31,23 @@ import htsjdk.samtools.SamPairUtil.PairOrientation;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.util.RExecutor;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -103,6 +109,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             "<hr />";
 
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
+    private static final String HISTOGRAM_R_SCRIPT = "picard/analysis/readLengthDistribution.R";
+
+    @Argument(shortName="H", doc="If Provided, file to write read-length chart pdf.", optional = true)
+    public File HISTOGRAM_FILE;
 
     @Argument(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = ChimeraUtil.DEFAULT_INSERT_SIZE_LIMIT;
@@ -125,12 +135,28 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private AlignmentSummaryMetricsCollector collector;
 
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(HISTOGRAM_FILE != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
+    }
+
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
+        if (HISTOGRAM_FILE != null) {
+            if (!METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS)) {
+                log.error("ReadLength histogram is calculated on all reads only, but ALL_READS were not " +
+                        "included in the Metric Accumulation Levels. Histogram will not be generated.");
+                HISTOGRAM_FILE=null;
+            } else {
+                IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
+            }
+        }
 
         if (header.getSequenceDictionary().isEmpty()) {
-            log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +
+            log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary. If any reads " +
                     "in the file are aligned, then alignment summary metrics collection will fail.");
         }
 
@@ -149,10 +175,49 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Override protected void finish() {
         collector.finish();
 
-        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> file = getMetricsFile();
+        final MetricsFile<AlignmentSummaryMetrics, Integer> file = getMetricsFile();
         collector.addAllLevelsToFile(file);
 
+        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector =
+                (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
+
+        if (allReadsGroupCollector != null) {
+            addAllHistogramToMetrics(file, "PAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
+            addAlignedHistogramToMetrics(file, "PAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
+            addAllHistogramToMetrics(file, "UNPAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+            addAlignedHistogramToMetrics(file, "UNPAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+        }
+
         file.write(OUTPUT);
+
+        if (HISTOGRAM_FILE != null) {
+            final List<String> plotArgs = new ArrayList<>();
+            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), HISTOGRAM_FILE.getAbsolutePath(), INPUT.getName());
+
+            final int rResult = RExecutor.executeFromClasspath(HISTOGRAM_R_SCRIPT, plotArgs.toArray(new String[0]));
+            if (rResult != 0) {
+                throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
+            }
+        }
+
+    }
+
+    private static void addAllHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final AlignmentSummaryMetricsCollector.IndividualAlignmentSummaryMetricsCollector metricsCollector) {
+        if (metricsCollector != null) {
+            addHistogramToMetrics(file, label, metricsCollector.getReadHistogram());
+        }
+    }
+
+    private static void addAlignedHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final AlignmentSummaryMetricsCollector.IndividualAlignmentSummaryMetricsCollector metricsCollector) {
+        if (metricsCollector != null) {
+            addHistogramToMetrics(file, label, metricsCollector.getAlignedReadHistogram());
+        }
+    }
+
+    private static void addHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final Histogram<Integer> readHistogram) {
+        readHistogram.setBinLabel("READ_LENGTH");
+        readHistogram.setValueLabel(label);
+        file.addHistogram(readHistogram);
     }
 
     // overridden to make it visible on the commandline and to change the doc.

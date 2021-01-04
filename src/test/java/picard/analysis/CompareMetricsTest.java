@@ -45,7 +45,6 @@ public class CompareMetricsTest {
         final File input1 = new File(TEST_DATA_DIR, file1);
         final File input2 = new File(TEST_DATA_DIR, file2);
         final CompareMetrics compareMetrics = new CompareMetrics();
-        CompareMetrics.MetricToAllowableRelativeChange.clear();
         compareMetrics.INPUT = asList(input1, input2);
         if (metricsToIgnore != null) {
             compareMetrics.METRICS_TO_IGNORE = Collections.singletonList(metricsToIgnore);
@@ -93,17 +92,21 @@ public class CompareMetricsTest {
     public Object[][] testCompareMetricValuesDataProvider() {
         return new Object[][]{
                 { 1.0, 1.0, true, "", null },
-                { 1.1, 1.0, false, "Changed by 0.10000000000000009 which is outside of the allowable tolerance of 0.05", 0.05 },
-                { 1.1, 1.0, false, "Changed by 0.10000000000000009 which is outside of the allowable tolerance of 0.1", 0.1 },
-                { 1.1, 1.0, true, "Changed by 0.10000000000000009 which is within the allowable tolerance of 0.1001", 0.1001 },
-                { 1.1, 1.0, true, "Changed by 0.10000000000000009 which is within the allowable tolerance of 0.2", 0.2 },
+                { 1.0, 1.1, false, "Changed by 0.10000000000000009 (relative change of 0.10000000000000009) which is outside of the allowable relative change tolerance of 0.05", 0.05 },
+                { 1.0, 1.1, false, "Changed by 0.10000000000000009 (relative change of 0.10000000000000009) which is outside of the allowable relative change tolerance of 0.1", 0.1 },
+                { 1.0, 1.1, true, "Changed by 0.10000000000000009 (relative change of 0.10000000000000009) which is within the allowable relative change tolerance of 0.1001", 0.1001 },
+                { 1.0, 1.1, true, "Changed by 0.10000000000000009 (relative change of 0.10000000000000009) which is within the allowable relative change tolerance of 0.2", 0.2 },
                 { 1.0f, 1.0f, true, "", null },
-                { 1.1f, 1.0f, false, "Changed by 0.10000002384185791 which is outside of the allowable tolerance of 0.05", 0.05 },
-                { 1.1f, 1.0f, false, "Changed by 0.10000002384185791 which is outside of the allowable tolerance of 0.1", 0.1 },
-                { 1.1f, 1.0f, true, "Changed by 0.10000002384185791 which is within the allowable tolerance of 0.1001", 0.1001 },
-                { 1.1f, 1.0f, true, "Changed by 0.10000002384185791 which is within the allowable tolerance of 0.2", 0.2 },
+                { 1.0f, 1.1f, false, "Changed by 0.10000002384185791 (relative change of 0.10000002384185791) which is outside of the allowable relative change tolerance of 0.05", 0.05 },
+                { 1.0f, 1.1f, false, "Changed by 0.10000002384185791 (relative change of 0.10000002384185791) which is outside of the allowable relative change tolerance of 0.1", 0.1 },
+                { 1.0f, 1.1f, true, "Changed by 0.10000002384185791 (relative change of 0.10000002384185791) which is within the allowable relative change tolerance of 0.1001", 0.1001 },
+                { 1.0f, 1.1f, true, "Changed by 0.10000002384185791 (relative change of 0.10000002384185791) which is within the allowable relative change tolerance of 0.2", 0.2 },
                 { 1, 1, true, "", null },
-                { 1f, 1f, true, "", null }
+                { 1, 2, false, "Changed by 1.0 (relative change of 1.0)", null },
+                { 1, 0, false, "Changed by -1.0 (relative change of -1.0)", null },
+                { 1f, 1f, true, "", null },
+                { Float.NaN, Float.NaN, true, "", null },
+                { Double.NaN, Double.NaN, true, "", null }
         };
     }
 
@@ -111,7 +114,6 @@ public class CompareMetricsTest {
     public void testCompareMetrics(final Object value1, final Object value2,
                                    final boolean expectedEqual, final String expectedDescription, final Double marcValue) {
         final CompareMetrics compareMetrics = new CompareMetrics();
-        CompareMetrics.MetricToAllowableRelativeChange.clear();
         compareMetrics.METRIC_ALLOWABLE_RELATIVE_CHANGE = Collections.singletonList("M:" + marcValue);
         compareMetrics.customCommandLineValidation();
         final CompareMetrics.SimpleResult result = compareMetrics.compareMetricValues(value1, value2, "M");
