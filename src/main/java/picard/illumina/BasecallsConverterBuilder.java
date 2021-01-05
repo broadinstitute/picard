@@ -28,8 +28,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private List<File> tmpDirs;
     private File barcodesDir;
     private boolean demultiplex = false;
-    private int numProcessors = Runtime.getRuntime().availableProcessors();
-    private final int numThreads;
+    private int numThreads = Runtime.getRuntime().availableProcessors();
     private Integer firstTile = null;
     private Integer tileLimit = null;
     private BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
@@ -52,14 +51,6 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
         this.lane = lane;
         this.readStructure = readStructure;
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
-
-        if (numProcessors == 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors();
-        } else if (numProcessors < 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
-        } else {
-            this.numThreads = numProcessors;
-        }
     }
 
     /**
@@ -178,7 +169,14 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @return A builder that will create a converter with numProcessors set.
      */
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> numProcessors(Integer numProcessors) {
-        this.numProcessors = numProcessors;
+    	if (numProcessors == 0) {
+	    this.numThreads = Runtime.getRuntime().availableProcessors();
+	} else if (numProcessors < 0) {
+	    this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
+	} else {
+	   this.numThreads = numProcessors;
+	}
+
         return this;
     }
 
