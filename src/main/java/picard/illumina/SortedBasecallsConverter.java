@@ -196,9 +196,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
                 readProgressLogger.record(null, 0);
-                if (cluster.isPf() || includeNonPfReads) {
-                    final String barcode = (demultiplex ? cluster.getMatchedBarcode() : null);
-                    addRecord(barcode, converter.convertClusterToOutputRecord(cluster));
+                if (includeNonPfReads || cluster.isPf()) {
+                    addRecord(cluster.getMatchedBarcode() , converter.convertClusterToOutputRecord(cluster));
                 }
             }
 

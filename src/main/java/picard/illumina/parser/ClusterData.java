@@ -39,7 +39,7 @@ public class ClusterData {
     private int y = -1;
     private final ReadData [] reads;
     private Boolean pf;
-    private String matchedBarcode;
+    private String matchedBarcode = null;
 
     /** Used for testing, reads is set directly with no copying to the input array */
     public ClusterData(final ReadData ... reads) {

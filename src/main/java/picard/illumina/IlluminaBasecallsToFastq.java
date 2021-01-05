@@ -24,11 +24,8 @@
 package picard.illumina;
 
 import htsjdk.samtools.Defaults;
-import htsjdk.samtools.fastq.FastqRecord;
-import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
 import htsjdk.samtools.util.*;
-import org.apache.commons.math3.ml.clustering.Cluster;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -52,6 +49,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 @CommandLineProgramProperties(
@@ -394,7 +393,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
 
 
-        return new AsyncClusterWriter(new ClusterWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles), 8192);
+        return new AsyncClusterWriter(new ClusterWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles), 1024);
     }
 
     /**
@@ -446,9 +445,19 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
 
         private OutputStream makeWriter(final File file) {
-            OutputStream os = Defaults.CREATE_MD5 ? IOUtil.openFileForMd5CalculatingWriting(file) : IOUtil.openFileForWriting(file);
-            os = IOUtil.maybeBufferOutputStream(os);
-            return os;
+            Path outputPath = file.toPath();
+            try {
+                OutputStream os = Files.newOutputStream(outputPath);
+                if (IOUtil.hasGzipFileExtension(outputPath)) {
+                    os = new BlockCompressedOutputStream(os, (File) null, COMPRESSION_LEVEL);
+                } else {
+                    os = IOUtil.maybeBufferOutputStream(os);
+                }
+                if (Defaults.CREATE_MD5) os = new Md5CalculatingOutputStream(os, IOUtil.addExtension(outputPath, ".md5"));
+                return os;
+            } catch (final IOException ioe) {
+                throw new RuntimeIOException("Error opening file: " + outputPath.toUri(), ioe);
+            }
         }
 
         @Override

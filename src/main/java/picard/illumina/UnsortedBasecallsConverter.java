@@ -94,7 +94,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
         completedWorkExecutor.shutdown();
 
         final ThreadPoolExecutorWithExceptions tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
-        int MAX_TILES_IN_CACHE = 8;
+        int MAX_TILES_IN_CACHE = 4;
 
         int tilesSubmitted = 0;
         while( tilesSubmitted < tiles.size()){
@@ -203,11 +203,10 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
                     if (tileReadCache.containsKey(currentTile)) {
                         log.debug("Writing out tile. Tile: " + currentTile);
                         Queue<ClusterData> clusterData = tileReadCache.get(currentTile);
-                        while(!clusterData.isEmpty()){
-                            ClusterData cluster = clusterData.remove();
-                            if (cluster.isPf() || includeNonPfReads) {
-                                final String barcode = (demultiplex ? cluster.getMatchedBarcode() : null);
-                                barcodeRecordWriterMap.get(barcode).write(converter.convertClusterToOutputRecord(cluster));
+                        ClusterData cluster;
+                        while( (cluster = clusterData.poll()) != null){
+                            if (includeNonPfReads || cluster.isPf()) {
+                                barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
                                 writeProgressLogger.record(null, 0);
                             }
                         }
