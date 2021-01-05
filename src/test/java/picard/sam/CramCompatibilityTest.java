@@ -3,7 +3,6 @@ package picard.sam;
 import htsjdk.samtools.SamStreams;
 import htsjdk.samtools.cram.CRAMException;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
@@ -43,7 +42,7 @@ public class CramCompatibilityTest {
 
     @AfterTest
     public void tearDown() {
-        TestUtil.recursiveDelete(outputDir);
+        IOUtil.recursiveDelete(outputDir.toPath());
     }
 
     @DataProvider(name = "programArgsForCRAMWithReference")
@@ -260,8 +259,8 @@ public class CramCompatibilityTest {
         }
 
 
-        CommandLineProgram program = (CommandLineProgram) Class.forName(programClassname).newInstance();
-        program.instanceMain(args.toArray(new String[args.size()]));
+        final CommandLineProgram program = (CommandLineProgram) Class.forName(programClassname).newInstance();
+        program.instanceMain(args.toArray(new String[0]));
     }
 
     static void assertCRAM(File outputFile) {

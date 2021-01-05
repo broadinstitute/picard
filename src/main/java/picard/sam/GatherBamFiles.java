@@ -9,6 +9,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -95,9 +96,9 @@ public class GatherBamFiles extends CommandLineProgram {
     protected int doWork() {
         final List<File> inputs = IOUtil.unrollFiles(
                 INPUT,
-                BamFileIoUtils.BAM_FILE_EXTENSION,
-                IOUtil.SAM_FILE_EXTENSION,
-                CramIO.CRAM_FILE_EXTENSION);
+                FileExtensions.BAM,
+                FileExtensions.SAM,
+                FileExtensions.CRAM);
         for (final File f : inputs) IOUtil.assertFileIsReadable(f);
         IOUtil.assertFileIsWritable(OUTPUT);
 
