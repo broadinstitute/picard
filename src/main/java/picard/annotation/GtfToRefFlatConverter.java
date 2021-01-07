@@ -1,4 +1,4 @@
-package picard.analysis;
+package picard.annotation;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.gff.Gff3Feature;
@@ -15,38 +15,39 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GtfToRefflat {
+public class GtfToRefFlatConverter {
 
     private final File GTF;
 
+    private File refFlat = null;
 
     private static final String COLUMN_DELIMITER = "\t";
     private static final String COORDINATE_DELIMITER = ",";
     private static final String NEW_LINE_DELIMITER = "\n";
     private static final String ATTRIBUTE_DELIMITER = " ";
 
-    private File refflat = null;
-
-    private List<String> rows = new ArrayList<>();
-    private String transcriptId = "";
-    private List<Integer> exonStarts = new ArrayList<>();
-    private List<Integer> exonEnds = new ArrayList<>();
-    private int codingStart = -1;
-    private int codingEnd = -1;
     private String gene_id = "";
+    private String transcriptId = "";
     private String chromosome = "";
-
     private Strand strand = null;
     private String type = "";
+    private int codingStart = -1;
+    private int codingEnd = -1;
+    private List<Integer> exonStarts = new ArrayList<>();
+    private List<Integer> exonEnds = new ArrayList<>();
 
-    public GtfToRefflat(File GTF) {
+    private final List<String> rows = new ArrayList<>();
+
+    /**
+     * @param GTF             Gene annotations in GTF form
+     */
+    public GtfToRefFlatConverter(File GTF) {
         this.GTF = GTF;
 
         this.doWork();
     }
 
-
-    protected int doWork() {
+    private int doWork() {
         if (GTF != null) {
 
             // convert the Gtf to a Gff3 and create a Gff3Feature
@@ -61,18 +62,17 @@ public class GtfToRefflat {
                 String ignore_id = "";
                 boolean has_stopCodon = false;
 
-                // iterate through each line in the Gff3Feature
                 for (final Gff3Feature feature : reader.iterator()) {
 
-                    // if the line has no transcipt_id, move onto the next line
-                    if(!feature.getAttribute("transcript_id").isEmpty()) {
-                        currentTranscriptId = feature.getAttribute("transcript_id").get(0);
-                    } else {
+                    // if the line has no transcript_id, move onto the next line
+                    if(feature.getAttribute("transcript_id").isEmpty()) {
                         continue;
                     }
 
+                    currentTranscriptId = feature.getAttribute("transcript_id").get(0);
+
                     // Since information is grouped by transcipt_id, once the transcript_id is different
-                    // create a line in the refflat file with the collected information
+                    // create a row with the collected information for the refFlat
                     if (!transcriptId.equals(currentTranscriptId) && !transcriptId.equals("")
                             && !ignore_id.equals(transcriptId)) {
                         this.addRow();
@@ -128,10 +128,10 @@ public class GtfToRefflat {
                     transcriptId = currentTranscriptId;
                 }
 
-                // add last row, format them into refflat format, and create the refflat file
+                // add last row, format them into refFlat format, and create the refFlat file
                 this.addRow();
                 String data = String.join(NEW_LINE_DELIMITER, rows);
-                refflat = writeToFile("new" + GTF.getName().substring(0, GTF.getName().length() - 4) + ".refflat", data);
+                refFlat = writeToFile(GTF.getName(), ".refflat", data);
 
             } catch (Exception e) {
                 System.out.println("There was an error while converting the given GFT to a refFlat for CollectRnaSeqMetrics. " +
@@ -141,8 +141,9 @@ public class GtfToRefflat {
         return 0;
     }
 
-    // calculate start and end variables and the exon count, format the variables into a refflat line
+    // calculate start and end variables and the exon count, format the variables into a refFlat line
     private void addRow() {
+        // sort the exon lists and remove duplicates
         Collections.sort(exonStarts);
         exonStarts = exonStarts.stream().distinct().collect(Collectors.toList());
         Collections.sort(exonEnds);
@@ -164,23 +165,23 @@ public class GtfToRefflat {
     }
 
     // reset all the start end and count variables for the next line in the Gff3Feature
-    public void resetVariables() {
+    private void resetVariables() {
         exonStarts = new ArrayList<>();
         exonEnds = new ArrayList<>();
         codingStart = -1;
         codingEnd = -1;
     }
 
-    // return the Refflat file
-    public File getRefflat() {
-        return refflat;
+    public File getRefFlat() {
+        return refFlat;
     }
 
-    // create a file and write data in it
-    public File writeToFile(String fileName, String data) {
-        File newFile = new File(fileName);
+    private File writeToFile(String fileName, String suffix, String data) {
+
+        File newFile;
         FileWriter fr = null;
         try {
+            newFile = File.createTempFile(fileName, suffix);
             fr = new FileWriter(newFile);
             fr.write(data);
         } catch (IOException e) {
@@ -195,11 +196,9 @@ public class GtfToRefflat {
         return newFile;
     }
 
-    // convert the Gtf file to a Gff3 file
-    public File convertToGFF3(File gtf) {
+    private File convertToGFF3(File gtf) {
         List<String> rows = new ArrayList<>();
 
-        // read in the gtf file and if the current line is not a comment or blank, convert it to gff3 format
         try {
             Scanner myReader = new Scanner(gtf);
             while (myReader.hasNextLine()) {
@@ -215,21 +214,18 @@ public class GtfToRefflat {
             System.out.println("An error occurred. Could not find the gtf file.");
             e.printStackTrace();
         }
-
         String data = String.join(NEW_LINE_DELIMITER, rows);
 
-        return writeToFile("new" + GTF.getName().substring(0, GTF.getName().length() - 4) + ".gff3", data);
+        return writeToFile(GTF.getName(), ".gff3", data);
     }
 
-    // format the given gtf line to gff3 format. Everything is the same except the attribute column
-    public String useGff3Syntax(String row) {
+    private String useGff3Syntax(String row) {
         String[] values = row.split(COLUMN_DELIMITER);
         String[] attributes = values[values.length - 1].split(ATTRIBUTE_DELIMITER);
-        List<String> resultValues = new ArrayList<>();
+
+        List<String> resultValues = new ArrayList<>(Arrays.asList(values).subList(0, values.length - 1));
         List<String> resultAttributes = new ArrayList<>();
-        for (int i = 0; i < values.length - 1; i++) {
-            resultValues.add(values[i]);
-        }
+
         for (int i = 0; i < attributes.length; i++) {
             switch (attributes[i]) {
                 case "gene_id":
@@ -244,12 +240,8 @@ public class GtfToRefflat {
                     break;
             }
         }
-
-        String newAttributes = String.join("", resultAttributes);
-        resultValues.add(StringUtils.chop(newAttributes));
+        resultValues.add(StringUtils.chop(String.join("", resultAttributes)));
 
         return String.join(COLUMN_DELIMITER, resultValues);
-
     }
-
 }

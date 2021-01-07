@@ -41,6 +41,7 @@ import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
+import picard.annotation.GtfToRefFlatConverter;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
@@ -162,7 +163,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
         if (GTF != null) {
-            REF_FLAT = new GtfToRefflat(GTF).getRefflat();
+            REF_FLAT = new GtfToRefFlatConverter(GTF).getRefFlat();
         }
 
         final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
