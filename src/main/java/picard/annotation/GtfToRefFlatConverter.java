@@ -31,12 +31,16 @@ public class GtfToRefFlatConverter {
     private String chromosome = "";
     private Strand strand = null;
     private String type = "";
-    private int codingStart = -1;
-    private int codingEnd = -1;
+    private int cdsStart = -1;
+    private int cdsEnd = -1;
     private List<Integer> exonStarts = new ArrayList<>();
     private List<Integer> exonEnds = new ArrayList<>();
 
     private final List<String> rows = new ArrayList<>();
+
+    int minExonStart = Integer.MAX_VALUE;
+    int maxExonEnd = Integer.MIN_VALUE;
+    boolean hasExon = false;
 
     /**
      * @param GTF             Gene annotations in GTF form
@@ -55,12 +59,10 @@ public class GtfToRefFlatConverter {
             final AbstractFeatureReader<Gff3Feature, LineIterator> reader = AbstractFeatureReader.getFeatureReader(GFF3.getAbsolutePath(), null, new Gff3Codec(), false);
 
             String currentTranscriptId = "";
+            String ignore_id = "";
+            boolean has_stopCodon = false;
 
             try {
-
-                boolean hasExon = false;
-                String ignore_id = "";
-                boolean has_stopCodon = false;
 
                 for (final Gff3Feature feature : reader.iterator()) {
 
@@ -88,41 +90,33 @@ public class GtfToRefFlatConverter {
                     strand = feature.getStrand();
                     type = feature.getType().toLowerCase();
 
-                    if (type.equals("exon")) {
-                        exonStarts.add(feature.getStart() - 1);
-                        exonEnds.add(feature.getEnd());
-                        hasExon = true;
-                    } else if (hasExon == false) {
-                        if (!type.equals("start_codon")) {
-                            exonEnds.add(feature.getEnd());
-                        }
-                        if (!type.equals("stop_codon")) {
-                            exonStarts.add(feature.getStart() - 1);
-                        }
-                    }
+                    int newStart = feature.getStart() - 1;
+                    int newEnd = feature.getEnd();
+
+                    calculateExonLists(newStart, newEnd);
 
                     if (strand.equals(Strand.POSITIVE)) {
                         if (type.equals("start_codon")) {
-                            codingStart = feature.getStart();
+                            cdsStart = newStart + 1;
                         }
                         if (type.equals("stop_codon")) {
-                            codingEnd = feature.getEnd();
+                            cdsEnd = newEnd;
                             has_stopCodon = true;
                         }
                     } else {
                         if (type.equals("stop_codon")) {
-                            codingStart = feature.getStart();
+                            cdsStart = newStart + 1;
                         }
                         if (type.equals("start_codon")) {
-                            codingEnd = feature.getEnd();
+                            cdsEnd = newEnd;
                             has_stopCodon = true;
                         }
                     }
-                    if (type.equals("cds") && codingStart == -1) {
-                        codingStart = feature.getStart();
+                    if (type.equals("cds") && cdsStart == -1) {
+                        cdsStart = newStart + 1;
                     }
                     if (type.equals("cds") && !has_stopCodon) {
-                        codingEnd = feature.getEnd();
+                        cdsEnd = newEnd;
                     }
 
                     transcriptId = currentTranscriptId;
@@ -141,22 +135,55 @@ public class GtfToRefFlatConverter {
         return 0;
     }
 
+    private void calculateExonLists(int newStart, int newEnd) {
+        if (type.equals("exon")) {
+            if (!hasExon && (!exonStarts.isEmpty() || !exonEnds.isEmpty())) {
+                exonStarts.clear();
+                exonEnds.clear();
+            }
+            exonStarts.add(newStart);
+            exonEnds.add(newEnd);
+            hasExon = true;
+        } else if (hasExon == false) {
+
+            if (maxExonEnd == Integer.MIN_VALUE && minExonStart == Integer.MAX_VALUE) {
+                minExonStart = newStart;
+                maxExonEnd = newEnd;
+            } else {
+                // if the intervals overlap, find the min start position and max end position
+                if (newStart <= maxExonEnd || newEnd <= maxExonEnd) {
+                    maxExonEnd = Math.max(newEnd, maxExonEnd);
+                    minExonStart = Math.min(newStart, minExonStart);
+                } else {
+                    exonStarts.add(minExonStart);
+                    exonEnds.add(maxExonEnd);
+
+                    maxExonEnd = newEnd;
+                    minExonStart = newStart;
+                }
+            }
+        }
+    }
+
     // calculate start and end variables and the exon count, format the variables into a refFlat line
     private void addRow() {
-        // sort the exon lists and remove duplicates
-        Collections.sort(exonStarts);
-        exonStarts = exonStarts.stream().distinct().collect(Collectors.toList());
-        Collections.sort(exonEnds);
-        exonEnds = exonEnds.stream().distinct().collect(Collectors.toList());
 
-        codingStart = codingStart == -1 ? exonStarts.get(0) : codingStart - 1;
-        codingEnd = codingEnd == -1 ? exonEnds.get(exonEnds.size() - 1) : codingEnd;
+        if (!hasExon) {
+            exonStarts.add(minExonStart);
+            exonEnds.add(maxExonEnd);
+        }
+
+        Collections.sort(exonStarts);
+        Collections.sort(exonEnds);
+
+        cdsStart = cdsStart == -1 ? exonStarts.get(0) : cdsStart - 1;
+        cdsEnd = cdsEnd == -1 ? exonEnds.get(exonEnds.size() - 1) : cdsEnd;
 
         rows.add(String.join(
                 COLUMN_DELIMITER,
                 gene_id, transcriptId, chromosome, strand.toString(),
                 Integer.toString(exonStarts.get(0)), Integer.toString(exonEnds.get(exonEnds.size() - 1)),
-                Integer.toString(codingStart), Integer.toString(codingEnd),
+                Integer.toString(cdsStart), Integer.toString(cdsEnd),
                 Integer.toString(exonStarts.size()),
                 exonStarts.stream().map(Object::toString).collect(Collectors.joining(COORDINATE_DELIMITER)
                 ), exonEnds.stream().map(Object::toString).collect(Collectors.joining(COORDINATE_DELIMITER))));
@@ -168,20 +195,21 @@ public class GtfToRefFlatConverter {
     private void resetVariables() {
         exonStarts = new ArrayList<>();
         exonEnds = new ArrayList<>();
-        codingStart = -1;
-        codingEnd = -1;
+        cdsStart = -1;
+        cdsEnd = -1;
+        maxExonEnd = Integer.MIN_VALUE;
+        minExonStart = Integer.MAX_VALUE;
+        transcriptId = "";
     }
 
     public File getRefFlat() {
         return refFlat;
     }
 
-    private File writeToFile(String fileName, String suffix, String data) {
-
-        File newFile;
+    public File writeToFile(String fileName, String suffix, String data) {
+        File newFile = new File(fileName + suffix);
         FileWriter fr = null;
         try {
-            newFile = File.createTempFile(fileName, suffix);
             fr = new FileWriter(newFile);
             fr.write(data);
         } catch (IOException e) {

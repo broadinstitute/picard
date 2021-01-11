@@ -31,7 +31,7 @@ public class GtfToRefFlatConverterTest extends CommandLineProgramTest {
         Assert.assertEquals(FileUtils.contentEquals(expectedRefflat, refflat), true);
     }
 
-    @Test //doesnt work yet...there is one difference that I dont get in the exon end lists
+    @Test
     public void testDups() throws IOException {
         final File gtf = new File(TEST_DIR + "/Gtfs/", "dupsGtf.gtf");
         final File expectedRefflat = new File(TEST_DIR + "/Refflats/", "dupsRefflat.refflat");
