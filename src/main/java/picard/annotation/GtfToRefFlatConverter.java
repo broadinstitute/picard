@@ -206,10 +206,11 @@ public class GtfToRefFlatConverter {
         return refFlat;
     }
 
-    public File writeToFile(String fileName, String suffix, String data) {
-        File newFile = new File(fileName + suffix);
+    private File writeToFile(String fileName, String suffix, String data) {
+        File newFile;
         FileWriter fr = null;
         try {
+            newFile = File.createTempFile(fileName, suffix);
             fr = new FileWriter(newFile);
             fr.write(data);
         } catch (IOException e) {
