@@ -41,8 +41,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
     private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
     private final Map<Integer, List<SortedRecordToWriterPump>> completedWork = new HashMap<>();
-    private boolean tileProcessingComplete = false;
-    private boolean tileProcessingError = false;
+    private boolean tileReadingComplete = false;
     final ThreadPoolExecutorWithExceptions tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
     /**
      * Constructs a new SortedBaseCallsConverter.
@@ -116,32 +115,54 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         completedWorkExecutor.shutdown();
 
         //  Thread by surface tile
-        final ThreadPoolExecutorWithExceptions tileProcessingExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+        final ThreadPoolExecutorWithExceptions tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
         for (final Integer tile : tiles) {
-            tileProcessingExecutor.submit(new TileProcessor(tile, barcodes));
+            tileReadExecutor.submit(new TileProcessor(tile, barcodes));
         }
-        tileProcessingExecutor.shutdown();
+        tileReadExecutor.shutdown();
 
-        // Wait for all the threads to complete before checking for errors
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileProcessingExecutor, Duration.ofMinutes(5));
-        tileProcessingComplete = true;
-        tileProcessingError = tileProcessingExecutor.hasError();
+        // Wait for all the read threads to complete before checking for errors
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileReadExecutor, Duration.ofMinutes(5));
+        tileReadingComplete = true;
 
-        synchronized (completedWork) {
-            log.debug("Final notification of work complete.");
-            completedWork.notifyAll();
+        try {
+            // Check for reading errors
+            if (tileReadExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
+            }
+
+            synchronized (completedWork) {
+                log.debug("Final notification of work complete.");
+                completedWork.notifyAll();
+            }
+
+            // Wait for tile processing synchronization to complete
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
+
+            // Check for tile work synchronization errors
+            if (completedWorkExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
+            }
+
+            // Wait for writing to be done
+            tileWriteExecutor.shutdown();
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
+
+            // Check for writing errors
+            if (tileWriteExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
+            }
+
+        } finally {
+            // We are all done scheduling work. Now close the writers.
+            barcodeRecordWriterMap.values().forEach(ConvertedClusterDataWriter::close);
         }
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
+    }
 
-        // We are all done scheduling work. Now schedule the closers.
-        barcodeRecordWriterMap.values().forEach(ConvertedClusterDataWriter::close);
-
-        if (tileProcessingError ||
-                completedWorkExecutor.hasError()) {
-            int tasksStillRunning = completedWorkExecutor.shutdownNow().size();
-            throw new PicardException("Exceptions in tile processing. There were " + tasksStillRunning
-                    + " tasks were still running or queued and have been cancelled.");
-        }
+    private void interruptAndShutdownExecutors(ThreadPoolExecutorWithExceptions ...executors) {
+        int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
+        throw new PicardException("Exceptions in tile processing. There were " + tasksRunning
+                + " tasks were still running or queued and have been cancelled.");
     }
 
     /**
@@ -270,11 +291,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         private void checkCompletedWork() throws InterruptedException {
             synchronized (completedWork) {
                 while (currentTileIndex < tiles.size()) {
-                    if (tileProcessingError) {
-                        throw new InterruptedException("Tile processing error, shutting down completed work checker.");
-                    }
                     // Wait only if tile processing is still occurring
-                    if (!tileProcessingComplete) {
+                    if (!tileReadingComplete) {
                         log.debug("Waiting for completed work.");
                         completedWork.wait();
                     }
@@ -289,13 +307,6 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                             currentTileIndex++;
                         }
                     }
-                }
-                tileWriteExecutor.shutdown();
-                ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
-                if (tileWriteExecutor.hasError()) {
-                    int tasksStillRunning = tileWriteExecutor.shutdownNow().size();
-                    throw new PicardException("Exceptions in tile processing. There were " + tasksStillRunning
-                            + " tasks were still running or queued and have been cancelled.");
                 }
             }
         }
