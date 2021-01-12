@@ -1,23 +1,52 @@
-package picard.annotation;
+package picard.analysis;
 
+import htsjdk.samtools.util.Log;
 import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.annotation.Strand;
+import htsjdk.tribble.gff.Gff3Codec;
 import htsjdk.tribble.gff.Gff3Feature;
 import htsjdk.tribble.readers.LineIterator;
 import org.apache.commons.lang.StringUtils;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import htsjdk.tribble.gff.Gff3Codec;
-import htsjdk.tribble.annotation.Strand;
+import picard.cmdline.CommandLineProgram;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GtfToRefFlatConverter {
+/**
+ * Class to convert a GTF file into a RefFlat file.
+ */
+@CommandLineProgramProperties(
+        summary = GtfToRefFlat_CP.USAGE_DETAILS,
+        oneLineSummary = "Program to convert a GTF file to a RefFlat file",
+        programGroup = picard.cmdline.programgroups.OtherProgramGroup.class
+)
+@DocumentedFeature
+public class GtfToRefFlat extends CommandLineProgram {
 
-    private final File GTF;
+    static final String USAGE_DETAILS =
+            "GtfToRefFlat takes a GTF file and converts it to a RefFlat file. " +
+                    "A GTF (General Transfer Format) file is an a tab-delimited file used to hold information about gene structure." +
+                    "<a href='http://mblab.wustl.edu/GTF2.html'></a> " +
+                    "A RefFlat file is another format for gene annotation. It is a tab-delimited file containing information such as the location of RNA transcripts," +
+                    "and exon start and stop sites." +
+                    "<a href='http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat'></a>" +
+                    "<h4>Usage example:</h4>" +
+                    "<pre>" +
+                    "java -jar picard.jar GtfToRefFlat \\<br />" +
+                    "      GTF=example.gtf \\<br />" +
+                    "</pre>";
+
+    private final static Log log = Log.getInstance(GtfToRefFlat_CP.class);
+
+    @Argument(shortName = "GTF", doc = "Gene annotations in GTF form.  Format described here: http://mblab.wustl.edu/GTF2.html")
+    public File GTF;
 
     private File refFlat = null;
 
@@ -36,22 +65,14 @@ public class GtfToRefFlatConverter {
     private List<Integer> exonStarts = new ArrayList<>();
     private List<Integer> exonEnds = new ArrayList<>();
 
+    private int minExonStart = Integer.MAX_VALUE;
+    private int maxExonEnd = Integer.MIN_VALUE;
+    private boolean hasExon = false;
+
     private final List<String> rows = new ArrayList<>();
 
-    int minExonStart = Integer.MAX_VALUE;
-    int maxExonEnd = Integer.MIN_VALUE;
-    boolean hasExon = false;
-
-    /**
-     * @param GTF             Gene annotations in GTF form
-     */
-    public GtfToRefFlatConverter(File GTF) {
-        this.GTF = GTF;
-
-        this.doWork();
-    }
-
-    private int doWork() {
+    @Override
+    protected int doWork() {
         if (GTF != null) {
 
             // convert the Gtf to a Gff3 and create a Gff3Feature
@@ -67,19 +88,19 @@ public class GtfToRefFlatConverter {
                 for (final Gff3Feature feature : reader.iterator()) {
 
                     // if the line has no transcript_id, move onto the next line
-                    if(feature.getAttribute("transcript_id").isEmpty()) {
+                    if (feature.getAttribute("transcript_id").isEmpty()) {
                         continue;
                     }
 
                     currentTranscriptId = feature.getAttribute("transcript_id").get(0);
 
-                    // Since information is grouped by transcipt_id, once the transcript_id is different
+                    // Since information is grouped by transcript_id, once the transcript_id is different
                     // create a row with the collected information for the refFlat
                     if (!transcriptId.equals(currentTranscriptId) && !transcriptId.equals("")
                             && !ignore_id.equals(transcriptId)) {
                         this.addRow();
                     } else if (strand != feature.getStrand() && strand != null) {
-                        System.out.println("Error: all group members must be on the same strand");
+                        log.error("Error: all group members must be on the same strand");
                         ignore_id = currentTranscriptId;
                         resetVariables();
                         continue;
@@ -128,8 +149,8 @@ public class GtfToRefFlatConverter {
                 refFlat = writeToFile(GTF.getName(), ".refflat", data);
 
             } catch (Exception e) {
-                System.out.println("There was an error while converting the given GFT to a refFlat for CollectRnaSeqMetrics. " +
-                        "Make sure the GTF file is tab separated.");
+                log.error("There was an error while converting the given GFT to a refFlat for CollectRnaSeqMetrics. " +
+                        "Make sure the GTF file is tab separated.", e);
             }
         }
         return 0;
@@ -211,7 +232,6 @@ public class GtfToRefFlatConverter {
         FileWriter fr = null;
         try {
             newFile = File.createTempFile(fileName, suffix);
-            fr = new FileWriter(newFile);
             fr.write(data);
         } catch (IOException e) {
             throw new PicardException("Could not write to file " + fileName);
@@ -219,7 +239,7 @@ public class GtfToRefFlatConverter {
             try {
                 fr.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e);
             }
         }
         return newFile;
@@ -228,21 +248,20 @@ public class GtfToRefFlatConverter {
     private File convertToGFF3(File gtf) {
         List<String> rows = new ArrayList<>();
 
-        try {
-            Scanner myReader = new Scanner(gtf);
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
+        try (Scanner scanner = new Scanner(gtf)) {
+            while (scanner.hasNext()) {
+                String data = scanner.nextLine();
                 boolean isEmpty = data.matches("");
                 boolean isComment = data.startsWith("#");
                 if (!isEmpty && !isComment) {
                     rows.add(useGff3Syntax(data));
                 }
             }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred. Could not find the gtf file.");
+        } catch (IOException e) {
+            log.error("An error occurred while trying to convert the GTF to a GFF3.", e);
             e.printStackTrace();
         }
+
         String data = String.join(NEW_LINE_DELIMITER, rows);
 
         return writeToFile(GTF.getName(), ".gff3", data);

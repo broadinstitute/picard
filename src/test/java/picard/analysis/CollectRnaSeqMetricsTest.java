@@ -461,15 +461,15 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void GtfToRefFlatFile() throws Exception {
+    public void testInputGtf() throws Exception {
         final File input = new File("testdata/picard/sam/", "forMetrics.sam");
-        final File outfile = getTempOutputFile("test", ".wgs_metrics");
-        final File ref = new File("testdata/picard/sam/GtfToRefflat/Gtfs", "basic.gtf");
+        final File output = getTempOutputFile("test", ".wgs_metrics");
+        final File gtf = new File("testdata/picard/util/GtfToRefflat/Gtfs", "basic.gtf");
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
-                "OUTPUT=" + outfile.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
-                "GTF=" + ref.getAbsolutePath()
+                "GTF=" + gtf.getAbsolutePath()
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
     }
