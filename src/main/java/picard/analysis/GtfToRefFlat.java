@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Class to convert a GTF file into a RefFlat file.
  */
 @CommandLineProgramProperties(
-        summary = GtfToRefFlat_CP.USAGE_DETAILS,
+        summary = GtfToRefFlat.USAGE_DETAILS,
         oneLineSummary = "Program to convert a GTF file to a RefFlat file",
         programGroup = picard.cmdline.programgroups.OtherProgramGroup.class
 )
@@ -43,7 +43,7 @@ public class GtfToRefFlat extends CommandLineProgram {
                     "      GTF=example.gtf \\<br />" +
                     "</pre>";
 
-    private final static Log log = Log.getInstance(GtfToRefFlat_CP.class);
+    private final static Log log = Log.getInstance(GtfToRefFlat.class);
 
     @Argument(shortName = "GTF", doc = "Gene annotations in GTF form.  Format described here: http://mblab.wustl.edu/GTF2.html")
     public File GTF;
@@ -65,11 +65,11 @@ public class GtfToRefFlat extends CommandLineProgram {
     private List<Integer> exonStarts = new ArrayList<>();
     private List<Integer> exonEnds = new ArrayList<>();
 
+    private final List<String> rows = new ArrayList<>();
+
     private int minExonStart = Integer.MAX_VALUE;
     private int maxExonEnd = Integer.MIN_VALUE;
     private boolean hasExon = false;
-
-    private final List<String> rows = new ArrayList<>();
 
     @Override
     protected int doWork() {
@@ -228,10 +228,10 @@ public class GtfToRefFlat extends CommandLineProgram {
     }
 
     private File writeToFile(String fileName, String suffix, String data) {
-        File newFile;
+        File newFile = new File(fileName + suffix);
         FileWriter fr = null;
         try {
-            newFile = File.createTempFile(fileName, suffix);
+            fr = new FileWriter(newFile);
             fr.write(data);
         } catch (IOException e) {
             throw new PicardException("Could not write to file " + fileName);
@@ -292,4 +292,5 @@ public class GtfToRefFlat extends CommandLineProgram {
 
         return String.join(COLUMN_DELIMITER, resultValues);
     }
+
 }

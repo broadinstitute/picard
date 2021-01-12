@@ -20,7 +20,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
     private static final File REFFLAT_TEST_DIR = new File("testdata/picard/util/GtfToRefflat/Refflats/");
 
     public String getCommandLineProgramName() {
-        return GtfToRefFlat_CP.class.getSimpleName();
+        return GtfToRefFlat.class.getSimpleName();
     }
 
     @Test
@@ -28,7 +28,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         final File gtf = new File(GTF_TEST_DIR, "basic.gtf");
         final File expectedRefFlat = new File(REFFLAT_TEST_DIR, "basic.refflat");
 
-        GtfToRefFlat_CP gtfToRefFlat = new GtfToRefFlat_CP();
+        GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
         Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
@@ -39,7 +39,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         final File gtf = new File(GTF_TEST_DIR, "dupsGtf.gtf");
         final File expectedRefFlat = new File(REFFLAT_TEST_DIR, "dupsRefflat.refflat");
 
-        GtfToRefFlat_CP gtfToRefFlat = new GtfToRefFlat_CP();
+        GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
         Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
@@ -50,7 +50,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         final File gtf = new File(GTF_TEST_DIR, "ensembl.gtf");
         final File expectedRefFlat = new File(REFFLAT_TEST_DIR, "ensembl.refflat");
 
-        GtfToRefFlat_CP gtfToRefFlat = new GtfToRefFlat_CP();
+        GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
         Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
@@ -61,7 +61,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         final File gtf = new File(GTF_TEST_DIR, "ensemblSplicedStops.gtf");
         final File expectedRefFlat = new File(REFFLAT_TEST_DIR, "ensemblSplicedStops.refflat");
 
-        GtfToRefFlat_CP gtfToRefFlat = new GtfToRefFlat_CP();
+        GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
         Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
@@ -72,7 +72,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         final File gtf = new File(GTF_TEST_DIR, "splitStop.gtf");
         final File expectedRefFlat = new File(REFFLAT_TEST_DIR, "splitStop.refflat");
 
-        GtfToRefFlat_CP gtfToRefFlat = new GtfToRefFlat_CP();
+        GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
         Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);

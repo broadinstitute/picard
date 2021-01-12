@@ -1,0 +1,1 @@
+The test data in this directory is from the USCS Genome Broswer found [here](https://github.com/ucscGenomeBrowser/kent/tree/master/src/hg/utils/gtfToGenePred/tests)
