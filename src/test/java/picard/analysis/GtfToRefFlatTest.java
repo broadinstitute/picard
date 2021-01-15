@@ -31,7 +31,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
-        Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
+        Assert.assertTrue(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()));
     }
 
     @Test
@@ -42,7 +42,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
-        Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
+        Assert.assertTrue(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()));
     }
 
     @Test
@@ -53,7 +53,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
-        Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
+        Assert.assertTrue(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
-        Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
+        Assert.assertTrue(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class GtfToRefFlatTest extends CommandLineProgramTest {
         GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
         gtfToRefFlat.GTF = gtf;
         gtfToRefFlat.doWork();
-        Assert.assertEquals(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()), true);
+        Assert.assertTrue(FileUtils.contentEquals(expectedRefFlat, gtfToRefFlat.getRefFlat()));
     }
 
 }

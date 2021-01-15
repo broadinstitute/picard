@@ -149,7 +149,7 @@ public class GtfToRefFlat extends CommandLineProgram {
                 refFlat = writeToFile(GTF.getName(), ".refflat", data);
 
             } catch (Exception e) {
-                log.error("There was an error while converting the given GFT to a refFlat for CollectRnaSeqMetrics. " +
+                throw new PicardException("There was an error while converting the given GTF to a refFlat for CollectRnaSeqMetrics. " +
                         "Make sure the GTF file is tab separated.", e);
             }
         }
@@ -165,8 +165,7 @@ public class GtfToRefFlat extends CommandLineProgram {
             exonStarts.add(newStart);
             exonEnds.add(newEnd);
             hasExon = true;
-        } else if (hasExon == false) {
-
+        } else if (!hasExon) {
             if (maxExonEnd == Integer.MIN_VALUE && minExonStart == Integer.MAX_VALUE) {
                 minExonStart = newStart;
                 maxExonEnd = newEnd;
@@ -228,38 +227,29 @@ public class GtfToRefFlat extends CommandLineProgram {
     }
 
     private File writeToFile(String fileName, String suffix, String data) {
-        File newFile = new File(fileName + suffix);
-        FileWriter fr = null;
-        try {
-            fr = new FileWriter(newFile);
+        final File newFile = new File(fileName + suffix);
+        try (final FileWriter fr = new FileWriter(newFile)) {
             fr.write(data);
         } catch (IOException e) {
-            throw new PicardException("Could not write to file " + fileName);
-        } finally {
-            try {
-                fr.close();
-            } catch (IOException e) {
-                log.error(e);
-            }
+            throw new PicardException("Could not write to file " + fileName, e);
         }
         return newFile;
     }
 
     private File convertToGFF3(File gtf) {
-        List<String> rows = new ArrayList<>();
+        final List<String> rows = new ArrayList<>();
 
         try (Scanner scanner = new Scanner(gtf)) {
             while (scanner.hasNext()) {
-                String data = scanner.nextLine();
-                boolean isEmpty = data.matches("");
-                boolean isComment = data.startsWith("#");
+                final String data = scanner.nextLine();
+                final boolean isEmpty = data.matches("");
+                final boolean isComment = data.startsWith("#");
                 if (!isEmpty && !isComment) {
                     rows.add(useGff3Syntax(data));
                 }
             }
         } catch (IOException e) {
-            log.error("An error occurred while trying to convert the GTF to a GFF3.", e);
-            e.printStackTrace();
+            throw new PicardException("An error occurred while trying to convert the GTF to a GFF3.", e);
         }
 
         String data = String.join(NEW_LINE_DELIMITER, rows);
