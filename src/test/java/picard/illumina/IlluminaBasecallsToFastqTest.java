@@ -153,7 +153,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
         List<FastqRecord> actualReads = slurpReads(actual);
         List<FastqRecord> expectedReads = slurpReads(expected);
 
-        actualReads.sort((a, b) -> a.getReadName().compareTo(b.getReadName()));
+        actualReads.sort(Comparator.comparing(FastqRecord::getReadName));
         expectedReads.sort((a, b) -> a.getReadName().compareTo(b.getReadName()));
         Assert.assertEquals(actualReads, expectedReads);
     }
@@ -161,7 +161,9 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private List<FastqRecord> slurpReads(final File f) {
         final FastqReader in = new FastqReader(f);
         final List<FastqRecord> recs = new ArrayList<>();
-        for (final FastqRecord r : in) recs.add(r);
+        for (final FastqRecord r : in) {
+          recs.add(r);
+        }
         in.close();
         return recs;
     }

@@ -13,7 +13,7 @@ public interface ReadNameEncoder {
      * @param pairNumber 1 if this is the first of the pair, 2 if it is the second, or null if this not a paired read.
      * @return The read name
      */
-    String generateReadName(ClusterData cluster, Integer pairNumber);
+    String generateReadName(final ClusterData cluster, final Integer pairNumber);
 
     /**
      * Generates a short read name that includes a minimal amount of information, this is used primarily for read

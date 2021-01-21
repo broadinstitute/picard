@@ -140,7 +140,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
         final String s1 = integer1.toString();
         final String s2 = integer2.toString();
-        // Because a the tile number is followed by a colon, a tile number that
+        // Because the tile number is followed by a colon, a tile number that
         // is a prefix of another tile number should sort after. (e.g. 10 sorts after 100).
         if (s1.length() < s2.length()) {
             if (s2.startsWith(s1)) {

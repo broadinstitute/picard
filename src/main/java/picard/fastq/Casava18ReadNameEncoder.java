@@ -14,14 +14,14 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
 
     /* The following is to make generation of string representations of integers fast for a small subset of ints. */
     private static final int INT_CACHE_LIMIT = 5000;
-    private static final String[] intStrings = new String[INT_CACHE_LIMIT];
+    private static final String[] INT_STRINGS = new String[INT_CACHE_LIMIT];
     static {
-        for (int i=0; i<intStrings.length; ++i) {
+        for (int i = 0; i < intStrings.length; ++i) {
             intStrings[i] = Integer.toString(i);
         }
     }
 
-    private final String base;
+    private final String nameBase;
     private int bufferSize;
 
     public Casava18ReadNameEncoder(final String instrumentName, final String runId, final String flowcellId) {

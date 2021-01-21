@@ -228,7 +228,7 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
 
         try {
             // See how many clusters we can read and then make BclData objects for them
-            final int clustersRead   = this.streams[0].read(buffer);
+            final int clustersRead = this.streams[0].read(buffer);
             if (clustersRead == -1) return;
 
             final BclData[] bclDatas = new BclData[clustersRead];
@@ -253,7 +253,9 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
                 }
             }
 
-            for (final BclData data : bclDatas) this.queue.add(data);
+            for (final BclData data : bclDatas) {
+              this.queue.add(data);
+            }
         }
         catch (final IOException ioe) {
             throw new RuntimeIOException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
@@ -261,7 +263,7 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
         }
     }
 
-    /** Inserts the bases and quals at `cycle` of `read` in all of the bclDatqs, using data in this.buffer. */
+    /** Inserts the bases and quals at `cycle` of `read` in all of the bclDatas, using data in this.buffer. */
     private void updateClusterBclDatas(final BclData[] bclDatas, final int read, final int cycle) {
         final int numClusters = bclDatas.length;
         for (int dataIdx = 0; dataIdx< numClusters; ++dataIdx) {
@@ -301,4 +303,3 @@ public class BclReader extends BaseBclReader implements CloseableIterator<BclDat
         return numClustersInTile;
     }
 }
-
