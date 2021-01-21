@@ -1,11 +1,13 @@
 package picard.sam.util;
 
+import java.io.Serializable;
+
 /**
  * Small interface that provides access to the physical location information about a cluster.
  * All values should be defaulted to -1 if unavailable.  ReadGroup and Tile should only allow
  * non-zero positive integers, x and y coordinates may be negative.
  */
-public interface PhysicalLocation {
+public interface PhysicalLocation extends Serializable {
     public static int NO_VALUE = -1;
 
     public short getReadGroup();

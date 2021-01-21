@@ -50,10 +50,12 @@ import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
+import picard.PicardException;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PathProvider;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -62,7 +64,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -496,5 +497,21 @@ public abstract class CommandLineProgram {
      */
     public static String getFaqLink() {
         return "To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp";
+    }
+
+    /**
+     * Check if R is installed
+     * @param has_chart_output
+     * @return true if R is installed
+     */
+    public static boolean checkRInstallation(final boolean has_chart_output) {
+        if (has_chart_output) {
+            try {
+                RExecutor.executeFromClasspath("picard/analysis/checkRInstallation.R");
+            } catch (htsjdk.samtools.SAMException e) {
+                return false;
+            }
+        }
+        return true;
     }
 }
