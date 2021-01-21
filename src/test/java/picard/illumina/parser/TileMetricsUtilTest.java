@@ -35,15 +35,15 @@ public class TileMetricsUtilTest {
         List<Integer> someCycleFiles = Arrays.asList(2, 4);
 
         return new Object[][]{
-            //specificTestDir, numCycleMetricsFiles, populatedCycleDirs, baseMetricsFile, isNovaSeq
-            {"notNovaSeq", 0, Collections.emptyList(), true, false},
-            {"novaSeqBaseFileOnly", 0, Collections.emptyList(), true, true},
-            {"novaSeqSingleCycleFile", 1, oneCycleFile, false, true},
-            {"novaSeqBaseAndSingleCycleFile", 1, oneCycleFile, true, true},
-            {"novaSeqAllCycleFiles", 5, allCycleFiles, false, true},
-            {"novaSeqBaseAndAllCycleFiles", 5, allCycleFiles, true, true},
-            {"novaSeqSomeCycleFiles", 5, someCycleFiles, false, true},
-            {"novaSeqBaseAndSomeCycleFiles", 5, someCycleFiles, true, true}
+            //specificTestDir, numCycleMetricsFiles, populatedCycleDirs, baseMetricsFile
+            {"notNovaSeq", 0, Collections.emptyList(), true},
+            {"novaSeqBaseFileOnly", 0, Collections.emptyList(), true},
+            {"novaSeqSingleCycleFile", 1, oneCycleFile, false},
+            {"novaSeqBaseAndSingleCycleFile", 1, oneCycleFile, true},
+            {"novaSeqAllCycleFiles", 5, allCycleFiles, false},
+            {"novaSeqBaseAndAllCycleFiles", 5, allCycleFiles, true},
+            {"novaSeqSomeCycleFiles", 5, someCycleFiles, false},
+            {"novaSeqBaseAndSomeCycleFiles", 5, someCycleFiles, true}
         };
     }
 
@@ -52,7 +52,7 @@ public class TileMetricsUtilTest {
         List<Integer> populatedCycleDirs = Collections.emptyList();
         Path baseDir = createTestDirs("missingTileMetrics", 0, populatedCycleDirs, false);
         TileMetricsUtil.findTileMetricsFiles(
-                baseDir.toFile(), 0, false);
+                baseDir.toFile(), 0);
     }
 
     @Test(dataProvider = "testCases")
@@ -60,13 +60,12 @@ public class TileMetricsUtilTest {
             String specificTestDir,
             int numCycles,
             List<Integer> populatedCycleDirs,
-            boolean baseMetricsFile,
-            boolean isNovaSeq
+            boolean baseMetricsFile
     ) throws IOException {
 
         Path baseDir = createTestDirs(specificTestDir, numCycles, populatedCycleDirs, baseMetricsFile);
         List<File> tileMetricsFiles = TileMetricsUtil.findTileMetricsFiles(
-            baseDir.toFile(), numCycles, isNovaSeq);
+            baseDir.toFile(), numCycles);
 
         List<File> expected = generateFindTileMetricsExpected(baseDir, populatedCycleDirs, baseMetricsFile);
         Assert.assertEquals(tileMetricsFiles, expected);

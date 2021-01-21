@@ -50,14 +50,13 @@ public class IlluminaLaneMetricsCollectorTest {
     }
 
     @Test(dataProvider = "testCollectIlluminaLaneMetrics")
-    public void testCollectIlluminaLaneMetrics(final String testRun, final ReadStructure readStructure, final boolean isNovaSeq) throws Exception {
+    public void testCollectIlluminaLaneMetrics(final String testRun, final ReadStructure readStructure) throws Exception {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final File runDirectory = new File(TILE_RUN_DIRECTORY, testRun);
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
             clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
             clp.RUN_DIRECTORY = runDirectory;
             clp.OUTPUT_PREFIX = "test";
-            clp.IS_NOVASEQ = isNovaSeq;
             if (useReadStructure) clp.READ_STRUCTURE = readStructure;
             clp.doWork();
 
@@ -75,12 +74,12 @@ public class IlluminaLaneMetricsCollectorTest {
     @DataProvider(name = "testCollectIlluminaLaneMetrics")
     public Object[][] testCollectIlluminaLaneMetricsDataProvider() {
         return new Object[][] {
-                {"A7LE0", new ReadStructure("25T8B8B25T"), false},
-                {"C2MFAACXX", new ReadStructure("95T101T"), false},
-                {"H7BATADXX", new ReadStructure("76T8B76T"), false},
-                {"H7H7RADXX", new ReadStructure("101T8B8B101T"), false},
-                {"A67HY", new ReadStructure("8B8B"), false},
-                {"NovaSeq", new ReadStructure("151T8B8B151T"), true}
+                {"A7LE0", new ReadStructure("25T8B8B25T")},
+                {"C2MFAACXX", new ReadStructure("95T101T")},
+                {"H7BATADXX", new ReadStructure("76T8B76T")},
+                {"H7H7RADXX", new ReadStructure("101T8B8B101T")},
+                {"A67HY", new ReadStructure("8B8B")},
+                {"NovaSeq", new ReadStructure("151T8B8B151T")}
         };
     }
 

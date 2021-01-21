@@ -72,26 +72,20 @@ public class TileMetricsUtil {
     private final static Log LOG = Log.getInstance(TileMetricsUtil.class);
 
     /**
-     * Returns the path to the TileMetrics file given the basecalling directory.
-     *
-     * @deprecated use {@link #findTileMetricsFiles(File, int, boolean)} instead
+     * Finds all of the tile metrics files for a given run directory and cycle count.
+     * @param illuminaRunDirectory The run directory
+     * @param numCycles The number of cycle directories to check.
+     * @return A list of all tile metrics files.
      */
-    @Deprecated
-    public static File renderTileMetricsFileFromBasecallingDirectory(final File illuminaRunDirectory, int numCycles, boolean isNovaSeq) {
-        return findTileMetricsFiles(illuminaRunDirectory, numCycles, isNovaSeq).get(0);
-    }
-
-    public static List<File> findTileMetricsFiles(File illuminaRunDirectory, int numCycles, boolean isNovaSeq) {
+    public static List<File> findTileMetricsFiles(File illuminaRunDirectory, int numCycles) {
         Path interOpDir = illuminaRunDirectory.toPath().resolve(INTEROP_SUBDIRECTORY_NAME);
         final List<Path> pathsToTest = new ArrayList<>();
 
         pathsToTest.add(interOpDir.resolve(TILE_METRICS_OUT_FILE_NAME));
 
-        if (isNovaSeq) {
-            // check cycles in reverse order.
-            for (int i = numCycles; i > 0; i--) {
-                pathsToTest.add(interOpDir.resolve(String.format("C%d.1/%s", i, TILE_METRICS_OUT_FILE_NAME)));
-            }
+        // check cycles in reverse order.
+        for (int i = numCycles; i > 0; i--) {
+            pathsToTest.add(interOpDir.resolve(String.format("C%d.1/%s", i, TILE_METRICS_OUT_FILE_NAME)));
         }
 
         final List<File> files = pathsToTest.stream()
@@ -99,12 +93,7 @@ public class TileMetricsUtil {
                 .map(Path::toFile)
                 .collect(Collectors.toList());
         if (files.isEmpty()) {
-            StringBuilder message = new StringBuilder(
-                    String.format("No %s file found in %s", INTEROP_SUBDIRECTORY_NAME, interOpDir));
-            if (isNovaSeq) {
-                message.append(" or any of its cycle directories.");
-            }
-            throw new IllegalStateException(message.toString());
+            throw new IllegalStateException(String.format("No %s file found in %s or any of its cycle directories.\"", INTEROP_SUBDIRECTORY_NAME, interOpDir));
         }
         return files;
     }
@@ -137,7 +126,7 @@ public class TileMetricsUtil {
     ) throws FileNotFoundException {
         final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
         for (File tileMetricsOutFile : tileMetricsOutFiles) {
-            final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
+            final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile);
             final float density = tileMetricsIterator.getDensity();
             final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
             final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
@@ -163,7 +152,7 @@ public class TileMetricsUtil {
                                                     final ValidationStringency validationStringency)
             throws FileNotFoundException {
         final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
-        final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.THREE);
+        final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile);
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
         return getTileClusterRecordsV3(locationToMetricsMap, phasingValues, tileMetricsIterator.getDensity());
@@ -182,7 +171,7 @@ public class TileMetricsUtil {
                                                     final ValidationStringency validationStringency) throws FileNotFoundException {
         // Get the tile metrics lines from TileMetricsOut, keeping only the last value for any Lane/Tile/Code combination
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(new TileMetricsOutReader
-                (tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion.TWO));
+                (tileMetricsOutFile));
 
         // Collect the tiles by lane & tile, and then collect the metrics by lane
         final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
