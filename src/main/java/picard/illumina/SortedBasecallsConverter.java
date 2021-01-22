@@ -124,6 +124,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                 writer.write(record);
                 writeProgressLogger.record(null, 0);
             }
+            recordCollection.cleanup();
         }
     }
 

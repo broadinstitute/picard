@@ -15,6 +15,7 @@ import picard.util.ThreadPoolExecutorWithExceptions;
 import java.io.File;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -111,6 +112,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         tiles.sort(TILE_NUMBER_COMPARATOR);
         setTileLimits(firstTile, tileLimit);
         tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numWriteThreads);
+        tileWriteExecutor.setKeepAliveTime(500, TimeUnit.MILLISECONDS);
         tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
         final CompletedWorkChecker workChecker = new CompletedWorkChecker();
         completedWorkExecutor.submit(workChecker);
@@ -180,16 +182,6 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             if (completedWorkExecutor.hasError()) {
                 interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
             }
-
-            // Wait for writing to be done
-            tileWriteExecutor.shutdown();
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
-
-            // Check for writing errors
-            if (tileWriteExecutor.hasError()) {
-                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
-            }
-
         } finally {
             // We are all done scheduling work. Now close the writers.
             barcodeRecordWriterMap.values().forEach(ConvertedClusterDataWriter::close);
@@ -234,15 +226,19 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                     }
                     final Integer currentTile = tiles.get(currentTileIndex);
                     if (completedWork.containsKey(currentTile)) {
-                        if (tileWriteExecutor.getQueue().size() == 0 && tileWriteExecutor.getActiveCount() == 0) {
-                            // tileWriteExecutor will report 0 active workers even though the worker is still tidying up
-                            // so we add a small sleep to ensure it is finished before moving on to the next tile
-                            Thread.sleep(100);
+                        if (tileWriteExecutor.getActiveCount() == 0 && tileWriteExecutor.getTaskCount() == tileWriteExecutor.getCompletedTaskCount()) {
                             log.debug("Writing out tile. Tile: " + currentTile);
                             completedWork.get(currentTile).forEach(tileWriteExecutor::submit);
                             currentTileIndex++;
                         }
                     }
+                }
+                tileWriteExecutor.shutdown();
+                ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
+
+                // Check for writing errors
+                if (tileWriteExecutor.hasError()) {
+                    interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
                 }
             }
         }

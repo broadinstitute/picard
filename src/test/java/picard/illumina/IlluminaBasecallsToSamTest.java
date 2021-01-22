@@ -23,13 +23,16 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.sam.util.SamComparison;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -265,12 +268,34 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 Assert.assertEquals(runPicardCommandLine(args), 0);
 
                 for (final File outputSam : samFiles) {
-                    String fileName = sort ? outputSam.getName() : "unsorted." + outputSam.getName() ;
-                    IOUtil.assertFilesEqual(outputSam, new File(testDataDir, fileName));
+                    if (sort) {
+                        IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
+                    } else {
+                        compareSams(outputSam, new File(testDataDir, outputSam.getName()));
+                    }
                 }
             } finally {
                 IOUtil.recursiveDelete(outputDir);
             }
         }
+    }
+
+    /*
+        private void compareFastqs(File actual, File expected) {
+        List<FastqRecord> actualReads = slurpReads(actual);
+        List<FastqRecord> expectedReads = slurpReads(expected);
+
+        actualReads.sort(Comparator.comparing(FastqRecord::getReadName));
+        expectedReads.sort(Comparator.comparing(FastqRecord::getReadName));
+        Assert.assertEquals(actualReads, expectedReads);
+    }
+     */
+    private void compareSams(File testSam, File sam) {
+        SamReader testReader = SamReaderFactory.makeDefault().open(testSam);
+        SamReader samReader = SamReaderFactory.makeDefault().open(sam);
+        samReader.getFileHeader().setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        SamComparison comparison = new SamComparison(testReader, samReader);
+        Assert.assertTrue(comparison.areEqual());
     }
 }
