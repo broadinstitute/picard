@@ -499,7 +499,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         final SAMFileHeader header = new SAMFileHeader();
 
-        if(presorted) {
+        if (presorted) {
             header.setSortOrder(SAMFileHeader.SortOrder.queryname);
         } else {
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
