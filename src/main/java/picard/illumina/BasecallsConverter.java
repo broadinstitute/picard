@@ -1,14 +1,19 @@
 package picard.illumina;
 
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.ThreadPoolExecutorUtil;
+import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -28,24 +33,35 @@ import java.util.regex.Pattern;
  * @param <CLUSTER_OUTPUT_RECORD> The type of record that this converter will convert to.
  */
 public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
-    public static final IlluminaDataType[] DATA_TYPES_WITH_BARCODE = {
+    public static final Set<IlluminaDataType> DATA_TYPES_WITH_BARCODE = new HashSet<>(Arrays.asList(
             IlluminaDataType.BaseCalls,
             IlluminaDataType.QualityScores,
             IlluminaDataType.Position,
             IlluminaDataType.PF,
-            IlluminaDataType.Barcodes
-    };
-    public static final IlluminaDataType[] DATA_TYPES_WITHOUT_BARCODE =
-            Arrays.copyOfRange(DATA_TYPES_WITH_BARCODE, 0, DATA_TYPES_WITH_BARCODE.length - 1);
+            IlluminaDataType.Barcodes));
+
+    public static final Set<IlluminaDataType> DATA_TYPES_WITHOUT_BARCODE = new HashSet<>(Arrays.asList(
+            IlluminaDataType.BaseCalls,
+            IlluminaDataType.QualityScores,
+            IlluminaDataType.Position,
+            IlluminaDataType.PF));
+    protected static final Log log = Log.getInstance(UnsortedBasecallsConverter.class);
 
     protected final IlluminaDataProviderFactory factory;
     protected final boolean demultiplex;
     protected final boolean ignoreUnexpectedBarcodes;
     protected final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
     protected final boolean includeNonPfReads;
-    protected List<Integer> tiles;
+    protected final int numThreads;
+    protected final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
+    protected final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
+    protected final Map<Integer, List<? extends Runnable>> completedWork = new HashMap<>();
+    protected final ThreadPoolExecutorWithExceptions tileWriteExecutor;
+    protected final ThreadPoolExecutorWithExceptions tileReadExecutor;
+    protected final ThreadPoolExecutorWithExceptions completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
     protected ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter = null;
-    protected int numThreads;
+    protected List<Integer> tiles;
+    protected boolean tileProcessingComplete = false;
 
     /**
      * Constructs a new BasecallsConverter object.
@@ -79,7 +95,8 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
             final boolean ignoreUnexpectedBarcodes,
             final boolean applyEamssFiltering,
-            final boolean includeNonPfReads
+            final boolean includeNonPfReads,
+            final int numWriteThreads
     ) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
@@ -93,6 +110,11 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.tiles = factory.getAvailableTiles();
         tiles.sort(TILE_NUMBER_COMPARATOR);
         setTileLimits(firstTile, tileLimit);
+        tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numWriteThreads);
+        tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+        final CompletedWorkChecker workChecker = new CompletedWorkChecker();
+        completedWorkExecutor.submit(workChecker);
+        completedWorkExecutor.shutdown();
     }
 
     /**
@@ -134,14 +156,107 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         void close();
     }
 
+    protected void awaitTileProcessingCompletion() {
+        tileReadExecutor.shutdown();
+        // Wait for all the read threads to complete before checking for errors
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileReadExecutor, Duration.ofMinutes(5));
+        tileProcessingComplete = true;
+
+        try {
+            // Check for reading errors
+            if (tileReadExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
+            }
+
+            synchronized (completedWork) {
+                log.debug("Final notification of work complete.");
+                completedWork.notifyAll();
+            }
+
+            // Wait for tile processing synchronization to complete
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
+
+            // Check for tile work synchronization errors
+            if (completedWorkExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
+            }
+
+            // Wait for writing to be done
+            tileWriteExecutor.shutdown();
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
+
+            // Check for writing errors
+            if (tileWriteExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
+            }
+
+        } finally {
+            // We are all done scheduling work. Now close the writers.
+            barcodeRecordWriterMap.values().forEach(ConvertedClusterDataWriter::close);
+        }
+    }
+
+    protected void notifyWorkComplete(int tileNum, List<? extends Runnable> pumpList) {
+        synchronized (completedWork) {
+            log.debug("Notifying completed work. Tile: " + tileNum);
+            completedWork.put(tileNum, pumpList);
+            completedWork.notifyAll();
+        }
+    }
+
+    /**
+     * CompletedWorkChecker is notified by the TileProcessor threads as work on a tile is complete and the
+     * records are ready for writing. It also ensures that tiles are written out in the proper order according
+     * by keep track of the current tile index in the sorted list of all tiles to be processed.
+     * <p>
+     * If a tile is finished and it is next in line to be written the CompletedWorkChecker thread will call
+     * writeRecords on the SortedRecordToWriterPump.
+     */
+    protected class CompletedWorkChecker implements Runnable {
+        private int currentTileIndex = 0;
+
+        @Override
+        public void run() {
+            try {
+                checkCompletedWork();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void checkCompletedWork() throws InterruptedException {
+            synchronized (completedWork) {
+                while (currentTileIndex < tiles.size()) {
+                    // Wait only if tile processing is still occurring
+                    if (!tileProcessingComplete) {
+                        log.debug("Waiting for completed work.");
+                        completedWork.wait();
+                    }
+                    final Integer currentTile = tiles.get(currentTileIndex);
+                    if (completedWork.containsKey(currentTile)) {
+                        if (tileWriteExecutor.getQueue().size() == 0 && tileWriteExecutor.getActiveCount() == 0) {
+                            // tileWriteExecutor will report 0 active workers even though the worker is still tidying up
+                            // so we add a small sleep to ensure it is finished before moving on to the next tile
+                            Thread.sleep(100);
+                            log.debug("Writing out tile. Tile: " + currentTile);
+                            completedWork.get(currentTile).forEach(tileWriteExecutor::submit);
+                            currentTileIndex++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * A comparator used to sort Illumina tiles in their proper order.
+     * Because the tile number is followed by a colon, a tile number that is a prefix of another tile number
+     * should sort after. (e.g. 10 sorts after 100). Tile numbers with the same number of digits are sorted numerically.
      */
     public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
         final String s1 = integer1.toString();
         final String s2 = integer2.toString();
-        // Because the tile number is followed by a colon, a tile number that
-        // is a prefix of another tile number should sort after. (e.g. 10 sorts after 100).
+
         if (s1.length() < s2.length()) {
             if (s2.startsWith(s1)) {
                 return 1;
@@ -170,8 +285,8 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      * @param demultiplex   If true, output is split by barcode, otherwise all are written to the same output stream.
      * @return A data type array for each piece of data needed to satisfy the read structure.
      */
-    protected static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
-                                                                      final boolean demultiplex) {
+    protected static Set<IlluminaDataType> getDataTypesFromReadStructure(final ReadStructure readStructure,
+                                                                         final boolean demultiplex) {
         if (!readStructure.hasSampleBarcode() || !demultiplex) {
             return DATA_TYPES_WITHOUT_BARCODE;
         } else {
@@ -221,5 +336,11 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         if (tileLimit != null && tiles.size() > tileLimit) {
             tiles = tiles.subList(0, tileLimit);
         }
+    }
+
+    protected void interruptAndShutdownExecutors(ThreadPoolExecutorWithExceptions... executors) {
+        int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
+        throw new PicardException("Exceptions in tile processing. There were " + tasksRunning
+                + " tasks were still running or queued and have been cancelled.");
     }
 }

@@ -124,32 +124,32 @@ public class IlluminaDataProviderFactory {
      * @param readStructure     The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
      *                          the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
      *                          in a run's QSeq files
-     * @param dataTypesArg      Which data types to read
+     * @param dataTypes      Which data types to read
      */
     public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,
                                        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                       final IlluminaDataType... dataTypesArg) {
+                                       final Set<IlluminaDataType> dataTypes) {
         this(basecallDirectory, null,
                 lane, readStructure,
                 bclQualityEvaluationStrategy,
-                dataTypesArg);
+                dataTypes);
     }
 
     /**
      * Create factory with the specified options, one that favors using QSeqs over all other files
      *
      * @param basecallDirectory            The baseCalls directory of a complete Illumina directory.  Files are found by searching relative to this folder (some of them higher up in the directory tree).
-     * @param barcodesDirectory            The barcodesDirectory with barcode files extracted by 'ExtractIlluminaBarcodes' (optional, use basecallDirectory if not specified)
+     * @param barcodesDirectory            The barcodesDirectory with barcode files extracted by 'ExtractIlluminaBarcodes'. This will be set to `basecallsDirectory` if null.
      * @param lane                         Which lane to iterate over.
      * @param readStructure                The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
      *                                     the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
      *                                     in a run's QSeq files
      * @param bclQualityEvaluationStrategy The basecall quality evaluation strategy that is applyed to decoded base calls.
-     * @param dataTypesArg                 Which data types to read
+     * @param dataTypes                 Which data types to read
      */
     public IlluminaDataProviderFactory(final File basecallDirectory, File barcodesDirectory, final int lane,
                                        final ReadStructure readStructure,
-                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final IlluminaDataType... dataTypesArg) {
+                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final Set<IlluminaDataType> dataTypes) {
         this.basecallDirectory = basecallDirectory;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
@@ -158,7 +158,6 @@ public class IlluminaDataProviderFactory {
           Note: In previous version, data of types not specified might be returned if a data type was specified
           for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
           MUST specify all data types that should be returned.*/
-        final Set<IlluminaDataType> dataTypes = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(dataTypesArg)));
 
         if (dataTypes.isEmpty()) {
             throw new PicardException("No data types have been specified for basecall output " + basecallDirectory +

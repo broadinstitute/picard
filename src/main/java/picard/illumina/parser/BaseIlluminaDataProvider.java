@@ -11,6 +11,7 @@ import java.util.stream.StreamSupport;
  */
 public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>, Iterable<ClusterData>, AutoCloseable {
 
+    public static final Pattern FILE_NAME_PATTERN = Pattern.compile("^s_\\d+_(\\d{1,5}).+");
     protected final int lane;
     /**
      * Calculated once, outputReadTypes describes the type of read data for each ReadData that will be found in output ClusterData objects
@@ -82,7 +83,7 @@ public abstract class BaseIlluminaDataProvider implements Iterator<ClusterData>,
     abstract void seekToTile(Integer seekAfterFirstRead);
 
     public static Integer fileToTile(final String fileName) {
-        final Matcher matcher = Pattern.compile("^s_\\d+_(\\d{1,5}).+").matcher(fileName);
+        final Matcher matcher = FILE_NAME_PATTERN.matcher(fileName);
         if (!matcher.matches()) {
             return null;
         }

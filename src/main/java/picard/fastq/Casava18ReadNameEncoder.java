@@ -16,8 +16,8 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
     private static final int INT_CACHE_LIMIT = 5000;
     private static final String[] INT_STRINGS = new String[INT_CACHE_LIMIT];
     static {
-        for (int i = 0; i < intStrings.length; ++i) {
-            intStrings[i] = Integer.toString(i);
+        for (int i = 0; i < INT_STRINGS.length; ++i) {
+            INT_STRINGS[i] = Integer.toString(i);
         }
     }
 
@@ -25,20 +25,20 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
     private int bufferSize;
 
     public Casava18ReadNameEncoder(final String instrumentName, final String runId, final String flowcellId) {
-        this.base           = instrumentName + SEPARATOR + runId + SEPARATOR + flowcellId + SEPARATOR;
-        this.bufferSize     = this.base.length();
+        this.nameBase           = instrumentName + SEPARATOR + runId + SEPARATOR + flowcellId + SEPARATOR;
+        this.bufferSize     = this.nameBase.length();
     }
 
     /** Converts an int to a string, with cached results for some ints. */
     private static String encodeInt(final int i) {
-        if (i >= 0 && i < INT_CACHE_LIMIT) return intStrings[i];
+        if (i >= 0 && i < INT_CACHE_LIMIT) return INT_STRINGS[i];
         else return Integer.toString(i);
     }
 
     @Override
     public String generateReadName(final ClusterData cluster, final Integer pairNumber) {
         final StringBuilder builder = new StringBuilder(bufferSize);
-        builder.append(this.base);
+        builder.append(this.nameBase);
         builder.append(encodeInt(cluster.getLane()));
         builder.append(SEPARATOR);
         builder.append(encodeInt(cluster.getTile()));
@@ -68,7 +68,7 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
     @Override
     public String generateShortName(ClusterData cluster) {
         final StringBuilder builder = new StringBuilder(bufferSize);
-        builder.append(this.base);
+        builder.append(this.nameBase);
         builder.append(encodeInt(cluster.getLane()));
         builder.append(SEPARATOR);
         builder.append(encodeInt(cluster.getTile()));

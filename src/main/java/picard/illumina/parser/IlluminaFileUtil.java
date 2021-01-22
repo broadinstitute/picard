@@ -127,12 +127,12 @@ public class IlluminaFileUtil {
 
                         @Override
                         public List<String> verify(List<Integer> expectedTiles, int[] expectedCycles) {
-                            throw new NotImplementedException("Verify is not implemented for CBCLs");
+                            throw new NotImplementedException("`verify()` is not implemented for CBCLs");
                         }
 
                         @Override
                         public List<String> fakeFiles(List<Integer> expectedTiles, int[] cycles, SupportedIlluminaFormat format) {
-                            throw new NotImplementedException("Verify is not implemented for CBCLs");
+                            throw new NotImplementedException("`fakeFiles()` is not implemented for CBCLs");
                         }
 
                         @Override

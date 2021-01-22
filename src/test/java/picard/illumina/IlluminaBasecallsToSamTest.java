@@ -70,76 +70,82 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         Assert.assertTrue(BasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
     }
 
-
-
-
     @Test
     public void testNonBarcodedWithCenter() throws Exception {
-        final File outputBam = File.createTempFile("nonBarcodedDescriptionNonBI.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
+        for (final boolean sort : new boolean[]{false, true}) {
+            final File outputBam = File.createTempFile("nonBarcodedDescriptionNonBI.", ".sam");
+            outputBam.deleteOnExit();
+            final int lane = 1;
 
-        Assert.assertEquals(runPicardCommandLine(new String[]{
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=25S8S25T",
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "SEQUENCING_CENTER=TEST_CENTER123",
-                "LIBRARY_NAME=Hello, World"
-        }), 0);
-        final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
-        validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
-        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedDescriptionNonBI.sam"));
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "BASECALLS_DIR=" + BASECALLS_DIR,
+                    "LANE=" + lane,
+                    "READ_STRUCTURE=25S8S25T",
+                    "OUTPUT=" + outputBam,
+                    "RUN_BARCODE=HiMom",
+                    "SAMPLE_ALIAS=HiDad",
+                    "SEQUENCING_CENTER=TEST_CENTER123",
+                    "LIBRARY_NAME=Hello, World",
+                    "SORT=" + sort
+            }), 0);
+            final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
+            validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+            String fileName = sort ? "nonBarcodedDescriptionNonBI.sam" : "nonBarcodedDescriptionNonBI.unsorted.sam"  ;
+            IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, fileName));
+        }
     }
 
     @DataProvider
     public Object[][] molecularBarcodeData() {
         return new Object[][]{
-                {"25S8S25T", null, null, "nonBarcoded.sam", 0},
-                {"25S8M25T", null, null, "nonBarcodedWithMolecularIndex8M.sam", 0},
-                {"25S8M25T", null, new String[]{"TAG_PER_MOLECULAR_INDEX=null"}, "nonBarcodedWithMolecularIndex8M.sam", 0},
-                {"25S4M4M25T", null, null, "nonBarcodedWithMolecularIndex4M4M.sam", 0},
-                {"25S4M4M25T", new String[]{"ZA", "ZB"}, null, "nonBarcodedWithTagPerMolecularIndex4M4M.sam", 0},
+                {"25S8S25T", null, null, "nonBarcoded", 0},
+                {"25S8M25T", null, null, "nonBarcodedWithMolecularIndex8M", 0},
+                {"25S8M25T", null, new String[]{"TAG_PER_MOLECULAR_INDEX=null"}, "nonBarcodedWithMolecularIndex8M", 0},
+                {"25S4M4M25T", null, null, "nonBarcodedWithMolecularIndex4M4M", 0},
+                {"25S4M4M25T", new String[]{"ZA", "ZB"}, null, "nonBarcodedWithTagPerMolecularIndex4M4M", 0},
                 {"25S4M4M25T", new String[]{"ZA", "ZB", "ZC"}, null, null, 1},
                 {"25S2M2M2M2M25T", new String[]{"ZA", "ZB", "ZC"}, null, null, 1},
-                {"25S2M2M2M2M25T", new String[]{"ZA", "ZB", "ZC", "ZD"}, null, "nonBarcodedWithTagPerMolecularIndex2M2M2M2M.sam", 0},
-                {"25S8S25T", null, new String[]{"FIRST_TILE=1201", "TILE_LIMIT=1"}, "nonBarcodedTileSubset.sam", 0}
+                {"25S2M2M2M2M25T", new String[]{"ZA", "ZB", "ZC", "ZD"}, null, "nonBarcodedWithTagPerMolecularIndex2M2M2M2M", 0},
+                {"25S8S25T", null, new String[]{"FIRST_TILE=1201", "TILE_LIMIT=1"}, "nonBarcodedTileSubset", 0}
         };
     }
 
     @Test(dataProvider = "molecularBarcodeData")
     public void testMolecularBarcodes(final String readStructure, final String[] umiTags, final String[] extraArgs, final String expectedSam, final int expectedReturn) throws Exception {
-        final File outputBam = File.createTempFile("molecularBarcodeTest.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 1;
-        List<String> args = new ArrayList<>(CollectionUtil.makeList(
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "READ_STRUCTURE=" + readStructure,
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "SEQUENCING_CENTER=BI",
-                "LIBRARY_NAME=Hello, World"));
+        for (final boolean sort : new boolean[]{false, true}) {
+            final File outputBam = File.createTempFile("molecularBarcodeTest.", ".sam");
+            outputBam.deleteOnExit();
+            final int lane = 1;
 
-        if (umiTags != null) {
-            for (final String umiTag : umiTags) {
-                args.add("TAG_PER_MOLECULAR_INDEX=" + umiTag);
+            List<String> args = new ArrayList<>(CollectionUtil.makeList(
+                    "BASECALLS_DIR=" + BASECALLS_DIR,
+                    "LANE=" + lane,
+                    "READ_STRUCTURE=" + readStructure,
+                    "OUTPUT=" + outputBam,
+                    "RUN_BARCODE=HiMom",
+                    "SAMPLE_ALIAS=HiDad",
+                    "SEQUENCING_CENTER=BI",
+                    "LIBRARY_NAME=Hello, World",
+                    "SORT=" + sort));
+
+            if (umiTags != null) {
+                for (final String umiTag : umiTags) {
+                    args.add("TAG_PER_MOLECULAR_INDEX=" + umiTag);
+                }
             }
-        }
 
-        if (extraArgs != null) {
-            args.addAll(Arrays.asList(extraArgs));
-        }
+            if (extraArgs != null) {
+                args.addAll(Arrays.asList(extraArgs));
+            }
 
-        Assert.assertEquals(runPicardCommandLine(args), expectedReturn);
-        if (expectedSam != null) {
-            final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
-            validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
-            final File expectedSamFile = new File(TEST_DATA_DIR, expectedSam);
-            IOUtil.assertFilesEqual(outputBam, expectedSamFile);
+            Assert.assertEquals(runPicardCommandLine(args), expectedReturn);
+            if (expectedSam != null) {
+                final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
+                validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
+                String expectedSamFilename = sort ? expectedSam + ".sam" : expectedSam + ".unsorted.sam";
+                final File expectedSamFile = new File(TEST_DATA_DIR, expectedSamFilename);
+                IOUtil.assertFilesEqual(outputBam, expectedSamFile);
+            }
         }
     }
 
@@ -163,7 +169,6 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] variousConfigurationsData() {
         return new Object[][]{
-
                 {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, new File(TEST_DATA_DIR.getParentFile(),"sams_with_DS"), null},
                 {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null},
                 {"multiplexedBarcode.", "library.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null},
@@ -214,54 +219,58 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                                  final int concatNColumnFields, final String readStructure,
                                  final File baseCallsDir, final File testDataDir, final Integer tile, final boolean includeBcInHeader, final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
                                  final boolean includeBarcodeQuality) throws Exception {
-        final Path outputDir = Files.createTempDirectory(jobName);
-        try {
-            final String tilePrefix = (tile != null) ? tile + "." : "";
+        for (final boolean sort : new boolean[]{false, true}) {
+            final Path outputDir = Files.createTempDirectory(jobName + sort);
+            try {
+                final String tilePrefix = (tile != null) ? tile + "." : "";
 
-            // Create library.params with output files in the temp directory
-            final File libraryParams = new File(outputDir.toFile(), libraryParamsFile);
-            libraryParams.deleteOnExit();
-            final List<File> samFiles = new ArrayList<>();
-            final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
-            final PrintWriter writer = new PrintWriter(libraryParams);
-            final String header = reader.readLine();
-            writer.println(header + "\tOUTPUT");
-            while (true) {
-                final String line = reader.readLine();
-                if (line == null) {
-                    break;
+                // Create library.params with output files in the temp directory
+                final File libraryParams = new File(outputDir.toFile(), libraryParamsFile);
+                libraryParams.deleteOnExit();
+                final List<File> samFiles = new ArrayList<>();
+                final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
+                final PrintWriter writer = new PrintWriter(libraryParams);
+                final String header = reader.readLine();
+                writer.println(header + "\tOUTPUT");
+                while (true) {
+                    final String line = reader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    final String[] fields = line.split("\t");
+                    final File outputSam = new File(outputDir.toFile(), StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
+                    outputSam.deleteOnExit();
+                    samFiles.add(new File(outputSam.getParentFile(), tilePrefix + outputSam.getName()));
+                    writer.println(line + "\t" + outputSam);
                 }
-                final String[] fields = line.split("\t");
-                final File outputSam = new File(outputDir.toFile(), StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
-                outputSam.deleteOnExit();
-                samFiles.add(new File(outputSam.getParentFile(), tilePrefix + outputSam.getName()));
-                writer.println(line + "\t" + outputSam);
+                writer.close();
+                reader.close();
+
+                List<String> args = new ArrayList<>();
+                args.add("BASECALLS_DIR=" + baseCallsDir);
+                args.add("LANE=" + lane);
+                args.add("RUN_BARCODE=HiMom");
+                args.add("READ_STRUCTURE=" + readStructure);
+                args.add("SEQUENCING_CENTER=BI");
+                args.add("LIBRARY_PARAMS=" + libraryParams);
+                args.add("INCLUDE_BC_IN_RG_TAG=" + includeBcInHeader);
+                args.add("BARCODE_POPULATION_STRATEGY=" + populateBarcode.name());
+                args.add("INCLUDE_BARCODE_QUALITY=" + includeBarcodeQuality);
+                args.add("SORT=" + sort);
+
+                if (tile != null) {
+                    args.add("PROCESS_SINGLE_TILE=" + tile);
+                }
+
+                Assert.assertEquals(runPicardCommandLine(args), 0);
+
+                for (final File outputSam : samFiles) {
+                    String fileName = sort ? outputSam.getName() : "unsorted." + outputSam.getName() ;
+                    IOUtil.assertFilesEqual(outputSam, new File(testDataDir, fileName));
+                }
+            } finally {
+                IOUtil.recursiveDelete(outputDir);
             }
-            writer.close();
-            reader.close();
-
-            List<String> args = new ArrayList<>();
-            args.add("BASECALLS_DIR=" + baseCallsDir);
-            args.add("LANE=" + lane);
-            args.add("RUN_BARCODE=HiMom");
-            args.add("READ_STRUCTURE=" + readStructure);
-            args.add("SEQUENCING_CENTER=BI");
-            args.add("LIBRARY_PARAMS=" + libraryParams);
-            args.add("INCLUDE_BC_IN_RG_TAG=" + includeBcInHeader);
-            args.add("BARCODE_POPULATION_STRATEGY=" + populateBarcode.name());
-            args.add("INCLUDE_BARCODE_QUALITY=" + includeBarcodeQuality);
-
-            if (tile != null) {
-                args.add("PROCESS_SINGLE_TILE=" + tile);
-            }
-
-            Assert.assertEquals(runPicardCommandLine(args), 0);
-
-            for (final File outputSam : samFiles) {
-                IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
-            }
-        } finally {
-            IOUtil.recursiveDelete(outputDir);
         }
     }
 }

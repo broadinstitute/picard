@@ -2,10 +2,12 @@ package picard.illumina;
 
 import htsjdk.samtools.SAMFileWriterImpl;
 import htsjdk.samtools.util.SortingCollection;
+import picard.PicardException;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +26,8 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     private SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     private Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
-    private int maxReadsInRamPerTile = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
-    private List<File> tmpDirs;
+    private int maxReadsInRamPerThread = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
+    private List<File> tmpDirs = Collections.singletonList(new File(System.getProperty("java.io.tmpdir")));
     private File barcodesDir;
     private boolean demultiplex = false;
     private int numThreads = Runtime.getRuntime().availableProcessors();
@@ -66,6 +68,9 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
                                                                         SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                                                         Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                                                         List<File> tmpDirs) {
+        if(outputRecordComparator == null || codecPrototype == null || outputRecordClass == null){
+            throw new PicardException("outputRecordComparator, codecPrototype and outputRecordClasse can not be null.");
+        }
         this.outputRecordComparator = outputRecordComparator;
         this.codecPrototype = codecPrototype;
         this.outputRecordClass = outputRecordClass;
@@ -74,15 +79,15 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     }
 
     /**
-     * Builds a basecalls converter without sorting
+     * Builds a basecalls converter
      *
-     * @return A basecalls converter that will output unsorted records.
+     * @return A basecalls converter that will output records according to the parameters set.
      */
     public BasecallsConverter<CLUSTER_OUTPUT_RECORD> build() {
 
         if (outputRecordComparator != null && codecPrototype != null && outputRecordClass != null && tmpDirs != null) {
             return new SortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
-                    barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
+                    barcodeRecordWriterMap, demultiplex, maxReadsInRamPerThread,
                     tmpDirs, numThreads,
                     firstTile, tileLimit, outputRecordComparator,
                     codecPrototype,
@@ -95,7 +100,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     }
 
     /**
-     * Configures whether or not the converter will ingore unexpected barcodes or throw an exception if one is found.
+     * Configures whether or not the converter will ignore unexpected barcodes or throw an exception if one is found.
      *
      * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap.
      * @return A builder that will create a converter with the ignoreUnexpectedBarcodes boolean set.
@@ -134,7 +139,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @param bclQualityEvaluationStrategy The mechanism for revising and evaluating qualities read from a BCL file
      * @return A builder that will create a converter with the bclQualityEvaluationStrategy set.
      */
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> bclQualityEvaluationStrategy(BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withBclQualityEvaluationStrategy(BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
         return this;
     }
@@ -168,14 +173,14 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      *                      available cores - numProcessors.
      * @return A builder that will create a converter with numProcessors set.
      */
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> numProcessors(Integer numProcessors) {
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> numProcessors(int numProcessors) {
     	if (numProcessors == 0) {
-	    this.numThreads = Runtime.getRuntime().availableProcessors();
-	} else if (numProcessors < 0) {
-	    this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
-	} else {
-	   this.numThreads = numProcessors;
-	}
+            this.numThreads = Runtime.getRuntime().availableProcessors();
+        } else if (numProcessors < 0) {
+            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
+        } else {
+           this.numThreads = numProcessors;
+        }
 
         return this;
     }
@@ -211,7 +216,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @return A builder that will create a converter with the maximum records in RAM set to `maxReadsInRam/numThreads`
      */
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withMaxRecordsInRam(int maxReadsInRam) {
-        this.maxReadsInRamPerTile = Math.max(1, maxReadsInRam / this.numThreads);
+        this.maxReadsInRamPerThread = Math.max(1, maxReadsInRam / this.numThreads);
         return this;
     }
 }

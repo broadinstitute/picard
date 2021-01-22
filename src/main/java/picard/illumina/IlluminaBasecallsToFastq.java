@@ -24,6 +24,7 @@
 package picard.illumina;
 
 import htsjdk.samtools.Defaults;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.FastqWriterFactory;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -195,10 +196,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     public enum ReadNameFormat {
         CASAVA_1_8, ILLUMINA
     }
-
-    /**
-     * One of these maps will get populated and the other will remain empty depending on if we are sorting or not.
-     */
     private final Map<String, AsyncClusterWriter> sampleBarcodeClusterWriterMap = new HashMap<>(1, 0.5f);
     final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
     private ReadStructure readStructure;
@@ -220,7 +217,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         final LinkedList<String> errors = new LinkedList<>();
 
         // Remove once deprecated parameter is deleted.
-        if(MAX_READS_IN_RAM_PER_TILE != -1) {
+        if (MAX_READS_IN_RAM_PER_TILE != -1) {
             log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
             MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
         }
@@ -259,8 +256,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 break;
         }
 
-        Comparator<ClusterData> queryNameComparator = new ClusterDataQueryNameComparator(readNameEncoder);
-
         readStructure = new ReadStructure(READ_STRUCTURE);
         if (MULTIPLEX_PARAMS != null) {
             IOUtil.assertFileIsReadable(MULTIPLEX_PARAMS);
@@ -284,9 +279,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
                 .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
-                .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
+                .withBclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
 
         if (SORT) {
+            Comparator<ClusterData> queryNameComparator = new ClusterDataQueryNameComparator(readNameEncoder);
             converterBuilder = converterBuilder.withSorting(
                     queryNameComparator,
                     new ClusterDataCodec(),
@@ -337,7 +333,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         expectedColumnLabels.addAll(sampleBarcodeColumnLabels);
         assertExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
 
-        List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
+        final List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
         final Set<String> seenBarcodes = new HashSet<>();
 
         for (final TabbedTextFileWithHeaderParser.Row row : rows) {
@@ -367,7 +363,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     }
 
     /**
-     * @return FastqRecordsWriter that contains one or more FastqWriters (amount depends on read structure), all using
+     * Builds an asynchronous writer used to output all fastq records.
+     *
+     * @return AsyncClusterWriter that contains one or more ClusterWriters (amount depends on read structure), all using
      * outputPrefix to determine the filename(s).
      */
     private AsyncClusterWriter buildWriter(final File outputPrefix) {
@@ -393,7 +391,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
 
 
-        return new AsyncClusterWriter(new ClusterWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles), 1024);
+        return new AsyncClusterWriter(new ClusterToFastqWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles), 1024);
     }
 
     /**
@@ -407,9 +405,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     }
 
     private final class AsyncClusterWriter extends AbstractAsyncWriter<ClusterData> implements BasecallsConverter.ConvertedClusterDataWriter<ClusterData>  {
-        private final ClusterWriter writer;
+        private final ClusterToFastqWriter writer;
 
-        public AsyncClusterWriter(final ClusterWriter out, final int queueSize) {
+        public AsyncClusterWriter(final ClusterToFastqWriter out, final int queueSize) {
             super(queueSize);
             this.writer = out;
         }
@@ -421,7 +419,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     /**
      * An optimized writer for writing ClusterData directly to a set of Fastq files.
      */
-    private final class ClusterWriter implements BasecallsConverter.ConvertedClusterDataWriter<ClusterData> {
+    private final class ClusterToFastqWriter implements BasecallsConverter.ConvertedClusterDataWriter<ClusterData> {
         public static final char NEW_LINE = '\n';
         public static final char AT_SYMBOL = '@';
         public static final char PLUS = '+';
@@ -432,9 +430,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         private final boolean appendMolecularBarcodeNumber;
         private final int numReads;
 
-        public ClusterWriter(final File[] templateFiles,
-                             final File[] sampleBarcodeFiles,
-                             final File[] molecularBarcodeFiles) {
+        public ClusterToFastqWriter(final File[] templateFiles,
+                                    final File[] sampleBarcodeFiles,
+                                    final File[] molecularBarcodeFiles) {
 
             this.templateOut = Arrays.stream(templateFiles).map(this::makeWriter).toArray(OutputStream[]::new);
             this.sampleBarcodeOut = Arrays.stream(sampleBarcodeFiles).map(this::makeWriter).toArray(OutputStream[]::new);
@@ -501,7 +499,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 final byte[] quals = read.getQualities();
                 final int len = bases.length;
                 for (int i = 0; i < len; ++i) {
-                    quals[i] = (byte) (quals[i] + 33);
+                    quals[i] = (byte) SAMUtils.phredToFastq(quals[i]);
                 }
 
                 out.write(AT_SYMBOL);

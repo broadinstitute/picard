@@ -40,6 +40,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
@@ -77,7 +78,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "MACHINE_NAME=machine1",
                 "FLOWCELL_BARCODE=abcdeACXX",
-                "MAX_RECORDS_IN_RAM=1000" //force spill to disk to test encode/decode
+                "MAX_RECORDS_IN_RAM=100" //force spill to disk to test encode/decode
         });
         IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
         IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
@@ -103,7 +104,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     "MACHINE_NAME=machine1",
                     "FLOWCELL_BARCODE=abcdeACXX",
                     "READ_NAME_FORMAT=" + IlluminaBasecallsToFastq.ReadNameFormat.ILLUMINA,
-                    "MAX_RECORDS_IN_RAM=1000" //force spill to disk to test encode/decode
+                    "MAX_RECORDS_IN_RAM=100" //force spill to disk to test encode/decode
             });
 
             final String[] filenames = new String[]{
@@ -154,7 +155,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
         List<FastqRecord> expectedReads = slurpReads(expected);
 
         actualReads.sort(Comparator.comparing(FastqRecord::getReadName));
-        expectedReads.sort((a, b) -> a.getReadName().compareTo(b.getReadName()));
+        expectedReads.sort(Comparator.comparing(FastqRecord::getReadName));
         Assert.assertEquals(actualReads, expectedReads);
     }
 

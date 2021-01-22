@@ -55,12 +55,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.text.NumberFormat;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -400,9 +395,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * thus reducing the file IO and value copying done by the data provider
          */
         readStructure = new ReadStructure(READ_STRUCTURE.replaceAll("T|M", "S"));
-        final IlluminaDataType[] datatypes = (MINIMUM_BASE_QUALITY > 0) ?
-                new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores} :
-                new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF};
+        final Set<IlluminaDataType> datatypes = (MINIMUM_BASE_QUALITY > 0) ?
+                new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores)) :
+                new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls, IlluminaDataType.PF));
         factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, bclQualityEvaluationStrategy, datatypes);
 
         if (BARCODE_FILE != null) {

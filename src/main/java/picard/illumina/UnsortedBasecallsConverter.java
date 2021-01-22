@@ -1,19 +1,13 @@
 package picard.illumina;
 
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.ThreadPoolExecutorUtil;
-import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
-import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * UnortedBasecallsConverter utilizes an underlying IlluminaDataProvider to convert parsed and decoded sequencing data
@@ -30,12 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * their associated writers.
  */
 public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
-    private static final Log log = Log.getInstance(UnsortedBasecallsConverter.class);
-    private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
-    private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
-    private final Map<Integer, Queue<ClusterData>> tileReadCache = new HashMap<>();
-    private boolean tileProcessingComplete = false;
-    private boolean tileProcessingError = false;
     private int tilesProcessing = 0;
 
     /**
@@ -74,7 +62,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
     ) {
         super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
                 numThreads, firstTile, tileLimit, bclQualityEvaluationStrategy,
-                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, 1);
     }
 
     /**
@@ -88,17 +76,11 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
      */
     @Override
     public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) {
-        final ThreadPoolExecutorWithExceptions completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
-        final CompletedWorkChecker workChecker = new CompletedWorkChecker();
-        completedWorkExecutor.submit(workChecker);
-        completedWorkExecutor.shutdown();
-
-        final ThreadPoolExecutorWithExceptions tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
         int MAX_TILES_IN_CACHE = 4;
 
         int tilesSubmitted = 0;
-        while( tilesSubmitted < tiles.size()){
-            if(tilesProcessing < MAX_TILES_IN_CACHE) {
+        while (tilesSubmitted < tiles.size()) {
+            if (tilesProcessing < MAX_TILES_IN_CACHE) {
                 int tile = tiles.get(tilesSubmitted);
                 tileReadExecutor.submit(new TileReadProcessor(tile));
                 tilesProcessing++;
@@ -111,26 +93,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
                 }
             }
         }
-        tileReadExecutor.shutdown();
-
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileReadExecutor, Duration.ofMinutes(5));
-        tileProcessingComplete = true;
-        tileProcessingError = tileReadExecutor.hasError();
-
-        synchronized (tileReadCache) {
-            log.debug("Final notification of work complete.");
-            tileReadCache.notifyAll();
-        }
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
-
-        if (tileProcessingError ||
-                completedWorkExecutor.hasError()) {
-            int tasksStillRunning = completedWorkExecutor.shutdownNow().size();
-            throw new PicardException("Exceptions in tile processing. There were " + tasksStillRunning
-                    + " tasks were still running or queued and have been cancelled.");
-        }
-
-        barcodeRecordWriterMap.values().forEach(ConvertedClusterDataWriter::close);
+        awaitTileProcessingCompletion();
     }
 
     /**
@@ -147,6 +110,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
         TileReadProcessor(final int tileNum) {
             this.tileNum = tileNum;
         }
+
         @Override
         public void run() {
             Queue<ClusterData> queue = new ArrayDeque<>();
@@ -155,67 +119,33 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
                 readProgressLogger.record(null, 0);
-                queue.add(cluster);
+                if (includeNonPfReads || cluster.isPf()) {
+                    queue.add(cluster);
+                }
             }
 
             dataProvider.close();
-            synchronized (tileReadCache) {
-                log.debug("Notifying completed work. Tile: " + tileNum);
-                tileReadCache.put(tileNum, queue);
-                tileReadCache.notifyAll();
-            }
-
+            notifyWorkComplete(tileNum, Collections.singletonList(new RecordToWriterPump(queue)));
         }
     }
 
-    /**
-     * CompletedWorkChecker is notified by the TileProcessor threads as work on a tile is complete and the
-     * records are ready for writing. It also ensures that tiles are written out in the proper order according
-     * by keep track of the current tile index in the sorted list of all tiles to be processed.
-     * <p>
-     * If a tile is finished and it is next in line to be written the CompletedWorkChecker thread will submit
-     * work to the tileWriteExecutor which uses RecordToWriterPump to write records.
-     */
-    private class CompletedWorkChecker implements Runnable {
-        private int currentTileIndex = 0;
+    private class RecordToWriterPump implements Runnable {
+        private final Queue<ClusterData> clusterData;
+
+        RecordToWriterPump(final Queue<ClusterData> clusterData) {
+            this.clusterData = clusterData;
+        }
 
         @Override
         public void run() {
-            try {
-                checkCompletedWork();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void checkCompletedWork() throws InterruptedException {
-            synchronized (tileReadCache) {
-                while (currentTileIndex < tiles.size()) {
-                    if (tileProcessingError) {
-                        throw new InterruptedException("Tile processing error, shutting down completed work checker.");
-                    }
-                    // Wait only if tile processing is still occurring
-                    if (!tileProcessingComplete) {
-                        log.debug("Waiting for completed work.");
-                        tileReadCache.wait();
-                    }
-                    final Integer currentTile = tiles.get(currentTileIndex);
-                    if (tileReadCache.containsKey(currentTile)) {
-                        log.debug("Writing out tile. Tile: " + currentTile);
-                        Queue<ClusterData> clusterData = tileReadCache.get(currentTile);
-                        ClusterData cluster;
-                        while( (cluster = clusterData.poll()) != null){
-                            if (includeNonPfReads || cluster.isPf()) {
-                                barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
-                                writeProgressLogger.record(null, 0);
-                            }
-                        }
-                        tileReadCache.remove(currentTile);
-                        currentTileIndex++;
-                        tilesProcessing--;
-                    }
+            ClusterData cluster;
+            while ((cluster = clusterData.poll()) != null) {
+                if (includeNonPfReads || cluster.isPf()) {
+                    barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
+                    writeProgressLogger.record(null, 0);
                 }
             }
+            tilesProcessing--;
         }
     }
 }

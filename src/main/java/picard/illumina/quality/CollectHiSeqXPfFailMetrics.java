@@ -42,13 +42,7 @@ import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -184,10 +178,10 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
 
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, READ_STRUCTURE,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
-                IlluminaDataType.BaseCalls,
-                IlluminaDataType.PF,
-                IlluminaDataType.QualityScores,
-                IlluminaDataType.Position);
+                new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls,
+                    IlluminaDataType.PF,
+                    IlluminaDataType.QualityScores,
+                    IlluminaDataType.Position)));
 
         final File summaryMetricsFileName = new File(OUTPUT + summaryMetricsExtension);
         final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);

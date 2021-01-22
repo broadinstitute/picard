@@ -1,19 +1,14 @@
 package picard.illumina;
 
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.ThreadPoolExecutorUtil;
-import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
-import java.time.Duration;
 import java.util.*;
 
 /**
@@ -31,18 +26,12 @@ import java.util.*;
  * their associated writers.
  */
 public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
-    private static final Log log = Log.getInstance(SortedBasecallsConverter.class);
-
     private final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     private final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
     private final int maxReadsInRamPerTile;
     private final List<File> tmpDirs;
-    private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
-    private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
-    private final Map<Integer, List<SortedRecordToWriterPump>> completedWork = new HashMap<>();
-    private boolean tileReadingComplete = false;
-    final ThreadPoolExecutorWithExceptions tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+
     /**
      * Constructs a new SortedBaseCallsConverter.
      *
@@ -89,7 +78,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     ) {
         super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
                 numThreads, firstTile, tileLimit, bclQualityEvaluationStrategy,
-                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, numThreads);
 
         this.tmpDirs = tmpDirs;
         this.maxReadsInRamPerTile = maxReadsInRamPerTile;
@@ -109,60 +98,10 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      */
     @Override
     public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) {
-        final ThreadPoolExecutorWithExceptions completedWorkExecutor = new ThreadPoolExecutorWithExceptions(1);
-        final CompletedWorkChecker workChecker = new CompletedWorkChecker();
-        completedWorkExecutor.submit(workChecker);
-        completedWorkExecutor.shutdown();
-
-        //  Thread by surface tile
-        final ThreadPoolExecutorWithExceptions tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
         for (final Integer tile : tiles) {
             tileReadExecutor.submit(new TileProcessor(tile, barcodes));
         }
-        tileReadExecutor.shutdown();
-
-        // Wait for all the read threads to complete before checking for errors
-        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileReadExecutor, Duration.ofMinutes(5));
-        tileReadingComplete = true;
-
-        try {
-            // Check for reading errors
-            if (tileReadExecutor.hasError()) {
-                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
-            }
-
-            synchronized (completedWork) {
-                log.debug("Final notification of work complete.");
-                completedWork.notifyAll();
-            }
-
-            // Wait for tile processing synchronization to complete
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", completedWorkExecutor, Duration.ofMinutes(5));
-
-            // Check for tile work synchronization errors
-            if (completedWorkExecutor.hasError()) {
-                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
-            }
-
-            // Wait for writing to be done
-            tileWriteExecutor.shutdown();
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Tile completion executor", tileWriteExecutor, Duration.ofMinutes(5));
-
-            // Check for writing errors
-            if (tileWriteExecutor.hasError()) {
-                interruptAndShutdownExecutors(tileReadExecutor, completedWorkExecutor, tileWriteExecutor);
-            }
-
-        } finally {
-            // We are all done scheduling work. Now close the writers.
-            barcodeRecordWriterMap.values().forEach(ConvertedClusterDataWriter::close);
-        }
-    }
-
-    private void interruptAndShutdownExecutors(ThreadPoolExecutorWithExceptions ...executors) {
-        int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
-        throw new PicardException("Exceptions in tile processing. There were " + tasksRunning
-                + " tasks were still running or queued and have been cancelled.");
+        awaitTileProcessingCompletion();
     }
 
     /**
@@ -205,7 +144,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             this.tileNum = tileNum;
             this.barcodeToRecordCollection = new HashMap<>(barcodes.size(), 1.0f);
             for (String barcode : barcodes) {
-                SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection = newSortingCollection();
+                SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection = createSortingCollection();
                 this.barcodeToRecordCollection.put(barcode, recordCollection);
             }
         }
@@ -218,7 +157,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                 final ClusterData cluster = dataProvider.next();
                 readProgressLogger.record(null, 0);
                 if (includeNonPfReads || cluster.isPf()) {
-                    addRecord(cluster.getMatchedBarcode() , converter.convertClusterToOutputRecord(cluster));
+                    addRecord(cluster.getMatchedBarcode(), converter.convertClusterToOutputRecord(cluster));
                 }
             }
 
@@ -232,17 +171,9 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                 writerList.add(new SortedRecordToWriterPump(writer, value));
             });
 
-            notifyWorkComplete(writerList);
+            notifyWorkComplete(tileNum, writerList);
 
             log.debug("Finished processing tile " + tileNum);
-        }
-
-        private void notifyWorkComplete(List<SortedRecordToWriterPump> writerList) {
-            synchronized (completedWork) {
-                log.debug("Notifying completed work. Tile: " + tileNum);
-                completedWork.put(tileNum, writerList);
-                completedWork.notifyAll();
-            }
         }
 
         private synchronized void addRecord(final String barcode, final CLUSTER_OUTPUT_RECORD record) {
@@ -255,7 +186,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             }
         }
 
-        private synchronized SortingCollection<CLUSTER_OUTPUT_RECORD> newSortingCollection() {
+        private synchronized SortingCollection<CLUSTER_OUTPUT_RECORD> createSortingCollection() {
             final int maxRecordsInRam =
                     Math.max(1, maxReadsInRamPerTile /
                             barcodeRecordWriterMap.size());
@@ -265,50 +196,6 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                     outputRecordComparator,
                     maxRecordsInRam,
                     IOUtil.filesToPaths(tmpDirs));
-        }
-    }
-
-    /**
-     * CompletedWorkChecker is notified by the TileProcessor threads as work on a tile is complete and the
-     * records are ready for writing. It also ensures that tiles are written out in the proper order according
-     * by keep track of the current tile index in the sorted list of all tiles to be processed.
-     * <p>
-     * If a tile is finished and it is next in line to be written the CompletedWorkChecker thread will call
-     * writeRecords on the SortedRecordToWriterPump.
-     */
-    private class CompletedWorkChecker implements Runnable {
-        private int currentTileIndex = 0;
-
-        @Override
-        public void run() {
-            try {
-                checkCompletedWork();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void checkCompletedWork() throws InterruptedException {
-            synchronized (completedWork) {
-                while (currentTileIndex < tiles.size()) {
-                    // Wait only if tile processing is still occurring
-                    if (!tileReadingComplete) {
-                        log.debug("Waiting for completed work.");
-                        completedWork.wait();
-                    }
-                    final Integer currentTile = tiles.get(currentTileIndex);
-                    if (completedWork.containsKey(currentTile)) {
-                        if(tileWriteExecutor.getQueue().size() == 0 && tileWriteExecutor.getActiveCount() == 0) {
-                            // tileWriteExecutor will report 0 active workers even though the worker is still tidying up
-                            // so we add a small sleep to ensure it is finished before moving on to the next tile
-                            Thread.sleep(100);
-                            log.debug("Writing out tile. Tile: " + currentTile);
-                            completedWork.get(currentTile).forEach(tileWriteExecutor::submit);
-                            currentTileIndex++;
-                        }
-                    }
-                }
-            }
         }
     }
 }

@@ -145,7 +145,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         if (INPUT == null) {
             // TODO: Legacy support. Remove when INPUT is required, after all old workflows are through
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, bclQualityEvaluationStrategy,
-                    IlluminaDataType.PF, IlluminaDataType.Position);
+                    new HashSet<>(Arrays.asList(IlluminaDataType.PF, IlluminaDataType.Position)));
         } else {
             // Grab expected barcode data from barcodeData.<LANE>
             IOUtil.assertFileIsReadable(INPUT);
@@ -171,17 +171,14 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
                         LANE,
                         readStructure,
                         bclQualityEvaluationStrategy,
-                        IlluminaDataType.PF,
-                        IlluminaDataType.Position)
+                        new HashSet<>(Arrays.asList(IlluminaDataType.PF, IlluminaDataType.Position)))
                         : new IlluminaDataProviderFactory(
                         BASECALLS_DIR,
                         BARCODES_DIR,
                         LANE,
                         readStructure,
                         bclQualityEvaluationStrategy,
-                        IlluminaDataType.PF,
-                        IlluminaDataType.Position,
-                        IlluminaDataType.Barcodes);
+                        new HashSet<>(Arrays.asList(IlluminaDataType.PF, IlluminaDataType.Position, IlluminaDataType.Barcodes)));
         }
 
         unmatchedBarcode = StringUtil.repeatCharNTimes('N', barcodeLength);

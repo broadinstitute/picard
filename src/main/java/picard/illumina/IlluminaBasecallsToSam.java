@@ -276,7 +276,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         if (OUTPUT != null) {
             barcodeSamWriterMap = new HashMap<>(1, 1.0f);
-            barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), true));
+            barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), SORT));
         } else {
             populateWritersFromLibraryParams();
         }
@@ -299,7 +299,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
                 .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
-                .bclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
+                .withBclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
 
         if (SORT) {
             converterBuilder = converterBuilder
@@ -397,7 +397,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Set<String> rgTagColumns = findAndFilterExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
         checkRgTagColumns(rgTagColumns);
 
-        List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
+        final List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
         barcodeSamWriterMap = new HashMap<>(rows.size(), 1);
 
         for (final TabbedTextFileWithHeaderParser.Row row : rows) {
@@ -432,7 +432,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             }
 
             final SAMFileWriterWrapper writer = buildSamFileWriter(outputFile,
-                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, true);
+                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, SORT);
             barcodeSamWriterMap.put(key, writer);
         }
         if (barcodeSamWriterMap.isEmpty()) {
@@ -499,7 +499,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         final SAMFileHeader header = new SAMFileHeader();
 
-        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+        if(presorted) {
+            header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+        } else {
+            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        }
         header.addReadGroup(rg);
         return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, output));
     }

@@ -37,8 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static picard.illumina.BasecallsConverter.TILE_NUMBER_COMPARATOR;
-import static picard.illumina.BasecallsConverter.getTiledFiles;
+import static picard.illumina.BasecallsConverter.*;
 import static picard.illumina.parser.BaseIlluminaDataProvider.fileToTile;
 
 /**
@@ -116,7 +115,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     protected int doWork() {
         final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
         if (DATA_TYPES.isEmpty()) {
-            DATA_TYPES.addAll(Arrays.asList(BasecallsConverter.DATA_TYPES_WITHOUT_BARCODE));
+            DATA_TYPES = DATA_TYPES_WITHOUT_BARCODE;
         }
 
         final List<Integer> failingLanes = new ArrayList<>();
@@ -169,7 +168,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 for (final File filterFile : filterFiles) {
                     filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
                 }
-                for (Integer tile: tiles) {
+                for (int tile : tiles) {
                     try (CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
                             tile, locs, outputMapping.getOutputCycles(), true)) {
                         reader.getAllTiles().forEach((key, value) -> {
@@ -346,7 +345,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         IOUtil.assertDirectoryIsReadable(BASECALLS_DIR);
         final List<String> errors = new ArrayList<>();
 
-        for (final Integer lane : LANES) {
+        for (final int lane : LANES) {
             if (lane < 1) {
                 errors.add(
                         "LANES must be greater than or equal to 1.  LANES passed in " + StringUtil.join(", ", LANES));
