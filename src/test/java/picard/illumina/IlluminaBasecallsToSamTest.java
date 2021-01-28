@@ -94,7 +94,13 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
             final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 100);
             validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
             String fileName = sort ? "nonBarcodedDescriptionNonBI.sam" : "nonBarcodedDescriptionNonBI.unsorted.sam"  ;
-            IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, fileName));
+            final File expectedSamFile = new File(TEST_DATA_DIR, fileName);
+
+            if (sort) {
+                IOUtil.assertFilesEqual(outputBam, expectedSamFile);
+            } else {
+                compareSams(outputBam, expectedSamFile);
+            }
         }
     }
 
@@ -147,7 +153,11 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 validator.validateSamFileSummary(SamReaderFactory.makeDefault().open(outputBam), null);
                 String expectedSamFilename = sort ? expectedSam + ".sam" : expectedSam + ".unsorted.sam";
                 final File expectedSamFile = new File(TEST_DATA_DIR, expectedSamFilename);
-                IOUtil.assertFilesEqual(outputBam, expectedSamFile);
+                if (sort) {
+                    IOUtil.assertFilesEqual(outputBam, expectedSamFile);
+                } else {
+                    compareSams(outputBam, expectedSamFile);
+                }
             }
         }
     }
@@ -280,16 +290,6 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         }
     }
 
-    /*
-        private void compareFastqs(File actual, File expected) {
-        List<FastqRecord> actualReads = slurpReads(actual);
-        List<FastqRecord> expectedReads = slurpReads(expected);
-
-        actualReads.sort(Comparator.comparing(FastqRecord::getReadName));
-        expectedReads.sort(Comparator.comparing(FastqRecord::getReadName));
-        Assert.assertEquals(actualReads, expectedReads);
-    }
-     */
     private void compareSams(File testSam, File sam) {
         SamReader testReader = SamReaderFactory.makeDefault().open(testSam);
         SamReader samReader = SamReaderFactory.makeDefault().open(sam);

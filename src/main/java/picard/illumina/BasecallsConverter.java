@@ -226,7 +226,12 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                     }
                     final Integer currentTile = tiles.get(currentTileIndex);
                     if (completedWork.containsKey(currentTile)) {
-                        if (tileWriteExecutor.getActiveCount() == 0 && tileWriteExecutor.getTaskCount() == tileWriteExecutor.getCompletedTaskCount()) {
+                        if (tileWriteExecutor.getQueue().size() == 0
+                                && tileWriteExecutor.getActiveCount() == 0
+                                && tileWriteExecutor.getTaskCount() == tileWriteExecutor.getCompletedTaskCount()) {
+                            // tileWriteExecutor will report 0 active workers even though the worker is still tidying up
+                            // so we add a small sleep to ensure it is finished before moving on to the next tile
+                            Thread.sleep(100);
                             log.debug("Writing out tile. Tile: " + currentTile);
                             completedWork.get(currentTile).forEach(tileWriteExecutor::submit);
                             currentTileIndex++;
