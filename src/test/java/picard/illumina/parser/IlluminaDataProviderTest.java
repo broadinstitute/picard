@@ -30,9 +30,7 @@ import picard.PicardException;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 //import static htsjdk.samtools.util.CollectionUtil.*;
@@ -45,9 +43,8 @@ public class IlluminaDataProviderTest {
 
     public static final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
     public static final File BINARY_TD_LOCATION = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final IlluminaDataType[] DEFAULT_DATA_TYPES = new IlluminaDataType[]{
-            IlluminaDataType.Position, IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF
-    };
+    private static final Set<IlluminaDataType> DEFAULT_DATA_TYPES = new HashSet<>(Arrays.asList(
+            IlluminaDataType.Position, IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF));
 
     private void runTest(
             final String testName, final int size,
@@ -76,14 +73,10 @@ public class IlluminaDataProviderTest {
         dataProvider.close();
     }
 
-    private IlluminaDataType[] getDataTypes(final IlluminaDataType[] extraDataTypes) {
-        final IlluminaDataType[] dts;
-
-        if (extraDataTypes == null) {
-            dts = DEFAULT_DATA_TYPES;
-        } else {
-            dts = Arrays.copyOf(DEFAULT_DATA_TYPES, DEFAULT_DATA_TYPES.length + extraDataTypes.length);
-            System.arraycopy(extraDataTypes, 0, dts, DEFAULT_DATA_TYPES.length, extraDataTypes.length);
+    private Set<IlluminaDataType> getDataTypes(final Set<IlluminaDataType> extraDataTypes) {
+        final Set<IlluminaDataType> dts = new HashSet<>(DEFAULT_DATA_TYPES);
+        if (extraDataTypes != null) {
+            dts.addAll(extraDataTypes);
         }
         return dts;
     }
@@ -133,8 +126,8 @@ public class IlluminaDataProviderTest {
 
     @Test
     public void barcodeParsingTest() {
-        runBarcodeParsingTest(new IlluminaDataProviderFactory(BINARY_TD_LOCATION, 1, new ReadStructure("25T8B25T"), bclQualityEvaluationStrategy, IlluminaDataType.BaseCalls,
-                IlluminaDataType.Barcodes));
+        runBarcodeParsingTest(new IlluminaDataProviderFactory(BINARY_TD_LOCATION, 1, new ReadStructure("25T8B25T"), bclQualityEvaluationStrategy,
+                new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls, IlluminaDataType.Barcodes))));
     }
 
     @DataProvider(name = "binaryData")
@@ -143,7 +136,7 @@ public class IlluminaDataProviderTest {
                 {
                         "Bustard Parsing Test(25T8B25T) w/Clocs", 1, 180,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.Barcodes)),
                         "25T8B25T",
                         0, 0,
                         BINARY_TD_LOCATION
@@ -151,7 +144,7 @@ public class IlluminaDataProviderTest {
                 {
                         "Bustard Parsing Test(25T8S25T) w/Clocs", 1, 180,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.Barcodes)),
                         "25T8S25T",
                         0, 0,
                         BINARY_TD_LOCATION
@@ -159,7 +152,7 @@ public class IlluminaDataProviderTest {
                 {
                         "Bustard Parsing Test(25T8S25T) w/Clocs with ending skip", 1, 180,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.Barcodes)),
                         "25T8B1S",
                         0, 0,
                         BINARY_TD_LOCATION
@@ -167,7 +160,7 @@ public class IlluminaDataProviderTest {
                 {
                         "Bustard Parsing Test(25S8S25T) w/Clocs", 1, 180,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.Barcodes)),
                         "25S8S25T",
                         0, 0,
                         BINARY_TD_LOCATION
@@ -175,7 +168,7 @@ public class IlluminaDataProviderTest {
                 {
                         "Bustard Parsing Test(25T8B25T) w/Clocs And Seeking", 1, 61,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.Barcodes)),
                         "25T8B25T",
                         2101, 4631,
                         BINARY_TD_LOCATION
@@ -187,13 +180,13 @@ public class IlluminaDataProviderTest {
     public void testIlluminaDataProviderBclMethod(
             final String testName, final int lane, final int size,
             final List<Integer> tiles,
-            final IlluminaDataType[] extraDataTypes,
+            final Set<IlluminaDataType> extraDataTypes,
             final String illuminaConfigStr,
             final int seekAfterFirstRead, final int seekTestDataReadOffset,
             final File basecallsDirectory)
             throws Exception {
 
-        final IlluminaDataType[] dts = getDataTypes(extraDataTypes);
+        final Set<IlluminaDataType> dts = getDataTypes(extraDataTypes);
 
         final Map<Integer, ClusterData> readNoToClusterData = BinTdUtil.clusterData(lane, tiles, illuminaConfigStr, dts);
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), bclQualityEvaluationStrategy, dts);
@@ -209,7 +202,7 @@ public class IlluminaDataProviderTest {
                 {
                         "Bad Lane(5)", 5, 60,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.Barcodes)),
                         "25T8B25T",
                         BINARY_TD_LOCATION
                 },
@@ -237,21 +230,21 @@ public class IlluminaDataProviderTest {
                 {
                         "Missing Barcodes File", 9, 60,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.Position, IlluminaDataType.Barcodes},
+                        new HashSet<>(Arrays.asList(IlluminaDataType.Position, IlluminaDataType.Barcodes)),
                         "25T8B25T",
                         BINARY_TD_LOCATION
                 },
                 {
                         "Missing Cycle File", 9, 60,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.BaseCalls},
+                        new HashSet<>(Collections.singletonList(IlluminaDataType.BaseCalls)),
                         "25T8B25T",
                         BINARY_TD_LOCATION
                 },
                 {
                         "Missing Filter File", 9, 60,
                         makeList(1101, 1201, 2101),
-                        new IlluminaDataType[]{IlluminaDataType.PF, IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores},
+                        new HashSet<>(Arrays.asList(IlluminaDataType.PF, IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores)),
                         "25T8B24T",
                         BINARY_TD_LOCATION
                 }
@@ -262,7 +255,7 @@ public class IlluminaDataProviderTest {
     public void testIlluminaDataProviderMissingDatas(
             final String testName, final int lane, final int size,
             final List<Integer> tiles,
-            final IlluminaDataType[] actualDts,
+            final Set<IlluminaDataType> actualDts,
             final String illuminaConfigStr,
             final File basecallsDirectory)
             throws Exception {

@@ -40,6 +40,7 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -237,7 +238,10 @@ public abstract class CommandLineProgram {
           System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
         }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
+
+        // Set the compression level everywhere we can think of
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
+        IOUtil.setCompressionLevel(COMPRESSION_LEVEL);
 
         if (VALIDATION_STRINGENCY != ValidationStringency.STRICT) VariantContextWriterBuilder.setDefaultOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
 
