@@ -474,6 +474,13 @@
 					<td>read one or more arguments files and add them to the command line</td>
 				</tr>
 				<tr>
+					<td><a href="#--COMPARE_MQ">--COMPARE_MQ</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If set to true, generate a histogram for mapping quality concordance between the two SAM files and write it to the output metrics file. In this histogram, an entry of 10 at bin "20,30" means that 10 reads in the left file have mapping quality 20 while those same reads have mapping quality 30 in the right file. The reads are associated based solely on read names and not the mapped position. Only primary alignments are included, but all duplicate reads are counted individually.</td>
+				</tr>
+				<tr>
 					<td><a href="#--help">--help</a><br />
 								&nbsp;<em>-h</em>
 					</td>
@@ -660,6 +667,18 @@
 		<p>
 		<span class="label label-info ">List[File]</span>
 			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--COMPARE_MQ">--COMPARE_MQ </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>If set to true, generate a histogram for mapping quality concordance between the two SAM files and write it to the output metrics file. In this histogram, an entry of 10 at bin "20,30" means that 10 reads in the left file have mapping quality 20 while those same reads have mapping quality 30 in the right file. The reads are associated based solely on read names and not the mapped position. Only primary alignments are included, but all duplicate reads are counted individually.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">boolean</span>
+			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--COMPRESSION_LEVEL">--COMPRESSION_LEVEL </a>
@@ -953,7 +972,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.24.1-SNAPSHOT built at 22-23-2021 09:23:47.
+        <p class="version">Picard version 2.24.2-SNAPSHOT built at 03-38-2021 12:38:33.
         </p>
 
 	</div>

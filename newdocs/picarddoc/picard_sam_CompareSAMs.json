@@ -32,6 +32,21 @@
       "options": []
     },
     {
+      "summary": "If set to true, generate a histogram for mapping quality concordance between the two SAM files and write it to the output metrics file. In this histogram, an entry of 10 at bin \"20,30\" means that 10 reads in the left file have mapping quality 20 while those same reads have mapping quality 30 in the right file. The reads are associated based solely on read names and not the mapped position. Only primary alignments are included, but all duplicate reads are counted individually.",
+      "name": "--COMPARE_MQ",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Compression level for all compressed files created (e.g. BAM and VCF).",
       "name": "--COMPRESSION_LEVEL",
       "synonyms": "NA",
