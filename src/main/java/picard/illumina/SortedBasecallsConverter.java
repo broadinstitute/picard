@@ -1,15 +1,24 @@
 package picard.illumina;
 
+import htsjdk.io.AsyncWriterPool;
+import htsjdk.io.Writer;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.ThreadPoolExecutorUtil;
+import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * SortedBasecallsConverter utilizes an underlying IlluminaDataProvider to convert parsed and decoded sequencing data
@@ -26,11 +35,17 @@ import java.util.*;
  * their associated writers.
  */
 public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+    protected static final Log log = Log.getInstance(SortedBasecallsConverter.class);
     private final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     private final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
     private final int maxReadsInRamPerTile;
     private final List<File> tmpDirs;
+    private final Map<Integer, List<? extends Runnable>> completedWork = new ConcurrentHashMap<>();
+    private final ThreadPoolExecutorWithExceptions tileWriteExecutor;
+    private final ThreadPoolExecutorWithExceptions tileReadExecutor;
+    private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
+    private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
 
     /**
      * Constructs a new SortedBaseCallsConverter.
@@ -61,7 +76,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final File barcodesDir,
             final int lane,
             final ReadStructure readStructure,
-            final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
+            final Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
             final boolean demultiplex,
             final int maxReadsInRamPerTile,
             final List<File> tmpDirs,
@@ -74,17 +89,20 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
             final boolean ignoreUnexpectedBarcodes,
             final boolean applyEamssFiltering,
-            final boolean includeNonPfReads
+            final boolean includeNonPfReads,
+            final AsyncWriterPool writerPool
     ) {
         super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
-                numThreads, firstTile, tileLimit, bclQualityEvaluationStrategy,
-                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, numThreads);
+                firstTile, tileLimit, bclQualityEvaluationStrategy,
+                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, writerPool);
 
         this.tmpDirs = tmpDirs;
         this.maxReadsInRamPerTile = maxReadsInRamPerTile;
         this.codecPrototype = codecPrototype;
         this.outputRecordComparator = outputRecordComparator;
         this.outputRecordClass = outputRecordClass;
+        tileWriteExecutor = new ThreadPoolExecutorWithExceptions(barcodeRecordWriterMap.keySet().size());
+        tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
     }
 
     /**
@@ -97,7 +115,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      *                 containing a single null value.
      */
     @Override
-    public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) {
+    public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) throws IOException {
         for (final Integer tile : tiles) {
             tileReadExecutor.submit(new TileProcessor(tile, barcodes));
         }
@@ -110,9 +128,9 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      */
     private class SortedRecordToWriterPump implements Runnable {
         private final SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection;
-        private final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer;
+        private final Writer<CLUSTER_OUTPUT_RECORD> writer;
 
-        SortedRecordToWriterPump(final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer,
+        SortedRecordToWriterPump(final Writer<CLUSTER_OUTPUT_RECORD> writer,
                                  final SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection) {
             this.writer = writer;
             this.recordCollection = recordCollection;
@@ -167,12 +185,12 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final List<SortedRecordToWriterPump> writerList = new ArrayList<>();
             barcodeToRecordCollection.forEach((barcode, value) -> {
                 value.doneAdding();
-                final ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD> writer = barcodeRecordWriterMap.get(barcode);
+                final Writer<CLUSTER_OUTPUT_RECORD> writer = barcodeRecordWriterMap.get(barcode);
                 log.debug("Writing out barcode " + barcode);
                 writerList.add(new SortedRecordToWriterPump(writer, value));
             });
 
-            notifyWorkComplete(tileNum, writerList);
+            completedWork.put(tileNum, writerList);
 
             log.debug("Finished processing tile " + tileNum);
         }
@@ -197,6 +215,41 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                     outputRecordComparator,
                     maxRecordsInRam,
                     IOUtil.filesToPaths(tmpDirs));
+        }
+    }
+
+    protected void awaitTileProcessingCompletion() throws IOException {
+        tileReadExecutor.shutdown();
+        // Wait for all the read threads to complete before checking for errors
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileReadExecutor, Duration.ofMinutes(5));
+
+        try {
+            // Check for reading errors
+            if (tileReadExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileReadExecutor, tileWriteExecutor);
+            }
+
+            int tileProcessingIndex = 0;
+
+            while (tileProcessingIndex < tiles.size()) {
+                if (tileWriteExecutor.getActiveCount() == 0) {
+                    completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
+                    tileProcessingIndex++;
+                    Thread.sleep(100);
+                }
+            }
+
+            tileWriteExecutor.shutdown();
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Writing executor", tileWriteExecutor, Duration.ofMinutes(5));
+
+            // Check for tile work synchronization errors
+            if (tileWriteExecutor.hasError()) {
+                interruptAndShutdownExecutors(tileWriteExecutor);
+            }
+        } catch (InterruptedException e) {
+            throw new PicardException(e.getMessage());
+        } finally {
+            closeWriters();
         }
     }
 }

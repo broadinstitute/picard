@@ -1,5 +1,7 @@
 package picard.illumina;
 
+import htsjdk.io.AsyncWriterPool;
+import htsjdk.io.Writer;
 import htsjdk.samtools.SAMFileWriterImpl;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
@@ -22,7 +24,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private final File basecallsDir;
     private final int lane;
     private final ReadStructure readStructure;
-    private final Map<String, ? extends BasecallsConverter.ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
+    private final Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
     private Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
     private SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     private Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
@@ -30,13 +32,14 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private List<File> tmpDirs = Collections.singletonList(new File(System.getProperty("java.io.tmpdir")));
     private File barcodesDir;
     private boolean demultiplex = false;
-    private int numThreads = Runtime.getRuntime().availableProcessors();
+    private int numProcessors = Runtime.getRuntime().availableProcessors();
     private Integer firstTile = null;
     private Integer tileLimit = null;
     private BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
     private boolean ignoreUnexpectedBarcodes = false;
     private boolean applyEamssFiltering = false;
     private boolean includeNonPfReads = false;
+    private AsyncWriterPool writerPool = null;
 
     /**
      * Constructs a new builder used for creating BasecallsConverter objects.
@@ -48,7 +51,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      *                               one writer stored with key=null.
      */
     public BasecallsConverterBuilder(final File basecallsDir, final Integer lane, final ReadStructure readStructure,
-                                     Map<String, ? extends BasecallsConverter.ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap) {
+                                     Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap) {
         this.basecallsDir = basecallsDir;
         this.lane = lane;
         this.readStructure = readStructure;
@@ -68,7 +71,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
                                                                         SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                                                         Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                                                         List<File> tmpDirs) {
-        if(outputRecordComparator == null || codecPrototype == null || outputRecordClass == null){
+        if (outputRecordComparator == null || codecPrototype == null || outputRecordClass == null) {
             throw new PicardException("outputRecordComparator, codecPrototype and outputRecordClasse can not be null.");
         }
         this.outputRecordComparator = outputRecordComparator;
@@ -84,18 +87,19 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @return A basecalls converter that will output records according to the parameters set.
      */
     public BasecallsConverter<CLUSTER_OUTPUT_RECORD> build() {
-
         if (outputRecordComparator != null && codecPrototype != null && outputRecordClass != null && tmpDirs != null) {
             return new SortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
                     barcodeRecordWriterMap, demultiplex, maxReadsInRamPerThread,
-                    tmpDirs, numThreads,
+                    tmpDirs, numProcessors,
                     firstTile, tileLimit, outputRecordComparator,
                     codecPrototype,
-                    outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+                    outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering,
+                    includeNonPfReads, writerPool);
         } else {
             return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lane, readStructure,
-                    barcodeRecordWriterMap, demultiplex, numThreads, firstTile, tileLimit,
-                    bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads);
+                    barcodeRecordWriterMap, demultiplex, firstTile, tileLimit,
+                    bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads,
+                    writerPool);
         }
     }
 
@@ -174,14 +178,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @return A builder that will create a converter with numProcessors set.
      */
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> numProcessors(int numProcessors) {
-    	if (numProcessors == 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors();
-        } else if (numProcessors < 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
-        } else {
-           this.numThreads = numProcessors;
-        }
-
+        this.numProcessors = numProcessors;
         return this;
     }
 
@@ -216,7 +213,12 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @return A builder that will create a converter with the maximum records in RAM set to `maxReadsInRam/numThreads`
      */
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withMaxRecordsInRam(int maxReadsInRam) {
-        this.maxReadsInRamPerThread = Math.max(1, maxReadsInRam / this.numThreads);
+        this.maxReadsInRamPerThread = Math.max(1, maxReadsInRam / this.numProcessors);
+        return this;
+    }
+
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withAsyncWriterPool(AsyncWriterPool writerPool) {
+        this.writerPool = writerPool;
         return this;
     }
 }
