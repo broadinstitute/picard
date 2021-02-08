@@ -129,6 +129,24 @@ public class PanelMetricsBase extends MultilevelMetrics {
     public double PCT_TARGET_BASES_50X;
     /** The fraction of all target bases achieving 100X or greater coverage. */
     public double PCT_TARGET_BASES_100X;
+    /** The fraction of all target bases achieving 250X or greater coverage. */
+    public double PCT_TARGET_BASES_250X;
+    /** The fraction of all target bases achieving 500X or greater coverage. */
+    public double PCT_TARGET_BASES_500X;
+    /** The fraction of all target bases achieving 1000X or greater coverage. */
+    public double PCT_TARGET_BASES_1000X;
+    /** The fraction of all target bases achieving 2500X or greater coverage. */
+    public double PCT_TARGET_BASES_2500X;
+    /** The fraction of all target bases achieving 5000X or greater coverage. */
+    public double PCT_TARGET_BASES_5000X;
+    /** The fraction of all target bases achieving 10000X or greater coverage. */
+    public double PCT_TARGET_BASES_10000X;
+    /** The fraction of all target bases achieving 25000X or greater coverage. */
+    public double PCT_TARGET_BASES_25000X;
+    /** The fraction of all target bases achieving 50000X or greater coverage. */
+    public double PCT_TARGET_BASES_50000X;
+    /** The fraction of all target bases achieving 100000X or greater coverage. */
+    public double PCT_TARGET_BASES_100000X;
 
     /**
      * A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]

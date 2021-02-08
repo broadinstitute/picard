@@ -1,11 +1,11 @@
 @HD	VN:1.6	SO:queryname
 @RG	ID:HiMom.1	SM:HiDad	LB:Hello, World	PL:ILLUMINA	PU:HiMom.1	CN:BI
-HiMom:1:1201:1018:2133	4	*	0	0	*	*	0	0	.........................	#########################	RG:Z:HiMom.1	XN:i:1
-HiMom:1:1201:1018:2217	516	*	0	0	*	*	0	0	.........................	#########################	RG:Z:HiMom.1	XN:i:1
-HiMom:1:1201:1028:2202	4	*	0	0	*	*	0	0	..AAAC.C.T.......GG..TG..	##42@?###################	RG:Z:HiMom.1
-HiMom:1:1201:1042:2174	4	*	0	0	*	*	0	0	.TCAGGAAGGC..CAAAAAAAGAAA	#0;@@@?@?<@##3<@@?@@?????	RG:Z:HiMom.1
-HiMom:1:1201:1043:2246	4	*	0	0	*	*	0	0	.GCATCATTTC..GCTTCTCTCTGT	#0;@@??@=@>##22=;@??><@??	RG:Z:HiMom.1
-HiMom:1:1201:1045:2105	516	*	0	0	*	*	0	0	.TTTTTTTTTT..TTTTTTTTTTTT	#0;@@@@@@@?##0:????????=<	RG:Z:HiMom.1
+HiMom:1:1201:1018:2133	4	*	0	0	*	*	0	0	NNNNNNNNNNNNNNNNNNNNNNNNN	#########################	RG:Z:HiMom.1	XN:i:1
+HiMom:1:1201:1018:2217	516	*	0	0	*	*	0	0	NNNNNNNNNNNNNNNNNNNNNNNNN	#########################	RG:Z:HiMom.1	XN:i:1
+HiMom:1:1201:1028:2202	4	*	0	0	*	*	0	0	NNAAACNCNTNNNNNNNGGNNTGNN	##42@?###################	RG:Z:HiMom.1
+HiMom:1:1201:1042:2174	4	*	0	0	*	*	0	0	NTCAGGAAGGCNNCAAAAAAAGAAA	#0;@@@?@?<@##3<@@?@@?????	RG:Z:HiMom.1
+HiMom:1:1201:1043:2246	4	*	0	0	*	*	0	0	NGCATCATTTCNNGCTTCTCTCTGT	#0;@@??@=@>##22=;@??><@??	RG:Z:HiMom.1
+HiMom:1:1201:1045:2105	516	*	0	0	*	*	0	0	NTTTTTTTTTTNNTTTTTTTTTTTT	#0;@@@@@@@?##0:????????=<	RG:Z:HiMom.1
 HiMom:1:1201:1054:2151	4	*	0	0	*	*	0	0	GTCAGGCACTGAGAATATATGGGTG	CBCFFFFFHHHHHJJJJJJJJJJEG	RG:Z:HiMom.1
 HiMom:1:1201:1064:2239	4	*	0	0	*	*	0	0	GGGATGGGAGGGCGATGAGGACTAG	8?@:DDDACC:FHHGIH<EGDDDFH	RG:Z:HiMom.1
 HiMom:1:1201:1073:2225	4	*	0	0	*	*	0	0	CGTGTGCTCTTCCGATCTGGAGGGT	@BBDFFFFHHHHHJJJJJJJJJJJ:	RG:Z:HiMom.1

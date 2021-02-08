@@ -8,10 +8,7 @@ import picard.PicardException;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static picard.illumina.parser.BinTdUtil.*;
 
@@ -24,7 +21,7 @@ public class BclParserTest {
     public static final String READ_STRUCTURE_WSKIPS_BAD = "10T5S10T2B4S2B5T20S";
     public static final int[] READ_LENGTHS = new int[]{25, 8, 25};
     public static final int LANE = 1;
-    public static final IlluminaDataType DATA_TYPES[] = {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores};
+    public static final Set<IlluminaDataType> DATA_TYPES = new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores));
     public static final int TILE_SIZES = 60;
 
 
@@ -308,7 +305,7 @@ public class BclParserTest {
                     case T:
                         sb.append("T ");
                         break;
-                    case P:
+                    case N:
                         sb.append(". ");
                         break;
 
@@ -354,7 +351,7 @@ public class BclParserTest {
                         null)},
 
                 //Stays at 0, Stretches of G's Separated
-                {new BasesAndQuals(new byte[]{T, G, G, G, G, G, G, G, P, P, G, G, G, G, G, G, G, T, A, A, G, G, G},
+                {new BasesAndQuals(new byte[]{T, G, G, G, G, G, G, G, N, N, G, G, G, G, G, G, G, T, A, A, G, G, G},
                         new byte[]{7, 8, 33, 7, 2, 33, 16, 17, 2, 2, 6, 5, 35, 2, 33, 22, 18, 16, 25, 33, 32, 16, 18},
                         null)},
 
@@ -364,7 +361,7 @@ public class BclParserTest {
                         null)},
 
                 //Longer
-                {new BasesAndQuals(new byte[]{T, A, C, G, G, P, P, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A, T, A, C, G, G, P, P, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A},
+                {new BasesAndQuals(new byte[]{T, A, C, G, G, N, N, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A, T, A, C, G, G, N, N, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A},
                         new byte[]{25, 16, 16, 33, 22, 2, 2, 33, 35, 3, 31, 38, 22, 19, 25, 16, 16, 31, 30, 2, 2, 33, 26, 3, 31, 38, 22, 19, 2, 2, 30, 27, 28, 16, 2, 2, 30, 16, 19, 21, 22, 17, 19, 16, 16, 16},
                         null)},
 
@@ -385,7 +382,7 @@ public class BclParserTest {
                         new byte[]{7, 8, 33, 7, 2, 33, 16, 17, 19, 32, 33, 5, 8, 2, 2, 2, 33, 16, 25},
                         11)},
                 //Stays at 0, Stretches of G's Separated                                                       X- Mask from here
-                {new BasesAndQuals(new byte[]{T, G, G, G, G, G, G, G, P, P, G, G, G, G, G, G, G, T, A, A, G, G, G},
+                {new BasesAndQuals(new byte[]{T, G, G, G, G, G, G, G, N, N, G, G, G, G, G, G, G, T, A, A, G, G, G},
                         new byte[]{7, 8, 33, 7, 2, 33, 16, 17, 2, 2, 6, 5, 35, 2, 33, 30, 13, 16, 7, 2, 2, 16, 18},
                         16)},
                 //shorter                       X - Mask from here
@@ -393,7 +390,7 @@ public class BclParserTest {
                         new byte[]{2, 11, 13},
                         0)},
                 //Longer                                                                                                                           X- Mask from here
-                {new BasesAndQuals(new byte[]{T, A, C, G, G, P, P, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A, T, A, C, G, G, P, P, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A},
+                {new BasesAndQuals(new byte[]{T, A, C, G, G, N, N, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A, T, A, C, G, G, N, N, T, C, C, C, C, T, T, T, G, G, G, A, T, G, C, A},
                         new byte[]{25, 16, 16, 33, 22, 2, 2, 33, 35, 3, 31, 38, 22, 19, 25, 16, 16, 31, 30, 2, 2, 33, 26, 3, 31, 38, 22, 19, 2, 2, 30, 27, 28, 16, 2, 2, 30, 16, 19, 21, 22, 2, 19, 16, 2, 2},
                         26)}
         };
