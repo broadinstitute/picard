@@ -352,7 +352,7 @@ public abstract class CommandLineProgram {
             ret = commandLineParser.parseArguments(System.err, argv);
         } catch (CommandLineException e) {
             // Barclay command line parser throws on parsing/argument errors
-            System.err.println(commandLineParser.usage(false,false));
+            System.err.println(commandLineParser.usage(true,false));
             System.err.println(e.getMessage());
             ret = false;
         }
@@ -365,7 +365,7 @@ public abstract class CommandLineProgram {
 
         final String[] customErrorMessages = customCommandLineValidation();
         if (customErrorMessages != null) {
-            System.err.print(commandLineParser.usage(false, false));
+            System.err.print(commandLineParser.usage(true, false));
             for (final String msg : customErrorMessages) {
                 System.err.println(msg);
             }
