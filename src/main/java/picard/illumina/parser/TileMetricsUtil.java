@@ -35,19 +35,9 @@ import picard.illumina.parser.readers.TileMetricsOutReader;
 import picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -98,7 +88,7 @@ public class TileMetricsUtil {
         return files;
     }
 
-    private static Collection<Tile> getTileClusterRecordsV3(
+    private static Collection<Tile> getTileClusterRecords(
             final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap,
             final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues,
             final float density) {
@@ -119,18 +109,18 @@ public class TileMetricsUtil {
         return Collections.unmodifiableCollection(tiles);
     }
 
-    public static Collection<Tile> parseClusterRecordsFromTileMetricsV3(
+    public static Collection<Tile> parseClusterRecordsFromTileMetrics(
             final Collection<File> tileMetricsOutFiles,
             final Map<Integer, File> phasingMetricsFiles,
             final ReadStructure readStructure
-    ) throws FileNotFoundException {
+    ) {
         final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
         for (File tileMetricsOutFile : tileMetricsOutFiles) {
             final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile);
             final float density = tileMetricsIterator.getDensity();
             final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
             final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
-            final Collection<Tile> tiles = getTileClusterRecordsV3(locationToMetricsMap, phasingValues, density);
+            final Collection<Tile> tiles = getTileClusterRecords(locationToMetricsMap, phasingValues, density);
             if (!tiles.isEmpty()) {
                 return tiles;
             }
@@ -143,22 +133,6 @@ public class TileMetricsUtil {
     }
 
     /**
-     * @deprecated use {@link #parseClusterRecordsFromTileMetricsV3(Collection, Map, ReadStructure)} instead
-     */
-    @Deprecated
-    public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile,
-                                                    final Map<Integer, File> phasingMetricsFiles,
-                                                    final ReadStructure readStructure,
-                                                    final ValidationStringency validationStringency)
-            throws FileNotFoundException {
-        final Map<Integer, Map<Integer, Collection<TilePhasingValue>>> phasingValues = getTilePhasingValues(phasingMetricsFiles, readStructure);
-        final TileMetricsOutReader tileMetricsIterator = new TileMetricsOutReader(tileMetricsOutFile);
-        final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(tileMetricsIterator);
-        final Map<String, ? extends Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
-        return getTileClusterRecordsV3(locationToMetricsMap, phasingValues, tileMetricsIterator.getDensity());
-    }
-
-    /**
      * Returns an unmodifiable collection of tile data read from the provided file. For each tile we will extract:
      * - lane number
      * - tile number
@@ -168,7 +142,7 @@ public class TileMetricsUtil {
      * - Phasing & Prephasing for second template read (if available)
      */
     public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile, final ReadStructure readStructure,
-                                                    final ValidationStringency validationStringency) throws FileNotFoundException {
+                                                    final ValidationStringency validationStringency) {
         // Get the tile metrics lines from TileMetricsOut, keeping only the last value for any Lane/Tile/Code combination
         final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(new TileMetricsOutReader
                 (tileMetricsOutFile));

@@ -30,6 +30,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -37,19 +38,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.BaseCallingProgramGroup;
-import picard.illumina.parser.ReadDescriptor;
-import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.ReadType;
-import picard.illumina.parser.Tile;
-import picard.illumina.parser.TileMetricsUtil;
+import picard.illumina.parser.*;
 import picard.illumina.parser.readers.TileMetricsOutReader;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -145,31 +140,29 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
 
         private final static Log LOG = Log.getInstance(IlluminaLaneMetricsCollector.class);
 
-        /** Returns a partitioned collection of lane number to Tile objects from the provided basecall directory. */
+        /**
+         * Returns a partitioned collection of lane number to Tile objects from the provided basecall directory.
+         */
         public static Map<Integer, ? extends Collection<Tile>> readLaneTiles(final File illuminaRunDirectory,
                                                                              final ReadStructure readStructure,
                                                                              final ValidationStringency validationStringency,
                                                                              final int tileMetricsVersion) {
             final Collection<Tile> tiles;
-            try {
-                final List<File> tileMetricsOutFiles = TileMetricsUtil.findTileMetricsFiles(illuminaRunDirectory, readStructure.totalCycles);
-                if (tileMetricsVersion == TileMetricsOutReader.TileMetricsVersion.THREE.version) {
-                    tiles = TileMetricsUtil.parseClusterRecordsFromTileMetricsV3(
-                            tileMetricsOutFiles,
-                            TileMetricsUtil.renderPhasingMetricsFilesFromBasecallingDirectory(illuminaRunDirectory),
-                            readStructure
-                    );
-                } else {
-                    tiles = TileMetricsUtil.parseTileMetrics(
-                            tileMetricsOutFiles.get(0),
-                            readStructure,
-                            validationStringency
-                    );
-                }
-            } catch (final FileNotFoundException e) {
-                throw new PicardException("Unable to open laneMetrics file.", e);
-            }
 
+            final List<File> tileMetricsOutFiles = TileMetricsUtil.findTileMetricsFiles(illuminaRunDirectory, readStructure.totalCycles);
+            if (tileMetricsVersion == TileMetricsOutReader.TileMetricsVersion.THREE.version) {
+                tiles = TileMetricsUtil.parseClusterRecordsFromTileMetrics(
+                        tileMetricsOutFiles,
+                        TileMetricsUtil.renderPhasingMetricsFilesFromBasecallingDirectory(illuminaRunDirectory),
+                        readStructure
+                );
+            } else {
+                tiles = TileMetricsUtil.parseTileMetrics(
+                        tileMetricsOutFiles.get(0),
+                        readStructure,
+                        validationStringency
+                );
+            }
             return tiles.stream().filter(tile -> tile.getLaneNumber() > 0).collect(Collectors.groupingBy(Tile::getLaneNumber));
         }
 
@@ -187,10 +180,21 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
 
         private static int determineTileMetricsVersion(File illuminaRunDirectory, ReadStructure readStructure) {
             final List<File> tileMetricsOutFiles = TileMetricsUtil.findTileMetricsFiles(illuminaRunDirectory, readStructure.totalCycles);
-            return new TileMetricsOutReader(tileMetricsOutFiles.get(0)).getVersion();
+            int version = new TileMetricsOutReader(tileMetricsOutFiles.get(0)).getVersion();
+            if (!tileMetricsOutFiles.stream().allMatch(metricFile -> {
+                int fileVersion = new TileMetricsOutReader(metricFile).getVersion();
+                boolean matches = fileVersion == version;
+                if (!matches) {
+                    LOG.error(String.format("File %s version %d does not match expected version %d.", metricFile.getAbsolutePath(), fileVersion, version));
+                }
+                return matches;
+            })) {
+                throw new PicardException("Not all tile metrics files match expected version: " + version);
+            }
+            return version;
         }
 
-        public static void writePhasingMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
+        private static void writePhasingMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
                                                final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> phasingMetricsFile,
                                                final String fileExtension, final int tileMetricsVersion) {
             laneTiles.forEach((key, value) -> IlluminaPhasingMetrics.getPhasingMetricsForTiles(key.longValue(),

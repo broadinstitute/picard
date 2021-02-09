@@ -8,7 +8,6 @@ import picard.PicardException;
 import picard.illumina.parser.ReadStructure;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 /** @author mccowan */
@@ -16,13 +15,14 @@ public class IlluminaLaneMetricsCollectorTest {
     final static File TEST_DIRECTORY = new File("testdata/picard/illumina/IlluminaLaneMetricsCollectorTest");
     final static File TILE_RUN_DIRECTORY = new File(TEST_DIRECTORY, "tileRuns");
     final static File TEST_MISSING_PHASING_DIRECTORY = new File(TEST_DIRECTORY, "missing_phasing");
+    final static File TEST_MISMATCHED_VERSIONS = new File(TEST_DIRECTORY, "metrics-mismatch");
 
     private static File buildOutputFile(final File directory, final String prefix, final String extension) {
         return new File(directory, String.format("%s.%s", prefix, extension));
     }
 
     @Test(dataProvider = "testLaneMetrics")
-    public void testWriteLaneMetrics(final String testRun) throws Exception {
+    public void testWriteLaneMetrics(final String testRun) {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
             clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
@@ -50,7 +50,7 @@ public class IlluminaLaneMetricsCollectorTest {
     }
 
     @Test(dataProvider = "testCollectIlluminaLaneMetrics")
-    public void testCollectIlluminaLaneMetrics(final String testRun, final ReadStructure readStructure) throws Exception {
+    public void testCollectIlluminaLaneMetrics(final String testRun, final ReadStructure readStructure) {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final File runDirectory = new File(TILE_RUN_DIRECTORY, testRun);
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
@@ -110,7 +110,7 @@ public class IlluminaLaneMetricsCollectorTest {
 
     /** Silently continue if we encounter a tile without phasing/pre-phasing metrics. */
     @Test
-    public void testMissingPhasingValuesSilent() throws IOException {
+    public void testMissingPhasingValuesSilent() {
         final ReadStructure readStructure = new ReadStructure("151T8B8B151T");
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final File runDirectory = TEST_MISSING_PHASING_DIRECTORY;
@@ -130,6 +130,22 @@ public class IlluminaLaneMetricsCollectorTest {
             final File canonicalLaneFile = buildOutputFile(runDirectory, runDirectory.getName(), IlluminaLaneMetrics.getExtension());
             IOUtil.assertFilesEqual(canonicalLaneFile, laneMetricsFile);
             IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+        }
+    }
+
+    /**
+     * Ensures that an exception is thrown when we encounter tile metrics files that have mismatching versions.
+     */
+    @Test(expectedExceptions = PicardException.class)
+    public void testMismatchedMetricsVersions() {
+        final ReadStructure readStructure = new ReadStructure("151T8B8B151T");
+        for (final boolean useReadStructure : Arrays.asList(true, false)) {
+            final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.RUN_DIRECTORY = TEST_MISMATCHED_VERSIONS;
+            clp.OUTPUT_PREFIX = "test";
+            if (useReadStructure) clp.READ_STRUCTURE = readStructure;
+            clp.doWork();
         }
     }
 }
