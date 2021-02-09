@@ -102,7 +102,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
     public String FILE_EXTENSION = null;
 
     @Deprecated
-    @Argument(doc = "Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.(Deprectated: no longer necessary)", optional = true)
+    @Argument(doc = "Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)", optional = true)
     public boolean IS_NOVASEQ = false;
 
     @Override
