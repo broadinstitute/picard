@@ -609,13 +609,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>For specifying adapters other than standard Illumina</td>
 				</tr>
 				<tr>
-					<td><a href="#--FORCE_GC">--FORCE_GC</a><br />
-					</td>
-					<!--<td>Boolean</td> -->
-					<td>true</td>
-					<td>If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed is larger than the available memory.</td>
-				</tr>
-				<tr>
 					<td><a href="#--help">--help</a><br />
 								&nbsp;<em>-h</em>
 					</td>
@@ -665,8 +658,8 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td><a href="#--MAX_READS_IN_RAM_PER_TILE">--MAX_READS_IN_RAM_PER_TILE</a><br />
 					</td>
 					<!--<td>int</td> -->
-					<td>1200000</td>
-					<td>Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices.</td>
+					<td>-1</td>
+					<td>Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`</td>
 				</tr>
 				<tr>
 					<td><a href="#--MINIMUM_QUALITY">--MINIMUM_QUALITY</a><br />
@@ -724,6 +717,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>Date</td> -->
 					<td>null</td>
 					<td>The start date of the run.</td>
+				</tr>
+				<tr>
+					<td><a href="#--SORT">--SORT</a><br />
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>true</td>
+					<td>If true, the output records are sorted by read name. Otherwise they are unsorted.</td>
 				</tr>
 				<tr>
 					<td><a href="#--TAG_PER_MOLECULAR_INDEX">--TAG_PER_MOLECULAR_INDEX</a><br />
@@ -1020,18 +1020,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--FORCE_GC">--FORCE_GC </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed is larger than the available memory.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">Boolean</span>
-			&nbsp;<span class="label">true</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
 			 / <small>NA</small>
 		</h3>
@@ -1148,12 +1136,12 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices.</b><br />
+			<b>Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`</b><br />
 			
 		</p>
 		<p>
 		<span class="label label-info ">int</span>
-			&nbsp;<span class="label">1200000</span>
+			&nbsp;<span class="label">-1</span>
 			&nbsp;<span class="label label-warning">[ [ -∞</span>
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
@@ -1382,6 +1370,18 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SORT">--SORT </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>If true, the output records are sorted by read name. Otherwise they are unsorted.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">true</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--TAG_PER_MOLECULAR_INDEX">--TAG_PER_MOLECULAR_INDEX </a>
 			 / <small>NA</small>
 		</h3>
@@ -1523,7 +1523,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.24.2-SNAPSHOT built at 03-38-2021 12:38:33.
+        <p class="version">Picard version 2.25.0-SNAPSHOT built at 10-38-2021 01:38:54.
         </p>
 
 	</div>

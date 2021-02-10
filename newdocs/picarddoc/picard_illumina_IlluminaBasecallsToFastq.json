@@ -272,18 +272,18 @@
       "options": []
     },
     {
-      "summary": "Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices.",
+      "summary": "Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`",
       "name": "--MAX_READS_IN_RAM_PER_TILE",
       "synonyms": "NA",
       "type": "int",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "1200000",
+      "defaultValue": "-1",
       "minValue": "-Infinity",
       "maxValue": "Infinity",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "optional",
+      "kind": "deprecated",
       "options": []
     },
     {
@@ -458,6 +458,21 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "options": []
+    },
+    {
+      "summary": "If true, the output records are sorted by read name. Otherwise they are output in the same order that the data was produced on the sequencer (ordered by tile and position).",
+      "name": "--SORT",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "true",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
       "options": []
     },
     {
