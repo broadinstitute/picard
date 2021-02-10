@@ -42,7 +42,10 @@ public class MultiTileBclFileFaker extends FileFaker {
     public void fakeMultiTileBclFile(final File bcl, final TileIndex tileIndex) throws IOException {
         this.tiles = tileIndex.getTiles();
         final OutputStream outputStream;
-        if (BclReader.isGzipped(bcl)) outputStream = new GZIPOutputStream(new FileOutputStream(bcl));
+        if (BclReader.isGzipped(bcl)) {
+            outputStream = new GZIPOutputStream(new FileOutputStream(bcl));
+        }...
+
         else if (BclReader.isBlockGzipped(bcl)) outputStream = new BlockCompressedOutputStream(bcl);
         else outputStream = new FileOutputStream(bcl);
 
