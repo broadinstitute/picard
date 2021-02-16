@@ -289,6 +289,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "Should only be used with SECOND_INPUT. ", optional = true)
     public File SECOND_INPUT_SAMPLE_MAP;
 
+    @Argument(doc = "A tsv with two columns representing the individual with which each sample is associated.  When this sample is specified, expectations for matches will be based " +
+            "on the equality or inequality of the individual associated with two samples, as opposed to the sample ids themselves.  Samples which are not included in this file " +
+            "will have their sample id used as their individual id", optional = true)
+    public File SAMPLE_INDIVIDUAL_MAP;
+
     @Argument(doc = "An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. ")
     public Fingerprint.CrosscheckMode CROSSCHECK_MODE = CHECK_SAME_SAMPLE;
 
@@ -368,6 +373,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private double[][] crosscheckMatrix = null;
     private final List<String> lhsMatrixKeys = new ArrayList<>();
     private final List<String> rhsMatrixKeys = new ArrayList<>();
+    private Map<String, String> sampleIndividualMap;
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -431,6 +437,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
         if (SECOND_INPUT_SAMPLE_MAP != null) {
             IOUtil.assertFileIsReadable(SECOND_INPUT_SAMPLE_MAP);
+        }
+        if (SAMPLE_INDIVIDUAL_MAP != null) {
+            IOUtil.assertFileIsReadable(SAMPLE_INDIVIDUAL_MAP);
+            sampleIndividualMap = getStringStringMap(SAMPLE_INDIVIDUAL_MAP, "SAMPLE_INDIVIDUAL_MAP");
         }
 
         final HaplotypeMap map = new HaplotypeMap(HAPLOTYPE_MAP);
@@ -787,7 +797,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
             for (int col = 0; col < rhsFingerprintIdDetails.size(); col++) {
                 final FingerprintIdDetails rhsId = rhsFingerprintIdDetails.get(col);
-                final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsId.sample.equals(rhsId.sample);
+                final String lhsMatchId = sampleIndividualMap == null ? lhsId.sample : sampleIndividualMap.getOrDefault(lhsId.sample, lhsId.sample);
+                final String rhsMatchId = sampleIndividualMap == null ? rhsId.sample : sampleIndividualMap.getOrDefault(rhsId.sample, rhsId.sample);
+                final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsMatchId.equals(rhsMatchId);
 
                 final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFingerprints.get(lhsId), rhsFingerprints.get(rhsId),
                         GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
