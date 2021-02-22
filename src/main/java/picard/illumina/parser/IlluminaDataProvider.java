@@ -38,7 +38,7 @@ import java.util.Set;
  *
  * @author jburke@broadinstitute.org
  */
-public class IlluminaDataProvider extends BaseIlluminaDataProvider {
+class IlluminaDataProvider extends BaseIlluminaDataProvider {
 
     /**
      * contains QSeqs, bcls, or other Illumina file types that will be parsed by this class
@@ -160,7 +160,7 @@ public class IlluminaDataProvider extends BaseIlluminaDataProvider {
      * Jump so that the next record returned will be from the specified tile.
      */
     @Override
-    public void seekToTile(final int oneBasedTileNumber) {
+    public void seekToTile(final Integer oneBasedTileNumber) {
         for (final IlluminaParser parser : parsers) {
             parser.seekToTile(oneBasedTileNumber);
         }

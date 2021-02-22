@@ -50,7 +50,7 @@ import java.util.*;
  * @author jburke@broadinstitute.org
  */
 public class ClusterDataToSamConverter implements
-        IlluminaBasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
+        BasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
 
     private final String readGroupId;
     private final SamRecordFilter filters = new SolexaNoiseFilter();

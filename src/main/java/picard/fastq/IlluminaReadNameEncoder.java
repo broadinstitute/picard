@@ -18,9 +18,14 @@ public class IlluminaReadNameEncoder implements ReadNameEncoder {
     
     @Override
     public String generateReadName(final ClusterData cluster, final Integer pairNumber) {
-        return runBarcode + ":" + cluster.getLane() + ":" + cluster.getTile() + ":" + cluster.getX() + ":" + cluster.getY() + generatePairNumberSuffix(pairNumber);
+        return generateShortName(cluster) + generatePairNumberSuffix(pairNumber);
     }
-    
+
+    @Override
+    public String generateShortName(ClusterData cluster) {
+        return runBarcode + ":" + cluster.getLane() + ":" + cluster.getTile() + ":" + cluster.getX() + ":" + cluster.getY();
+    }
+
     private static String generatePairNumberSuffix(final Integer pairNumber) {
         if (pairNumber == null)
             return ""; 
