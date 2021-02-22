@@ -1,6 +1,7 @@
 package picard.annotation;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
@@ -117,6 +118,9 @@ public class SortGff extends CommandLineProgram {
 
     @Override
     protected int doWork() {
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertDirectoryIsWritable(OUTPUT);
+
         final Gff3Codec inputCodec = new Gff3Codec(Gff3Codec.DecodeDepth.SHALLOW);
         if (!(inputCodec.canDecode(INPUT.toString()))) {
             throw new IllegalArgumentException("Input file " + INPUT + " cannot be read by Gff3Codec");
