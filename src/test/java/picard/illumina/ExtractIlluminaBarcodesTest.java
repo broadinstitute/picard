@@ -42,11 +42,7 @@ import picard.util.BasicInputParser;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -252,7 +248,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         final ReadStructure rs = new ReadStructure("25T8B25T");
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, rs,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
-                IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
+                new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes)));
         testParsing(factory, rs, metricOne, barcodePosition);
     }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2020 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -134,15 +135,28 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private AlignmentSummaryMetricsCollector collector;
 
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(HISTOGRAM_FILE != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
+    }
+
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
         if (HISTOGRAM_FILE != null) {
-            IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
+            if (!METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS)) {
+                log.error("ReadLength histogram is calculated on all reads only, but ALL_READS were not " +
+                        "included in the Metric Accumulation Levels. Histogram will not be generated.");
+                HISTOGRAM_FILE=null;
+            } else {
+                IOUtil.assertFileIsWritable(HISTOGRAM_FILE);
+            }
         }
 
         if (header.getSequenceDictionary().isEmpty()) {
-            log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +
+            log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary. If any reads " +
                     "in the file are aligned, then alignment summary metrics collection will fail.");
         }
 
@@ -164,27 +178,15 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         final MetricsFile<AlignmentSummaryMetrics, Integer> file = getMetricsFile();
         collector.addAllLevelsToFile(file);
 
-        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector = (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
+        final AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector allReadsGroupCollector =
+                (AlignmentSummaryMetricsCollector.GroupAlignmentSummaryMetricsPerUnitMetricCollector) collector.getAllReadsCollector();
 
-        final Histogram<Integer> pairTotalReadHistogram = allReadsGroupCollector.pairCollector.getReadHistogram();
-        pairTotalReadHistogram.setBinLabel("READ_LENGTH");
-        pairTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
-        file.addHistogram(pairTotalReadHistogram);
-
-        final Histogram<Integer> pairClippedReadHistogram = allReadsGroupCollector.pairCollector.getAlignedReadHistogram();
-        pairClippedReadHistogram.setBinLabel("READ_LENGTH");
-        pairClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
-        file.addHistogram(pairClippedReadHistogram);
-
-        final Histogram<Integer> unpairedTotalReadHistogram = allReadsGroupCollector.unpairedCollector.getReadHistogram();
-        unpairedTotalReadHistogram.setBinLabel("READ_LENGTH");
-        unpairedTotalReadHistogram.setValueLabel("PAIRED_TOTAL_LENGTH_COUNT");
-        file.addHistogram(unpairedTotalReadHistogram);
-
-        final Histogram<Integer> unpairedClippedReadHistogram = allReadsGroupCollector.unpairedCollector.getAlignedReadHistogram();
-        unpairedClippedReadHistogram.setBinLabel("READ_LENGTH");
-        unpairedClippedReadHistogram.setValueLabel("PAIRED_ALIGNED_LENGTH_COUNT");
-        file.addHistogram(unpairedClippedReadHistogram);
+        if (allReadsGroupCollector != null) {
+            addAllHistogramToMetrics(file, "PAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
+            addAlignedHistogramToMetrics(file, "PAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.pairCollector);
+            addAllHistogramToMetrics(file, "UNPAIRED_TOTAL_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+            addAlignedHistogramToMetrics(file, "UNPAIRED_ALIGNED_LENGTH_COUNT", allReadsGroupCollector.unpairedCollector);
+        }
 
         file.write(OUTPUT);
 
@@ -198,6 +200,24 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             }
         }
 
+    }
+
+    private static void addAllHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final AlignmentSummaryMetricsCollector.IndividualAlignmentSummaryMetricsCollector metricsCollector) {
+        if (metricsCollector != null) {
+            addHistogramToMetrics(file, label, metricsCollector.getReadHistogram());
+        }
+    }
+
+    private static void addAlignedHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final AlignmentSummaryMetricsCollector.IndividualAlignmentSummaryMetricsCollector metricsCollector) {
+        if (metricsCollector != null) {
+            addHistogramToMetrics(file, label, metricsCollector.getAlignedReadHistogram());
+        }
+    }
+
+    private static void addHistogramToMetrics(final MetricsFile<AlignmentSummaryMetrics, Integer> file, final String label, final Histogram<Integer> readHistogram) {
+        readHistogram.setBinLabel("READ_LENGTH");
+        readHistogram.setValueLabel(label);
+        file.addHistogram(readHistogram);
     }
 
     // overridden to make it visible on the commandline and to change the doc.

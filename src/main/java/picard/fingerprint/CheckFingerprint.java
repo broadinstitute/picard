@@ -107,19 +107,19 @@ import java.util.List;
 
 @CommandLineProgramProperties(
         summary = CheckFingerprint.USAGE_DETAILS,
-        oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM or VCF) file and compares it to the provided genotypes",
+        oneLineSummary = "Computes a fingerprint from the supplied input (SAM/BAM/CRAM or VCF) file and compares it to the provided genotypes",
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CheckFingerprint extends CommandLineProgram {
 
     static final String USAGE_DETAILS =
-            "Checks the sample identity of the sequence/genotype data in the provided file (SAM/BAM or VCF) " +
+            "Checks the sample identity of the sequence/genotype data in the provided file (SAM/BAM/CRAM or VCF) " +
                     "against a set of known genotypes in the supplied genotype file (in VCF format).\n " +
                     "\n " +
                     "<h3>Summary</h3> " +
                     "Computes a fingerprint (essentially, genotype information from different parts of the genome) " +
-                    "from the supplied input file (SAM/BAM or VCF) file and " +
+                    "from the supplied input file (SAM/BAM/CRAM or VCF) file and " +
                     "compares it to the expected fingerprint genotypes provided. " +
                     "The key output is a LOD score which represents the relative likelihood of " +
                     "the sequence data originating from the same sample as the genotypes vs. from a random sample. " +
@@ -167,7 +167,7 @@ public class CheckFingerprint extends CommandLineProgram {
                     "When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) " +
                     "and uses the first one that it finds. ";
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file SAM/BAM or VCF.  If a VCF is used, " +
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file SAM/BAM/CRAM or VCF.  If a VCF is used, " +
             "it must have at least one sample.  If there are more than one samples in the VCF, the parameter OBSERVED_SAMPLE_ALIAS must " +
             "be provided in order to indicate which sample's data to use.  If there are no samples in the VCF, an exception will be thrown.")
     public String INPUT;
@@ -203,7 +203,7 @@ public class CheckFingerprint extends CommandLineProgram {
             "where the most likely haplotype achieves at least this LOD.")
     public double GENOTYPE_LOD_THRESHOLD = 5;
 
-    @Argument(optional = true, shortName = "IGNORE_RG", doc = "If the input is a SAM/BAM, and this parameter is true, treat the " +
+    @Argument(optional = true, shortName = "IGNORE_RG", doc = "If the input is a SAM/BAM/CRAM, and this parameter is true, treat the " +
             "entire input BAM as one single read group in the calculation, " +
             "ignoring RG annotations, and producing a single fingerprint metric for the entire BAM.")
     public boolean IGNORE_READ_GROUPS = false;
