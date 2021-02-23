@@ -25,12 +25,7 @@
 package picard.illumina;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Iso8601Date;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -38,7 +33,6 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.BaseCallingProgramGroup;
-import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.AdapterPair;
@@ -49,16 +43,7 @@ import picard.util.TabbedTextFileWithHeaderParser;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into
@@ -226,17 +211,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             optional = true)
     public Integer PROCESS_SINGLE_TILE;
 
-    @Argument(doc = "If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed " +
-            "is larger than the available memory.")
-    public Boolean FORCE_GC = true;
-
     @Argument(doc = "Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads" +
             " and convert their quality scores to Q2.")
     public boolean APPLY_EAMSS_FILTER = true;
 
     @Argument(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
-            " run, each SortingCollection gets this value/number of indices.")
-    public int MAX_READS_IN_RAM_PER_TILE = 1200000;
+            " run, each SortingCollection gets this value/number of indices. Deprecated: use `MAX_RECORDS_IN_RAM`")
+    public int MAX_READS_IN_RAM_PER_TILE = -1;
 
     @Argument(doc = "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
@@ -265,15 +246,19 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Argument(doc = "Should the barcode quality be included when the sample barcode is included?")
     public boolean INCLUDE_BARCODE_QUALITY = false;
 
-    private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<>();
+    @Argument(doc = "If true, the output records are sorted by read name. Otherwise they are unsorted.")
+    public Boolean SORT = true;
+
+    private Map<String, SAMFileWriterWrapper> barcodeSamWriterMap;
     private ReadStructure readStructure;
     private BasecallsConverter<SAMRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
+    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
     @Override
     protected int doWork() {
         initialize();
-        basecallsConverter.doTileProcessing();
+        basecallsConverter.processTilesAndWritePerSampleOutputs(barcodeSamWriterMap.keySet());
         return 0;
     }
 
@@ -281,8 +266,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
-        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
-
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
         }
@@ -292,7 +275,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         if (OUTPUT != null) {
-            barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), true));
+            barcodeSamWriterMap = new HashMap<>(1, 1.0f);
+            barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null), SORT));
         } else {
             populateWritersFromLibraryParams();
         }
@@ -306,26 +290,33 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         final boolean demultiplex = readStructure.hasSampleBarcode();
-        if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, LANE)) {
-            if (BARCODES_DIR == null) BARCODES_DIR = BASECALLS_DIR;
-            basecallsConverter = new NewIlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / numOutputRecords),
-                    TMP_DIR, NUM_PROCESSORS,
-                    FIRST_TILE, TILE_LIMIT, new QueryNameComparator(),
-                    new Codec(numOutputRecords),
-                    SAMRecordsForCluster.class, bclQualityEvaluationStrategy, IGNORE_UNEXPECTED_BARCODES);
-        } else {
-            basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                    barcodeSamWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE / numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
-                    FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                    bclQualityEvaluationStrategy, APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
+        BasecallsConverterBuilder<SAMRecordsForCluster> converterBuilder = new BasecallsConverterBuilder<>(BASECALLS_DIR, LANE, readStructure, barcodeSamWriterMap)
+                .barcodesDir(BARCODES_DIR)
+                .withDemultiplex(demultiplex)
+                .numProcessors(NUM_PROCESSORS)
+                .firstTile(FIRST_TILE)
+                .tileLimit(TILE_LIMIT)
+                .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
+                .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
+                .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
+                .withBclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
+
+        if (SORT) {
+            converterBuilder = converterBuilder
+                    .withSorting(
+                            new QueryNameComparator(),
+                            new Codec(numOutputRecords),
+                            SAMRecordsForCluster.class,
+                            TMP_DIR);
         }
+
+        basecallsConverter = converterBuilder.build();
         /*
          * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).
          */
         final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
-                basecallsConverter.getFactory().getOutputReadStructure(), adapters, BARCODE_POPULATION_STRATEGY, INCLUDE_BARCODE_QUALITY )
+                basecallsConverter.getFactory().getOutputReadStructure(), adapters, BARCODE_POPULATION_STRATEGY, INCLUDE_BARCODE_QUALITY)
                 .withMolecularIndexTag(MOLECULAR_INDEX_TAG)
                 .withMolecularIndexQualityTag(MOLECULAR_INDEX_BASE_QUALITY_TAG)
                 .withTagPerMolecularIndex(TAG_PER_MOLECULAR_INDEX);
@@ -406,7 +397,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Set<String> rgTagColumns = findAndFilterExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
         checkRgTagColumns(rgTagColumns);
 
-        for (final TabbedTextFileWithHeaderParser.Row row : libraryParamsParser) {
+        final List<TabbedTextFileWithHeaderParser.Row> rows = libraryParamsParser.iterator().toList();
+        barcodeSamWriterMap = new HashMap<>(rows.size(), 1);
+
+        for (final TabbedTextFileWithHeaderParser.Row row : rows) {
             List<String> barcodeValues = null;
 
             if (!barcodeColumnLabels.isEmpty()) {
@@ -438,7 +432,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             }
 
             final SAMFileWriterWrapper writer = buildSamFileWriter(outputFile,
-                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, true);
+                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams, SORT);
             barcodeSamWriterMap.put(key, writer);
         }
         if (barcodeSamWriterMap.isEmpty()) {
@@ -505,7 +499,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         final SAMFileHeader header = new SAMFileHeader();
 
-        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+        if (presorted) {
+            header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+        } else {
+            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        }
         header.addReadGroup(rg);
         return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, output));
     }
@@ -522,6 +520,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (BARCODE_PARAMS != null) {
             LIBRARY_PARAMS = BARCODE_PARAMS;
+        }
+
+        // Remove once deprecated parameter is deleted.
+        if(MAX_READS_IN_RAM_PER_TILE != -1) {
+            log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
         }
 
         final ArrayList<String> messages = new ArrayList<>();

@@ -40,6 +40,7 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -237,7 +238,10 @@ public abstract class CommandLineProgram {
           System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
         }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
+
+        // Set the compression level everywhere we can think of
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
+        IOUtil.setCompressionLevel(COMPRESSION_LEVEL);
 
         if (VALIDATION_STRINGENCY != ValidationStringency.STRICT) VariantContextWriterBuilder.setDefaultOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
 
@@ -348,7 +352,7 @@ public abstract class CommandLineProgram {
             ret = commandLineParser.parseArguments(System.err, argv);
         } catch (CommandLineException e) {
             // Barclay command line parser throws on parsing/argument errors
-            System.err.println(commandLineParser.usage(false,false));
+            System.err.println(commandLineParser.usage(true,false));
             System.err.println(e.getMessage());
             ret = false;
         }
@@ -361,7 +365,7 @@ public abstract class CommandLineProgram {
 
         final String[] customErrorMessages = customCommandLineValidation();
         if (customErrorMessages != null) {
-            System.err.print(commandLineParser.usage(false, false));
+            System.err.print(commandLineParser.usage(true, false));
             for (final String msg : customErrorMessages) {
                 System.err.println(msg);
             }

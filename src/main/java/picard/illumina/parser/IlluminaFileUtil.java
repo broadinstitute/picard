@@ -25,6 +25,7 @@ package picard.illumina.parser;
 
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.lang.NotImplementedException;
 import picard.PicardException;
 import picard.illumina.parser.fakers.*;
 import picard.illumina.parser.readers.TileMetricsOutReader;
@@ -49,6 +50,7 @@ public class IlluminaFileUtil {
 
     public enum SupportedIlluminaFormat {
         Bcl,
+        Cbcl,
         Locs,
         Clocs,
         Pos,
@@ -115,6 +117,30 @@ public class IlluminaFileUtil {
                                 "Not all BCL files in " + basecallLaneDir.getAbsolutePath() + " have the same extension!");
                     }
                     utils.put(SupportedIlluminaFormat.Bcl, parameterizedFileUtil);
+                    break;
+                case Cbcl:
+                    parameterizedFileUtil =  new ParameterizedFileUtil("L(//d+)_(//d+)", ".cbcl", basecallLaneDir, null, lane ) {
+                        @Override
+                        public boolean filesAvailable() {
+                            return IlluminaFileUtil.hasCbcls(basecallDir, lane);
+                        }
+
+                        @Override
+                        public List<String> verify(List<Integer> expectedTiles, int[] expectedCycles) {
+                            throw new NotImplementedException("`verify()` is not implemented for CBCLs");
+                        }
+
+                        @Override
+                        public List<String> fakeFiles(List<Integer> expectedTiles, int[] cycles, SupportedIlluminaFormat format) {
+                            throw new NotImplementedException("`fakeFiles()` is not implemented for CBCLs");
+                        }
+
+                        @Override
+                        public boolean checkTileCount() {
+                            return false;
+                        }
+                    };
+                    utils.put(SupportedIlluminaFormat.Cbcl, parameterizedFileUtil);
                     break;
                 case Locs:
                     parameterizedFileUtil = new PerTileOrPerRunFileUtil(".locs", intensityLaneDir, new LocsFileFaker(), lane);

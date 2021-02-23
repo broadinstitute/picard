@@ -1,12 +1,7 @@
 package picard.illumina.parser;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 
@@ -23,7 +18,7 @@ public class BinTdUtil {
     public static final byte C = (byte) 67;
     public static final byte G = (byte) 71;
     public static final byte T = (byte) 84;
-    public static final byte P = (byte) 46; //dot
+    public static final byte N = (byte) 'N';
     public static final Map<String, List<ClusterData>> goldData = new HashMap<String, List<ClusterData>>();
     public static final Map<String, List<Integer>> goldIndices = new HashMap<String, List<Integer>>();
     public static final Map<String, Integer> goldSizes = new HashMap<String, Integer>();
@@ -34,15 +29,15 @@ public class BinTdUtil {
         goldIndices.put(ltStr(lane, tile), makeList(0, 2, 10, 18, 19));
         goldData.put(ltStr(lane, tile), makeList(
                         makeCd(lane, tile, 1140, 2120, true,
-                                new byte[]{P, C, C, C, C, A, A, C, A, T, T, C, T, A, A, T, T, A, T, G, C, C, T, C, A, C, A, A, C, T, C, T, C, T, T, T, T, T, T, T, T, T, T, T, T, T, A, A, C, T, T, T, G, C, A, A, A, T},
+                                new byte[]{N, C, C, C, C, A, A, C, A, T, T, C, T, A, A, T, T, A, T, G, C, C, T, C, A, C, A, A, C, T, C, T, C, T, T, T, T, T, T, T, T, T, T, T, T, T, A, A, C, T, T, T, G, C, A, A, A, T},
                                 new byte[]{2, 16, 25, 33, 35, 37, 37, 35, 39, 37, 37, 35, 37, 40, 41, 41, 41, 40, 40, 41, 40, 40, 40, 40, 40, 31, 31, 31, 35, 35, 37, 35, 37, 31, 31, 31, 35, 35, 35, 35, 35, 39, 39, 39, 39, 37, 33, 31, 24, 37, 39, 40, 31, 33, 37, 39, 31, 31},
                                 "CAACTCTC"),
                         makeCd(lane, tile, 1047, 2122, false,
-                                new byte[]{P,C,T,A,A,P,G,P,A,C,T,P,T,G,P,G,T,G,T,G,C,P,P,P,P,P,P,P,A,P,P,P,P,P,P,T,C,A,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,C,T,A,A, N,G, N,A,C,T, N,T,G, N,G,T,G,T,G,C, N, N, N, N, N, N, N,A, N, N, N, N, N, N,T,C,A, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,15,26,31,31,2,19,2,18,31,31,2,18,31,2,17,27,31,31,31,31,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1069, 2159, true,
-                                new byte[]{T,C,C,C,T,T,A,C,C,A,T,C,A,A,A,T,C,A,A,T,T,G,P,C,C,G,T,C,C,A,C,A,G,G,A,C,G,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{T,C,C,C,T,T,A,C,C,A,T,C,A,A,A,T,C,A,A,T,T,G, N,C,C,G,T,C,C,A,C,A,G,G,A,C,G,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{34,34,34,37,37,37,37,37,39,39,39,39,39,41,41,41,41,41,41,41,41,41,2,18,32,31,33,33,37,37,37,37,37,27,27,27,31,30,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 "GTCCACAG"),
                         makeCd(lane, tile, 1175, 2197, true,
@@ -50,7 +45,7 @@ public class BinTdUtil {
                                 new byte[]{34,34,34,37,37,37,37,37,39,39,39,39,39,41,41,41,41,41,41,41,41,41,41,41,41,34,34,34,37,37,37,37,37,33,34,31,37,37,37,37,37,39,39,39,39,39,41,41,41,41,41,41,41,41,41,41,41,41},
                                 "CCAACATT"),
                         makeCd(lane, tile, 1048, 2197, false,
-                                new byte[]{P,C,T,C,C,P,G,P,T,C,A,P,C,A,P,G,T,G,G,A,G,P,P,P,P,P,P,P,C,P,P,P,P,P,P,G,T,G,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,C,T,C,C, N,G, N,T,C,A, N,C,A, N,G,T,G,G,A,G, N, N, N, N, N, N, N,C, N, N, N, N, N, N,G,T,G, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,15,26,30,31,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null)
                 )
@@ -61,11 +56,11 @@ public class BinTdUtil {
         goldIndices.put(ltStr(lane, tile), makeList(0, 1, 18, 19));
         goldData.put(ltStr(lane, tile), makeList(
                 makeCd(lane, tile, 1187, 2100, true,
-                        new byte[]{P,G,C,G,G,T,A,A,T,T,C,C,A,G,C,T,C,C,A,A,T,A,G,C,G,T,A,T,C,T,G,C,C,A,A,A,A,A,A,G,A,G,C,C,C,G,C,A,T,T,G,C,C,G,A,G,A,C},
+                        new byte[]{N,G,C,G,G,T,A,A,T,T,C,C,A,G,C,T,C,C,A,A,T,A,G,C,G,T,A,T,C,T,G,C,C,A,A,A,A,A,A,G,A,G,C,C,C,G,C,A,T,T,G,C,C,G,A,G,A,C},
                         new byte[]{2,16,25,33,33,17,31,35,39,39,37,39,39,40,40,40,40,39,39,40,40,38,39,38,38,34,34,34,37,37,37,37,37,28,27,28,26,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                         "TATCTGCC"),
                 makeCd(lane, tile, 1045, 2105, false,
-                        new byte[]{P,T,A,A,A,G,A,G,A,A,A,T,C,A,A,G,A,A,T,A,C,T,A,T,T,C,T,G,T,A,A,T,C,P,T,T,T,T,T,T,T,T,T,T,P,P,T,T,T,T,T,T,T,T,T,T,T,T},
+                        new byte[]{N,T,A,A,A,G,A,G,A,A,A,T,C,A,A,G,A,A,T,A,C,T,A,T,T,C,T,G,T,A,A,T,C, N,T,T,T,T,T,T,T,T,T,T, N, N,T,T,T,T,T,T,T,T,T,T,T,T},
                         new byte[]{2,12,19,31,30,7,31,8,31,31,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,16,16,16,17,31,32,2,2,2,15,26,31,31,31,31,31,31,31,30,2,2,15,25,30,30,30,30,30,30,30,30,28,27},
                         "CTGTAATC"),
                 makeCd(lane, tile, 1159, 2179, false,
@@ -83,7 +78,7 @@ public class BinTdUtil {
         goldIndices.put(ltStr(lane, tile), makeList(7, 15, 16, 19));
         goldData.put(ltStr(lane, tile), makeList(
                 makeCd(lane, tile, 1123, 2095, true,
-                        new byte[]{P,T,G,G,A,C,A,A,C,A,T,G,T,T,C,G,A,G,A,G,C,T,A,C,A,C,A,G,C,G,G,T,A,T,C,C,G,C,C,T,C,C,A,G,C,T,T,C,A,G,C,T,T,C,T,C,C,T},
+                        new byte[]{N,T,G,G,A,C,A,A,C,A,T,G,T,T,C,G,A,G,A,G,C,T,A,C,A,C,A,G,C,G,G,T,A,T,C,C,G,C,C,T,C,C,A,G,C,T,T,C,A,G,C,T,T,C,T,C,C,T},
                         new byte[]{2,16,28,33,33,35,35,35,37,37,37,37,35,38,37,38,40,38,30,37,26,39,39,37,40,31,30,31,35,35,37,31,31,31,31,31,37,35,35,37,37,39,39,39,39,39,41,39,38,38,41,40,41,41,41,36,39,39},
                         "CAGCGGTA"),
                makeCd(lane, tile, 1162, 2139, true,
@@ -91,7 +86,7 @@ public class BinTdUtil {
                        new byte[]{31,31,31,35,35,35,35,35,39,37,39,39,39,35,33,25,36,37,39,39,34,32,38,30,35,34,34,34,37,37,37,37,37,33,34,34,37,37,37,37,37,39,39,39,39,39,40,41,41,41,41,41,41,41,40,41,41,40},
                        "TGCTGCTG"),
                 makeCd(lane, tile, 1013, 2146, true,
-                        new byte[]{P,A,C,A,C,T,G,C,T,G,C,A,G,A,T,G,A,C,A,A,G,C,A,G,C,C,T,A,T,G,C,G,T,P,P,P,P,C,G,C,T,A,G,A,A,C,C,A,A,C,T,T,A,T,T,C,A,T},
+                        new byte[]{N,A,C,A,C,T,G,C,T,G,C,A,G,A,T,G,A,C,A,A,G,C,A,G,C,C,T,A,T,G,C,G,T, N, N, N, N,C,G,C,T,A,G,A,A,C,C,A,A,C,T,T,A,T,T,C,A,T},
                         new byte[]{2,19,33,35,37,37,37,37,39,39,39,39,39,41,41,41,41,41,41,41,41,41,41,41,41,34,34,34,37,37,37,37,37,2,2,2,2,17,19,28,30,31,31,30,31,30,31,31,30,31,31,31,31,31,31,30,31,31},
                         "CTATGCGT"),
                 makeCd(lane, tile, 1245, 2154, true,
@@ -105,23 +100,23 @@ public class BinTdUtil {
         goldIndices.put(ltStr(lane, tile), makeList(0, 2, 10, 18, 19));
         goldData.put(ltStr(lane, tile), makeList(
                         makeCd(lane, tile, 1140, 2120, true,
-                                new byte[]{P,A,A,C,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,A,A,C,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1047, 2122, false,
-                                new byte[]{P,A,A,G,A,C,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,A,A,G,A,C, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,27,37,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1069, 2159, true,
-                                new byte[]{P,C,T,T,G,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,C,T,T,G,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,37,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1175, 2197, true,
-                                new byte[]{P,A,A,A,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,A,A,A,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1048, 2197, false,
-                                new byte[]{P,A,A,G,A,C,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,A,A,G,A,C, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,27,22,32,32,37,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null)
                 )
@@ -132,23 +127,23 @@ public class BinTdUtil {
         goldIndices.put(ltStr(lane, tile), makeList(0, 2, 10, 18, 19));
         goldData.put(ltStr(lane, tile), makeList(
                         makeCd(lane, tile, 1140, 2120, true,
-                                new byte[]{P,A,A,G,A,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,A,A,G,A, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1047, 2122, false,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1069, 2159, true,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1175, 2197, true,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1048, 2197, false,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null)
                 )
@@ -159,23 +154,23 @@ public class BinTdUtil {
         goldIndices.put(ltStr(lane, tile), makeList(0, 2, 10, 18, 19));
         goldData.put(ltStr(lane, tile), makeList(
                         makeCd(lane, tile, 1140, 2120, true,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1047, 2122, false,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1069, 2159, true,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1175, 2197, true,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null),
                         makeCd(lane, tile, 1048, 2197, false,
-                                new byte[]{P,G,C,T,T,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P},
+                                new byte[]{N,G,C,T,T, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N},
                                 new byte[]{2,32,32,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                                 null)
                 )
@@ -183,7 +178,7 @@ public class BinTdUtil {
         goldSizes.put(ltStr(lane, tile), 336434);
     }
 
-    public static Map<Integer, ClusterData> clusterData(final int lane, final List<Integer> tiles, final String readStructure, final IlluminaDataType... dataTypes) {
+    public static Map<Integer, ClusterData> clusterData(final int lane, final List<Integer> tiles, final String readStructure, final Set<IlluminaDataType> dataTypes) {
         final List<Integer> sortedTiles = new ArrayList<Integer>(tiles);
         Collections.sort(sortedTiles);
 
@@ -204,7 +199,7 @@ public class BinTdUtil {
         return data;
     }
 
-    public static ReadData[] copyReadData(final ReadStructure rs, final IlluminaDataType[] dts, final ClusterData toCopy) {
+    public static ReadData[] copyReadData(final ReadStructure rs, final Set<IlluminaDataType> dts, final ClusterData toCopy) {
         boolean doBases = false;
         boolean doQuals = false;
 
@@ -252,7 +247,7 @@ public class BinTdUtil {
         return rds;
     }
 
-    public static ClusterData selectiveCopyCd(final ClusterData toCopy, final String readStructure, final IlluminaDataType... dataTypes) {
+    public static ClusterData selectiveCopyCd(final ClusterData toCopy, final String readStructure, final Set<IlluminaDataType> dataTypes) {
         final ReadStructure rs = new ReadStructure(readStructure);
         final ReadData[] rd = copyReadData(rs, dataTypes, toCopy);
         final ClusterData cd = new ClusterData(rd);

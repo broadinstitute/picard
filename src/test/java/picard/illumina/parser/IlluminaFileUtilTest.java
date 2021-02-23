@@ -10,12 +10,7 @@ import picard.PicardException;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -270,9 +265,13 @@ public class IlluminaFileUtilTest {
     @Test(dataProvider = "missingTileFormats")
     public void missingTileTest(final int lane,
                                 final List<SupportedIlluminaFormat> formats,
-                                final List<SupportedIlluminaFormat> formatsToGetTiles,
+                                List<SupportedIlluminaFormat> formatsToGetTiles,
                                 final List<String> relativeFilesToDelete,
                                 final String compression) {
+
+        formatsToGetTiles = new LinkedList<>(formatsToGetTiles);
+        formatsToGetTiles.remove(SupportedIlluminaFormat.Cbcl);
+
         for (final SupportedIlluminaFormat format : formats) {
             makeFiles(format, intensityDir, lane, DEFAULT_TILES, DEFAULT_CYCLES, compression);
         }
