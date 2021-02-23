@@ -3,7 +3,6 @@ package picard.illumina.parser;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.illumina.parser.fakers.MultiTileBclFileFaker;
-import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.BclReader;
 
 import java.io.File;
