@@ -119,7 +119,7 @@ public class SortGff extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertDirectoryIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         final Gff3Codec inputCodec = new Gff3Codec(Gff3Codec.DecodeDepth.SHALLOW);
         if (!(inputCodec.canDecode(INPUT.toString()))) {
