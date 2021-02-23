@@ -19,10 +19,7 @@ public class MultiTileBclFileFakerTest {
         fakeBciFile.deleteOnExit();
 
         new MultiTileBclFileFaker().fakeMultiTileBclFile(fakeFile, new TileIndex(new File(TEST_DATA_DIRECTORY, "0001.bcl.bgzf.bci")));
-        new BclReader(
-                fakeFile,
-                new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY), false);
+
         Assert.assertEquals(1, BclReader.getNumberOfClusters(fakeFile));
-        Assert.assertEquals(BclReader.getNumberOfClusters(fakeFile) * 64, fakeFile.length() - 4);
     }
 }
