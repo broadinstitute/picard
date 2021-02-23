@@ -5,7 +5,9 @@ import picard.util.UnsignedTypeUtil;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -29,17 +31,18 @@ import java.util.NoSuchElementException;
 public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.IlluminaTileMetrics> {
     private final BinaryFileIterator<ByteBuffer> bbIterator;
     private float density;
-    private TileMetricsVersion version;
+    private final TileMetricsVersion version;
 
     /**
      * Return a TileMetricsOutReader for the specified file
      * @param tileMetricsOutFile The file to read
-     * @param version The version of the tile metrics file being parsed.
      */
-    public TileMetricsOutReader(final File tileMetricsOutFile, TileMetricsOutReader.TileMetricsVersion version) {
+    public TileMetricsOutReader(final File tileMetricsOutFile) {
+
+        int versionInt = UnsignedTypeUtil.uByteToInt(MMapBackedIteratorFactory.getByteIterator(1, tileMetricsOutFile).getHeaderBytes().get());
+        this.version = TileMetricsVersion.findByKey(versionInt);
 
         bbIterator = MMapBackedIteratorFactory.getByteBufferIterator(version.headerSize, version.recordSize, tileMetricsOutFile);
-        this.version = version;
 
         final ByteBuffer header = bbIterator.getHeaderBytes();
 
@@ -75,6 +78,8 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
     public float getDensity() {
         return density;
     }
+
+    public int getVersion() { return version.version; }
 
     /**
      * IlluminaPhasingMetrics corresponds to a single record in a TileMetricsOut file
@@ -189,14 +194,25 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
         TWO(2, 2, 10),
         THREE(3, 6, 15);
 
-        private final int version;
+        public final int version;
         private final int headerSize;
         private final int recordSize;
+        private static final Map<Integer,TileMetricsVersion> versionLookupMap;
 
         TileMetricsVersion(int version, int headerSize, int recordSize) {
             this.version = version;
             this.headerSize = headerSize;
             this.recordSize = recordSize;
+        }
+
+        static {
+            versionLookupMap = new HashMap<>();
+            for (TileMetricsVersion v : TileMetricsVersion.values()) {
+                versionLookupMap.put(v.version, v);
+            }
+        }
+        public static TileMetricsVersion findByKey(int i) {
+            return versionLookupMap.get(i);
         }
     }
 }
