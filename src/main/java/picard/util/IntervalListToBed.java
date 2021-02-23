@@ -24,11 +24,13 @@
 package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalCodec;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalCoordinateComparator;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.tribble.AbstractFeatureReader;
@@ -87,10 +89,13 @@ public class IntervalListToBed extends CommandLineProgram {
 
     private CloseableIterator<Interval> getSortedIntervals(AbstractFeatureReader<Interval, LineIterator> intervalsReader)  throws IOException {
         if (SORT) {
+            final SAMFileHeader header = (SAMFileHeader) intervalsReader.getHeader();
+            final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+            final IntervalCoordinateComparator comparator = new IntervalCoordinateComparator(header);
             SortingCollection<Interval> sortedIntervals =
                     SortingCollection.newInstance(Interval.class,
-                            new IntervalCodec(((SAMFileHeader)intervalsReader.getHeader()).getSequenceDictionary()),
-                            Interval::compareTo, 500000, TMP_DIR.stream().map(File::toPath).toArray(java.nio.file.Path[]::new));
+                            new IntervalCodec(sequenceDictionary),
+                            comparator, 500000, TMP_DIR.stream().map(File::toPath).toArray(java.nio.file.Path[]::new));
 
             for (final Interval i: intervalsReader.iterator()) {
                 sortedIntervals.add(i);

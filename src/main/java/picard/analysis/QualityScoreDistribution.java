@@ -99,6 +99,14 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
     @Override
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(CHART_OUTPUT);

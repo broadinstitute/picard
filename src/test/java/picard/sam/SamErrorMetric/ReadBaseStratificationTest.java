@@ -12,8 +12,6 @@ import org.testng.annotations.Test;
 import picard.sam.AbstractAlignmentMerger;
 import picard.sam.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,8 +23,13 @@ import java.util.stream.IntStream;
 public class ReadBaseStratificationTest {
 
     @BeforeClass
-    public void setup() {
+    public void setupLH() {
         ReadBaseStratification.setLongHomopolymer(6);
+    }
+
+    @BeforeClass
+    public void setupLBS() {
+        ReadBaseStratification.setLocationBinSize(1000);
     }
 
     @DataProvider
@@ -262,6 +265,10 @@ public class ReadBaseStratificationTest {
                 {1, false, (Math.round(100.0 * 5 / 8)) / 100.0, ReadBaseStratification.gcContentStratifier},
 
                 {1, false, 93, ReadBaseStratification.flowCellTileStratifier},
+
+                {1, false, 3981 / 1000, ReadBaseStratification.flowCellXStratifier},
+
+                {1, false, 7576 / 1000, ReadBaseStratification.flowCellYStratifier},
 
                 {1, false, "rgID", ReadBaseStratification.readgroupStratifier},
 
