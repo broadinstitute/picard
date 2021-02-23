@@ -44,10 +44,11 @@ public class MultiTileBclFileFaker extends FileFaker {
         final OutputStream outputStream;
         if (BclReader.isGzipped(bcl)) {
             outputStream = new GZIPOutputStream(new FileOutputStream(bcl));
-        }...
-
-        else if (BclReader.isBlockGzipped(bcl)) outputStream = new BlockCompressedOutputStream(bcl);
-        else outputStream = new FileOutputStream(bcl);
+        } else if (BclReader.isBlockGzipped(bcl)) {
+            outputStream = new BlockCompressedOutputStream(bcl);
+        } else {
+            outputStream = new FileOutputStream(bcl);
+        }
 
         for (TileIndex.TileIndexRecord tileRecord : tileIndex) {
             final ByteBuffer buffer = ByteBuffer.allocate(tileRecord.getNumClustersInTile() + 4);
