@@ -77,8 +77,8 @@ public class RefFlatReader {
         for (final TabbedTextFileWithHeaderParser.Row row : parser) {
             final int lineNumber = parser.getCurrentLineNumber(); // getCurrentLineNumber returns the number of the next line
             if (row.getFields().length != expectedColumns) {
-                throw new AnnotationException("Wrong number of fields in refFlat file " + refFlatFile + " at line " +
-                        lineNumber);
+                throw new AnnotationException("Wrong number of fields in refFlat file  " + refFlatFile + " at line " +
+                        lineNumber + ". Found '" + row.getFields().length + "' but expected '" + expectedColumns + "'.");
             }
             final String geneName = row.getField(RefFlatColumns.GENE_NAME.name());
             final String transcriptName = row.getField(RefFlatColumns.TRANSCRIPT_NAME.name());
