@@ -80,10 +80,59 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "MACHINE_NAME=machine1",
                 "FLOWCELL_BARCODE=abcdeACXX",
-                "MAX_RECORDS_IN_RAM=100" //force spill to disk to test encode/decode
+                "MAX_RECORDS_IN_RAM=100", //force spill to disk to test encode/decode
         });
         IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
         IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
+    }
+
+    @Test
+    public void testAdapterTrimming() throws Exception {
+        final String suffix = ".1.fastq";
+        final File outputFastq1 = File.createTempFile("adapterTrimmed.", suffix);
+        outputFastq1.deleteOnExit();
+        final String outputPrefix = outputFastq1.getAbsolutePath().substring(0, outputFastq1.getAbsolutePath().length() - suffix.length());
+        final File outputFastq2 = new File(outputPrefix + ".2.fastq");
+        outputFastq2.deleteOnExit();
+        final int lane = 1;
+        runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25T8B25T",
+                "OUTPUT_PREFIX=" + outputPrefix,
+                "RUN_BARCODE=HiMom",
+                "MACHINE_NAME=machine1",
+                "FLOWCELL_BARCODE=abcdeACXX",
+                "MAX_RECORDS_IN_RAM=100", //force spill to disk to test encode/decode,
+                "FIVE_PRIME_ADAPTER=CGGCC",
+                "THREE_PRIME_ADAPTER=TGGGC"
+        });
+        IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "adapterTrimmed.1.fastq"));
+        IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "adapterTrimmed.2.fastq"));
+    }
+
+    @Test
+    public void testQualityTrimming() throws Exception {
+        final String suffix = ".1.fastq";
+        final File outputFastq1 = File.createTempFile("qualityTrimmed.", suffix);
+        outputFastq1.deleteOnExit();
+        final String outputPrefix = outputFastq1.getAbsolutePath().substring(0, outputFastq1.getAbsolutePath().length() - suffix.length());
+        final File outputFastq2 = new File(outputPrefix + ".2.fastq");
+        outputFastq2.deleteOnExit();
+        final int lane = 1;
+        runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25T8B25T",
+                "OUTPUT_PREFIX=" + outputPrefix,
+                "RUN_BARCODE=HiMom",
+                "MACHINE_NAME=machine1",
+                "FLOWCELL_BARCODE=abcdeACXX",
+                "MAX_RECORDS_IN_RAM=100", //force spill to disk to test encode/decode,
+                "TRIMMING_QUALITY=10"
+        });
+        IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "qualityTrimmed.1.fastq"));
+        IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "qualityTrimmed.2.fastq"));
     }
 
     @Test
