@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.PicardException;
@@ -30,6 +31,9 @@ public class ConvertHaplotypeDatabaseToVcf extends CommandLineProgram {
 
     @Override
     protected int doWork() {
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(INPUT);
+        
         final HaplotypeMap haplotypeMap = new HaplotypeMap(INPUT);
 
         try {
