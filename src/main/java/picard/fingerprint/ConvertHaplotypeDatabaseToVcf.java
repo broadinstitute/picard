@@ -39,7 +39,7 @@ public class ConvertHaplotypeDatabaseToVcf extends CommandLineProgram {
         try {
             haplotypeMap.writeAsVcf(OUTPUT, REFERENCE_SEQUENCE);
         } catch (final FileNotFoundException ex) {
-            throw new PicardException("uggh", ex);
+            throw new PicardException("Problem writing haplotype map to " + OUTPUT, ex);
         }
 
         return 0;
