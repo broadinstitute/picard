@@ -216,7 +216,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         try {
             basecallsConverter.processTilesAndWritePerSampleOutputs(barcodes);
         } catch (IOException e) {
-            return 1;
+            throw new PicardException("Error converting basecalls to Fastq.", e);
         }
         return 0;
     }

@@ -262,7 +262,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         try {
             basecallsConverter.processTilesAndWritePerSampleOutputs(barcodeSamWriterMap.keySet());
         } catch (IOException e) {
-            return 1;
+            throw new PicardException("Error converting basecalls to SAM.", e);
         }
         return 0;
     }
