@@ -147,8 +147,9 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             }
             recordCollection.cleanup();
             int writeJobsRemaining = tileWriteJobs.decrementAndGet();
-            synchronized (tileWriteJobs) {
-                if (writeJobsRemaining == 0) {
+
+            if (writeJobsRemaining == 0) {
+                synchronized (tileWriteJobs) {
                     tileWriteJobs.notifyAll();
                 }
             }
@@ -241,9 +242,9 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
 
         while (tileProcessingIndex < tiles.size()) {
             if (tileWriteJobs.get() == 0) {
+                completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
+                tileProcessingIndex++;
                 synchronized (tileWriteJobs) {
-                    completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
-                    tileProcessingIndex++;
                     try {
                         tileWriteJobs.wait();
                     } catch (InterruptedException e) {
