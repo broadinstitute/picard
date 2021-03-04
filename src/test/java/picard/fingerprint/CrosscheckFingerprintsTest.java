@@ -469,8 +469,6 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         Assert.assertEquals(matrixParser.columnLabelsList().size(), numberOfSamples + 1 );
     }
 
-    @Test()
-
     @DataProvider(name = "checkSamplesData")
     public Iterator<Object[]> checkSamplesData() {
         List<Object[]> tests = new ArrayList<>();
