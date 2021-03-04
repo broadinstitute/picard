@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * BasecallsConverter utilizes an underlying IlluminaDataProvider to convert parsed and decoded sequencing data
@@ -248,7 +249,8 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
     protected void interruptAndShutdownExecutors(ThreadPoolExecutorWithExceptions... executors) {
         int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
+        String errorMessages = Arrays.stream(executors).map(e -> e.exception.toString()).collect(Collectors.joining(","));
         throw new PicardException("Exceptions in tile processing. There were " + tasksRunning
-                + " tasks were still running or queued and have been cancelled.");
+                + " tasks were still running or queued and have been cancelled. Errors: " + errorMessages);
     }
 }
