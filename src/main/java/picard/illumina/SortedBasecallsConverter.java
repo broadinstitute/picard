@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * SortedBasecallsConverter utilizes an underlying IlluminaDataProvider to convert parsed and decoded sequencing data
@@ -46,6 +47,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     private final ThreadPoolExecutorWithExceptions tileReadExecutor;
     private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
     private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
+    private final AtomicInteger tileWriteJobs = new AtomicInteger(0);
 
     /**
      * Constructs a new SortedBaseCallsConverter.
@@ -138,11 +140,18 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
 
         @Override
         public void run() {
+            tileWriteJobs.incrementAndGet();
             for (final CLUSTER_OUTPUT_RECORD record : recordCollection) {
                 writer.write(record);
                 writeProgressLogger.record(null, 0);
             }
             recordCollection.cleanup();
+            int writeJobsRemaining = tileWriteJobs.decrementAndGet();
+            synchronized (tileWriteJobs) {
+                if (writeJobsRemaining == 0) {
+                    tileWriteJobs.notifyAll();
+                }
+            }
         }
     }
 
@@ -223,33 +232,34 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         // Wait for all the read threads to complete before checking for errors
         ThreadPoolExecutorUtil.awaitThreadPoolTermination("Reading executor", tileReadExecutor, Duration.ofMinutes(5));
 
-        try {
-            // Check for reading errors
-            if (tileReadExecutor.hasError()) {
-                interruptAndShutdownExecutors(tileReadExecutor, tileWriteExecutor);
-            }
+        // Check for reading errors
+        if (tileReadExecutor.hasError()) {
+            interruptAndShutdownExecutors(tileReadExecutor, tileWriteExecutor);
+        }
 
-            int tileProcessingIndex = 0;
+        int tileProcessingIndex = 0;
 
-            while (tileProcessingIndex < tiles.size()) {
-                if (tileWriteExecutor.getActiveCount() == 0) {
+        while (tileProcessingIndex < tiles.size()) {
+            if (tileWriteJobs.get() == 0) {
+                synchronized (tileWriteJobs) {
                     completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
                     tileProcessingIndex++;
-                    Thread.sleep(100);
+                    try {
+                        tileWriteJobs.wait();
+                    } catch (InterruptedException e) {
+                        throw new PicardException("Error waiting for thread lock during tile processing.", e);
+                    }
                 }
             }
-
-            tileWriteExecutor.shutdown();
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Writing executor", tileWriteExecutor, Duration.ofMinutes(5));
-
-            // Check for tile work synchronization errors
-            if (tileWriteExecutor.hasError()) {
-                interruptAndShutdownExecutors(tileWriteExecutor);
-            }
-        } catch (InterruptedException e) {
-            throw new PicardException(e.getMessage());
-        } finally {
-            closeWriters();
         }
+
+        tileWriteExecutor.shutdown();
+        ThreadPoolExecutorUtil.awaitThreadPoolTermination("Writing executor", tileWriteExecutor, Duration.ofMinutes(5));
+
+        // Check for tile work synchronization errors
+        if (tileWriteExecutor.hasError()) {
+            interruptAndShutdownExecutors(tileWriteExecutor);
+        }
+        closeWriters();
     }
 }
