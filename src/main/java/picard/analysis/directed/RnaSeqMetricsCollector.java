@@ -34,6 +34,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private final StrandSpecificity strandSpecificity;
     private final double rrnaFragmentPercentage;
     protected final Long ribosomalInitialValue;
+    private final int endBiasBases;
 
     final private Set<Integer> ignoredSequenceIndices;
 
@@ -44,7 +45,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
-                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics) {
+                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics, final int endBiasBases) {
         this.ribosomalInitialValue  = ribosomalBasesInitialValue;
         this.ignoredSequenceIndices = ignoredSequenceIndices;
         this.geneOverlapDetector    = geneOverlapDetector;
@@ -53,6 +54,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.strandSpecificity      = strandSpecificity;
         this.rrnaFragmentPercentage = rrnaFragmentPercentage;
         this.collectCoverageStatistics = collectCoverageStatistics;
+        this.endBiasBases        = endBiasBases;
         setup(accumulationLevels, samRgRecords);
     }
 
@@ -377,9 +379,8 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
                 // Calculate the 5' and 3' biases
                 {
-                    final int PRIME_BASES = 100;
-                    final double fivePrimeCoverage = MathUtil.mean(coverage, 0, PRIME_BASES);
-                    final double threePrimeCoverage = MathUtil.mean(coverage, coverage.length - PRIME_BASES, coverage.length);
+                    final double fivePrimeCoverage = MathUtil.mean(coverage, 0, endBiasBases);
+                    final double threePrimeCoverage = MathUtil.mean(coverage, coverage.length - endBiasBases, coverage.length);
 
                     fivePrimeSkews.increment(fivePrimeCoverage / mean);
                     threePrimeSkews.increment(threePrimeCoverage / mean);
@@ -451,7 +452,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 for (final Gene.Transcript tx : gene) {
                     final int[] cov = transcriptCoverage.get(tx);
 
-                    if (tx.length() < Math.max(minimumLength, 100)) continue;
+                    if (tx.length() < Math.max(minimumLength, endBiasBases)) continue;
 
                     final double mean = MathUtil.mean(MathUtil.promote(cov), 0, cov.length);
                     if (mean < 1d) continue;
