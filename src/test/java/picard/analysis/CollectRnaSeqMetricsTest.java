@@ -94,7 +94,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<>();
         output.read(new FileReader(metricsFile));
 
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
@@ -415,40 +415,48 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
         samWriter.close();
 
-        // Generate the metrics.
-        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
         metricsFile.deleteOnExit();
 
-        final String[] args = new String[] {
-                "INPUT=" +               samFile.getAbsolutePath(),
-                "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
-                "STRAND_SPECIFICITY=" +     "NONE",
-                "END_BIAS_BASES="
-        };
+        // Generate the metrics.
         RnaSeqMetrics metrics;
         MetricsFile<RnaSeqMetrics, Comparable<?>> output;
 
         // Case 1 - 25 nt in, ends should both be 0 coverage.
-        args[4] = "END_BIAS_BASES=" + test_sizes[0];
+        String[] args = new String[] {
+                "INPUT=" +               samFile.getAbsolutePath(),
+                "OUTPUT=" +              metricsFile.getAbsolutePath(),
+                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
+                "STRAND_SPECIFICITY=" +     "NONE",
+                "END_BIAS_BASES=" +     test_sizes[0]
+        };
+
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        output = new MetricsFile<>();
         output.read(new FileReader(metricsFile));
-
         metrics = output.getMetrics().get(0);
+
         Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, 0.0);
         Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, 0.0);
         Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, 0.0);
 
         // Case 2 - 50 nt in, 5' should be 0 coverage and 3' should be partially covered.
-        args[4] = "END_BIAS_BASES=" + test_sizes[1];
+        metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
+
+        args = new String[] {
+                "INPUT=" +               samFile.getAbsolutePath(),
+                "OUTPUT=" +              metricsFile.getAbsolutePath(),
+                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
+                "STRAND_SPECIFICITY=" +     "NONE",
+                "END_BIAS_BASES=" +     test_sizes[1]
+        };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        output = new MetricsFile<>();
         output.read(new FileReader(metricsFile));
-
         metrics = output.getMetrics().get(0);
 
         Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, 0.0);
@@ -456,14 +464,22 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, 0.0);
 
         // Case 3 - 100 nt in, 3' and 5' should both have coverage.
-        args[4] = "END_BIAS_BASES=" + test_sizes[2];
+        metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
 
+        args = new String[] {
+                "INPUT=" +               samFile.getAbsolutePath(),
+                "OUTPUT=" +              metricsFile.getAbsolutePath(),
+                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
+                "STRAND_SPECIFICITY=" +     "NONE",
+                "END_BIAS_BASES=" +     test_sizes[2]
+        };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
+        output = new MetricsFile<>();
         output.read(new FileReader(metricsFile));
-
         metrics = output.getMetrics().get(0);
+
         Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, 1.677852);
         Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, 2.449664);
         Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, 0.684932);
@@ -486,6 +502,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
         final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
         samFile.deleteOnExit();
+
         try (SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile)) {
             for (final SAMRecord rec : builder.getRecords()) {
                 samWriter.addAlignment(rec);
@@ -549,10 +566,6 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
 
     public File getSimpleFlatFile(String sequence) throws Exception {
         // Create a refFlat file of single exon. Used for summary metrics where end bias is evaluated.
-        final File refFlatFile = File.createTempFile("tmp.", ".refFlat");
-        refFlatFile.deleteOnExit();
-
-        final PrintStream refFlatStream = new PrintStream(refFlatFile);
         final String start_position = "0";
         final String end_position = "1000";
 
@@ -568,8 +581,11 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         refFlatFields[RefFlatColumns.EXON_COUNT.ordinal()] = "1";
         refFlatFields[RefFlatColumns.EXON_STARTS.ordinal()] = start_position;
         refFlatFields[RefFlatColumns.EXON_ENDS.ordinal()] = end_position;
-        refFlatStream.println(StringUtil.join("\t", refFlatFields));
 
+        final File refFlatFile = File.createTempFile("tmp.", ".refFlat");
+        refFlatFile.deleteOnExit();
+        final PrintStream refFlatStream = new PrintStream(refFlatFile);
+        refFlatStream.println(StringUtil.join("\t", refFlatFields));
         refFlatStream.close();
 
         return refFlatFile;
