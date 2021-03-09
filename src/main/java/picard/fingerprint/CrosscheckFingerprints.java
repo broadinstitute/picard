@@ -295,7 +295,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of the individual ids associated with two " +
             "samples, as opposed to the sample ids themselves.  Samples which are not listed in this file will have their sample id used as their individual id, for the " +
             "purposes of match expectations.  This means that one sample id could be used as the individual id for another sample, but not included in the map itself, and " +
-            "these two samples would be considered to have come from the same individual.", optional = true)
+            "these two samples would be considered to have come from the same individual.  Note that use of this parameter only affects labelling of matches and mismatches as " +
+            "EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.", optional = true)
     public File SAMPLE_INDIVIDUAL_MAP;
 
     @Argument(doc = "An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. ")
@@ -796,9 +797,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final long totalChecks = lhsFingerprintIdDetails.size() * ((long) rhsFingerprintIdDetails.size());
 
         if (SAMPLE_INDIVIDUAL_MAP != null) {
-            final List<FingerprintIdDetails> allFingerprintIdDeatils = new ArrayList<>(lhsFingerprintIdDetails);
-            allFingerprintIdDeatils.addAll(rhsFingerprintIdDetails);
-            final Set<String> inputSamples = allFingerprintIdDeatils.stream().map(id -> id.sample).collect(Collectors.toSet());
+            final List<FingerprintIdDetails> allFingerprintIdDetails = new ArrayList<>(lhsFingerprintIdDetails);
+            allFingerprintIdDetails.addAll(rhsFingerprintIdDetails);
+            final Set<String> inputSamples = allFingerprintIdDetails.stream().map(id -> id.sample).collect(Collectors.toSet());
 
             sampleIndividualMap = buildSampleIndividualsMap(SAMPLE_INDIVIDUAL_MAP, inputSamples);
         }
