@@ -32,7 +32,7 @@ public class ConvertHaplotypeDatabaseToVcf extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         final HaplotypeMap haplotypeMap = new HaplotypeMap(INPUT);
 
