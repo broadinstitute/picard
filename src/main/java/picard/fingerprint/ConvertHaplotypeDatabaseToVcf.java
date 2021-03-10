@@ -12,7 +12,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 @CommandLineProgramProperties(
-        summary = "Convert Haplotype database file to vcf",
+        summary = "Convert Haplotype database file to vcf" +
+                "<h3>Examples</h3>" +
+                "<pre>" +
+                "java -jar picard.jar ConvertHaplotypeDatabaseToVcf \\\n" +
+                "-I haplotype_database.txt \\\n" +
+                "-O haplotype_database.vcf.gz \\\n" +
+                "-R reference.fasta" +
+                "</pre>",
         oneLineSummary = "Convert Haplotype database file to vcf",
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
