@@ -27,9 +27,9 @@ public class ConvertHaplotypeDatabaseToVcfTest extends CommandLineProgramTest {
     public void testConvertHaplotypeDatabaseToVcf() throws IOException {
         final File outfile = getTempOutputFile("testConvertHaplotypeDatabase", ".vcf");
         final String[] args = new String[]{
-                "I=", TEST_MAP.getAbsolutePath(),
-                "R=", TEST_FASTA.getAbsolutePath(),
-                "O=", outfile.getAbsolutePath()
+                "I=" + TEST_MAP.getAbsolutePath(),
+                "R=" + TEST_FASTA.getAbsolutePath(),
+                "O=" + outfile.getAbsolutePath()
         };
 
         runPicardCommandLine(args);
