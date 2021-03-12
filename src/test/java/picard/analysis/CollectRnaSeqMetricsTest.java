@@ -382,8 +382,35 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.333333);
     }
 
-    @Test
-    public void testBiasEndBiasAdjust() throws Exception {
+    @DataProvider(name = "endBiasValues")
+    public static Object[][] endBiasValues() {
+        return new Object[][] {
+                // Case 1 - 25 nt in, ends should both be 0 coverage.
+                {
+                    25,
+                    0.0,
+                    0.0,
+                    0.0
+                },
+                // Case 2 - 50 nt in, 5' should be 0 coverage and 3' should be partially covered.
+                {
+                    50,
+                    1.543624,
+                    0.0,
+                    0.0
+                },
+                // Case 3 - 100 nt in, 3' and 5' should both have coverage.
+                {
+                    100,
+                    2.449664,
+                    1.677852,
+                    0.684932
+                }
+        };
+    }
+
+    @Test(dataProvider = "endBiasValues")
+    public void testBiasEndBiasAdjust(int end_bias_size, double expected_3prime, double expected_5prime, double expected_ratio) throws Exception {
         final String sequence = "chr1";
 
         // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
@@ -393,18 +420,15 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         builder.setRandomSeed(0);
         final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
 
-        // Add 30 reads per transcript. Adds a shift into the start and ends of reads so we can assess
-        // the dynamic characteristic of the bias windows.
-
         final int read_length = 150;
-        final Integer[] test_sizes = new Integer[] {
-                25, 50, 100
-        };
+        final int n_fragments = 30;
         final String read_cigar = read_length + "M";
-        final int five_prime_start = test_sizes[1]+1;
-        final int three_prime_start = 1000 - read_length - test_sizes[0];
+        final int five_prime_start = 51;
+        final int three_prime_start = 975 - read_length;
+        final String refFlatStart = "0";
+        final String refFlatEnd = "1000";
 
-        for (int j=0; j < 30; j++) {
+        for (int j=0; j < n_fragments; j++) {
             builder.addPair("transcript_pair_" + j, sequenceIndex, five_prime_start, three_prime_start, false, false, read_cigar, read_cigar, false, true, -1);
         }
 
@@ -415,64 +439,21 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
         samWriter.close();
 
-        File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
         metricsFile.deleteOnExit();
 
         // Generate the metrics.
-        RnaSeqMetrics metrics;
-        MetricsFile<RnaSeqMetrics, Comparable<?>> output;
+        final RnaSeqMetrics metrics;
+        final MetricsFile<RnaSeqMetrics, Comparable<?>> output;
 
-        // Case 1 - 25 nt in, ends should both be 0 coverage.
-        String[] args = new String[] {
+        final String refFlatFile = getRefFlatFile(sequence, refFlatStart, refFlatEnd, refFlatStart, refFlatEnd, "1", refFlatStart, refFlatEnd).getAbsolutePath();
+
+        final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
+                "REF_FLAT=" +            refFlatFile,
                 "STRAND_SPECIFICITY=" +     "NONE",
-                "END_BIAS_BASES=" +     test_sizes[0]
-        };
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-
-        output = new MetricsFile<>();
-        output.read(new FileReader(metricsFile));
-        metrics = output.getMetrics().get(0);
-
-        Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, 0.0);
-        Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, 0.0);
-        Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, 0.0);
-
-        // Case 2 - 50 nt in, 5' should be 0 coverage and 3' should be partially covered.
-        metricsFile = File.createTempFile("tmp.", ".rna_metrics");
-        metricsFile.deleteOnExit();
-
-        args = new String[] {
-                "INPUT=" +               samFile.getAbsolutePath(),
-                "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
-                "STRAND_SPECIFICITY=" +     "NONE",
-                "END_BIAS_BASES=" +     test_sizes[1]
-        };
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-
-        output = new MetricsFile<>();
-        output.read(new FileReader(metricsFile));
-        metrics = output.getMetrics().get(0);
-
-        Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, 0.0);
-        Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, 1.543624);
-        Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, 0.0);
-
-        // Case 3 - 100 nt in, 3' and 5' should both have coverage.
-        metricsFile = File.createTempFile("tmp.", ".rna_metrics");
-        metricsFile.deleteOnExit();
-
-        args = new String[] {
-                "INPUT=" +               samFile.getAbsolutePath(),
-                "OUTPUT=" +              metricsFile.getAbsolutePath(),
-                "REF_FLAT=" +            getSimpleFlatFile(sequence).getAbsolutePath(),
-                "STRAND_SPECIFICITY=" +     "NONE",
-                "END_BIAS_BASES=" +     test_sizes[2]
+                "END_BIAS_BASES=" +     end_bias_size
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -480,9 +461,9 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(metricsFile));
         metrics = output.getMetrics().get(0);
 
-        Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, 1.677852);
-        Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, 2.449664);
-        Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, 0.684932);
+        Assert.assertEquals(metrics.MEDIAN_5PRIME_BIAS, expected_5prime);
+        Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, expected_3prime);
+        Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, expected_ratio);
     }
 
     @Test
@@ -539,21 +520,21 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PCT_RIBOSOMAL_BASES, 0.4);
     }
 
-    public File getRefFlatFile(String sequence) throws Exception {
-        // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
-        // ribosomal interval.
+    public File getRefFlatFile(String sequence, String txStart, String txEnd, String cdsStart, String cdsEnd, String exonCount, String exonStarts, String exonEnds) throws Exception {
+        // Create a refFlat file containing a single gene with specified parameters.
+
         final String[] refFlatFields = new String[RefFlatColumns.values().length];
         refFlatFields[RefFlatColumns.GENE_NAME.ordinal()] = "myGene";
         refFlatFields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()] = "myTranscript";
         refFlatFields[RefFlatColumns.CHROMOSOME.ordinal()] = sequence;
         refFlatFields[RefFlatColumns.STRAND.ordinal()] = "+";
-        refFlatFields[RefFlatColumns.TX_START.ordinal()] = "49";
-        refFlatFields[RefFlatColumns.TX_END.ordinal()] = "500";
-        refFlatFields[RefFlatColumns.CDS_START.ordinal()] = "74";
-        refFlatFields[RefFlatColumns.CDS_END.ordinal()] = "400";
-        refFlatFields[RefFlatColumns.EXON_COUNT.ordinal()] = "2";
-        refFlatFields[RefFlatColumns.EXON_STARTS.ordinal()] = "49,249";
-        refFlatFields[RefFlatColumns.EXON_ENDS.ordinal()] = "200,500";
+        refFlatFields[RefFlatColumns.TX_START.ordinal()] = txStart;
+        refFlatFields[RefFlatColumns.TX_END.ordinal()] = txEnd;
+        refFlatFields[RefFlatColumns.CDS_START.ordinal()] = cdsStart;
+        refFlatFields[RefFlatColumns.CDS_END.ordinal()] = cdsEnd;
+        refFlatFields[RefFlatColumns.EXON_COUNT.ordinal()] = exonCount;
+        refFlatFields[RefFlatColumns.EXON_STARTS.ordinal()] = exonStarts;
+        refFlatFields[RefFlatColumns.EXON_ENDS.ordinal()] = exonEnds;
 
         final File refFlatFile = File.createTempFile("tmp.", ".refFlat");
         refFlatFile.deleteOnExit();
@@ -564,30 +545,11 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         return refFlatFile;
     }
 
-    public File getSimpleFlatFile(String sequence) throws Exception {
-        // Create a refFlat file of single exon. Used for summary metrics where end bias is evaluated.
-        final String start_position = "0";
-        final String end_position = "1000";
+    public File getRefFlatFile(String sequence) throws Exception {
+        // Default refFlat file with a single gene containing two exons, one of which is overlapped by the
+        // ribosomal interval.
 
-        String[] refFlatFields = new String[RefFlatColumns.values().length];
-        refFlatFields[RefFlatColumns.GENE_NAME.ordinal()] = "myGene";
-        refFlatFields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()] = "myTranscript";
-        refFlatFields[RefFlatColumns.CHROMOSOME.ordinal()] = sequence;
-        refFlatFields[RefFlatColumns.STRAND.ordinal()] = "+";
-        refFlatFields[RefFlatColumns.TX_START.ordinal()] = start_position;
-        refFlatFields[RefFlatColumns.TX_END.ordinal()] = end_position;
-        refFlatFields[RefFlatColumns.CDS_START.ordinal()] = start_position;
-        refFlatFields[RefFlatColumns.CDS_END.ordinal()] = end_position;
-        refFlatFields[RefFlatColumns.EXON_COUNT.ordinal()] = "1";
-        refFlatFields[RefFlatColumns.EXON_STARTS.ordinal()] = start_position;
-        refFlatFields[RefFlatColumns.EXON_ENDS.ordinal()] = end_position;
-
-        final File refFlatFile = File.createTempFile("tmp.", ".refFlat");
-        refFlatFile.deleteOnExit();
-        final PrintStream refFlatStream = new PrintStream(refFlatFile);
-        refFlatStream.println(StringUtil.join("\t", refFlatFields));
-        refFlatStream.close();
-
-        return refFlatFile;
+        return getRefFlatFile(sequence, "49", "500", "74", "400", "2", "49,249", "200,500");
     }
+
 }
