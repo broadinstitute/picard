@@ -413,7 +413,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     public void testBiasEndBiasAdjust(int end_bias_size, double expected_3prime, double expected_5prime, double expected_ratio) throws Exception {
         final String sequence = "chr1";
 
-        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+        // Create alignments that are shifted by a fixed distance from the 3' and 5' end of a trnscript.
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
 
         // Set seed so that strandedness is consistent among runs.
@@ -423,10 +423,13 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         final int read_length = 150;
         final int n_fragments = 30;
         final String read_cigar = read_length + "M";
-        final int five_prime_start = 51;
-        final int three_prime_start = 975 - read_length;
-        final String refFlatStart = "0";
-        final String refFlatEnd = "1000";
+
+        final int txStart = 0;
+        final int txEnd = 1000;
+        final int five_prime_start = txStart + 51;
+        final int three_prime_start = txEnd - 25 - read_length;
+        final String refFlatStart = Integer.toString(txStart);
+        final String refFlatEnd = Integer.toString(txEnd);
 
         for (int j=0; j < n_fragments; j++) {
             builder.addPair("transcript_pair_" + j, sequenceIndex, five_prime_start, three_prime_start, false, false, read_cigar, read_cigar, false, true, -1);
@@ -551,5 +554,4 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
 
         return getRefFlatFile(sequence, "49", "500", "74", "400", "2", "49,249", "200,500");
     }
-
 }
