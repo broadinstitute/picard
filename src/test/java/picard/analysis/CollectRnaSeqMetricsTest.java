@@ -413,7 +413,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     public void testBiasEndBiasAdjust(int end_bias_size, double expected_3prime, double expected_5prime, double expected_ratio) throws Exception {
         final String sequence = "chr1";
 
-        // Create alignments that are shifted by a fixed distance from the 3' and 5' end of a trnscript.
+        // Create alignments that are shifted by a fixed distance from the 3' and 5' end of a transcript.
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
 
         // Set seed so that strandedness is consistent among runs.
