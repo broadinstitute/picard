@@ -40,6 +40,7 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -50,10 +51,12 @@ import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
+import picard.PicardException;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PathProvider;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -62,7 +65,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -236,7 +238,10 @@ public abstract class CommandLineProgram {
           System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
         }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
+
+        // Set the compression level everywhere we can think of
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
+        IOUtil.setCompressionLevel(COMPRESSION_LEVEL);
 
         if (VALIDATION_STRINGENCY != ValidationStringency.STRICT) VariantContextWriterBuilder.setDefaultOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
 
@@ -347,7 +352,7 @@ public abstract class CommandLineProgram {
             ret = commandLineParser.parseArguments(System.err, argv);
         } catch (CommandLineException e) {
             // Barclay command line parser throws on parsing/argument errors
-            System.err.println(commandLineParser.usage(false,false));
+            System.err.println(commandLineParser.usage(true,false));
             System.err.println(e.getMessage());
             ret = false;
         }
@@ -360,7 +365,7 @@ public abstract class CommandLineProgram {
 
         final String[] customErrorMessages = customCommandLineValidation();
         if (customErrorMessages != null) {
-            System.err.print(commandLineParser.usage(false, false));
+            System.err.print(commandLineParser.usage(true, false));
             for (final String msg : customErrorMessages) {
                 System.err.println(msg);
             }
@@ -496,5 +501,21 @@ public abstract class CommandLineProgram {
      */
     public static String getFaqLink() {
         return "To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp";
+    }
+
+    /**
+     * Check if R is installed
+     * @param has_chart_output
+     * @return true if R is installed
+     */
+    public static boolean checkRInstallation(final boolean has_chart_output) {
+        if (has_chart_output) {
+            try {
+                RExecutor.executeFromClasspath("picard/analysis/checkRInstallation.R");
+            } catch (htsjdk.samtools.SAMException e) {
+                return false;
+            }
+        }
+        return true;
     }
 }

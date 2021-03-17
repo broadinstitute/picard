@@ -1,0 +1,4 @@
+@HD	VN:1.6	SO:coordinate
+@SQ	SN:1	LN:249250621	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:1b22b98cdeb4a9304cb5d48026a85128	SP:Homo Sapiens
+1	30000	30003	+	target_1_abutting_combined
+1	30005	30008	+	target_3_overlapping_combined

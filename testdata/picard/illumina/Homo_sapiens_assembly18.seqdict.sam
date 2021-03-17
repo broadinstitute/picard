@@ -1,4 +1,4 @@
-@HD	VN:1.0	SO:unsorted
+@HD	VN:1.6	SO:unsorted
 @SQ	SN:chrM	LN:16571	UR:file:/Users/alecw/tmp/Homo_sapiens_assembly18.fasta	AS:HG18	M5:d2ed829b8a1628d16cbeee88e88e39eb	SP:homo sapiens
 @SQ	SN:chr1	LN:247249719	UR:file:/Users/alecw/tmp/Homo_sapiens_assembly18.fasta	AS:HG18	M5:9ebc6df9496613f373e73396d5b3b6b6	SP:homo sapiens
 @SQ	SN:chr2	LN:242951149	UR:file:/Users/alecw/tmp/Homo_sapiens_assembly18.fasta	AS:HG18	M5:b12c7373e3882120332983be99aeb18d	SP:homo sapiens

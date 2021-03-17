@@ -1,9 +1,11 @@
 package picard.illumina.parser;
 
 import htsjdk.samtools.util.IOUtil;
+import picard.illumina.parser.fakers.BclIndexFaker;
 import picard.illumina.parser.fakers.MultiTileBclFileFaker;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,7 @@ public class MultiTileBclFileUtil extends ParameterizedFileUtil {
                     final String fileName = file.getName();
                     final String cycleNum = fileName.substring(0, fileName.indexOf('.'));
                     final IlluminaFileMap fileMap = new IlluminaFileMap();
-                    for(final Integer tile : tileIndex.getTiles()) {
+                    for (final Integer tile : tileIndex.getTiles()) {
                         fileMap.put(tile, file);
                     }
                     cycleFileMap.put(Integer.valueOf(cycleNum), fileMap);
@@ -62,7 +64,7 @@ public class MultiTileBclFileUtil extends ParameterizedFileUtil {
         // Create the map.
         final CycleIlluminaFileMap cycledMap = new CycleIlluminaFileMap();
         if (goodCycles.length > 0) {
-            for(final int cycle : goodCycles) {
+            for (final int cycle : goodCycles) {
                 final IlluminaFileMap fileMap = cycleFileMap.get(cycle).keep(tiles);
                 cycledMap.put(cycle, fileMap);
             }
@@ -106,6 +108,15 @@ public class MultiTileBclFileUtil extends ParameterizedFileUtil {
         final List<String> ret = tileIndex.verify(expectedTiles);
         for (final int expectedCycle : expectedCycles) {
             if (!cycleFileMap.containsKey(expectedCycle)) {
+                //we need to fake a bci file for the tile index
+                final BclIndexFaker bciFileFaker = new BclIndexFaker();
+                final MultiTileBclFileFaker bclFileFaker = new MultiTileBclFileFaker();
+                try {
+                    bciFileFaker.fakeBciFile(new File(basecallLaneDir, String.format("%04d", expectedCycle) + ".bcl.bgzf.bci"), tileIndex);
+                    bclFileFaker.fakeMultiTileBclFile(new File(basecallLaneDir, String.format("%04d", expectedCycle) + ".bcl.bgzf"), tileIndex);
+                } catch (final IOException e) {
+                    return Collections.singletonList("Could not create tile index file: " + bci.getAbsolutePath());
+                }
                 ret.add(expectedCycle + ".bcl.bgzf not found in " + base);
             }
         }

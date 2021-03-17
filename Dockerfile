@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM adoptopenjdk:8
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
 ARG build_command=shadowJar
