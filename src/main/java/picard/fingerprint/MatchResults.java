@@ -45,7 +45,7 @@ public class MatchResults implements Comparable<MatchResults> {
     private final double LOD;
     //the lod score when assuming the left sample is tumor and the right is normal
     private final double lodTN;
-    //the lod score when assuming the left sample is tumor and the right is normal
+    //the lod score when assuming the left sample is normal and the right is tumor
     private final double lodNT;
 
     public double getLodNT() {

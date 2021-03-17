@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM adoptopenjdk:8
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
 ARG build_command=shadowJar
@@ -6,7 +6,7 @@ ARG jar_name=picard.jar
 
 # Install ant, git for building
 RUN apt-get update && \
-    apt-get --no-install-recommends install -y --force-yes \
+    apt-get --no-install-recommends install -y \
         git \
         r-base \
         ant && \

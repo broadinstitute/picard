@@ -23,11 +23,19 @@
  */
 package picard.util;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.IntervalCodec;
+import htsjdk.samtools.util.IntervalCoordinateComparator;
 import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.IntervalList.IntervalListCodec;
+import htsjdk.tribble.readers.LineIterator;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -69,24 +77,43 @@ public class IntervalListToBed extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        IntervalList intervals = IntervalList.fromFile(INPUT);
-        if (SORT) intervals = intervals.sorted();
+        try (final AbstractFeatureReader<Interval, LineIterator> intervalsReader = AbstractFeatureReader.getFeatureReader(INPUT.getPath(), new IntervalListCodec(), false);
+             CloseableIterator<Interval> intervalsToUse = getSortedIntervals(intervalsReader);
+             final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT)) {
+            intervalsToUse.stream().forEach(i -> generateOutput(i, out));
+            return 0;
+        } catch (Exception e) {
+            throw new RuntimeIOException(e);
+        }
+    }
 
-        try {
-            final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
-            for (final Interval i : intervals) {
-                final String strand = i.isNegativeStrand() ? "-" : "+";
-                final List<?> fields = CollectionUtil.makeList(i.getContig(), i.getStart()-1, i.getEnd(), i.getName(), SCORE, strand);
-                out.append(fields.stream().map(String::valueOf).collect(Collectors.joining("\t")));
-                out.newLine();
+    private CloseableIterator<Interval> getSortedIntervals(AbstractFeatureReader<Interval, LineIterator> intervalsReader)  throws IOException {
+        if (SORT) {
+            final SAMFileHeader header = (SAMFileHeader) intervalsReader.getHeader();
+            final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+            final IntervalCoordinateComparator comparator = new IntervalCoordinateComparator(header);
+            SortingCollection<Interval> sortedIntervals =
+                    SortingCollection.newInstance(Interval.class,
+                            new IntervalCodec(sequenceDictionary),
+                            comparator, 500000, TMP_DIR.stream().map(File::toPath).toArray(java.nio.file.Path[]::new));
+
+            for (final Interval i: intervalsReader.iterator()) {
+                sortedIntervals.add(i);
             }
-
-            out.close();
+            return sortedIntervals.iterator();
+        } else {
+            return intervalsReader.iterator();
         }
-        catch (IOException ioe) {
-            throw new RuntimeIOException(ioe);
-        }
+    }
 
-        return 0;
+    private void generateOutput(Interval interval, BufferedWriter outputWriter) {
+        try {
+            final String strand = interval.isNegativeStrand() ? "-" : "+";
+            final List<?> fields = CollectionUtil.makeList(interval.getContig(), interval.getStart() - 1, interval.getEnd(), interval.getName(), SCORE, strand);
+            outputWriter.append(fields.stream().map(String::valueOf).collect(Collectors.joining("\t")));
+            outputWriter.newLine();
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
     }
 }

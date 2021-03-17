@@ -47,6 +47,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                     "      OUTPUT=outputBaseName" +
                     "</pre>";
 
+
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")
     public File INPUT;
 
@@ -361,6 +362,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
         public Boolean IS_ZCALLED;
 
         /**
+         * The call rate as determined by Autocall/IAAP (and stored in the GTC File)
+         */
+        @MergeByAssertEquals
+        public Double GTC_CALL_RATE;
+
+        /**
          * The sex, as determined by Autocall
          */
         @MergeByAssertEquals
@@ -437,6 +444,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
          */
         @MergeByAssertEquals
         public String SCANNER_NAME;
+
+        /**
+         * The version of the pipeline used for this sample
+         */
+        @MergeByAssertEquals
+        public String PIPELINE_VERSION;
 
         /**
          * Hidden fields not propagated to the metrics file.

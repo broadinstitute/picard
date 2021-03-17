@@ -45,6 +45,7 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -190,18 +191,25 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
 
         // get an iterator to reads that overlap the heterozygous sites
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault()
+                .referenceSequence(REFERENCE_SEQUENCE)
+                .open(INPUT);
 
         if (!in.hasIndex()) {
             throw new PicardException("INPUT file must have an index.");
         }
 
         IOUtil.assertFileIsWritable(OUTPUT);
-        if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+        if (MATRIX_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+        }
 
         final VCFFileReader vcf = new VCFFileReader(VCF, false);
-
         final VCFHeader vcfFileHeader = vcf.getFileHeader();
+
+
+        SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(), vcfFileHeader.getSequenceDictionary());
+
         final List<String> samples = vcfFileHeader.getSampleNamesInOrder();
 
         if (SAMPLE == null) {
@@ -229,8 +237,6 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final Iterator<QueryInterval> queryIntervalIterator = intervalAlleleMap.keySet().iterator();
 
         log.info("Found " + intervalAlleleMap.size() + " heterozygous sites in VCF.");
-
-
         log.info("Querying BAM for sites.");
 
         final SAMRecordIterator samRecordIterator = in.query(QueryInterval.optimizeIntervals(intervalAlleleMap.keySet().toArray(new QueryInterval[0])), false);
@@ -240,7 +246,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 new MappingQualityFilter(MINIMUM_MQ)
         );
 
-        if (FILTER_UNPAIRED_READS){
+        if (FILTER_UNPAIRED_READS) {
             samFilters.add(new CountingPairedFilter());
         }
 
@@ -314,13 +320,17 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             newLocus = true;
 
             // shouldn't happen, but being safe.
-            if (queryInterval == null) break;
+            if (queryInterval == null) {
+                break;
+            }
 
             final int setSize = set.size();
 
             locusData.nTotalReads += setSize;
 
-            if (setSize > 1) locusData.nDuplicateSets++;
+            if (setSize > 1) {
+                locusData.nDuplicateSets++;
+            }
             if (setSize == DOUBLETON_SIZE) {
                 locusData.nExactlyDouble++;
             } else if (setSize == TRIPLETON_SIZE) {
@@ -371,7 +381,9 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             locusData.nAlternateReads += nAlt;
             locusData.nReferenceReads += nRef;
 
-            if ( setSize == 1 || setSize > TRIPLETON_SIZE) continue;
+            if ( setSize == 1 || setSize > TRIPLETON_SIZE) {
+                continue;
+            }
             // From here on there should only be 2 or 3 reads in the set
 
             final SetClassification classification = classifySet(nRef, nAlt, nOther);
@@ -389,7 +401,11 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
                 log.debug("using barcodes?" + useBarcodes);
 
-                if(useBarcodes) locusData.nGoodBarcodes++; else locusData.nBadBarcodes++;
+                if (useBarcodes) {
+                    locusData.nGoodBarcodes++;
+                } else {
+                    locusData.nBadBarcodes++;
+                }
 
                 final List<String> barcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_TAG))
@@ -467,7 +483,9 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                         throw new IllegalStateException("Un possible!");
                 }
             }
-            if (STOP_AFTER > 0 && progress.getCount() > STOP_AFTER) break;
+            if (STOP_AFTER > 0 && progress.getCount() > STOP_AFTER) {
+                break;
+            }
         }
         if (useLocus && newLocus) {
             metric.merge(locusData);

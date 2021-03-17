@@ -258,8 +258,10 @@ public class MergeBamAlignment extends CommandLineProgram {
     public PrimaryAlignmentStrategy PRIMARY_ALIGNMENT_STRATEGY = PrimaryAlignmentStrategy.BestMapq;
 
     @Argument(doc = "For paired reads, clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  " +
-            "Clipping will be either soft or hard clipping, depending on CLIP_OVERLAPPING_READS_OPERATOR setting. " +
-            "Hard clipped bases and their qualities will be stored in the XB and XQ tags respectively.")
+            "Reads are first soft clipped so that the 3' aligned end of each read does not extend past the 5' aligned end of its mate.  " +
+            "If HARD_CLIP_OVERLAPPING_READS is also true, then reads are additionally hard clipped so that the 3' unclipped end of each read " +
+            "does not extend past the 5' unclipped end of its mate.  Hard clipped bases and their qualities are stored in the XB and XQ " +
+            "tags, respectively.")
     public boolean CLIP_OVERLAPPING_READS = true;
 
     @Argument(doc = "If true, hard clipping will be applied to overlapping reads.  By default, soft clipping is used.")
@@ -279,7 +281,7 @@ public class MergeBamAlignment extends CommandLineProgram {
     public int MIN_UNCLIPPED_BASES = 32;
 
     @Argument(doc = "List of Sequence Records tags that must be equal (if present) in the reference dictionary and in the aligned file. Mismatching tags will cause an error if in this list, and a warning otherwise.")
-    public List<String> MATCHING_DICTIONARY_TAGS = SAMSequenceDictionary.DEFAULT_DICTIONARY_EQUAL_TAG;
+    public List<String> MATCHING_DICTIONARY_TAGS = new ArrayList<>(SAMSequenceDictionary.DEFAULT_DICTIONARY_EQUAL_TAG);
 
     @Argument(doc = "How to deal with alignment information in reads that are being unmapped (e.g. due to cross-species contamination.) " +
             "Currently ignored unless UNMAP_CONTAMINANT_READS = true. Note that the DO_NOT_CHANGE strategy will actually reset the cigar and set the mapping quality on unmapped reads since otherwise" +

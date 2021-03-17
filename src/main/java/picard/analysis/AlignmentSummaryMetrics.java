@@ -32,7 +32,7 @@ import picard.metrics.MultilevelMetrics;
  * the extension ".alignment_summary_metrics".
  */
 public class AlignmentSummaryMetrics extends MultilevelMetrics {
-    public enum Category { UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR }
+    public enum Category {UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR}
 
     /**
      * One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
@@ -48,10 +48,14 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      */
     public long TOTAL_READS;
 
-    /** The number of PF reads where PF is defined as passing Illumina's filter. */
+    /**
+     * The number of PF reads where PF is defined as passing Illumina's filter.
+     */
     public long PF_READS;
 
-    /** The fraction of reads that are PF (PF_READS / TOTAL_READS) */
+    /**
+     * The fraction of reads that are PF (PF_READS / TOTAL_READS)
+     */
     public double PCT_PF_READS;
 
     /**
@@ -71,7 +75,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      * The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS
      */
     public double PCT_PF_READS_ALIGNED;
-    
+
     /**
      * The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.
      */
@@ -170,4 +174,22 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      */
     public double PCT_ADAPTER;
 
+    /**
+     * the fraction of PF bases that are on (primary) aligned reads and are soft-clipped, as a fraction of the
+     * PF_ALIGNED_BASES (even though these are not aligned!)
+     */
+    public double PCT_SOFTCLIP;
+
+    /**
+     * The fraction of PF bases that are (on primary, aligned reads and) hard-clipped, as a fraction of the
+     * PF_ALIGNED_BASES (even though these are not aligned!)
+     */
+    public double PCT_HARDCLIP;
+
+    /**
+     * The average length of the soft-clipped bases at the 3' end of reads. This could be used as an estimate for
+     * the amount by which the insert-size must be increased in order to obtain a significant reduction in bases
+     * lost due to reading off the end of the insert.
+     */
+    public double AVG_POS_3PRIME_SOFTCLIP_LENGTH;
 }

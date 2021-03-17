@@ -765,36 +765,102 @@ public abstract class AbstractAlignmentMerger {
 
     /**
      * Checks to see whether the ends of the reads overlap and clips reads
-     * if necessary.
+     * if necessary.  For inward facing read pairs, this method will soft clip the 5'
+     * end of each read so that the 5' aligned end of each read does not extend past
+     * the 3' aligned end of its mate.  If useHardClipping is true, this method will
+     * additionally hard clip the 5' end of each read if necessary so that the 5' end of
+     * each read (including soft clipped bases) does not extend past the 3' end of its
+     * mate (including soft clipped bases).  Some examples are illustrative:
+     *
+     *              <-MMMMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMMMM->
+     * will be soft-clipped to
+     *              <-SSSMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMSSS->
+     * and with useHardClip true, this would then be hard-clipped to
+     *              <-HHHMMMMMMMMMMMMMM
+     *                   MMMMMMMMMMMMMMHHH->
+     *
+     * A more complicated example
+     *              <-MMMMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMMMMMM->
+     * will be soft-clipped to
+     *              <-SSSMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMSSSSS->
+     * and with useHardClip true, this would then be hard-clipped to
+     *              <-HHHMMMMMMMMMMMMSS
+     *                   MMMMMMMMMMMMSSHHH->
+     *
+     * Note that the soft-clipping is done such that the clipped starts and ends
+     * of each read are the same, and hard-clipping is done such that the unclipped
+     * starts and ends of each read are the same.
      */
     protected static void clipForOverlappingReads(final SAMRecord read1, final SAMRecord read2, final boolean useHardClipping) {
-        // If both reads are mapped, see if we need to clip the ends due to small insert size
-        if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
-            if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
-                final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
-                final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
+        // Only clip if both reads are mapped, on opposite strands, overlapping
+        if (!read1.getReadUnmappedFlag() && !read2.getReadUnmappedFlag() &&
+                read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag() &&
+                read1.overlaps(read2)) {
+            final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
+            final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
 
-                // Innies only -- do we need to do anything else about jumping libraries?
-                if (pos.getAlignmentStart() < neg.getAlignmentEnd()) {
-                    final int posClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(pos, neg.getUnclippedEnd() + 1);
-                    int negClipFrom = getReadPositionAtReferencePositionIgnoreSoftClips(neg, pos.getUnclippedStart() - 1);
-                    negClipFrom = negClipFrom > 0 ? (neg.getReadLength() + 1) - negClipFrom : 0;
+            // first we softclip the 3' end of each read so that its 3' aligned end does not extends past the 5' aligned start of it's mate
+            clip3primeEndsTo5primeEnds(pos, neg, false, false);
 
-                    if(posClipFrom > 0) {
-                        clip3PrimeEndOfRead(pos, posClipFrom, useHardClipping);
-                    }
-                    if(negClipFrom > 0) {
-                        clip3PrimeEndOfRead(neg, negClipFrom, useHardClipping);
-                    }
-                }
+            if (useHardClipping) {
+                // if we want to hardclip, we additionally hardclip the 3' end of each read so that its 3' unclipped end does not extend past the 5' unclipped start of its mate
+                clip3primeEndsTo5primeEnds(pos, neg, true, true);
             }
         }
     }
 
+    private static void clip3primeEndsTo5primeEnds(final SAMRecord pos, final SAMRecord neg, final boolean hardClipReads, final boolean useUnclippedEnds) {
+        final int negEnd = useUnclippedEnds? neg.getUnclippedEnd() : neg.getEnd();
+        final int posStart = useUnclippedEnds? pos.getUnclippedStart() : pos.getStart();
+        /*
+          For the positive strand, we ask for the position of the 3' most base which will not be clipped, and then increment to find the 5' most base to clip.
+          We do this because getReadPositionAtReferencePositionIgnoreSoftClips will return the base before a deletion, so will return the 3' most base before
+          the queried base when the queried base is in a deletion on a positive strand read
+
+            3' <SSSSSSSSMMMMMMMMMMMM 5'
+                     5' MMMMMMMMMMMMSSSSSSSS> 3'
+                                   ||
+                                   ||---> 5' most base to clip
+                                   |
+                                   |---> 3' most base not to clip
+         */
+
+        final int pos3PrimeMostUnclipped = getReadPositionAtReferencePositionIgnoreSoftClips(pos, negEnd);
+        if (pos3PrimeMostUnclipped > 0 && pos3PrimeMostUnclipped < pos.getReadLength()) {
+            final int pos5PrimeMostClipped = pos3PrimeMostUnclipped + 1;
+            clip3PrimeEndOfRead(pos, pos5PrimeMostClipped, hardClipReads);
+        }
+
+        /*
+        For the negative strand, we ask for the position of the 5' most base to clip.  getReadPositionAtReferencePositionIgnoreSoftClips will return the 5' most base before
+         the queried base when the queried base is in a deletion on a negative strand read.
+         */
+
+        // this is the position counting from the aligned start of the read
+        final int neg5PrimeMostBaseToClipPositionFromStart = getReadPositionAtReferencePositionIgnoreSoftClips(neg, posStart - 1);
+
+        // this is the position counting from the 5' end of the read
+        final int negFirstBaseFrom5PrimeEndToClip = neg5PrimeMostBaseToClipPositionFromStart > 0 ? (neg.getReadLength() + 1) - neg5PrimeMostBaseToClipPositionFromStart : 0;
+
+        if (negFirstBaseFrom5PrimeEndToClip > 0) {
+            clip3PrimeEndOfRead(neg, negFirstBaseFrom5PrimeEndToClip, hardClipReads);
+        }
+    }
+
+    /**
+     * Gets the 1-based read position that corresponds to a particular position on the reference.  If the position on the reference
+     * falls in a deletion in the alignment of the read, the position before the deletion will be returned.  Returns 0 if the position on
+     * the reference does not overlap the read.  In this method, soft-clips are considered to be aligned as matches to the reference.
+     * @param rec
+     * @param pos
+     * @return
+     */
     static int getReadPositionAtReferencePositionIgnoreSoftClips(final SAMRecord rec, final int pos) {
-        final int readPosition;
         final Cigar oldCigar = rec.getCigar();
-        final int oldStart = rec.getAlignmentStart();
         final Cigar newCigar = new Cigar();
         final List<CigarElement> cigarElements = new ArrayList<>(oldCigar.getCigarElements());
         int posShift = 0;
@@ -820,11 +886,13 @@ public abstract class AbstractAlignmentMerger {
         // Temporarily use the newCigar that has SOFT_CLIPs replaced with MATCH_OR_MISMATCH to get read position at reference, but ignore existence of soft-clips
         rec.setCigar(newCigar);
         // Since the read effectively got shifted forward by turning the clips into matches, the query position needs
-        // also to be moved forward bye posShift so that it's still querying the same base.
-        readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, false);
+        // also to be moved forward by posShift so that it's still querying the same base.
+        final int readPosition = SAMRecord.getReadPositionAtReferencePosition(rec, pos + posShift, true);
+
         rec.setCigar(oldCigar);
 
         return readPosition;
+
     }
 
     private static void clip3PrimeEndOfRead(final SAMRecord rec, final int clipFrom, final boolean useHardClipping) {

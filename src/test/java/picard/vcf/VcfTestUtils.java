@@ -25,7 +25,20 @@ public class VcfTestUtils {
      * @throws IOException - if a file could not be created.
      */
     public static File createTemporaryIndexedFile(final String prefix, final String suffix) throws IOException {
-        final File out = File.createTempFile(prefix, suffix);
+        return createTemporaryIndexedFile(prefix, suffix, null);
+    }
+
+    /**
+     * This method creates a temporary VCF or Bam file and its appropriately named index file, and will delete them on exit.
+     *
+     * @param prefix          - The prefix string to be used in generating the file's name; must be at least three characters long
+     * @param suffix          - The suffix string to be used in generating the file's name; may be null, in which case the suffix ".tmp" will be used
+     * @param parentDirectory - The parent directory where file will be created
+     * @return A File object referencing the newly created temporary file
+     * @throws IOException - if a file could not be created.
+     */
+    public static File createTemporaryIndexedFile(final String prefix, final String suffix, final File parentDirectory) throws IOException {
+        final File out = File.createTempFile(prefix, suffix, parentDirectory);
         out.deleteOnExit();
         String indexFileExtension = null;
         if (suffix.endsWith("vcf.gz")) {

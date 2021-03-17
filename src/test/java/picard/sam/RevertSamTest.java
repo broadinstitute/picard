@@ -331,7 +331,7 @@ public class RevertSamTest extends CommandLineProgramTest {
             Assert.assertEquals(returnCode, 1);
         } catch (CommandLineException e) {
             // Barclay parser throws on mutex violation
-            Assert.assertFalse(CommandLineProgram.useLegacyParser(getClass()));
+            Assert.assertFalse(CommandLineProgram.useLegacyParser());
         }
     }
 
@@ -346,7 +346,7 @@ public class RevertSamTest extends CommandLineProgramTest {
             Assert.assertEquals(returnCode, 1);
         } catch (CommandLineException e) {
             // Barclay parser throws on command line errors
-            Assert.assertFalse(CommandLineProgram.useLegacyParser(getClass()));
+            Assert.assertFalse(CommandLineProgram.useLegacyParser());
         }
     }
 

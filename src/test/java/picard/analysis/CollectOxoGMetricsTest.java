@@ -12,7 +12,7 @@ import java.util.HashSet;
 
 public class CollectOxoGMetricsTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
-    private static final File SAM_FILE = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+    private static final File SAM_FILE = new File(CollectAlignmentSummaryMetricsTest.TEST_DATA_DIR, "summary_alignment_stats_test.sam");
     private static final File REFERENCE_SEQUENCE = new File(TEST_DATA_DIR, "merger.fasta");
 
     @Test

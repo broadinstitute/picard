@@ -233,7 +233,7 @@ public class ValidateSamFile extends CommandLineProgram {
                     .enable(SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS);
             final SamReader samReader = factory.open(INPUT);
 
-            if (samReader.type() != SamReader.Type.BAM_TYPE) VALIDATE_INDEX = false;
+            if (samReader.type() != SamReader.Type.BAM_TYPE && samReader.type() != SamReader.Type.BAM_CSI_TYPE) VALIDATE_INDEX = false;
 
             factory.setOption(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES, VALIDATE_INDEX);
             factory.reapplyOptions(samReader);

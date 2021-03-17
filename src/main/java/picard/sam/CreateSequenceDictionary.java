@@ -220,6 +220,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             throw new PicardException(OUTPUT.getAbsolutePath() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         // map for aliases mapping a contig to its aliases
         final Map<String, Set<String>> aliasesByContig = loadContigAliasesMap();
@@ -242,15 +243,12 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 if (++sequencesWritten >= NUM_SEQUENCES) {
                     break;
                 }
-
             }
-        } catch (FileNotFoundException e) {
-            throw new PicardException("File " + OUTPUT.getAbsolutePath() + " not found");
         } catch (IOException e) {
-            throw new PicardException("Can't write to or close output file " + OUTPUT.getAbsolutePath());
+            throw new PicardException("Can't write to or close output file " + OUTPUT.getAbsolutePath(), e);
         } catch (IllegalArgumentException e) {
             // in case of an unexpected error delete the file so that there isn't a
-            // truncated result which might be valid and wrong.
+            // truncated result which might be valid yet wrong.
             OUTPUT.delete();
             throw new PicardException("Unknown problem. Partial dictionary file was deleted.", e);
         }
@@ -270,30 +268,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         );
     }
 
-    /**
-<<<<<<< HEAD
-     * Create one SAMSequenceRecord from a single fasta sequence
-     */
-    private SAMSequenceRecord makeSequenceRecord(final ReferenceSequence refSeq) {
-        final SAMSequenceRecord ret = new SAMSequenceRecord(refSeq.getName(), refSeq.length());
-
-        // Compute MD5 of upcased bases
-        final byte[] bases = refSeq.getBases();
-        for (int i = 0; i < bases.length; ++i) {
-                bases[i] = StringUtil.toUpperCase(bases[i]);
-        }
-
-        ret.setAttribute(SAMSequenceRecord.MD5_TAG, SequenceUtil.calculateMD5String(bases));
-
-        if (GENOME_ASSEMBLY != null) {
-            ret.setAttribute(SAMSequenceRecord.ASSEMBLY_TAG, GENOME_ASSEMBLY);
-        }
-        ret.setAttribute(SAMSequenceRecord.URI_TAG, URI);
-        if (SPECIES != null) {
-                ret.setAttribute(SAMSequenceRecord.SPECIES_TAG, SPECIES);
-            }
-        return ret;
-    }
 
     /**
      * Load the file ALT_NAMES containing the alternative contig names

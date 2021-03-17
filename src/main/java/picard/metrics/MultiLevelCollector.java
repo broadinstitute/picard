@@ -127,7 +127,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, Histog
         protected abstract PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeUnknownCollector();
 
         public Distributor(final List<SAMReadGroupRecord> rgRecs) {
-            collectors = new LinkedHashMap<String, PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE>>();
+            collectors = new LinkedHashMap<>();
             for(final SAMReadGroupRecord rg : rgRecs) {
                 final String key = getKey(rg);
                 if(!collectors.containsKey(key)) {
@@ -179,7 +179,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, Histog
     private class AllReadsDistributor extends Distributor {
 
         public AllReadsDistributor(final List<SAMReadGroupRecord> rgRecs) {
-            super(new ArrayList<SAMReadGroupRecord>());
+            super(new ArrayList<>());
             makeCollector(null);
         }
 
@@ -214,7 +214,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, Histog
         }
     }
 
-    //Discriminates between records based on sample name, and calls acceptRecord on the appropriate PerUnitMetricCollectors
+    // Discriminates between records based on sample name, and calls acceptRecord on the appropriate PerUnitMetricCollectors
     private class SampleDistributor extends Distributor {
         public SampleDistributor(final List<SAMReadGroupRecord> rgRecs) {
             super(rgRecs);
@@ -287,19 +287,19 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, Histog
      *                     readGroups found in the records depending on the accumulationLevels provided
      */
     protected void setup(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords) {
-        outputOrderedDistributors = new ArrayList<Distributor>(4);
-        if(accumulationLevels.contains(MetricAccumulationLevel.ALL_READS)) {
+        outputOrderedDistributors = new ArrayList<>(4);
+        if (accumulationLevels.contains(MetricAccumulationLevel.ALL_READS)) {
             outputOrderedDistributors.add(new AllReadsDistributor(samRgRecords));
         }
         if (accumulationLevels.contains(MetricAccumulationLevel.SAMPLE)) {
             outputOrderedDistributors.add(new SampleDistributor(samRgRecords));
         }
 
-        if(accumulationLevels.contains(MetricAccumulationLevel.LIBRARY)) {
+        if (accumulationLevels.contains(MetricAccumulationLevel.LIBRARY)) {
             outputOrderedDistributors.add(new LibraryDistributor(samRgRecords));
         }
 
-        if(accumulationLevels.contains(MetricAccumulationLevel.READ_GROUP)) {
+        if (accumulationLevels.contains(MetricAccumulationLevel.READ_GROUP)) {
             outputOrderedDistributors.add(new ReadGroupCollector(samRgRecords));
         }
     }

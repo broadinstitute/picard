@@ -28,6 +28,8 @@ package picard.arrays.illumina;
 import picard.PicardException;
 
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
@@ -73,7 +75,8 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
     private static final int INTENSITY_Y_PERCENTILES = 1015;
     private static final int SENTRIX_ID = 1016;
 
-    private static final int NO_CALL_CHAR = (int) '-';      // Used for string representation of no-call "--"
+    // Used for string representation of no-call "--"
+    private static final int NO_CALL_CHAR = '-';
     private static final int IDENTIFIER_LENGTH = 3;
     private static final String GTC_IDENTIFIER = "gtc";
 
@@ -82,10 +85,14 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
     public static final byte AB_CALL = 2;
     public static final byte BB_CALL = 3;
 
-    private final InfiniumNormalizationManifest normalizationManifest;
+    // Normalization Ids as pulled from the BPM file
+    private int[] allNormalizationIds;
+
+    private Integer[] uniqueNormalizationIds;
 
     private int numberOfSnps;
     private int ploidy;
+
     // 1 = Diploid, 2 = Autopolyploid, 3 = Allopolyploid
     private int ploidyType;
     private String sampleName;
@@ -141,19 +148,20 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
     private float[] RIlmn;
     private float[] thetaIlmn;
 
-    private int aaCalls = 0;
-    private int abCalls = 0;
-    private int bbCalls = 0;
+    private int aaCalls;
+    private int abCalls;
+    private int bbCalls;
 
     /**
-     * Creates an InfiniumGTCFile object and parses the given input stream.
+     * Creates an InfiniumGTCFile object and parses the given input file.
      *
-     * @param gtcStream The gtc file input stream.
-     * @throws IOException is thrown when there is a problem reading the stream.
+     * @param gtcFile The gtc file.
+     * @param bpmFile The Illumina bead pool manifest (bpm) file
+     * @throws IOException is thrown when there is a problem reading the files.
      */
-    public InfiniumGTCFile(final DataInputStream gtcStream, final InfiniumNormalizationManifest normalizationManifest) throws IOException {
-        super(gtcStream, true);
-        this.normalizationManifest = normalizationManifest;
+    public InfiniumGTCFile(final File gtcFile, final File bpmFile) throws IOException {
+        super(new DataInputStream(new FileInputStream(gtcFile)), true);
+        loadNormalizationIds(bpmFile);
         parse();
         normalizeAndCalculateStatistics();
     }
@@ -163,12 +171,15 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
         stream.close();
     }
 
-    InfiniumGTCFile(final DataInputStream gtcStream) throws IOException {
-        super(gtcStream, true);
-        this.normalizationManifest = null;
-        parse();
-    }
+    private void loadNormalizationIds(final File bpmFile) {
+        try (IlluminaBPMFile illuminaBPMFile = new IlluminaBPMFile(bpmFile)) {
+            allNormalizationIds = illuminaBPMFile.getAllNormalizationIds();
+            uniqueNormalizationIds = illuminaBPMFile.getUniqueNormalizationIds();
+        } catch (IOException e) {
+            throw new PicardException("Error reading bpm file '" + bpmFile.getAbsolutePath() + "'", e);
+        }
 
+    }
     private void calculateStatistics() {
         calculateRandTheta();
     }
@@ -196,7 +207,7 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
         try {
             final byte[] curIdentifier = new byte[IDENTIFIER_LENGTH];
             for (int i = 0; i < curIdentifier.length; i++) {
-                curIdentifier[i] = stream.readByte();
+                curIdentifier[i] = parseByte();
             }
 
             final String identifier = new String(curIdentifier);
@@ -204,8 +215,8 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
             if (!identifier.equals(GTC_IDENTIFIER)) {
                 throw new PicardException("Invalid identifier '" + identifier + "' for GTC file");
             }
-            setFileVersion(stream.readByte());
-            setNumberOfEntries(Integer.reverseBytes(stream.readInt()));
+            setFileVersion(parseByte());
+            setNumberOfEntries(parseInt());
 
             //parse the tables of contents
             for (InfiniumFileTOC toc : getTableOfContents()) {
@@ -221,24 +232,21 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
             stream.close();
         }
 
-        if ((normalizationManifest != null) && (normalizationManifest.getNormIds() != null)) {
-            normalizeIntensities();
-        }
+        normalizeIntensities();
     }
 
     private void normalizeIntensities() {
         normalizedXIntensities = new float[numberOfSnps];
         normalizedYIntensities = new float[numberOfSnps];
 
-        final int[] normIds = normalizationManifest.getNormIds();
         for (int i = 0; i < rawXIntensities.length; i++) {
             final int rawX = rawXIntensities[i];
             final int rawY = rawYIntensities[i];
 
             final int normId;
             int normIndex = -1;
-            if ((normIds != null) && (normIds.length > i)) {
-                normId = normIds[i];
+            if (allNormalizationIds.length > i) {
+                normId = allNormalizationIds[i];
                 normIndex = getAllNormIndex(normId);
             }
 
@@ -270,7 +278,7 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
     private int getAllNormIndex(final int normId) {
         int index = 0;
 
-        for (int currentNormId : normalizationManifest.getAllNormIds()) {
+        for (int currentNormId : uniqueNormalizationIds) {
             if (currentNormId == normId) {
                 return index;
             }
@@ -374,10 +382,10 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
                 logRRatios = parseFloatArray(toc);
                 break;
             case INTENSITY_X_PERCENTILES:
-                redIntensityPercentiles = new IntensityPercentiles(parseShort(toc), readShort(), readShort());
+                redIntensityPercentiles = new IntensityPercentiles(parseShort(toc), parseShort(), parseShort());
                 break;
             case INTENSITY_Y_PERCENTILES:
-                greenIntensityPercentiles = new IntensityPercentiles(parseShort(toc), readShort(), readShort());
+                greenIntensityPercentiles = new IntensityPercentiles(parseShort(toc), parseShort(), parseShort());
                 break;
             case SENTRIX_ID:
                 sentrixBarcode = parseString(toc);
@@ -495,9 +503,7 @@ public class InfiniumGTCFile extends InfiniumDataFile implements AutoCloseable {
     }
 
     private void normalizeAndCalculateStatistics() {
-        if (normalizationManifest.getNormIds() != null) {
-            normalizeIntensities();
-        }
+        normalizeIntensities();
         calculateStatistics();
     }
 
