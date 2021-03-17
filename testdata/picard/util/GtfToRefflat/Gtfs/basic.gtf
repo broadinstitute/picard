@@ -1,0 +1,14 @@
+chr16	mgc2_iscan_int_chr16.12.007.a	CDS	11495972	11496117	.	-	.	gene_id "MGC2.1.1.1.1.A11.1"; transcript_id "MGC2.1.1.1.1.A11.1.fa";
+chr16	mgc2_iscan_int_chr16.12.007.a	CDS	11502161	11502185	.	-	.	gene_id "MGC2.1.1.1.1.A11.1"; transcript_id "MGC2.1.1.1.1.A11.1.fa";
+chr8	mgc2_iscan_int_chr8.12.004.a	CDS	11253067	11253097	.	+	.	gene_id "MGC2.1.1.1.1.C06.1"; transcript_id "MGC2.1.1.1.1.C06.1.fa";
+chr8	mgc2_iscan_int_chr8.12.004.a	CDS	11254133	11254203	.	+	.	gene_id "MGC2.1.1.1.1.C06.1"; transcript_id "MGC2.1.1.1.1.C06.1.fa";
+chr8	mgc2_iscan_int_chr8.12.004.a	CDS	11256305	11256454	.	+	.	gene_id "MGC2.1.1.1.1.C06.1"; transcript_id "MGC2.1.1.1.1.C06.1.fa";
+chr8	mgc2_iscan_int_chr8.12.004.a	CDS	11256554	11256726	.	+	.	gene_id "MGC2.1.1.1.1.C06.1"; transcript_id "MGC2.1.1.1.1.C06.1.fa";
+chr8	mgc2_iscan_int_chr8.12.004.a	CDS	11259639	11259777	.	+	.	gene_id "MGC2.1.1.1.1.C06.1"; transcript_id "MGC2.1.1.1.1.C06.1.fa";
+chr2	mlmit1_urn:lsid:compbio.mit.edu:ggnovel:G00045	CDS	84758595	84758686	.	+	.	gene_id "MLMIT1.1.1.1.1.A02.1"; transcript_id "MLMIT1.1.1.1.1.A02.1.fa";
+chr2	mlmit1_urn:lsid:compbio.mit.edu:ggnovel:G00045	CDS	84759973	84760137	.	+	.	gene_id "MLMIT1.1.1.1.1.A02.1"; transcript_id "MLMIT1.1.1.1.1.A02.1.fa";
+chr2	mlmit1_urn:lsid:compbio.mit.edu:ggnovel:G00045	CDS	84760220	84760333	.	+	.	gene_id "MLMIT1.1.1.1.1.A02.1"; transcript_id "MLMIT1.1.1.1.1.A02.1.fa";
+chr2	mlmit1_urn:lsid:compbio.mit.edu:ggnovel:G00045	CDS	84763047	84763172	.	+	.	gene_id "MLMIT1.1.1.1.1.A02.1"; transcript_id "MLMIT1.1.1.1.1.A02.1.fa";
+chr2	mlmit1_urn:lsid:compbio.mit.edu:ggnovel:G00045	CDS	84763247	84763354	.	+	.	gene_id "MLMIT1.1.1.1.1.A02.1"; transcript_id "MLMIT1.1.1.1.1.A02.1.fa";
+chr7	mgc3_chr7.63.63.seq.masked.003.a	CDS	62137665	62137812	.	-	.	gene_id "MGC3.3.1.1.1.D07.1"; transcript_id "MGC3.3.1.1.1.D07.1.fa";
+chr7	mgc3_chr7.63.63.seq.masked.003.a	CDS	62138154	62138279	.	-	.	gene_id "MGC3.3.1.1.1.D07.1"; transcript_id "MGC3.3.1.1.1.D07.1.fa";

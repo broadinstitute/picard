@@ -1,0 +1,12 @@
+Y	protein_coding	exon	2005209	2005544	.	-	.	 gene_id "ENSMUSG00000069034"; transcript_id "ENSMUST00000091176"; exon_number "1"; gene_name "XP_622081.1"; transcript_name "XP_622081.1";
+Y	protein_coding	CDS	2005212	2005544	.	-	0	 gene_id "ENSMUSG00000069034"; transcript_id "ENSMUST00000091176"; exon_number "1"; gene_name "XP_622081.1"; transcript_name "XP_622081.1"; protein_id "ENSMUSP00000088715";
+Y	protein_coding	start_codon	2005542	2005544	.	-	0	 gene_id "ENSMUSG00000069034"; transcript_id "ENSMUST00000091176"; exon_number "1"; gene_name "XP_622081.1"; transcript_name "XP_622081.1";
+Y	protein_coding	stop_codon	2005209	2005211	.	-	0	 gene_id "ENSMUSG00000069034"; transcript_id "ENSMUST00000091176"; exon_number "1"; gene_name "XP_622081.1"; transcript_name "XP_622081.1";
+Y	protein_coding	exon	347038	347128	.	+	.	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "1"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE";
+Y	protein_coding	CDS	347060	347128	.	+	0	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "1"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE"; protein_id "ENSMUSP00000088733";
+Y	protein_coding	start_codon	347060	347062	.	+	0	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "1"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE";
+Y	protein_coding	exon	347703	347766	.	+	.	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "2"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE";
+Y	protein_coding	CDS	347703	347766	.	+	0	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "2"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE"; protein_id "ENSMUSP00000088733";
+Y	protein_coding	exon	351077	351910	.	+	.	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "3"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE";
+Y	protein_coding	CDS	351077	351246	.	+	2	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "3"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE"; protein_id "ENSMUSP00000088733";
+Y	protein_coding	stop_codon	351247	351249	.	+	0	 gene_id "ENSMUSG00000069049"; transcript_id "ENSMUST00000091194"; exon_number "3"; gene_name "Eif2s3y"; transcript_name "Q9CZT2_MOUSE";

@@ -73,10 +73,10 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
 "<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such a "+
 "<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. "+
-"The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, "+
-"exon start and stop sites, etc. For an example refFlat file for GRCh38, see refFlat.txt.gz at "+
+"The tool also requires either a REF_FLAT file, a tab-delimited file containing information about the location of RNA transcripts, "+
+"exon start and stop sites, etc, or a GTF file, a tab-delimited file used to hold information about gene structure. For an example refFlat file for GRCh38, see refFlat.txt.gz at "+
 "<a href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.  "+
-"The first five lines of the tab-limited text file appear as follows.</p>"+
+"The first five lines of the refFlat file appear as follows.</p>"+
 
 "<pre>" +
 "DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409," +
@@ -104,8 +104,11 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
-    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
+    @Argument(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat", mutex = {"GTF"})
     public File REF_FLAT;
+
+    @Argument(doc="Gene annotations in GTF form.  Format described here: http://mblab.wustl.edu/GTF2.html", mutex = {"REF_FLAT"})
+    public File GTF;
 
     @Argument(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
@@ -157,6 +160,13 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     protected void setup(final SAMFileHeader header, final File samFile) {
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
+
+        if (GTF != null) {
+            GtfToRefFlat gtfToRefFlat = new GtfToRefFlat();
+            gtfToRefFlat.GTF = GTF;
+            gtfToRefFlat.doWork();
+            REF_FLAT = gtfToRefFlat.getRefFlat();
+        }
 
         final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
