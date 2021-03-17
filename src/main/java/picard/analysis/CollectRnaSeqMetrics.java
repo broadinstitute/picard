@@ -133,7 +133,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     @Argument(doc="The distance into a transcript over which 5' and 3' bias is calculated.")
-    public int END_BIAS_BASES = 100;
+    public int END_BIAS_BASES = RnaSeqMetricsCollector.defaultEndBiasBases;
 
     private RnaSeqMetricsCollector collector;
 

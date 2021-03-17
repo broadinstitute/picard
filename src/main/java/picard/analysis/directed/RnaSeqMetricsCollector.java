@@ -35,6 +35,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private final double rrnaFragmentPercentage;
     protected final Long ribosomalInitialValue;
     private final int endBiasBases;
+    public static final int defaultEndBiasBases = 100;
 
     final private Set<Integer> ignoredSequenceIndices;
 
@@ -56,6 +57,13 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.collectCoverageStatistics = collectCoverageStatistics;
         this.endBiasBases        = endBiasBases;
         setup(accumulationLevels, samRgRecords);
+    }
+
+    public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
+                                  final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
+                                  final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
+                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics) {
+        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases);
     }
 
     @Override
