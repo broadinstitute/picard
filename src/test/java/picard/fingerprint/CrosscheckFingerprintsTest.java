@@ -61,6 +61,9 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     private File NA12891_r1_shifted_bam, NA12891_r2_shifted_bam, NA12892_r1_shifted_bam, NA12892_r2_shifted_bam;
     private final File referenceForCrams = new File(TEST_DATA_DIR, "reference.shifted.for.crams.fasta");
 
+    private final File NA12891_NA12892_diff_individuals = new File(TEST_DATA_DIR, "NA12891_NA12892_different_individuals.txt");
+    private final File NA12891_NA12892_same_individual = new File(TEST_DATA_DIR, "NA12891_NA12892_same_individual.txt");
+
     private final int NA12891_r1_RGs = 27;
     private final int NA12891_r2_RGs = 26;
     private final int NA12892_r1_RGs = 25;
@@ -425,6 +428,40 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
                 "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
                 "LOD_THRESHOLD=" + -1.0,
                 "CROSSCHECK_BY=SAMPLE"
+        };
+        doTest(args, metrics, expectedRetVal, numberOfSamples * numberOfSamples  , CrosscheckMetric.DataType.SAMPLE);
+
+        TabbedTextFileWithHeaderParser matrixParser = new TabbedTextFileWithHeaderParser(matrix);
+        Assert.assertEquals(matrixParser.columnLabelsList().size(), numberOfSamples + 1 );
+    }
+
+    @DataProvider(name = "bamFilesIndividuals")
+    public Object[][] bamFilesIndividuals() {
+            return new Object[][] {
+                    {NA12891_r1, NA12892_r1, NA12891_NA12892_diff_individuals, 0, 2},
+                    {NA12891_r1, NA12892_r1, NA12891_NA12892_same_individual, 1, 2}, // same individual, so expects match
+                    {NA12891_r2, NA12891_named_NA12892_r1, NA12891_NA12892_diff_individuals, 1, 2}, // diff individuals, so do not expect match
+                    {NA12891_r2, NA12891_named_NA12892_r1, NA12891_NA12892_same_individual, 0, 2} //same individual, so expect match
+            };
+    }
+
+    @Test(dataProvider = "bamFilesIndividuals")
+    public void testCrossCheckIndividuals(final File file1, final File file2, final File individualsMap, final int expectedRetVal, final int numberOfSamples) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "NA1291.SM.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        File matrix = File.createTempFile("Fingerprinting", "NA1291.SM.matrix");
+        matrix.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + file1.getAbsolutePath(),
+                "INPUT=" + file2.getAbsolutePath(),
+                "OUTPUT=" + metrics.getAbsolutePath(),
+                "MATRIX_OUTPUT=" + matrix.getAbsolutePath(),
+                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP,
+                "LOD_THRESHOLD=" + -1.0,
+                "CROSSCHECK_BY=SAMPLE",
+                "SAMPLE_INDIVIDUAL_MAP=" + individualsMap.getAbsolutePath()
         };
         doTest(args, metrics, expectedRetVal, numberOfSamples * numberOfSamples  , CrosscheckMetric.DataType.SAMPLE);
 
