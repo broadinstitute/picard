@@ -82,18 +82,20 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
      */
     @Override
     public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) throws IOException {
-        for (Integer tile : tiles) {
-            for (IlluminaDataProviderFactory laneFactory : laneFactories) {
-                final BaseIlluminaDataProvider dataProvider = laneFactory.makeDataProvider(tile);
+        for(IlluminaDataProviderFactory laneFactory : laneFactories) {
+            for (Integer tileNum : tiles) {
+                if (laneFactory.getAvailableTiles().contains(tileNum)) {
+                    final BaseIlluminaDataProvider dataProvider = laneFactory.makeDataProvider(tileNum);
 
-                while (dataProvider.hasNext()) {
-                    final ClusterData cluster = dataProvider.next();
-                    if (includeNonPfReads || cluster.isPf()) {
-                        barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
-                        progressLogger.record(null, 0);
+                    while (dataProvider.hasNext()) {
+                        final ClusterData cluster = dataProvider.next();
+                        if (includeNonPfReads || cluster.isPf()) {
+                            barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
+                            progressLogger.record(null, 0);
+                        }
                     }
+                    dataProvider.close();
                 }
-                dataProvider.close();
             }
         }
         closeWriters();
