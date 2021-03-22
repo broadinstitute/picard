@@ -606,49 +606,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         private BaseIlluminaDataProvider provider = null;
         private final ReadStructure outputReadStructure;
         private final int maxNoCalls, maxMismatches, minMismatchDelta, minimumBaseQuality;
-        private List<File> cbcls = null;
-        private List<AbstractIlluminaPositionFileReader.PositionInfo> locs = null;
-        private File[] filterFiles = null;
-        private IlluminaDataProviderFactory factory = null;
+        private final IlluminaDataProviderFactory factory;
         private final DistanceMetric distanceMode;
         private final ConcurrentHashMap<String, BarcodeMatch> barcodeLookupMap;
         private final static int maxLookupSize = 100000;
-
-        public PerTileBarcodeExtractor(
-                final int tile,
-                final File barcodeFile,
-                final Map<String, BarcodeMetric> barcodeToMetrics,
-                final ConcurrentHashMap<String, BarcodeMatch> barcodeLookupMap,
-                final BarcodeMetric noMatchMetric,
-                final IlluminaDataProviderFactory factory,
-                final int minimumBaseQuality,
-                final int maxNoCalls,
-                final int maxMismatches,
-                final int minMismatchDelta,
-                final List<File> cbcls,
-                final List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
-                final File[] filterFiles,
-                final DistanceMetric distanceMode) {
-            this.tile = tile;
-            this.barcodeFile = barcodeFile;
-            this.usingQualityScores = minimumBaseQuality > 0;
-            this.maxNoCalls = maxNoCalls;
-            this.maxMismatches = maxMismatches;
-            this.minMismatchDelta = minMismatchDelta;
-            this.minimumBaseQuality = minimumBaseQuality;
-            this.metrics = new LinkedHashMap<>(barcodeToMetrics.size());
-            for (final String key : barcodeToMetrics.keySet()) {
-                this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
-            }
-            this.barcodeLookupMap = barcodeLookupMap;
-            this.noMatch = BarcodeMetric.copy(noMatchMetric);
-            this.cbcls = cbcls;
-            this.locs = locs;
-            this.factory = factory;
-            this.filterFiles = filterFiles;
-            this.outputReadStructure = factory.getOutputReadStructure();
-            this.distanceMode = distanceMode;
-        }
 
         /**
          * Utility class to hang onto data about the best match for a given barcode
@@ -702,9 +663,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
             this.barcodeLookupMap = barcodeLookupMap;
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
-            this.provider = factory.makeDataProvider(tile);
             this.outputReadStructure = factory.getOutputReadStructure();
             this.distanceMode = distanceMode;
+            this.factory = factory;
         }
 
         // These methods return the results of the extraction
