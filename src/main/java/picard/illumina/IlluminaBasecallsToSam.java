@@ -41,6 +41,7 @@ import picard.util.IlluminaUtil.IlluminaAdapterPair;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
@@ -258,7 +259,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Override
     protected int doWork() {
         initialize();
-        basecallsConverter.processTilesAndWritePerSampleOutputs(barcodeSamWriterMap.keySet());
+        try {
+            basecallsConverter.processTilesAndWritePerSampleOutputs(barcodeSamWriterMap.keySet());
+        } catch (IOException e) {
+            throw new PicardException("Error converting basecalls to SAM.", e);
+        }
         return 0;
     }
 
@@ -518,12 +523,19 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
+
+        if (NUM_PROCESSORS == 0) {
+            NUM_PROCESSORS = Runtime.getRuntime().availableProcessors();
+        } else if (NUM_PROCESSORS < 0) {
+            NUM_PROCESSORS = Runtime.getRuntime().availableProcessors() + NUM_PROCESSORS;
+        }
+
         if (BARCODE_PARAMS != null) {
             LIBRARY_PARAMS = BARCODE_PARAMS;
         }
 
         // Remove once deprecated parameter is deleted.
-        if(MAX_READS_IN_RAM_PER_TILE != -1) {
+        if (MAX_READS_IN_RAM_PER_TILE != -1) {
             log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
             MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
         }
