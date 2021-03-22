@@ -289,6 +289,16 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "Should only be used with SECOND_INPUT. ", optional = true)
     public File SECOND_INPUT_SAMPLE_MAP;
 
+    @Argument(doc = "A tsv with two columns representing the individual with which each sample is associated.  The first column is the sample id, and the second " +
+            "column is the associated individual id.  Values in the first column must be unique.  If INPUT_SAMPLE_MAP or SECOND_INPUT_SAMPLE_MAP is also specified, " +
+            "then the values in the first column of this file should be the sample aliases specified in the second columns of INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP, " +
+            "respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of the individual ids associated with two " +
+            "samples, as opposed to the sample ids themselves.  Samples which are not listed in this file will have their sample id used as their individual id, for the " +
+            "purposes of match expectations.  This means that one sample id could be used as the individual id for another sample, but not included in the map itself, and " +
+            "these two samples would be considered to have come from the same individual.  Note that use of this parameter only affects labelling of matches and mismatches as " +
+            "EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.", optional = true)
+    public File SAMPLE_INDIVIDUAL_MAP;
+
     @Argument(doc = "An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. ")
     public Fingerprint.CrosscheckMode CROSSCHECK_MODE = CHECK_SAME_SAMPLE;
 
@@ -368,6 +378,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private double[][] crosscheckMatrix = null;
     private final List<String> lhsMatrixKeys = new ArrayList<>();
     private final List<String> rhsMatrixKeys = new ArrayList<>();
+    private Map<String, String> sampleIndividualMap;
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -431,6 +442,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
         if (SECOND_INPUT_SAMPLE_MAP != null) {
             IOUtil.assertFileIsReadable(SECOND_INPUT_SAMPLE_MAP);
+        }
+        if (SAMPLE_INDIVIDUAL_MAP != null) {
+            IOUtil.assertFileIsReadable(SAMPLE_INDIVIDUAL_MAP);
         }
 
         final HaplotypeMap map = new HaplotypeMap(HAPLOTYPE_MAP);
@@ -782,12 +796,22 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         // use 1L to promote size() to a long and avoid possible overflow
         final long totalChecks = lhsFingerprintIdDetails.size() * ((long) rhsFingerprintIdDetails.size());
 
+        if (SAMPLE_INDIVIDUAL_MAP != null) {
+            final List<FingerprintIdDetails> allFingerprintIdDetails = new ArrayList<>(lhsFingerprintIdDetails);
+            allFingerprintIdDetails.addAll(rhsFingerprintIdDetails);
+            final Set<String> inputSamples = allFingerprintIdDetails.stream().map(id -> id.sample).collect(Collectors.toSet());
+
+            sampleIndividualMap = buildSampleIndividualsMap(SAMPLE_INDIVIDUAL_MAP, inputSamples);
+        }
+
         for (int row = 0; row < lhsFingerprintIdDetails.size(); row++) {
             final FingerprintIdDetails lhsId = lhsFingerprintIdDetails.get(row);
 
             for (int col = 0; col < rhsFingerprintIdDetails.size(); col++) {
                 final FingerprintIdDetails rhsId = rhsFingerprintIdDetails.get(col);
-                final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsId.sample.equals(rhsId.sample);
+                final String lhsMatchId = resolveIndividualIfPossible(lhsId.sample);
+                final String rhsMatchId = resolveIndividualIfPossible(rhsId.sample);
+                final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsMatchId.equals(rhsMatchId);
 
                 final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFingerprints.get(lhsId), rhsFingerprints.get(rhsId),
                         GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
@@ -925,5 +949,45 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 return FingerprintResult.INCONCLUSIVE;
             }
         }
+    }
+
+    private String resolveIndividualIfPossible(final String sampleID) {
+        if (sampleIndividualMap != null) {
+            return sampleIndividualMap.getOrDefault(sampleID, sampleID);
+        }
+
+        return sampleID;
+    }
+
+    private Map<String, String> buildSampleIndividualsMap(final File sampleIndividualMapFile, final Set<String> sampleIDsInput) {
+        if (SAMPLE_INDIVIDUAL_MAP != null) {
+            final Map<String, String> individualMap = getStringStringMap(sampleIndividualMapFile, "SAMPLE_INDIVIDUAL_MAP");
+
+            //check for allowed but unusual situations that may indicate a mistake
+            //are there any sample ids used as individual ids?
+            for (final String individualID : individualMap.values()) {
+                if (sampleIDsInput.contains(individualID)) {
+                    log.warn("Sample " + individualID + " is used as an individual ID in " + sampleIndividualMapFile);
+                }
+            }
+
+            //are there any sample ids in input not found in the map?
+            for (final String sampleId : sampleIDsInput) {
+                if (!individualMap.keySet().contains(sampleId)) {
+                    log.warn("Sample " + sampleId + " in input data not found in " + sampleIndividualMapFile);
+                }
+            }
+
+            //are there any sample ids listed in the map that are not found in input data?
+            for (final String sampleId : individualMap.keySet()) {
+                if (!sampleIDsInput.contains(sampleId)) {
+                    log.warn("Sample " + sampleId + " in " + sampleIndividualMapFile + " not found in input data");
+                }
+            }
+
+            return individualMap;
+        }
+
+        return null;
     }
 }
