@@ -244,12 +244,14 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             if (tileWriteJobs.get() == 0) {
                 completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
                 tileProcessingIndex++;
-                synchronized (tileWriteJobs) {
-                    try {
+                try {
+                    synchronized (tileWriteJobs) {
                         tileWriteJobs.wait();
-                    } catch (InterruptedException e) {
-                        throw new PicardException("Error waiting for thread lock during tile processing.", e);
+                        // Short sleep to ensure data is flushed.
+                        Thread.sleep(500);
                     }
+                } catch (InterruptedException e) {
+                    throw new PicardException("Error waiting for thread lock during tile processing.", e);
                 }
             }
         }
