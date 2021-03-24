@@ -448,6 +448,21 @@
       "options": []
     },
     {
+      "summary": "A tsv with two columns representing the individual with which each sample is associated.  The first column is the sample id, and the second column is the associated individual id.  Values in the first column must be unique.  If INPUT_SAMPLE_MAP or SECOND_INPUT_SAMPLE_MAP is also specified, then the values in the first column of this file should be the sample aliases specified in the second columns of INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP, respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of the individual ids associated with two samples, as opposed to the sample ids themselves.  Samples which are not listed in this file will have their sample id used as their individual id, for the purposes of match expectations.  This means that one sample id could be used as the individual id for another sample, but not included in the map itself, and these two samples would be considered to have come from the same individual.  Note that use of this parameter only affects labelling of matches and mismatches as EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.",
+      "name": "--SAMPLE_INDIVIDUAL_MAP",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "A second set of input files (or lists of files) with which to compare fingerprints. If this option is provided the tool compares each sample in INPUT with the sample from SECOND_INPUT that has the same sample ID. In addition, data will be grouped by SAMPLE regardless of the value of CROSSCHECK_BY. When operating in this mode, each sample in INPUT must also have a corresponding sample in SECOND_INPUT. If this is violated, the tool will proceed to check the matching samples, but report the missing samples and return a non-zero error-code.",
       "name": "--SECOND_INPUT",
       "synonyms": "-SI",

@@ -189,6 +189,9 @@
 												<a href="picard_arrays_CombineGenotypingArrayVcfs.html">CombineGenotypingArrayVcfs</a>
 											</li>
 											<li>
+												<a href="picard_arrays_CreateBafRegressMetricsFile.html">CreateBafRegressMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
 											</li>
 											<li>
@@ -502,13 +505,6 @@
 					<td>display the help message</td>
 				</tr>
 				<tr>
-					<td><a href="#--IS_NOVASEQ">--IS_NOVASEQ</a><br />
-					</td>
-					<!--<td>boolean</td> -->
-					<td>false</td>
-					<td>Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.</td>
-				</tr>
-				<tr>
 					<td><a href="#--READ_STRUCTURE">--READ_STRUCTURE</a><br />
 								&nbsp;<em>-RS</em>
 					</td>
@@ -630,6 +626,16 @@ If not given, will use the RunInfo.xml in the run directory.</td>
 					<td>false</td>
 					<td>display hidden arguments</td>
 				</tr>
+			<tr>
+				<th colspan="4" id="row-divider">Deprecated Arguments</th>
+			</tr>
+				<tr>
+					<td><a href="#--IS_NOVASEQ">--IS_NOVASEQ</a><br />
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)</td>
+				</tr>
 					</tbody>
 				</table>
 
@@ -726,7 +732,7 @@ If not given, will use the RunInfo.xml in the run directory.</td>
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.</b><br />
+			<b>Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)</b><br />
 			
 		</p>
 		<p>
@@ -947,7 +953,7 @@ If not given, will use the RunInfo.xml in the run directory.</b><br />
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.0-SNAPSHOT built at 10-38-2021 01:38:54.
+        <p class="version">Picard version 2.25.1-SNAPSHOT built at 24-33-2021 01:33:49.
         </p>
 
 	</div>

@@ -189,6 +189,9 @@
 												<a href="picard_arrays_CombineGenotypingArrayVcfs.html">CombineGenotypingArrayVcfs</a>
 											</li>
 											<li>
+												<a href="picard_arrays_CreateBafRegressMetricsFile.html">CreateBafRegressMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
 											</li>
 											<li>
@@ -726,6 +729,13 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 					<td>If true then only groups that do not relate to each other as expected will have their LODs reported.</td>
 				</tr>
 				<tr>
+					<td><a href="#--SAMPLE_INDIVIDUAL_MAP">--SAMPLE_INDIVIDUAL_MAP</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>A tsv with two columns representing the individual with which each sample is associated.  The first column is the sample id, and the second column is the associated individual id.  Values in the first column must be unique.  If INPUT_SAMPLE_MAP or SECOND_INPUT_SAMPLE_MAP is also specified, then the values in the first column of this file should be the sample aliases specified in the second columns of INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP, respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of the individual ids associated with two samples, as opposed to the sample ids themselves.  Samples which are not listed in this file will have their sample id used as their individual id, for the purposes of match expectations.  This means that one sample id could be used as the individual id for another sample, but not included in the map itself, and these two samples would be considered to have come from the same individual.  Note that use of this parameter only affects labelling of matches and mismatches as EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.</td>
+				</tr>
+				<tr>
 					<td><a href="#--SECOND_INPUT">--SECOND_INPUT</a><br />
 								&nbsp;<em>-SI</em>
 					</td>
@@ -1236,6 +1246,18 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--SAMPLE_INDIVIDUAL_MAP">--SAMPLE_INDIVIDUAL_MAP </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>A tsv with two columns representing the individual with which each sample is associated.  The first column is the sample id, and the second column is the associated individual id.  Values in the first column must be unique.  If INPUT_SAMPLE_MAP or SECOND_INPUT_SAMPLE_MAP is also specified, then the values in the first column of this file should be the sample aliases specified in the second columns of INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP, respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of the individual ids associated with two samples, as opposed to the sample ids themselves.  Samples which are not listed in this file will have their sample id used as their individual id, for the purposes of match expectations.  This means that one sample id could be used as the individual id for another sample, but not included in the map itself, and these two samples would be considered to have come from the same individual.  Note that use of this parameter only affects labelling of matches and mismatches as EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--SECOND_INPUT">--SECOND_INPUT </a>
 			 / <small>-SI</small>
 		</h3>
@@ -1378,7 +1400,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.0-SNAPSHOT built at 10-38-2021 01:38:54.
+        <p class="version">Picard version 2.25.1-SNAPSHOT built at 24-33-2021 01:33:49.
         </p>
 
 	</div>

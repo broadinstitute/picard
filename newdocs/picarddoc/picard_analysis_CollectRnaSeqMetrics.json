@@ -92,6 +92,21 @@
       "options": []
     },
     {
+      "summary": "The distance into a transcript over which 5\u0027 and 3\u0027 bias is calculated.",
+      "name": "--END_BIAS_BASES",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "100",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Google Genomics API client_secrets.json file path.",
       "name": "--GA4GH_CLIENT_SECRETS",
       "synonyms": "NA",

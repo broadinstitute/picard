@@ -107,7 +107,7 @@
       "options": []
     },
     {
-      "summary": "Boolean the determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory.",
+      "summary": "Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)",
       "name": "--IS_NOVASEQ",
       "synonyms": "NA",
       "type": "boolean",
@@ -118,7 +118,7 @@
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "optional",
+      "kind": "deprecated",
       "options": []
     },
     {

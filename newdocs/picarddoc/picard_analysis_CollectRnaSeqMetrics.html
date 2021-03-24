@@ -189,6 +189,9 @@
 												<a href="picard_arrays_CombineGenotypingArrayVcfs.html">CombineGenotypingArrayVcfs</a>
 											</li>
 											<li>
+												<a href="picard_arrays_CreateBafRegressMetricsFile.html">CreateBafRegressMetricsFile</a>
+											</li>
+											<li>
 												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
 											</li>
 											<li>
@@ -511,6 +514,13 @@
 					<td>The PDF file to write out a plot of normalized position vs. coverage.</td>
 				</tr>
 				<tr>
+					<td><a href="#--END_BIAS_BASES">--END_BIAS_BASES</a><br />
+					</td>
+					<!--<td>int</td> -->
+					<td>100</td>
+					<td>The distance into a transcript over which 5' and 3' bias is calculated.</td>
+				</tr>
+				<tr>
 					<td><a href="#--help">--help</a><br />
 								&nbsp;<em>-h</em>
 					</td>
@@ -746,6 +756,20 @@
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--END_BIAS_BASES">--END_BIAS_BASES </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>The distance into a transcript over which 5' and 3' bias is calculated.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">int</span>
+			&nbsp;<span class="label">100</span>
+			&nbsp;<span class="label label-warning">[ [ -∞</span>
+			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
@@ -1068,7 +1092,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.0-SNAPSHOT built at 10-38-2021 01:38:54.
+        <p class="version">Picard version 2.25.1-SNAPSHOT built at 24-33-2021 01:33:49.
         </p>
 
 	</div>

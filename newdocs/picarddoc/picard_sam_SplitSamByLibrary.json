@@ -128,7 +128,7 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/sahakian/picard/.",
+      "defaultValue": "/Users/samn/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
