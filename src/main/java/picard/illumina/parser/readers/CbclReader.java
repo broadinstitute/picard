@@ -210,7 +210,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                     }
                 } catch (final IOException e) {
                     // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
-                    throw new PicardException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
+                    throw new PicardException(String.format("Error while reading from CBCL file for cycle %d. Offending file on disk is %s",
                             (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()), e);
                 }
                 totalCycleCount++;
@@ -265,7 +265,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     }
 
     private void advance() {
-        if(!tileCached){
+        if (!tileCached) {
             readTileData(tileNum, locs);
         }
         int totalCycleCount = 0;
