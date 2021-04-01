@@ -232,7 +232,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                                  final int concatNColumnFields, final String readStructure,
                                  final File baseCallsDir, final File testDataDir, final Integer tile, final boolean includeBcInHeader, final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
                                  final boolean includeBarcodeQuality) throws Exception {
-        for (final boolean sort : new boolean[]{false, true}) {
+        for (final boolean sort : new boolean[]{true, false}) {
             final Path outputDir = Files.createTempDirectory(jobName + sort);
             try {
                 final String tilePrefix = (tile != null) ? tile + "." : "";
