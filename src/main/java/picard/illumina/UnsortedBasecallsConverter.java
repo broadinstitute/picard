@@ -6,6 +6,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
@@ -37,7 +38,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
      *
      * @param basecallsDir                 Where to read basecalls from.
      * @param barcodesDir                  Where to read barcodes from (optional; use basecallsDir if not specified).
-     * @param lane                         What lane to process.
+     * @param lanes                        What lane to process.
      * @param readStructure                How to interpret each cluster.
      * @param barcodeRecordWriterMap       Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
      *                                     one writer stored with key=null.
@@ -53,7 +54,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
     protected UnsortedBasecallsConverter(
             final File basecallsDir,
             final File barcodesDir,
-            final int lane,
+            final int[] lanes,
             final ReadStructure readStructure,
             final Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
             final boolean demultiplex,
@@ -65,7 +66,7 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
             final boolean includeNonPfReads,
             final AsyncWriterPool writerPool
     ) {
-        super(basecallsDir, barcodesDir, lane, readStructure, barcodeRecordWriterMap, demultiplex,
+        super(basecallsDir, barcodesDir, lanes, readStructure, barcodeRecordWriterMap, demultiplex,
                 firstTile, tileLimit, bclQualityEvaluationStrategy,
                 ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, writerPool);
     }
@@ -81,17 +82,21 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
      */
     @Override
     public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) throws IOException {
-        for (Integer tile : tiles) {
-            final BaseIlluminaDataProvider dataProvider = factory.makeDataProvider(tile);
+        for(IlluminaDataProviderFactory laneFactory : laneFactories) {
+            for (Integer tileNum : tiles) {
+                if (laneFactory.getAvailableTiles().contains(tileNum)) {
+                    final BaseIlluminaDataProvider dataProvider = laneFactory.makeDataProvider(tileNum);
 
-            while (dataProvider.hasNext()) {
-                final ClusterData cluster = dataProvider.next();
-                if (includeNonPfReads || cluster.isPf()) {
-                    barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
-                    progressLogger.record(null, 0);
+                    while (dataProvider.hasNext()) {
+                        final ClusterData cluster = dataProvider.next();
+                        if (includeNonPfReads || cluster.isPf()) {
+                            barcodeRecordWriterMap.get(cluster.getMatchedBarcode()).write(converter.convertClusterToOutputRecord(cluster));
+                            progressLogger.record(null, 0);
+                        }
+                    }
+                    dataProvider.close();
                 }
             }
-            dataProvider.close();
         }
         closeWriters();
     }
