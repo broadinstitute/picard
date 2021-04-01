@@ -1,8 +1,8 @@
 dist: trusty
 language: java
-branches:
-  only:
-    - "master"
+#branches:
+#  only:
+#    - "master"
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
@@ -19,6 +19,13 @@ jdk:
   - openjdk8
   - openjdk11
 before_install:
+  #skip push builds if there's an associated PR because we don't look at them anway
+  - if [[ ${TRAVIS_EVENT_TYPE} == push ]]; then
+      PULL_REQUESTS=$( scripts/travis/check_for_pull_request.sh );
+      if [[ $( grep -c "commits" <<< ${PULL_REQUESTS} ) -gt 0 ]]; then
+        travis_terminate 0;
+      fi;
+    fi;
   - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
   - sudo apt-get -qq update
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
