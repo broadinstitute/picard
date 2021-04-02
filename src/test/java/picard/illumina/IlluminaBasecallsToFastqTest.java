@@ -42,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
@@ -122,32 +124,37 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     @Test
     public void testDeMultiplexed() throws Exception {
-        runStandardTest(1, "multiplexedBarcode.", "mp_barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+        runStandardTest(new int[]{1}, "multiplexedBarcode.", "mp_barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
     }
 
     @Test
     public void testDeMultiplexedWithIndex() throws Exception {
-        runStandardTest(1, "multiplexedBarcodeWithIndex.", "mp_barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M);
+        runStandardTest(new int[]{1}, "multiplexedBarcodeWithIndex.", "mp_barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M);
     }
 
     @Test
     public void testDeMultiplexedWithtwoIndexes() throws Exception {
-        runStandardTest(1, "multiplexedBarcodeWithTwoIndexes.", "mp_barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M);
+        runStandardTest(new int[]{1}, "multiplexedBarcodeWithTwoIndexes.", "mp_barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M);
     }
 
     @Test
     public void testDualBarcodes() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
+        runStandardTest(new int[]{1}, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
     }
 
     @Test
     public void testCbclConvert() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
+        runStandardTest(new int[]{1}, "dualBarcode.", "barcode_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR);
     }
 
     @Test
     public void testHiseqxSingleLocs() throws Exception {
-        runStandardTest(1, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
+        runStandardTest(new int[]{1}, "hiseqxSingleLocs.", "barcode_double.params", 2, "25T8B8B25T",TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR);
+    }
+
+    @Test
+    public void testMultipleLanes() throws Exception {
+        runStandardTest(new int[]{1, 2}, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
     }
 
     private void compareFastqs(File actual, File expected) {
@@ -173,7 +180,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToFastq to compare against
      * preloaded test data
      *
-     * @param lane                lane number to use
+     * @param lanes               lanes number to use
      * @param jobName             name of job for the temp file
      * @param libraryParamsFile   the params file to use for the de-multiplexing
      * @param concatNColumnFields how many columns to concatenate to get the barcode
@@ -183,7 +190,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
      * @throws Exception
      */
 
-    private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
+    private void runStandardTest(final int[] lanes, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructureString, final File baseCallsDir,
                                  final File testDataDir) throws Exception {
         final File outputDir = File.createTempFile(jobName, ".dir");
@@ -195,13 +202,16 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             // Create barcode.params with output files in the temp directory
             final File libraryParams = new File(outputDir, libraryParamsFile);
             libraryParams.deleteOnExit();
-            final List<File> outputPrefixes = new ArrayList<File>();
-            convertParamsFile(libraryParamsFile, concatNColumnFields, testDataDir, outputDir, libraryParams, outputPrefixes);
+            final List<File> outputPrefixes = new ArrayList<>();
+            convertParamsFile(libraryParamsFile, concatNColumnFields, testDataDir, outputDir, libraryParams, outputPrefixes, lanes.length > 1);
+            String[] laneArgs = new String[lanes.length];
+            for(int i = 0; i < lanes.length; i++) {
+                laneArgs[i] = "LANE=" + lanes[i];
+            }
 
             for (final boolean sort : new boolean[]{false, true}) {
-                runPicardCommandLine(new String[]{
+                final String[] args = {
                         "BASECALLS_DIR=" + baseCallsDir,
-                        "LANE=" + lane,
                         "RUN_BARCODE=HiMom",
                         "READ_STRUCTURE=" + readStructureString,
                         "MULTIPLEX_PARAMS=" + libraryParams,
@@ -209,36 +219,25 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                         "FLOWCELL_BARCODE=abcdeACXX",
                         "MAX_RECORDS_IN_RAM=1000", //force spill to disk to test encode/decode,
                         "SORT=" + sort
-                });
+                };
+                final String[] allArgs = Stream.concat(Arrays.stream(args), Arrays.stream(laneArgs))
+                        .toArray(String[]::new);
+                runPicardCommandLine(allArgs);
 
                 final ReadStructure readStructure = new ReadStructure(readStructureString);
                 for (final File prefix : outputPrefixes) {
+                    final String filePrefix = prefix.getName();
                     for (int i = 1; i <= readStructure.templates.length(); ++i) {
-                        final String filename = prefix.getName() + "." + i + ".fastq";
-                        if (sort) {
-                            IOUtil.assertFilesEqual(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
-                        }
-                        else {
-                            compareFastqs(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
-                        }
+                        final String filename = filePrefix + "." + i + ".fastq";
+                        compareResults(testDataDir, sort, prefix, filename);
                     }
                     for (int i = 1; i <= readStructure.sampleBarcodes.length(); ++i) {
-                        final String filename = prefix.getName() + ".barcode_" + i + ".fastq";
-                        if (sort) {
-                            IOUtil.assertFilesEqual(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
-                        }
-                        else {
-                            compareFastqs(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
-                        }
+                        final String filename = filePrefix + ".barcode_" + i + ".fastq";
+                        compareResults(testDataDir, sort, prefix, filename);
                     }
                     for (int i = 1; i <= readStructure.molecularBarcode.length(); ++i) {
-                        final String filename = prefix.getName() + ".index_" + i + ".fastq";
-                        if (sort) {
-                            IOUtil.assertFilesEqual(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
-                        }
-                        else {
-                            compareFastqs(new File(prefix.getParentFile(), filename), new File(testDataDir, filename));
-                        }
+                        final String filename = filePrefix + ".index_" + i + ".fastq";
+                        compareResults(testDataDir, sort, prefix, filename);
                     }
                 }
             }
@@ -247,7 +246,18 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
         }
     }
 
-    private void convertParamsFile(String libraryParamsFile, int concatNColumnFields, File testDataDir, File outputDir, File libraryParams, List<File> outputPrefixes) throws FileNotFoundException {
+    private void compareResults(File testDataDir, boolean sort, File prefix, String filename) {
+        File actual = new File(prefix.getParentFile(), filename);
+        File expected = new File(testDataDir, filename);
+        if(actual.length() == 0 && expected.length() == 0) return;
+        if (sort) {
+            IOUtil.assertFilesEqual(actual, expected);
+        } else {
+            compareFastqs(actual, expected);
+        }
+    }
+
+    private void convertParamsFile(String libraryParamsFile, int concatNColumnFields, File testDataDir, File outputDir, File libraryParams, List<File> outputPrefixes, boolean multilane) throws FileNotFoundException {
         try (LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)))) {
             final PrintWriter writer = new PrintWriter(libraryParams);
             final String header = reader.readLine();
@@ -258,7 +268,11 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     break;
                 }
                 final String[] fields = line.split("\t");
-                final File outputPrefix = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)));
+                String prefix = StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields));
+                if(multilane) {
+                    prefix += ".multilane";
+                }
+                final File outputPrefix = new File(outputDir, prefix);
                 outputPrefixes.add(outputPrefix);
                 writer.println(line + "\t" + outputPrefix);
             }
