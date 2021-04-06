@@ -84,7 +84,7 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
             filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
         }
         for(Integer tile: requestedTiles) {
-            this.tileReaders.put(tile, new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(), tile, locs, outputMapping.getOutputCycles(), false));
+            this.tileReaders.put(tile, new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(), tile, locs, outputMapping.getOutputCycles()));
         }
     }
 
