@@ -25,31 +25,17 @@ package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.BaseCallingProgramGroup;
-import picard.illumina.parser.BaseIlluminaDataProvider;
-import picard.illumina.parser.ClusterData;
-import picard.illumina.parser.IlluminaDataProviderFactory;
-import picard.illumina.parser.IlluminaDataType;
-import picard.illumina.parser.ReadDescriptor;
-import picard.illumina.parser.ReadStructure;
-import picard.illumina.parser.ReadType;
-import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
+import picard.illumina.parser.*;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.BarcodeEditDistanceQuery;
-import picard.util.IlluminaUtil;
-import picard.util.TabbedTextFileWithHeaderParser;
-import picard.util.ThreadPoolExecutorUtil;
-import picard.util.ThreadPoolExecutorWithExceptions;
+import picard.util.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -57,7 +43,6 @@ import java.text.NumberFormat;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Determine the barcode for each read in an Illumina lane.
@@ -253,7 +238,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
 
         LOG.info("Processing with " + numProcessors + " PerTileBarcodeExtractor(s).");
-        final ThreadPoolExecutor pool = new ThreadPoolExecutorWithExceptions(numProcessors);
+        final ThreadPoolExecutorWithExceptions pool = new ThreadPoolExecutorWithExceptions(numProcessors);
 
         final List<PerTileBarcodeExtractor> extractors = new ArrayList<>(factory.getAvailableTiles().size());
         // TODO: This is terribly inefficient; we're opening a huge number of files via the extractor constructor and we never close them.
@@ -279,6 +264,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         pool.shutdown();
         ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool, Duration.ofMinutes(5));
+
+        if(pool.hasError()){
+            throw new PicardException("Exceptions in tile processing. There were " + pool.shutdownNow().size()
+                    + " tasks were still running or queued and have been cancelled. Errors: " + pool.exception.toString());
+        }
 
         LOG.info("Processed " + extractors.size() + " tiles.");
         for (final PerTileBarcodeExtractor extractor : extractors) {
