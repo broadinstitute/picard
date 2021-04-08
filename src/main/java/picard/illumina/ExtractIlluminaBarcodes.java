@@ -265,9 +265,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         pool.shutdown();
         ThreadPoolExecutorUtil.awaitThreadPoolTermination("Per tile extractor executor", pool, Duration.ofMinutes(5));
 
-        if(pool.hasError()){
+        if (pool.hasError()) {
             throw new PicardException("Exceptions in tile processing. There were " + pool.shutdownNow().size()
-                    + " tasks were still running or queued and have been cancelled. Errors: " + pool.exception.toString());
+                    + " tasks that were still running or queued and have been cancelled. Errors: " + pool.exception.toString());
         }
 
         LOG.info("Processed " + extractors.size() + " tiles.");
