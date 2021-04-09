@@ -285,13 +285,13 @@
       "options": []
     },
     {
-      "summary": "Lane number. ",
+      "summary": "Lane number. This can be specified multiple times. Reads with the same index in multiple lanes will be added to the same output file. Each lane is represented by a separate read group",
       "name": "--LANE",
       "synonyms": "-L",
-      "type": "Integer",
+      "type": "List[Integer]",
       "required": "yes",
       "fulltext": "",
-      "defaultValue": "null",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
