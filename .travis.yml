@@ -24,6 +24,8 @@ before_install:
       fi;
     fi;
   - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+  # Add Repo key to prevent hyperdrive install errors.
+  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
   - sudo apt-get -qq update
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
 script:
