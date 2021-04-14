@@ -35,7 +35,7 @@ public class CbclReaderTest {
         final LocsFileReader locsFileReader = new LocsFileReader(new File("testdata/picard/illumina/readerTests/s_1_6.locs"));
         final List<AbstractIlluminaPositionFileReader.PositionInfo> locs = locsFileReader.toList();
         final CbclReader reader = new CbclReader(Arrays.asList(PASSING_CBCL_C1_1, PASSING_CBCL_C2_1),
-                filters, new int[]{2}, 1101, locs, new int[]{1, 2}, false);
+                filters, new int[]{2}, 1101, locs, new int[]{1, 2});
 
         int i = 0;
         while (reader.hasNext()) {
@@ -61,7 +61,7 @@ public class CbclReaderTest {
         final LocsFileReader locsFileReader = new LocsFileReader(new File("testdata/picard/illumina/readerTests/s_1_6.locs"));
         List<AbstractIlluminaPositionFileReader.PositionInfo> locs = locsFileReader.toList();
         new CbclReader(Arrays.asList(PASSING_CBCL_C1_1, PASSING_CBCL_C2_1),
-                filters, new int[]{2}, 1102, locs, new int[]{1, 2}, false);
+                filters, new int[]{2}, 1102, locs, new int[]{1, 2});
 
     }
 
@@ -72,7 +72,7 @@ public class CbclReaderTest {
         final LocsFileReader locsFileReader = new LocsFileReader(new File("testdata/picard/illumina/readerTests/s_1_6.locs"));
         List<AbstractIlluminaPositionFileReader.PositionInfo> locs = locsFileReader.toList();
         CbclReader reader = new CbclReader(Collections.singletonList(CBCL_WITH_EMPTY_TILE),
-                filters, new int[]{1}, 1101, locs, new int[]{3}, false);
+                filters, new int[]{1}, 1101, locs, new int[]{3});
         Assert.assertFalse(reader.hasNext());
     }
 }
