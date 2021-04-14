@@ -67,9 +67,12 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
     private byte[][] cachedTile;
     private final int[] cachedTilePosition;
+    private final int tileNum;
+    private boolean tileCached = false;
 
     private CbclData queue = null;
     private Iterator<AbstractIlluminaPositionFileReader.PositionInfo> positionInfoIterator;
+    private final List<AbstractIlluminaPositionFileReader.PositionInfo> locs;
     private final CycleData[] cycleData;
     private final Map<Integer, File> filterFileMap;
     private final Map<Integer, List<Boolean>> cachedFilter = new HashMap<>();
@@ -83,30 +86,26 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     private static final Pattern PATTERN = Pattern.compile("^.+C(\\d{1,4}).+L(\\d{1,3})_(\\d).cbcl$");
 
     public CbclReader(final List<File> cbcls, final Map<Integer, File> filterFileMap, final int[] outputLengths,
-                      final int tileNum, final List<AbstractIlluminaPositionFileReader.PositionInfo> locs, final int[] outputCycles, final boolean headerOnly) {
+                      final int tileNum, final List<AbstractIlluminaPositionFileReader.PositionInfo> locs, final int[] outputCycles) {
         super(outputLengths);
+        this.tileNum = tileNum;
         if (!filterFileMap.containsKey(tileNum)) {
             throw new PicardException("Filter file for tile " + tileNum + " does not exist.");
         }
         this.outputCycles = outputCycles;
-
-        surfaceToTileToCbclMap = sortCbcls(cbcls);
+        this.locs = locs;
+        this.surfaceToTileToCbclMap = sortCbcls(cbcls);
         this.filterFileMap = filterFileMap;
-        cycleData = new CycleData[cycles];
-        cachedTile = new byte[cycles][];
-        cachedTilePosition = new int[cycles];
+        this.cycleData = new CycleData[cycles];
+        this.cachedTile = new byte[cycles][];
+        this.cachedTilePosition = new int[cycles];
         for (int i = 1; i <= cycles; i++) {
-            allTiles.put(i, new ArrayList<>());
+            this.allTiles.put(i, new ArrayList<>());
         }
-        try {
-            readSurfaceTile(tileNum, locs, headerOnly);
-        } finally {
-            close();
-        }
+        readHeader(tileNum);
     }
 
-    private void readSurfaceTile(final int tileNum, final List<AbstractIlluminaPositionFileReader.PositionInfo> locs,
-                                 final boolean headerOnly) {
+    private void readHeader(final int tileNum) {
         log.info("Processing tile " + tileNum);
         try {
             for (final Map.Entry<Integer, Map<Integer, File>> entry : surfaceToTileToCbclMap.entrySet()) {
@@ -187,39 +186,37 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
                     headerBuffer.clear();
                 }
             }
-
-            if (headerOnly) {
-                return;
-            }
-
-            int totalCycleCount = 0;
-
-            if (cycleData[totalCycleCount].tileInfo == null) {
-                throw new PicardException("Could not find tile " + tileNum);
-            }
-
-            for (final int outputLength : outputLengths) {
-                for (int cycle = 0; cycle < outputLength; cycle++) {
-                    final CycleData currentCycleData = cycleData[totalCycleCount];
-                    try {
-                        if (cachedTile[totalCycleCount] == null) {
-                            if (!cachedFilter.containsKey(cycleData[totalCycleCount].tileInfo.tileNum)) {
-                                cacheFilterAndLocs(cycleData[totalCycleCount].tileInfo, locs);
-                            }
-                            cacheTile(totalCycleCount, cycleData[totalCycleCount].tileInfo, currentCycleData);
-                        }
-                    } catch (final IOException e) {
-                        // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
-                        throw new PicardException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
-                                (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()), e);
-                    }
-                    totalCycleCount++;
-                }
-            }
-
         } catch (final IOException ioe) {
             throw new RuntimeIOException(ioe);
         }
+    }
+
+    private void readTileData(int tileNum, List<AbstractIlluminaPositionFileReader.PositionInfo> locs) {
+        int totalCycleCount = 0;
+
+        if (cycleData[totalCycleCount].tileInfo == null) {
+            throw new PicardException("Could not find tile " + tileNum);
+        }
+
+        for (final int outputLength : outputLengths) {
+            for (int cycle = 0; cycle < outputLength; cycle++) {
+                final CycleData currentCycleData = cycleData[totalCycleCount];
+                try {
+                    if (cachedTile[totalCycleCount] == null) {
+                        if (!cachedFilter.containsKey(cycleData[totalCycleCount].tileInfo.tileNum)) {
+                            cacheFilterAndLocs(cycleData[totalCycleCount].tileInfo, locs);
+                        }
+                        cacheTile(totalCycleCount, cycleData[totalCycleCount].tileInfo, currentCycleData);
+                    }
+                } catch (final IOException e) {
+                    // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
+                    throw new PicardException(String.format("Error while reading from CBCL file for cycle %d. Offending file on disk is %s",
+                            (totalCycleCount + 1), this.streamFiles[totalCycleCount].getAbsolutePath()), e);
+                }
+                totalCycleCount++;
+            }
+        }
+        tileCached = true;
     }
 
     private Map<Integer, Map<Integer, File>> sortCbcls(final List<File> cbcls) {
@@ -268,6 +265,9 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     }
 
     private void advance() {
+        if (!tileCached) {
+            readTileData(tileNum, locs);
+        }
         int totalCycleCount = 0;
         final CbclData data = new CbclData(outputLengths, cycleData[totalCycleCount].tileInfo.tileNum);
 
