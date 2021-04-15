@@ -24,7 +24,7 @@ before_install:
       fi;
     fi;
   - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-  #- sudo apt-get -qq update
+  - sudo apt-get -qq update
   - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
 script:
   - if [[ $RUN_BARCLAY_TESTS == true ]]; then
