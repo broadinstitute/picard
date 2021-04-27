@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script is used to build and deploy the GCR docker image for Picard
-# The dockerhub iamge is built using a dockerhub automated build: https://hub.docker.com/r/broadinstitute/picard/builds
+# The dockerhub image is built using a dockerhub automated build: https://hub.docker.com/r/broadinstitute/picard/builds
 
 if [[ "$1" == "" ]]
 then

@@ -202,7 +202,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if (CHART_OUTPUT != null && atLeastOneHistogram) {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/rnaSeqCoverage.R",
                                                                OUTPUT.getAbsolutePath(),
-                                                               CHART_OUTPUT.getAbsolutePath(),
+                                                               CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                                                                INPUT.getName(),
                                                                this.plotSubtitle);
 

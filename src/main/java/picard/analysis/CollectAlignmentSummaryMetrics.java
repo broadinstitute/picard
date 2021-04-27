@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A command line tool to read a BAM file and produce standard alignment metrics that would be applicable to any alignment.  
+ * A command line tool to read a BAM file and produce standard alignment metrics that would be applicable to any alignment.
  * Metrics to include, but not limited to:
  * <ul>
  * <li>Total number of reads (total, period, no exclusions)</li>
@@ -77,7 +77,7 @@ import java.util.Set;
  * <li>the paired end orientation is different that the expected orientation</li>
  * <li>the read contains an SA tag (chimeric alignment)</li>
  * </ul>
- * 
+ *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
@@ -192,7 +192,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
         if (HISTOGRAM_FILE != null) {
             final List<String> plotArgs = new ArrayList<>();
-            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), HISTOGRAM_FILE.getAbsolutePath(), INPUT.getName());
+            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), HISTOGRAM_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
 
             final int rResult = RExecutor.executeFromClasspath(HISTOGRAM_R_SCRIPT, plotArgs.toArray(new String[0]));
             if (rResult != 0) {

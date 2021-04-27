@@ -164,7 +164,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             final int rResult = RExecutor.executeFromClasspath(
                     "picard/analysis/qualityScoreDistribution.R",
                     OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     INPUT.getName(),
                     this.plotSubtitle);
 
