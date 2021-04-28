@@ -69,7 +69,13 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
         //barcodes
         final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                 ParameterizedFileUtil.makeBarcodeRegex(lane)));
+
         final File[] barcodeFiles = getTiledFiles(barcodesDirectory, barcodeRegex);
+        if (barcodeFiles.length == 0) {
+            throw new PicardException("No barcodes files found in the barcodesDirectory " + barcodesDirectory.getAbsolutePath());
+        }
+
+        IOUtil.assertFilesAreReadable(Arrays.asList(barcodeFiles));
         this.barcodeFileMap = new HashMap<>();
         for (File barcodeFile : barcodeFiles) {
             barcodeFileMap.put(fileToTile(barcodeFile.getName()), new BarcodeFileReader(barcodeFile));
