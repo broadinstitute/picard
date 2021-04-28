@@ -20,6 +20,7 @@ before_install:
   - if [[ ${TRAVIS_EVENT_TYPE} == push ]]; then
       PULL_REQUESTS=$( scripts/travis/check_for_pull_request );
       if [[ $( grep -c "commits" <<< ${PULL_REQUESTS} ) -gt 0 ]]; then
+        echo "WARNING TEST SKIPPED. TESTS DO NOT RUN ON BRANCHES WITH OPEN PULL REQUESTS. SEE PULL REQUEST FOR TEST RESULTS"
         travis_terminate 0;
       fi;
     fi;
