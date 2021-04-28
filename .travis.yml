@@ -12,7 +12,7 @@ env:
     - RUN_BARCLAY_TESTS=true
     - RUN_BARCLAY_TESTS=false
 jdk:
-  - oraclejdk8
+  # oraclejdk8  - Xenial does not support oraclejdk8
   - openjdk8
   - openjdk11
 before_install:
