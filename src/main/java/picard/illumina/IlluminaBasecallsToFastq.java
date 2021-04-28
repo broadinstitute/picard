@@ -226,6 +226,11 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final LinkedList<String> errors = new LinkedList<>();
 
+        IOUtil.assertDirectoryIsReadable(BASECALLS_DIR);
+        if (BARCODES_DIR != null) {
+            IOUtil.assertDirectoryIsReadable(BARCODES_DIR);
+        }
+
         if (NUM_PROCESSORS == 0) {
             NUM_PROCESSORS = Runtime.getRuntime().availableProcessors();
         } else if (NUM_PROCESSORS < 0) {
