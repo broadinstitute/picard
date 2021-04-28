@@ -26,13 +26,7 @@ for (i in 1:length(startFinder)) {
 }
 
 getCumulative <- function(y, yrange) {
-  yNew <- rep(0, nrow(y));
-  yLength <- nrow(y)
-  ySum <- sum(y[,1])
-  for (i in 1:yLength) {
-    yNew[i] <- (yrange * sum(as.numeric(y[i:yLength,1])) / ySum)
-  }
-  return (yNew)
+  return ((yrange / sum(y[,1])) * rev(cumsum(rev(y[,1]))))
 }
 
 histogram <- read.table(metricsFile, header=TRUE, sep="\t", skip=secondBlankLine, comment.char="", quote='', check.names=FALSE)
