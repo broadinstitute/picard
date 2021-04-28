@@ -58,6 +58,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR_WITH_4M_INDEX = new File(ILLUMINA_TEST_DIR, "25T8B25T/sams_with_4M");
     private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File(ILLUMINA_TEST_DIR, "25T8B25T/sams_with_4M4M");
     private static final File TEST_DATA_DIR_WITH_CBCLS = new File(ILLUMINA_TEST_DIR, "151T8B8B151T_cbcl/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_BARCODES_DIR_WITH_CBCLS = new File(TEST_DATA_DIR_WITH_CBCLS, "barcodes");
     private static final File DUAL_CBCL_TEST_DATA_DIR = new File(ILLUMINA_TEST_DIR, "151T8B8B151T_cbcl/sams");
     private static final File TEST_DATA_HISEQX_SINGLE_LOCS = new File(ILLUMINA_TEST_DIR, "25T8B8B25T_hiseqx/Data/Intensities/BaseCalls");
     private static final File HISEQX_TEST_DATA_DIR = new File(ILLUMINA_TEST_DIR, "25T8B8B25T_hiseqx/sams");
@@ -176,30 +177,32 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     @Test(dataProvider = "multiplexedData")
     public void testMultiplexed(final boolean includeBcInHeader, final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
                                 final boolean includeBarcodeQuality, final File testDataDir) throws Exception {
-        runStandardTest(new int[]{1}, "multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, testDataDir, null, includeBcInHeader, populateBarcode, includeBarcodeQuality);
+        runStandardTest(new int[]{1}, "multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, testDataDir, null, includeBcInHeader, populateBarcode, includeBarcodeQuality);
     }
 
     @DataProvider
     public Object[][] variousConfigurationsData() {
         return new Object[][]{
-                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, new File(TEST_DATA_DIR.getParentFile(),"sams_with_DS"), null, new int[]{1}},
-                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}},
-                {"multiplexedBarcode.", "library.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null, new int[]{1}},
-                {"multiplexedBarcode2.", "library.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null, new int[]{1}},
-                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}},
-                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null, new int[]{1}},
-                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}},
-                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null, new int[]{1}},
-                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null, new int[]{1}},
-                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101, new int[]{1}},
-                {"multilane.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null, new int[]{1,2}},
-                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102, new int[]{1}}
+                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, new File(TEST_DATA_DIR.getParentFile(),"sams_with_DS"), null, new int[]{1}},
+                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}},
+                {"multiplexedBarcode.", "library.params", 1, "25T8B4M21T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null, new int[]{1}},
+                {"multiplexedBarcode2.", "library.params", 1, "25T8B4M4M17T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null, new int[]{1}},
+                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}},
+                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null, new int[]{1}},
+                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}},
+                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null, new int[]{1}},
+                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null, new int[]{1}},
+                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR,  DUAL_BASECALLS_DIR,DUAL_TEST_DATA_DIR, 1101, new int[]{1}},
+                {"multilane.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null, new int[]{1,2}},
+                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102, new int[]{1}},
+                // Test barcodes in a separate directory
+                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_BARCODES_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}},
         };
     }
 
     @Test(dataProvider = "variousConfigurationsData")
-    public void testVariousConfigurations(final String jobName, final String libraryParamsFile, final int nColumnFields, final String cigar, final File baseCallingDir, final File samDir, final Integer tile, final int[] lanes) throws Exception {
-        runStandardTest(lanes, jobName, libraryParamsFile, nColumnFields, cigar, baseCallingDir, samDir, tile, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false);
+    public void testVariousConfigurations(final String jobName, final String libraryParamsFile, final int nColumnFields, final String cigar, final File baseCallingDir, final File barcodesDir, final File samDir, final Integer tile, final int[] lanes) throws Exception {
+        runStandardTest(lanes, jobName, libraryParamsFile, nColumnFields, cigar, baseCallingDir, barcodesDir, samDir, tile, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false);
     }
 
     /**
@@ -209,7 +212,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     public void testCorruptDataReturnCode() throws Exception {
         boolean exceptionThrown = false;
         try {
-            runStandardTest(new int[]{9}, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, TEST_DATA_DIR, null, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false);
+            runStandardTest(new int[]{9}, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false);
         } catch (Throwable e) {
             exceptionThrown = true;
         } finally {
@@ -229,9 +232,16 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
      * @param populateBarcode
      * @param includeBarcodeQuality @throws Exception
      */
-    private void runStandardTest(final int[] lanes, final String jobName, final String libraryParamsFile,
-                                 final int concatNColumnFields, final String readStructure,
-                                 final File baseCallsDir, final File testDataDir, final Integer tile, final boolean includeBcInHeader, final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
+    private void runStandardTest(final int[] lanes, final String jobName,
+                                 final String libraryParamsFile,
+                                 final int concatNColumnFields,
+                                 final String readStructure,
+                                 final File baseCallsDir,
+                                 final File barcodesDir,
+                                 final File testDataDir,
+                                 final Integer tile,
+                                 final boolean includeBcInHeader,
+                                 final ClusterDataToSamConverter.PopulateBarcode populateBarcode,
                                  final boolean includeBarcodeQuality) throws Exception {
         for (final boolean sort : new boolean[]{true, false}) {
             final Path outputDir = Files.createTempDirectory(jobName + sort);
@@ -267,6 +277,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
 
                 List<String> args = new ArrayList<>();
                 args.add("BASECALLS_DIR=" + baseCallsDir);
+                args.add("BARCODES_DIR=" + barcodesDir);
                 args.add("RUN_BARCODE=HiMom");
                 args.add("READ_STRUCTURE=" + readStructure);
                 args.add("SEQUENCING_CENTER=BI");
