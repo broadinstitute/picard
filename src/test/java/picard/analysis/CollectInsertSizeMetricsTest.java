@@ -280,6 +280,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
             "LEVEL=READ_GROUP"
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertTrue(pdf.exists());
     }
 
     @Test
