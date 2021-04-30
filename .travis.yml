@@ -1,5 +1,8 @@
 dist: xenial
 language: java
+branches:
+  only:
+    - "master"
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
@@ -12,7 +15,7 @@ env:
     - RUN_BARCLAY_TESTS=true
     - RUN_BARCLAY_TESTS=false
 jdk:
-  - oraclejdk8  # Xenial does not support oraclejdk8
+  # oraclejdk8  - Xenial does not support oraclejdk8
   - openjdk8
   - openjdk11
 before_install:
