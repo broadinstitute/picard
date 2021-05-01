@@ -128,6 +128,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         log.info("Expected cycles: " + StringUtil.intValuesToString(outputCycles));
 
         for (final Integer lane : LANES) {
+            IOUtil.assertDirectoryIsReadable(new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane)));
+
             if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, lane)) {
                 final List<Integer> tiles = new ArrayList<>();
 
