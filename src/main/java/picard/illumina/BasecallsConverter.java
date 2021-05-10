@@ -253,9 +253,15 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     }
 
     protected void interruptAndShutdownExecutors(ThreadPoolExecutorWithExceptions... executors) {
-        int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
-        String errorMessages = Arrays.stream(executors).map(e -> e.exception.toString()).collect(Collectors.joining(","));
+        final int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
+        final String errorMessages = Arrays.stream(executors).map(e -> {
+            if (e.exception != null) {
+                return e.exception.toString();
+            } else {
+                return "";
+            }
+        }).collect(Collectors.joining(","));
         throw new PicardException("Exceptions in tile processing. There were " + tasksRunning
-                + " tasks were still running or queued and have been cancelled. Errors: " + errorMessages);
+                + " tasks still running or queued and they have been cancelled. Errors: " + errorMessages);
     }
 }
