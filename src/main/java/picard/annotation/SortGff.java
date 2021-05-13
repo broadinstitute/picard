@@ -97,7 +97,7 @@ public class SortGff extends CommandLineProgram {
 
     private final Map<String, Integer> latestStartMap = new HashMap<>();
     private int latestStart = 0;
-    String latestChrom;
+    private String latestChrom;
 
     private static class FeatureComparator implements Comparator<Gff3Feature> {
         final SAMSequenceDictionary dict;
