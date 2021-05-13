@@ -80,11 +80,15 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             if (ribosomalIntervals.size() == 0) {
                 log.warn("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " does not contain intervals");
             }
-            try {
-                SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
-            } catch (SequenceUtil.SequenceListsDifferException e) {
-                throw new PicardException("Sequence dictionaries differ in " + samFile.getAbsolutePath() + " and " + ribosomalIntervalsFile.getAbsolutePath(),
-                        e);
+
+            final boolean CHECK_HEADER = false;
+            if (CHECK_HEADER) {
+                try {
+                    SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
+                } catch (SequenceUtil.SequenceListsDifferException e) {
+                    throw new PicardException("Sequence dictionaries differ in " + samFile.getAbsolutePath() + " and " + ribosomalIntervalsFile.getAbsolutePath(),
+                            e);
+                }
             }
             final IntervalList uniquedRibosomalIntervals = ribosomalIntervals.uniqued();
             final List<Interval> intervals = uniquedRibosomalIntervals.getIntervals();
