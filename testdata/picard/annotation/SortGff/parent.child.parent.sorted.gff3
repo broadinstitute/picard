@@ -1,0 +1,6 @@
+##gff-version 3.1.25
+chr1	.	gene	150	250	.	-	.	ID=gene1
+chr1	.	promoter	275	285	.	.	.	Parent=gene1,gene2
+chr1	.	gene	300	400	.	+	.	ID=gene2
+###
+chr1	.	gene	500	550	.	+	.	.
