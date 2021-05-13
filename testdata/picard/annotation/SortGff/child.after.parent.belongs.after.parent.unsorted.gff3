@@ -1,0 +1,4 @@
+##gff-version 3
+chr1	.	gene	150	250	.	+	.	ID=gene1
+chr1	.	gene	300	400	.	+	.	.
+chr1	.	exon	175	180	.	+	.	Parent=gene1
