@@ -186,7 +186,7 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         }
         summaryFile.write(SUMMARY_OUT);
         detailsFile.write(DETAILS_OUT);
-        RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath());
+        RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath().replaceAll("%", "%%"));
         CloserUtil.close(samReader);
         return 0;
     }

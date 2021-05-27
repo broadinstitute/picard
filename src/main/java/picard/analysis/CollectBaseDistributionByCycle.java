@@ -73,9 +73,9 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
                 "of the Base Recalibration (BQSR) pre-processing step of the "+
                 "<a href='https://www.broadinstitute.org/gatk/guide/best-practices'>GATK Best Practices for Variant Discovery</a>, "+
                 "which aims to correct some types of systematic biases that affect the accuracy of base quality scores."+
-                
+
                 "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
-                
+
                 "<h4>Usage example:</h4>" +
                 "<pre>" +
                 "java -jar picard.jar CollectBaseDistributionByCycle \\<br />" +
@@ -140,7 +140,7 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
         } else {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/baseDistributionByCycle.R",
                     OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     INPUT.getName(),
                     plotSubtitle);
             if (rResult != 0) {

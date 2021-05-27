@@ -1,5 +1,6 @@
 package picard.arrays.illumina;
 
+import htsjdk.tribble.annotation.Strand;
 import picard.PicardException;
 
 import java.io.DataInputStream;
@@ -122,9 +123,9 @@ public class IlluminaBPMFile extends InfiniumDataFile implements AutoCloseable {
 
     private IlluminaBPMLocusEntry parseLocusEntry() throws IOException {
         IlluminaBPMLocusEntry locusEntry = new IlluminaBPMLocusEntry();
-        final int version = parseInt();
-        if (version < 6  || version > 8) {
-            throw new PicardException("Unsupported Locus version: " + version);
+        locusEntry.version = parseInt();
+        if (locusEntry.version < 6  || locusEntry.version > 8) {
+            throw new PicardException("Unsupported Locus version: " + locusEntry.version);
         }
 
         locusEntry.ilmnId = parseString();
@@ -134,7 +135,8 @@ public class IlluminaBPMFile extends InfiniumDataFile implements AutoCloseable {
         parseString();
         locusEntry.index = parseInt() - 1;
         parseString();
-        locusEntry.ilmnStrand = parseString();
+        final String ilmnStrandString = parseString();
+        locusEntry.ilmnStrand = (!ilmnStrandString.equals("")) ? IlluminaManifestRecord.IlluminaStrand.valueOf(ilmnStrandString) : IlluminaManifestRecord.IlluminaStrand.NONE;
         locusEntry.snp = parseString();
         locusEntry.chrom = parseString();
         locusEntry.ploidy = parseString();
@@ -149,21 +151,28 @@ public class IlluminaBPMFile extends InfiniumDataFile implements AutoCloseable {
         locusEntry.genomeBuild = parseString();
         locusEntry.source = parseString();
         locusEntry.sourceVersion = parseString();
-        locusEntry.sourceStrand = parseString();
+        final String sourceStrandString = parseString();
+        locusEntry.sourceStrand = (!sourceStrandString.equals("")) ? IlluminaManifestRecord.IlluminaStrand.valueOf(sourceStrandString) : IlluminaManifestRecord.IlluminaStrand.NONE;
         locusEntry.sourceSeq = parseString();           // Only in Version 4
         parseByte();
         locusEntry.expClusters = parseByte();
-        locusEntry.intensityOnly = parseByte();
+        int intensityOnlyValue = parseByte();
+        if ((intensityOnlyValue == 0) || (intensityOnlyValue == 1)) {
+            locusEntry.intensityOnly = intensityOnlyValue == 1;
+        } else {
+            throw new PicardException("Unexpected value ('" + intensityOnlyValue + "') for intensity_only field");
+        }
         locusEntry.assayType = parseByte();
 
-        if (version >= 7) {
+        if (locusEntry.version >= 7) {
             locusEntry.fracA = parseFloat();
             locusEntry.fracC = parseFloat();
             locusEntry.fracT = parseFloat();
             locusEntry.fracG = parseFloat();
         }
-        if (version == 8) {
-            locusEntry.refStrand = parseString();
+        if (locusEntry.version == 8) {
+            final String refStrandString = parseString();
+            locusEntry.refStrand = (!refStrandString.equals("")) ? Strand.decode(refStrandString.charAt(0)) : Strand.NONE;
         }
 
         if (locusEntry.assayType < 0 || locusEntry.assayType > 2) {

@@ -82,7 +82,7 @@ public class BpmToNormalizationManifestCsv extends CommandLineProgram {
                 joiner.add("" + locusEntry.mapInfo);
                 joiner.add(df.format(genTrainScore));
                 joiner.add(locusEntry.snp);
-                joiner.add(locusEntry.ilmnStrand);
+                joiner.add(locusEntry.ilmnStrand.toString());
                 joiner.add(locusEntry.customerStrand);
                 joiner.add("" + locusEntry.normalizationId);
                 writer.write(joiner.toString());
