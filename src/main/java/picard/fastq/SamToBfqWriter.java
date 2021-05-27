@@ -57,7 +57,7 @@ public class SamToBfqWriter {
     private static final int SEED_REGION_LENGTH = 28;
     private static final int MAX_SEED_REGION_NOCALL_FIXES = 2;
 
-    private final File bamFile;
+    private final File samFile;
     private final String outputPrefix;
     private final String namePrefix;
     private final int nameTrim;
@@ -76,30 +76,30 @@ public class SamToBfqWriter {
     /**
      * Constructor
      *
-     * @param bamFile        the BAM file to read from
-     * @param outputPrefix   the directory and file prefix for the binary fastq files
-     * @param total          the total number of records that should be written, drawn evenly
-     *                       from throughout the file (null for all).
-     * @param chunk          the maximum number of records that should be written to any one file
-     * @param pairedReads    whether these reads are from  a paired-end run
-     * @param namePrefix     The string to be stripped off the read name
-     *                       before writing to the bfq file. May be null, in which case
-     *                       the name will not be trimmed.
+     * @param samFile           the BAM file to read from
+     * @param outputPrefix      the directory and file prefix for the binary fastq files
+     * @param total             the total number of records that should be written, drawn evenly
+     *                          from throughout the file (null for all).
+     * @param chunk             the maximum number of records that should be written to any one file
+     * @param pairedReads       whether these reads are from  a paired-end run
+     * @param namePrefix        The string to be stripped off the read name
+     *                          before writing to the bfq file. May be null, in which case
+     *                          the name will not be trimmed.
      * @param includeNonPfReads whether to include non pf-reads
-     * @param clipAdapters    whether to replace adapters as marked with XT:i clipping position attribute
+     * @param clipAdapters      whether to replace adapters as marked with XT:i clipping position attribute
      */
-    public SamToBfqWriter(final File bamFile, final File referenceSequence, final String outputPrefix, final Integer total,
+    public SamToBfqWriter(final File samFile, final File referenceSequence, final String outputPrefix, final Integer total,
                           final Integer chunk, final boolean pairedReads, String namePrefix,
                           boolean includeNonPfReads, boolean clipAdapters, Integer basesToWrite) {
 
-        IOUtil.assertFileIsReadable(bamFile);
-        this.bamFile = bamFile;
+        IOUtil.assertFileIsReadable(samFile);
+        this.samFile = samFile;
         this.outputPrefix = outputPrefix;
         this.pairedReads = pairedReads;
         this.referenceSequence = referenceSequence;
         if (total != null) {
             final double writeable = countWritableRecords();
-            this.increment = (int)Math.floor(writeable/total.doubleValue());
+            this.increment = (int) Math.floor(writeable / total.doubleValue());
             if (this.increment == 0) {
                 this.increment = 1;
             }
@@ -117,24 +117,24 @@ public class SamToBfqWriter {
     /**
      * Constructor
      *
-     * @param bamFile   the BAM file to read from
-     * @param outputPrefix   the directory and file prefix for the binary fastq files
-     * @param pairedReads    whether these reads are from  a paired-end run
-     * @param namePrefix     the barcode of the run (to be stripped off the read name
-     *                       before writing to the bfq file)
+     * @param samFile           the BAM file to read from
+     * @param outputPrefix      the directory and file prefix for the binary fastq files
+     * @param pairedReads       whether these reads are from  a paired-end run
+     * @param namePrefix        the barcode of the run (to be stripped off the read name
+     *                          before writing to the bfq file)
      * @param includeNonPfReads whether to include non pf-reads
      */
-    public SamToBfqWriter(final File bamFile, final String outputPrefix, final boolean pairedReads,
+    public SamToBfqWriter(final File samFile, final String outputPrefix, final boolean pairedReads,
                           String namePrefix, boolean includeNonPfReads) {
-        this(bamFile, null, outputPrefix, null, null, pairedReads, namePrefix, includeNonPfReads, true, null);
+        this(samFile, null, outputPrefix, null, null, pairedReads, namePrefix, includeNonPfReads, true, null);
     }
- 
+
     /**
      * Writes the binary fastq file(s) to the output directory
      */
     public void writeBfqFiles() {
 
-        final SamReader reader = SamReaderFactory.makeDefault().open(bamFile);
+        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
         final Iterator<SAMRecord> iterator = reader.iterator();
 
         // Filter out noise reads and reads that fail the quality filter
@@ -152,8 +152,7 @@ public class SamToBfqWriter {
             }
             writeSingleEndBfqs(iterator, filters);
             codec1.close();
-        }
-        else {
+        } else {
             writePairedEndBfqs(iterator, tagFilter, qualityFilter, clippedFilter);
             codec1.close();
             codec2.close();
@@ -171,27 +170,28 @@ public class SamToBfqWriter {
      */
     private void writePairedEndBfqs(final Iterator<SAMRecord> iterator, final TagFilter tagFilter,
                                     final FailsVendorReadQualityFilter qualityFilter,
-                                    SamRecordFilter ... otherFilters) {
+                                    SamRecordFilter... otherFilters) {
         // Open the codecs for writing
         int fileIndex = 0;
         initializeNextBfqFiles(fileIndex++);
 
         int records = 0;
 
-        RECORD_LOOP: while (iterator.hasNext()) {
+        RECORD_LOOP:
+        while (iterator.hasNext()) {
             final SAMRecord first = iterator.next();
             if (!iterator.hasNext()) {
-                throw new PicardException("Mismatched number of records in " + this.bamFile.getAbsolutePath());
+                throw new PicardException("Mismatched number of records in " + this.samFile.getAbsolutePath());
             }
             final SAMRecord second = iterator.next();
             if (!second.getReadName().equals(first.getReadName()) ||
-                first.getFirstOfPairFlag() == second.getFirstOfPairFlag()) {
-                throw new PicardException("Unmatched read pairs in " + this.bamFile.getAbsolutePath() +
-                    ": " + first.getReadName() + ", " + second.getReadName() + ".");
+                    first.getFirstOfPairFlag() == second.getFirstOfPairFlag()) {
+                throw new PicardException("Unmatched read pairs in " + this.samFile.getAbsolutePath() +
+                        ": " + first.getReadName() + ", " + second.getReadName() + ".");
             }
 
             // If *both* are noise reads, filter them out
-            if (tagFilter.filterOut(first) && tagFilter.filterOut(second))  {
+            if (tagFilter.filterOut(first) && tagFilter.filterOut(second)) {
                 continue;
             }
 
@@ -228,8 +228,8 @@ public class SamToBfqWriter {
     /**
      * Path for writing bfqs for single-end reads
      *
-     * @param iterator  the iterator with he SAM Records to write
-     * @param filters   the list of filters to be applied
+     * @param iterator the iterator with he SAM Records to write
+     * @param filters  the list of filters to be applied
      */
     private void writeSingleEndBfqs(final Iterator<SAMRecord> iterator, final List<SamRecordFilter> filters) {
 
@@ -259,7 +259,7 @@ public class SamToBfqWriter {
     }
 
     /**
-     * Closes any the open bfq file(s), if any, and opens the new one(s)
+     * Closes any open bfq file(s), and opens the new one(s)
      *
      * @param fileIndex the index (counter) of the files to write
      */
@@ -273,11 +273,11 @@ public class SamToBfqWriter {
         }
 
         // Open new file, using the fileIndex.
-        final File bfq1 = getOutputFile(this.outputPrefix , 1, fileIndex);
+        final File bfq1 = getOutputFile(this.outputPrefix, 1, fileIndex);
         codec1 = new BinaryCodec(IOUtil.openFileForWriting(bfq1));
         log.info("Now writing to file " + bfq1.getAbsolutePath());
         if (pairedReads) {
-            final File bfq2 = getOutputFile(this.outputPrefix , 2, fileIndex);
+            final File bfq2 = getOutputFile(this.outputPrefix, 2, fileIndex);
             codec2 = new BinaryCodec(IOUtil.openFileForWriting(bfq2));
             log.info("Now writing to file " + bfq2.getAbsolutePath());
         }
@@ -303,13 +303,13 @@ public class SamToBfqWriter {
         final char[] quals = rec.getBaseQualityString().toCharArray();
 
         int retainedLength = seqs.length;
-        if (clipAdapters){
+        if (clipAdapters) {
             // adjust to a shorter length iff clipping tag exists
             Integer trimPoint = rec.getIntegerAttribute(ReservedTagConstants.XT);
             if (trimPoint != null) {
                 ValidationUtils.validateArg(rec.getReadLength() == seqs.length, () -> "length of read and seqs differ. Found " + rec.getReadLength() + " and '" + seqs.length + ".");
 
-                retainedLength = Math.min(seqs.length, Math.max(SEED_REGION_LENGTH, trimPoint -1));
+                retainedLength = Math.min(seqs.length, Math.max(SEED_REGION_LENGTH, trimPoint - 1));
             }
         }
 
@@ -326,9 +326,9 @@ public class SamToBfqWriter {
 
         int seedRegionNoCallFixes = 0;
         for (int i = 0; i < retainedLength && i < seqsAndQuals.length; i++) {
-            int quality = Math.min(quals[i]-33, 63);
+            int quality = Math.min(quals[i] - 33, 63);
             final int base;
-            switch(seqs[i]) {
+            switch (seqs[i]) {
                 case 'A':
                 case 'a':
                     base = 0;
@@ -349,16 +349,14 @@ public class SamToBfqWriter {
                 case 'n':
                 case '.':
                     base = 0;
-                    if (i < SEED_REGION_LENGTH ) {
+                    if (i < SEED_REGION_LENGTH) {
                         if (seedRegionNoCallFixes < MAX_SEED_REGION_NOCALL_FIXES) {
                             quality = 1;
                             seedRegionNoCallFixes++;
-                        }
-                        else {
+                        } else {
                             quality = 0;
                         }
-                    }
-                    else {
+                    } else {
                         quality = 1;
                     }
                     break;
@@ -382,16 +380,16 @@ public class SamToBfqWriter {
     /**
      * Count the number of records in the bamFile that could potentially be written
      *
-     * @return  the number of records in the Bam file
+     * @return the number of records in the Bam file
      */
     private int countWritableRecords() {
         int count = 0;
 
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).open(bamFile);
-        if(!reader.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.queryname)) {
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).open(samFile);
+        if (!reader.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.queryname)) {
             //this is a fix for issue PIC-274: It looks like BamToBfqWriter requires that the input BAM is queryname sorted,
             //but it doesn't check this early, nor produce an understandable error message."
-            throw new PicardException("Input file (" + bamFile.getAbsolutePath() + ") needs to be sorted by queryname.");
+            throw new PicardException("Input file (" + samFile.getAbsolutePath() + ") needs to be sorted by queryname.");
         }
         final PeekableIterator<SAMRecord> it = new PeekableIterator<SAMRecord>(reader.iterator());
         if (!this.pairedReads) {
@@ -406,18 +404,17 @@ public class SamToBfqWriter {
                 itr.next();
                 count++;
             }
-        }
-        else {
+        } else {
             while (it.hasNext()) {
                 final SAMRecord first = it.next();
                 final SAMRecord second = it.next();
                 // If both are noise reads, filter them out
                 if (first.getAttribute(ReservedTagConstants.XN) != null &&
-                    second.getAttribute(ReservedTagConstants.XN) != null)  {
+                        second.getAttribute(ReservedTagConstants.XN) != null) {
                     // skip it
                 }
                 // If either fails to pass filter, then exclude them as well
-                else if (!this.includeNonPfReads && (first.getReadFailsVendorQualityCheckFlag() || second.getReadFailsVendorQualityCheckFlag()) ) {
+                else if (!this.includeNonPfReads && (first.getReadFailsVendorQualityCheckFlag() || second.getReadFailsVendorQualityCheckFlag())) {
                     // skip it
                 }
                 // Otherwise, write them out
@@ -434,10 +431,10 @@ public class SamToBfqWriter {
     /**
      * Constructs the name for the output file and returns the file
      *
-     * @param outputPrefix        the directory and file prefix for the output bfq file
-     * @param read                whether this is the file for the first or second read
-     * @param index               used in file name
-     * @return                    a new File object for the bfq file.
+     * @param outputPrefix the directory and file prefix for the output bfq file
+     * @param read         whether this is the file for the first or second read
+     * @param index        used in file name
+     * @return a new File object for the bfq file.
      */
     private File getOutputFile(final String outputPrefix, final int read, final int index) {
         final File result = new File(outputPrefix + index + "." + read + ".bfq");

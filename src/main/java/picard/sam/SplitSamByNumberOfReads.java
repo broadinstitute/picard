@@ -54,7 +54,8 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Splits a SAM/BAM/CRAM file to multiple files.";
     static final String USAGE_DETAILS = "This tool splits the input query-grouped SAM/BAM/CRAM file into multiple files " +
             "while maintaining the sort order. This can be used to split a large unmapped input in order to parallelize alignment. " +
-            "It will traverse the input twice unless TOTAL_READS_IN_INPUT is provided." +
+            "It will traverse the input twice unless TOTAL_READS_IN_INPUT is provided. Output type (and extension) will agree" +
+            "with that of the input." +
             "<br />" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
@@ -135,7 +136,7 @@ public class SplitSamByNumberOfReads extends CommandLineProgram {
 
         Function<Integer, SAMFileWriter> createWriter = (index) ->
                 writerFactory.makeSAMOrBAMWriter(header, true,
-                        new File(OUTPUT, String.format("%s_%04d.%s", OUT_PREFIX,index,extension)));
+                        new File(OUTPUT, String.format("%s_%04d.%s", OUT_PREFIX, index, extension)));
 
         SAMFileWriter currentWriter = createWriter.apply(fileIndex++);
         String lastReadName = "";

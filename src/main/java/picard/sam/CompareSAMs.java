@@ -54,7 +54,7 @@ import java.util.List;
 @DocumentedFeature
 public class CompareSAMs extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Compare two input SAM/BAM/CRAM files.  ";
-    static final String USAGE_DETAILS = "This tool initially compares the headers input files. " +
+    static final String USAGE_DETAILS = "This tool initially compares the headers of the input files. " +
             " If the file headers are comparable, the tool can perform either strict comparisons for which " +
             "each alignment and the header must be identical, or a more lenient check of \"equivalence\", where reads with mapping quality < LOW_MQ_THRESHOLD " +
             "are allowed to have different alignments, duplicate marks are allowed to differ to account for " +

@@ -258,7 +258,7 @@ public class SamToFastq extends CommandLineProgram {
 
             fastqWriters = new FastqWriters(firstOfPairWriter, secondOfPairWriter, unpairedWriter);
 
-            // For all read groups we may find in the bam, register this single set of writers for them.
+            // For all read groups we may find in the sam, register this single set of writers for them.
             writerMap.put(null, fastqWriters);
             for (final SAMReadGroupRecord rg : samReadGroupRecords) {
                 writerMap.put(rg, fastqWriters);
@@ -335,7 +335,7 @@ public class SamToFastq extends CommandLineProgram {
             fileName = readGroup.getReadGroupId();
         }
         if (fileName == null) {
-            throw new PicardException("The selected RG_TAG: " + RG_TAG + " is not present in the bam header.");
+            throw new PicardException("The selected RG_TAG: " + RG_TAG + " is not present in the header.");
         }
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) {
