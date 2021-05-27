@@ -154,7 +154,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         } else {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/wgsHistogram.R",
                     OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     INPUT.getName(),
                     plotSubtitle);
             if (rResult != 0) {

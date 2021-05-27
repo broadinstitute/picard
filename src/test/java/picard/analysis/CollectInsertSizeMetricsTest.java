@@ -265,6 +265,25 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testPercentCharInPdfFilename() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
+        final File outfile   = File.createTempFile("test_%_char", ".insert_size_metrics");
+        final File pdf = File.createTempFile("test_%_char", ".pdf");
+        pdf.deleteOnExit();
+
+        final String[] args = new String[] {
+            "INPUT="  + input.getAbsolutePath(),
+            "OUTPUT=" + outfile.getAbsolutePath(),
+            "Histogram_FILE=" + pdf.getAbsolutePath(),
+            "LEVEL=SAMPLE",
+            "LEVEL=LIBRARY",
+            "LEVEL=READ_GROUP"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertTrue(pdf.exists());
+    }
+
+    @Test
     public void testWidthOfMetrics() throws IOException {
         final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
         testSamFile.deleteOnExit();
@@ -321,11 +340,11 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
 
         final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
-        
+
         final List<InsertSizeMetrics> metrics = output.getMetrics();
-        
+
         Assert.assertEquals(metrics.size(), 1);
-        
+
         final InsertSizeMetrics metric = metrics.get(0);
 
         Assert.assertEquals(metric.PAIR_ORIENTATION.name(), "FR");
