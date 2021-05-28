@@ -39,7 +39,7 @@ import java.util.function.Function;
 
 /**
  * <p/>
- * Splits the input queryname sorted or query-grouped SAM/BAM file and writes it into
+ * Splits the input queryname sorted or query-grouped SAM/BAM/CRAM file and writes it into
  * multiple BAM files, each with an approximately equal number of reads. This will retain the sort order
  * within each output BAM and if the BAMs are concatenated in order (output files are named
  * numerically) the order of the reads will match the original BAM. It will traverse the bam twice unless
