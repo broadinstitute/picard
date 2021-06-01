@@ -149,6 +149,7 @@ Please cite this repository when using Picard tools for your publications.
 }
 ```
 
+Identifiers from software registries are increasingly accepted by journals, as in (biotools:picard_tools) or (RRID:SCR_006525).
 
 Picard is migrating to semantic versioning (http://semver.org/). We will eventually adhere to it strictly and bump our major version whenever there are breaking changes to our API, but until we more clearly define what constitutes our official API, clients should assume that every release potentially contains at least minor changes to public methods.
 

@@ -31,8 +31,8 @@ public class BclReaderTest {
             'A', 'C', 'G', 'T', 'A', 'C', 'A', 'A', 'C', 'G', 'C', 'A', 'C', 'A', 'T', 'T',
             'T', 'A', 'A', 'G', 'C', 'G', 'T', 'C', 'A', 'T', 'G', 'A', 'G', 'C', 'T', 'C',
             'T', 'A', 'C', 'G', 'A', 'A', 'C', 'C', 'C', 'A', 'T', 'A', 'T', 'G', 'G', 'G',
-            'C', 'T', 'G', 'A', 'A', '.', '.', 'G', 'A', 'C', 'C', 'G', 'T', 'A', 'C', 'A',
-            'G', 'T', 'G', 'T', 'A', '.'
+            'C', 'T', 'G', 'A', 'A', 'N', 'N', 'G', 'A', 'C', 'C', 'G', 'T', 'A', 'C', 'A',
+            'G', 'T', 'G', 'T', 'A', 'N'
     };
 
     public static final int[] expectedQuals = new int[]{

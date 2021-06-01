@@ -1,89 +1,221 @@
 package picard.illumina;
 
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SortingCollection;
+import htsjdk.io.AsyncWriterPool;
+import htsjdk.io.Writer;
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.ThreadPoolExecutorWithExceptions;
 
 import java.io.File;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
-    private static final Log log = Log.getInstance(BasecallsConverter.class);
+/**
+ * BasecallsConverter utilizes an underlying IlluminaDataProvider to convert parsed and decoded sequencing data
+ * from standard Illumina formats to specific output records (FASTA records/SAM records).
+ * <p>
+ * The underlying IlluminaDataProvider apply several optional transformations that can include EAMSS filtering,
+ * non-PF read filtering and quality score recoding using a BclQualityEvaluationStrategy.
+ * <p>
+ * The converter can also limit the scope of data that is converted from the data provider by setting the
+ * tile to start on (firstTile) and the total number of tiles to process (tileLimit).
+ * <p>
+ * Additionally, BasecallsConverter can optionally demultiplex reads by outputting barcode specific reads to
+ * their associated writers..
+ *
+ * @param <CLUSTER_OUTPUT_RECORD> The type of record that this converter will convert to.
+ */
+public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
+    public static final Set<IlluminaDataType> DATA_TYPES_WITH_BARCODE = new HashSet<>(Arrays.asList(
+            IlluminaDataType.BaseCalls,
+            IlluminaDataType.QualityScores,
+            IlluminaDataType.Position,
+            IlluminaDataType.PF,
+            IlluminaDataType.Barcodes));
 
-    final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
-    final int maxReadsInRamPerTile;
-    final boolean demultiplex;
-    final List<File> tmpDirs;
-    final boolean ignoreUnexpectedBarcodes;
-    final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
-    final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
-    final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
-    final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
-    final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
-    int numThreads;
-    ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter = null;
+    public static final Set<IlluminaDataType> DATA_TYPES_WITHOUT_BARCODE = new HashSet<>(Arrays.asList(
+            IlluminaDataType.BaseCalls,
+            IlluminaDataType.QualityScores,
+            IlluminaDataType.Position,
+            IlluminaDataType.PF));
 
-    protected final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
+    protected final IlluminaDataProviderFactory[] laneFactories;
+    protected final boolean demultiplex;
+    protected final boolean ignoreUnexpectedBarcodes;
+    protected final Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
+    protected final boolean includeNonPfReads;
+    protected final AsyncWriterPool writerPool;
+    protected ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter = null;
     protected List<Integer> tiles;
-    protected final IlluminaDataProviderFactory factory;
+
 
     /**
-     * @param barcodeRecordWriterMap   Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
-     *                                 one writer stored with key=null.
-     * @param demultiplex              If true, output is split by barcode, otherwise all are written to the same output stream.
-     * @param maxReadsInRamPerTile     Configures number of reads each tile will store in RAM before spilling to disk.
-     * @param tmpDirs                  For SortingCollection spilling.
-     * @param numProcessors            Controls number of threads.  If <= 0, the number of threads allocated is
-     *                                 available cores - numProcessors.
-     * @param outputRecordComparator   For sorting output records within a single tile.
-     * @param codecPrototype           For spilling output records to disk.
-     * @param outputRecordClass        Inconveniently needed to create SortingCollections.
-     * @param ignoreUnexpectedBarcodes If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
+     * Constructs a new BasecallsConverter object.
+     *
+     * @param basecallsDir                 Where to read basecalls from.
+     * @param barcodesDir                  Where to read barcodes from (optional; use basecallsDir if not specified).
+     * @param lanes                        What lanes to process.
+     * @param readStructure                How to interpret each cluster.
+     * @param barcodeRecordWriterMap       Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
+     *                                     one writer stored with key=null.
+     * @param demultiplex                  If true, output is split by barcode, otherwise all are written to the same output stream.
+     * @param firstTile                    (For debugging) If non-null, start processing at this tile.
+     * @param tileLimit                    (For debugging) If non-null, process no more than this many tiles.
+     * @param bclQualityEvaluationStrategy The basecall quality evaluation strategy that is applyed to decoded base calls.
+     * @param ignoreUnexpectedBarcodes     If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap.
+     * @param applyEamssFiltering          If true, apply EAMSS filtering if parsing BCLs for bases and quality scores.
+     * @param includeNonPfReads            If true, will include ALL reads (including those which do not have PF set).
+     *                                     This option does nothing for instruments that output cbcls (Novaseqs)
      */
-    BasecallsConverter(final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
-                       final int maxReadsInRamPerTile,
-                       final List<File> tmpDirs,
-                       final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
-                       final boolean ignoreUnexpectedBarcodes,
-                       final boolean demultiplex,
-                       final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
-                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                       final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
-                       final int numProcessors,
-                       final IlluminaDataProviderFactory factory) {
-
+    public BasecallsConverter(
+            final File basecallsDir,
+            final File barcodesDir,
+            final int[] lanes,
+            final ReadStructure readStructure,
+            final Map<String, ? extends Writer<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
+            final boolean demultiplex,
+            final Integer firstTile,
+            final Integer tileLimit,
+            final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+            final boolean ignoreUnexpectedBarcodes,
+            final boolean applyEamssFiltering,
+            final boolean includeNonPfReads,
+            final AsyncWriterPool writerPool
+    ) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
-        this.maxReadsInRamPerTile = maxReadsInRamPerTile;
-        this.tmpDirs = tmpDirs;
-        this.codecPrototype = codecPrototype;
         this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
         this.demultiplex = demultiplex;
-        this.outputRecordComparator = outputRecordComparator;
-        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
-        this.outputRecordClass = outputRecordClass;
-        this.factory = factory;
+        this.writerPool = writerPool;
+        this.laneFactories = new IlluminaDataProviderFactory[lanes.length];
+        for(int i = 0; i < lanes.length; i++) {
+            this.laneFactories[i] = new IlluminaDataProviderFactory(basecallsDir,
+                    barcodesDir, lanes[i], readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex));
+            this.laneFactories[i].setApplyEamssFiltering(applyEamssFiltering);
+        }
+        this.includeNonPfReads = includeNonPfReads;
+        Set<Integer> allTiles = new TreeSet<>(TILE_NUMBER_COMPARATOR);
+        for(IlluminaDataProviderFactory laneFactory: laneFactories) {
+            allTiles.addAll(laneFactory.getAvailableTiles());
+        }
+        this.tiles = new ArrayList<>(allTiles);
+        setTileLimits(firstTile, tileLimit);
+    }
 
+    /**
+     * Abstract method for processing tiles of data and outputting records for each barcode.
+     *
+     * @param barcodes The barcodes used optionally for demultiplexing. Must contain at least a single null value if
+     *                 no demultiplexing is being done.
+     */
+    public abstract void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) throws IOException;
 
-        if (numProcessors == 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors();
-        } else if (numProcessors < 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors() + numProcessors;
+    /**
+     * Closes all writers. If an AsycnWriterPool is used call close on that, otherwise iterate each writer and close it.
+     *
+     * @throws IOException throw if there is an error closing the writer.
+     */
+    public void closeWriters() throws IOException {
+        if (writerPool != null) {
+            writerPool.close();
         } else {
-            this.numThreads = numProcessors;
+            for (Writer<CLUSTER_OUTPUT_RECORD> writer : barcodeRecordWriterMap.values()) {
+                writer.close();
+            }
         }
     }
 
-    public IlluminaDataProviderFactory getFactory() {
-        return factory;
+    /**
+     * Interface that defines a converter that takes ClusterData and returns OUTPUT_RECORD type objects.
+     *
+     * @param <OUTPUT_RECORD> The recode type to convert to.
+     */
+    protected interface ClusterDataConverter<OUTPUT_RECORD> {
+        /**
+         * Creates the OUTPUT_RECORDs from the cluster
+         */
+        OUTPUT_RECORD convertClusterToOutputRecord(final ClusterData cluster);
     }
 
-    public abstract void doTileProcessing();
+    /**
+     * Interface that defines a writer that will write out OUTPUT_RECORD type objects.
+     *
+     * @param <OUTPUT_RECORD> The recode type to convert to.
+     */
+    protected interface ConvertedClusterDataWriter<OUTPUT_RECORD> extends Writer<OUTPUT_RECORD> {
+        /**
+         * Write out a single record of type OUTPUT_RECORD.
+         *
+         * @param rec The record to write.
+         */
+        void write(final OUTPUT_RECORD rec);
+
+        /**
+         * Closes the writer.
+         */
+        void close();
+    }
+
+    /**
+     * A comparator used to sort Illumina tiles in their proper order.
+     * Because the tile number is followed by a colon, a tile number that is a prefix of another tile number
+     * should sort after. (e.g. 10 sorts after 100). Tile numbers with the same number of digits are sorted numerically.
+     */
+    public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
+        final String s1 = integer1.toString();
+        final String s2 = integer2.toString();
+
+        if (s1.length() < s2.length()) {
+            if (s2.startsWith(s1)) {
+                return 1;
+            }
+        } else if (s2.length() < s1.length() && s1.startsWith(s2)) {
+            return -1;
+        }
+        return s1.compareTo(s2);
+    };
+
+    /**
+     * Applies an lane and tile based regex to return all files matching that regex for each tile.
+     *
+     * @param baseDirectory The directory to search for tiled files.
+     * @param pattern       The pattern used to match files.
+     * @return A file array of all of the tile based files that match the regex pattern.
+     */
+    public static File[] getTiledFiles(final File baseDirectory, final Pattern pattern) {
+        return IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
+    }
+
+    /**
+     * Given a read structure return the data types that need to be parsed for this run
+     *
+     * @param readStructure The read structure that defines how the read is set up.
+     * @param demultiplex   If true, output is split by barcode, otherwise all are written to the same output stream.
+     * @return A data type array for each piece of data needed to satisfy the read structure.
+     */
+    protected static Set<IlluminaDataType> getDataTypesFromReadStructure(final ReadStructure readStructure,
+                                                                         final boolean demultiplex) {
+        if (!readStructure.hasSampleBarcode() || !demultiplex) {
+            return DATA_TYPES_WITHOUT_BARCODE;
+        } else {
+            return DATA_TYPES_WITH_BARCODE;
+        }
+    }
+
+    /**
+     * Gets the data provider factory used to create the underlying data provider.
+     *
+     * @return A factory used for create the underlying data provider.
+     */
+    protected IlluminaDataProviderFactory[] getLaneFactories() {
+        return laneFactories;
+    }
 
     /**
      * Must be called before doTileProcessing.  This is not passed in the ctor because often the
@@ -91,11 +223,18 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      *
      * @param converter Converts ClusterData to CLUSTER_OUTPUT_RECORD
      */
-    void setConverter(final ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter) {
+    protected void setConverter(final ClusterDataConverter<CLUSTER_OUTPUT_RECORD> converter) {
         this.converter = converter;
     }
 
-    void setTileLimits(final Integer firstTile, final Integer tileLimit) {
+    /**
+     * Uses the firstTile and tileLimit parameters to set which tiles will be processed. The processor will
+     * start with firstTile and continue to process tiles in order until it has processed at most tileLimit tiles.
+     *
+     * @param firstTile The tile to begin processing at.
+     * @param tileLimit The maximum number of tiles to process.
+     */
+    protected void setTileLimits(final Integer firstTile, final Integer tileLimit) {
         if (firstTile != null) {
             int i;
             for (i = 0; i < tiles.size(); ++i) {
@@ -113,34 +252,16 @@ abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         }
     }
 
-    interface ClusterDataConverter<OUTPUT_RECORD> {
-        /**
-         * Creates the OUTPUT_RECORDs from the cluster
-         */
-        OUTPUT_RECORD convertClusterToOutputRecord(final ClusterData cluster);
-    }
-
-    interface ConvertedClusterDataWriter<OUTPUT_RECORD> {
-        void write(final OUTPUT_RECORD rec);
-
-        void close();
-    }
-
-    /**
-     * A comparator for tile numbers, which are not necessarily ordered by the number's value.
-     */
-    public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = (integer1, integer2) -> {
-        final String s1 = integer1.toString();
-        final String s2 = integer2.toString();
-        // Because a the tile number is followed by a colon, a tile number that
-        // is a prefix of another tile number should sort after. (e.g. 10 sorts after 100).
-        if (s1.length() < s2.length()) {
-            if (s2.startsWith(s1)) {
-                return 1;
+    protected void interruptAndShutdownExecutors(ThreadPoolExecutorWithExceptions... executors) {
+        final int tasksRunning = Arrays.stream(executors).mapToInt(test -> test.shutdownNow().size()).sum();
+        final String errorMessages = Arrays.stream(executors).map(e -> {
+            if (e.exception != null) {
+                return e.exception.toString();
+            } else {
+                return "";
             }
-        } else if (s2.length() < s1.length() && s1.startsWith(s2)) {
-            return -1;
-        }
-        return s1.compareTo(s2);
-    };
+        }).collect(Collectors.joining(","));
+        throw new PicardException("Exceptions in tile processing. There were " + tasksRunning
+                + " tasks still running or queued and they have been cancelled. Errors: " + errorMessages);
+    }
 }

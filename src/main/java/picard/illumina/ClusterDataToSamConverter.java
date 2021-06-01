@@ -50,9 +50,9 @@ import java.util.*;
  * @author jburke@broadinstitute.org
  */
 public class ClusterDataToSamConverter implements
-        IlluminaBasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
+        BasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
 
-    private final String readGroupId;
+    private final Map<Integer, String> laneToReadGroup;
     private final SamRecordFilter filters = new SolexaNoiseFilter();
     private final boolean isPairedEnd;
     private final boolean hasSampleBarcode;
@@ -104,21 +104,21 @@ public class ClusterDataToSamConverter implements
      * Constructor
      *
      * @param runBarcode                Used to construct read names.
-     * @param readGroupId               If non-null, set RG attribute on SAMRecord to this.
+     * @param laneToReadGroup           If non-null, set RG attribute on SAMRecord to this.
      * @param readStructure             The expected structure (number of reads and indexes,
      *                                  and their length) in the read.
      * @param adapters                  The list of adapters to check for in the read
      * @param barcodePopulationStrategy When to populate BC tag?
      */
     public ClusterDataToSamConverter(final String runBarcode,
-                                     final String readGroupId,
+                                     final Map<Integer,String> laneToReadGroup,
                                      final ReadStructure readStructure,
                                      final List<AdapterPair> adapters,
                                      final PopulateBarcode barcodePopulationStrategy,
                                      final boolean includeQualitiesWithBarcode) {
         this.barcodePopulationStrategy = barcodePopulationStrategy;
         this.includeQualitiesWithBarcode = includeQualitiesWithBarcode;
-        this.readGroupId = readGroupId;
+        this.laneToReadGroup = laneToReadGroup;
 
         this.readNameEncoder = new IlluminaReadNameEncoder(runBarcode);
 
@@ -179,7 +179,8 @@ public class ClusterDataToSamConverter implements
      */
     private SAMRecord createSamRecord(final ReadData readData, final String readName, final boolean isPf, final boolean firstOfPair,
                                       final String unmatchedBarcode, final String barcodeQuality,
-                                      final List<String> molecularIndexes, final List<String> molecularIndexQualities) {
+                                      final List<String> molecularIndexes, final List<String> molecularIndexQualities,
+                                      final Integer lane) {
         final SAMRecord sam = new SAMRecord(null);
         sam.setReadName(readName);
         sam.setReadBases(readData.getBases());
@@ -199,9 +200,8 @@ public class ClusterDataToSamConverter implements
             sam.setAttribute(ReservedTagConstants.XN, 1);
         }
 
-        if (this.readGroupId != null) {
-            sam.setAttribute(SAMTag.RG.name(), readGroupId);
-        }
+        final String rgId = this.laneToReadGroup.get(lane);
+        if (rgId != null) sam.setAttribute(SAMTag.RG.name(), rgId);
 
         // If it's a barcoded run and it has been decided that the original BC value should be added to the record, do it
         if (unmatchedBarcode != null) {
@@ -272,7 +272,8 @@ public class ClusterDataToSamConverter implements
                 unmatchedBarcode,
                 barcodeQuality,
                 molecularIndexes,
-                molecularIndexQualities);
+                molecularIndexQualities,
+                cluster.getLane());
         ret.records[0] = firstOfPair;
 
 
@@ -287,7 +288,8 @@ public class ClusterDataToSamConverter implements
                     unmatchedBarcode,
                     barcodeQuality,
                     molecularIndexes,
-                    molecularIndexQualities);
+                    molecularIndexQualities,
+                    cluster.getLane());
             ret.records[1] = secondOfPair;
         }
 

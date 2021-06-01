@@ -186,7 +186,7 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         }
         summaryFile.write(SUMMARY_OUT);
         detailsFile.write(DETAILS_OUT);
-        RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath());
+        RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath().replaceAll("%", "%%"));
         CloserUtil.close(samReader);
         return 0;
     }
@@ -220,6 +220,10 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 
         if (MINIMUM_READ_LENGTH <= 0) {
             errorMsgs.add("MINIMUM_READ_LENGTH must be > 0");
+        }
+
+        if (!checkRInstallation(R_SCRIPT != null)) {
+            errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
         }
 
         return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
