@@ -614,7 +614,11 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             return;
 
         for (final BaseErrorAggregation aggregation : aggregatorList) {
-            aggregation.addBase(rao, info);
+            final int baseQuality = rao.getRecord().getBaseQualities()[rao.getOffset()];
+            final int mappingQuality = rao.getRecord().getMappingQuality();
+            if (baseQuality >= MIN_BASE_Q && mappingQuality >= MIN_MAPPING_Q) {
+                aggregation.addBase(rao, info);
+            }
         }
     }
 

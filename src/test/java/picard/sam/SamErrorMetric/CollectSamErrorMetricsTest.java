@@ -226,7 +226,6 @@ public class CollectSamErrorMetricsTest {
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
                         new BaseErrorMetric("33", 21L, 0L)},
                 // simpleSamWithIndels contains two insertions and one deletion.
-                // None of these should be included in error bases
                 // One of the insertions should not be counted in total bases because it has base quality < 20.
                 // There should be zero errors because insertions and deletions aren't included as errors.
                 {".error_by_base_quality", simpleSamWithIndels, priorQ,
