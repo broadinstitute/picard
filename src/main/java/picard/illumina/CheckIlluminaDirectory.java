@@ -174,6 +174,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                     try (CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
                             tile, locs, outputMapping.getOutputCycles())) {
                         reader.getAllTiles().forEach((key, value) -> {
+                            reader.readHeader(key);
                             //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
                             String emptyCycleString = value.stream()
                                     .filter(cycle -> cycle.getCompressedBlockSize() <= 2)
