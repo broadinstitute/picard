@@ -275,6 +275,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
+        IOUtil.assertDirectoryIsReadable(BASECALLS_DIR);
+        if (BARCODES_DIR != null) {
+            IOUtil.assertDirectoryIsReadable(BARCODES_DIR);
+        }
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
         }

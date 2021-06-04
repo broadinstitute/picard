@@ -8,7 +8,13 @@ import picard.illumina.parser.readers.CbclReader;
 import picard.illumina.parser.readers.LocsFileReader;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -31,11 +37,14 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
      *
      * @param outputMapping     Mapping of reads types to be output.
      * @param basecallDirectory The baseCalls directory of a complete Illumina directory.
+     * @param barcodesDirectory The directory containing the barcode files created by ExtractIlluminaBarcodes.
      * @param lane              The lane that to provide data for.
      * @param requestedTiles    The list of tiles that data is requested for.
      */
     NewIlluminaDataProvider(final OutputMapping outputMapping,
-                            final File basecallDirectory, final int lane, List<Integer> requestedTiles) {
+                            final File basecallDirectory,
+                            final File barcodesDirectory,
+                            final int lane, List<Integer> requestedTiles) {
         super(lane, outputMapping);
         requestedTiles.stream().sorted(TILE_NUMBER_COMPARATOR).forEach(tileOrder::add);
         currentTile = tileOrder.first();
@@ -66,7 +75,8 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
         //barcodes
         final Pattern barcodeRegex = Pattern.compile(ParameterizedFileUtil.escapePeriods(
                 ParameterizedFileUtil.makeBarcodeRegex(lane)));
-        final File[] barcodeFiles = getTiledFiles(basecallDirectory, barcodeRegex);
+
+        final File[] barcodeFiles = getTiledFiles(barcodesDirectory, barcodeRegex);
         this.barcodeFileMap = new HashMap<>();
         for (File barcodeFile : barcodeFiles) {
             barcodeFileMap.put(fileToTile(barcodeFile.getName()), new BarcodeFileReader(barcodeFile));
@@ -84,7 +94,7 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
             filterFileMap.put(fileToTile(filterFile.getName()), filterFile);
         }
         for(Integer tile: requestedTiles) {
-            this.tileReaders.put(tile, new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(), tile, locs, outputMapping.getOutputCycles(), false));
+            this.tileReaders.put(tile, new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(), tile, locs, outputMapping.getOutputCycles()));
         }
     }
 

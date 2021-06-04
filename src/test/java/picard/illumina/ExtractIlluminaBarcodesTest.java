@@ -25,6 +25,7 @@ package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -85,10 +86,12 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertTrue(basecallsDir.delete());
         Assert.assertTrue(basecallsDir.mkdir());
         IOUtil.copyDirectoryTree(SINGLE_DATA_DIR, basecallsDir);
+
         dual = File.createTempFile("eib_dual", ".tmp");
         Assert.assertTrue(dual.delete());
         Assert.assertTrue(dual.mkdir());
         IOUtil.copyDirectoryTree(DUAL_DATA_DIR, dual);
+
         qual = File.createTempFile("eib_qual", ".tmp");
         Assert.assertTrue(qual.delete());
         Assert.assertTrue(qual.mkdir());
@@ -103,6 +106,14 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertTrue(cbcl.delete());
         Assert.assertTrue(cbcl.mkdir());
         IOUtil.copyDirectoryTree(CBCL_DATA_DIR, cbcl);
+        // For the cbcl test, we are deleting the '*barcode.txt.gz' files that exist in the test Basecalls directory
+        // This is to prevent the error conditon that was briefly introduced which expected to find such files in that
+        // directory before EIB was run on it.
+        final File basecallsDir = new File(cbcl, "BaseCalls");
+        Collection<File> barcodeFiles = FileUtils.listFiles(basecallsDir, new String[]{"txt.gz"}, false);
+        for (final File barcodeFile : barcodeFiles) {
+            Assert.assertTrue(barcodeFile.delete());
+        }
     }
 
     @AfterTest
@@ -111,6 +122,7 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         IOUtil.deleteDirectoryTree(dual);
         IOUtil.deleteDirectoryTree(qual);
         IOUtil.deleteDirectoryTree(noSymlink);
+        IOUtil.deleteDirectoryTree(cbcl);
     }
 
     @Test

@@ -172,7 +172,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             file.write(OUTPUT);
 
             final List<String> plotArgs = new ArrayList<>();
-            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath(), INPUT.getName());
+            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
 
             if (HISTOGRAM_WIDTH != null) {
                 plotArgs.add(String.valueOf(HISTOGRAM_WIDTH));

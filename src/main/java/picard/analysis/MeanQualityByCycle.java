@@ -213,7 +213,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             final int rResult = RExecutor.executeFromClasspath(
                     "picard/analysis/meanQualityByCycle.R",
                     OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     INPUT.getName(),
                     plotSubtitle);
 

@@ -128,6 +128,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         log.info("Expected cycles: " + StringUtil.intValuesToString(outputCycles));
 
         for (final Integer lane : LANES) {
+            IOUtil.assertDirectoryIsReadable(new File(BASECALLS_DIR, IlluminaFileUtil.longLaneStr(lane)));
+
             if (IlluminaFileUtil.hasCbcls(BASECALLS_DIR, lane)) {
                 final List<Integer> tiles = new ArrayList<>();
 
@@ -170,7 +172,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 }
                 for (int tile : tiles) {
                     try (CbclReader reader = new CbclReader(cbcls, filterFileMap, outputMapping.getOutputReadLengths(),
-                            tile, locs, outputMapping.getOutputCycles(), true)) {
+                            tile, locs, outputMapping.getOutputCycles())) {
                         reader.getAllTiles().forEach((key, value) -> {
                             //we are looking for cycles with compressed data count of 2 bytes (standard gzip header size)
                             String emptyCycleString = value.stream()

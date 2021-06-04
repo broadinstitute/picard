@@ -161,7 +161,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             final Interval fragmentInterval;
             if (!rec.getReadPairedFlag()) {
                 fragmentInterval = readInterval;
-            } else if (rec.getMateUnmappedFlag() || rec.getReferenceIndex() != rec.getMateReferenceIndex()) {
+            } else if (rec.getMateUnmappedFlag() || !rec.getReferenceIndex().equals(rec.getMateReferenceIndex())) {
                 fragmentInterval = null;
             } else {
                 final int fragmentStart = Math.min(rec.getAlignmentStart(), rec.getMateAlignmentStart());

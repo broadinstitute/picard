@@ -211,7 +211,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         RExecutor.executeFromClasspath(R_SCRIPT,
                 OUTPUT.getAbsolutePath(),
                 SUMMARY_OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath(),
+                CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                 String.valueOf(SCAN_WINDOW_SIZE));
     }
 }
