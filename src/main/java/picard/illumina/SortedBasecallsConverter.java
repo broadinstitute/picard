@@ -142,15 +142,13 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
 
         @Override
         public void run() {
-            tileWriteJobs.incrementAndGet();
             for (final CLUSTER_OUTPUT_RECORD record : recordCollection) {
                 writer.write(record);
                 writeProgressLogger.record(null, 0);
             }
             recordCollection.cleanup();
-            int writeJobsRemaining = tileWriteJobs.decrementAndGet();
 
-            if (writeJobsRemaining == 0) {
+            if (tileWriteJobs.decrementAndGet() == 0) {
                 synchronized (tileWriteJobs) {
                     tileWriteJobs.notifyAll();
                 }
@@ -260,7 +258,11 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
 
         while (tileProcessingIndex < tiles.size()) {
             if (tileWriteJobs.get() == 0) {
-                completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
+                completedWork.get(tiles.get(tileProcessingIndex)).forEach(job ->
+                {
+                    tileWriteJobs.incrementAndGet();
+                    tileWriteExecutor.submit(job);
+                });
                 tileProcessingIndex++;
                 try {
                     synchronized (tileWriteJobs) {
