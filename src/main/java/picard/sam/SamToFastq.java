@@ -178,6 +178,9 @@ public class SamToFastq extends CommandLineProgram {
             "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
     public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS = false;
 
+    @Argument(doc =  "If true, do not append '/mate_number' as suffix")
+    public boolean REMOVE_MATE_NUMBER_SUFFIX = false;
+
     private static final String CLIP_TRIM = "X";
     private static final String CLIP_TO_N = "N";
 
@@ -353,7 +356,7 @@ public class SamToFastq extends CommandLineProgram {
 
     private void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer,
                              final int basesToTrim, final Integer maxBasesToWrite) {
-        final String seqHeader = mateNumber == null ? read.getReadName() : read.getReadName() + "/" + mateNumber;
+        final String seqHeader = mateNumber == null || REMOVE_MATE_NUMBER_SUFFIX ? read.getReadName() : read.getReadName() + "/" + mateNumber;
         String readString = read.getReadString();
         String baseQualities = read.getBaseQualityString();
 
