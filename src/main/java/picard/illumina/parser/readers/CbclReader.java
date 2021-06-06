@@ -105,7 +105,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
     }
 
     /**
-     * Reads the Cbcl header and set up the data streams.
+     * Reads the Cbcl header and sets up the data streams.
      *
      * @param tileNum The tile number
      */
