@@ -178,7 +178,7 @@ public class SamToFastq extends CommandLineProgram {
             "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
     public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS = false;
 
-    @Argument(doc =  "If true, do not append '/mate_number' as suffix")
+    @Argument(fullName = "remove-mate-number-suffix", doc =  "If true, do not append '/mate_number' as suffix")
     public boolean REMOVE_MATE_NUMBER_SUFFIX = false;
 
     private static final String CLIP_TRIM = "X";
