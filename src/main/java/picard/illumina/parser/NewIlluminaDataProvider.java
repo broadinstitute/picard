@@ -104,6 +104,9 @@ class NewIlluminaDataProvider extends BaseIlluminaDataProvider {
             reader.clear();
             reader.close();
         }
+        for(BarcodeFileReader reader: this.barcodeFileMap.values()){
+            reader.close();
+        }
     }
 
 
