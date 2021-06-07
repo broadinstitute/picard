@@ -102,10 +102,14 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
         for (int i = 1; i <= cycles; i++) {
             this.allTiles.put(i, new ArrayList<>());
         }
-        readHeader(tileNum);
     }
 
-    private void readHeader(final int tileNum) {
+    /**
+     * Reads the Cbcl header and sets up the data streams.
+     *
+     * @param tileNum The tile number
+     */
+    public void readHeader(final int tileNum) {
         log.info("Processing tile " + tileNum);
         try {
             for (final Map.Entry<Integer, Map<Integer, File>> entry : surfaceToTileToCbclMap.entrySet()) {
@@ -193,6 +197,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
 
     private void readTileData(int tileNum, List<AbstractIlluminaPositionFileReader.PositionInfo> locs) {
         int totalCycleCount = 0;
+        readHeader(tileNum);
 
         if (cycleData[totalCycleCount].tileInfo == null) {
             throw new PicardException("Could not find tile " + tileNum);
@@ -217,6 +222,7 @@ public class CbclReader extends BaseBclReader implements CloseableIterator<CbclD
             }
         }
         tileCached = true;
+        close();
     }
 
     private Map<Integer, Map<Integer, File>> sortCbcls(final List<File> cbcls) {
