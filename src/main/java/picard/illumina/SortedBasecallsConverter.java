@@ -230,9 +230,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         ThreadPoolExecutorWithExceptions tileWriteExecutor = null;
         while (tileProcessingIndex < tiles.size()) {
                 awaitExecutor(tileWriteExecutor);
-                ThreadPoolExecutorWithExceptions finalTileWriters = new ThreadPoolExecutorWithExceptions(numThreads);
-                tileWriteExecutor = finalTileWriters;
-                completedWork.get(tiles.get(tileProcessingIndex)).forEach(finalTileWriters::submit);
+                tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+                completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
                 tileProcessingIndex++;
         }
 
