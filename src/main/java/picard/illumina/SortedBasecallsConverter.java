@@ -104,7 +104,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         this.codecPrototype = codecPrototype;
         this.outputRecordComparator = outputRecordComparator;
         this.outputRecordClass = outputRecordClass;
-        tileWriteExecutor = new ThreadPoolExecutorWithExceptions(barcodeRecordWriterMap.keySet().size());
+        tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
         tileReadExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
     }
 
