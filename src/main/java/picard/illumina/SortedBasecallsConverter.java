@@ -227,7 +227,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         awaitExecutor(tileReadExecutor);
 
         int tileProcessingIndex = 0;
-        ThreadPoolExecutorWithExceptions tileWriteExecutor = null;// = new ThreadPoolExecutorWithExceptions(numThreads);
+        ThreadPoolExecutorWithExceptions tileWriteExecutor = null;
         while (tileProcessingIndex < tiles.size()) {
                 awaitExecutor(tileWriteExecutor);
                 ThreadPoolExecutorWithExceptions finalTileWriters = new ThreadPoolExecutorWithExceptions(numThreads);
