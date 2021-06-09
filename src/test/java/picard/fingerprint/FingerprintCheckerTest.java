@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static picard.util.TestNGUtil.compareDoubleWithAccuracy;
 
 /**
@@ -41,6 +44,7 @@ public class FingerprintCheckerTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private static final File SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private static final File HAPLOTYPE_DATABASE_CHR1 = new File(TEST_DATA_DIR, "Homo_sapiens_assembly38_chr1.haplotype_database.txt");
 
     @BeforeClass
     public void setup() {
@@ -490,5 +494,109 @@ public class FingerprintCheckerTest {
         FingerprintUtils.writeFingerPrint(fp, vcfOutput, fasta, "Dummy", "Testing");
 
         VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
+    }
+
+    @DataProvider(name = "identifyContaminantTestDataProvider")
+    public Object[][] identifyContaminantTestDataProvider() {
+        final Path NA12878_fingerprint = TEST_DATA_DIR.toPath().resolve("NA12878_chr1_fingerprint.vcf");
+        final Path NA24385_fingerprint = TEST_DATA_DIR.toPath().resolve("NA24385_chr1_fingerprint.vcf");
+
+        final Path NA12878_contaminated_by_NA24358 = TEST_DATA_DIR.toPath().resolve("NA12878_contaminated_with_NA24385_at_10_pct_chr1_fingerprint_sites.bam");
+        final Path NA24385_contaminated_by_NA12878 = TEST_DATA_DIR.toPath().resolve("NA24385_contaminated_with_NA12878_at_8_percent_chr1_fingerprint_sites.bam");
+
+        return new Object[][] {
+                {NA12878_contaminated_by_NA24358, NA12878_fingerprint, NA24385_fingerprint, .1},
+                {NA24385_contaminated_by_NA12878, NA24385_fingerprint, NA12878_fingerprint, .08}
+        };
+    }
+
+    @Test(dataProvider = "identifyContaminantTestDataProvider")
+    public void identifyContaminantWithBackgroundTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
+        final Fingerprint extractedContaminatingFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF, false);
+        final Fingerprint extractedContaminatingFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination);
+
+        final Fingerprint extractedContaminatedFPWithBackground = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination, contaminatingSampleVCF, false);
+        final Fingerprint extractedContaminatedFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, 1 - contamination);
+
+        final Fingerprint trueContaminatedSampleFP = getSingleFingerprintFromVCF(contaminatedSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+
+        final Fingerprint trueContaminatingSampleFP = getSingleFingerprintFromVCF(contaminatingSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+
+        assertExtractionIsCorrect(extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
+        assertExtractionIsCorrect(extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
+
+        assertFirstExtractionBetterThanSecond(extractedContaminatedFPWithBackground, extractedContaminatedFP, trueContaminatedSampleFP, trueContaminatingSampleFP);
+        assertFirstExtractionBetterThanSecond(extractedContaminatingFPWithBackground, extractedContaminatingFP, trueContaminatingSampleFP, trueContaminatedSampleFP);
+    }
+
+    @DataProvider(name = "identifyContaminantWithBackgroundLoHTestDataProvider")
+    public Object[][] identifyContaminantWithBackgroundLoHTestDataProvider() {
+        final Path NA12878_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_chr1_fingerprint.vcf");
+        final Path NA24385_fingerprint = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA24385_chr1_fingerprint.vcf");
+
+        final Path NA12878_with_LoH_contaminated_by_NA24358 = Paths.get(TEST_DATA_DIR.getAbsolutePath(), "NA12878_fake_LoH_contaminated_with_NA24385_at_11_percent_chr1_fingeprint_sites.bam");
+
+        return new Object[][] {
+                {NA12878_with_LoH_contaminated_by_NA24358, NA12878_fingerprint, NA24385_fingerprint, .11}
+        };
+    }
+
+    @Test(dataProvider = "identifyContaminantWithBackgroundLoHTestDataProvider")
+    public void identifyContaminantWithBackgroundLoHTest(final Path contaminatedBam, final Path contaminatedSampleVCF, final Path contaminatingSampleVCF, final double contamination) {
+        final Fingerprint extractedContaminatingFPWithBackgroundConsiderLoH = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF, true);
+        final Fingerprint extractedContaminatingFPWithBackgroundIgnoreLoH = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination, contaminatedSampleVCF, false);
+        final Fingerprint extractedContaminatingFP = getSingleExtractedFingerprint(contaminatedBam, HAPLOTYPE_DATABASE_CHR1, contamination);
+
+        final Fingerprint trueContaminatingSampleFP = getSingleFingerprintFromVCF(contaminatingSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+        final Fingerprint trueContaminatedSampleFP = getSingleFingerprintFromVCF(contaminatedSampleVCF, HAPLOTYPE_DATABASE_CHR1);
+
+        assertExtractionIsCorrect(extractedContaminatingFPWithBackgroundConsiderLoH, trueContaminatingSampleFP, trueContaminatedSampleFP);
+        assertFirstExtractionBetterThanSecond(extractedContaminatingFPWithBackgroundConsiderLoH, extractedContaminatingFP, trueContaminatingSampleFP);
+        assertFirstExtractionBetterThanSecond(extractedContaminatingFPWithBackgroundConsiderLoH, extractedContaminatingFPWithBackgroundIgnoreLoH, trueContaminatingSampleFP);
+
+    }
+
+    private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination) {
+        return getSingleExtractedFingerprint(bam, hapDatabase, contamination, null, false);
+    }
+
+    private Fingerprint getSingleExtractedFingerprint(final Path bam, final File hapDatabase, final double contamination, final Path background, final boolean contaminatedIsTumor) {
+        final Map<String, String> correspondingSampleMap = background == null ? null : ExtractFingerprint.getCorrespondingSampleMap(bam.toFile(), background.toFile());
+
+        final FingerprintChecker fpChecker = new FingerprintChecker(hapDatabase);
+        final Map<String, Fingerprint> extractedFPMap = fpChecker.identifyContaminant(bam, contamination, background, correspondingSampleMap, contaminatedIsTumor);
+        assertEquals(extractedFPMap.size(), 1);
+        return extractedFPMap.values().iterator().next();
+    }
+
+    private Fingerprint getSingleFingerprintFromVCF(final Path vcf, final File hapDatabase) {
+        final FingerprintChecker fpChecker = new FingerprintChecker(hapDatabase);
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = Fingerprint.mergeFingerprintsBy(fpChecker.fingerprintVcf(vcf),
+                Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
+        assertEquals(fpMap.size(), 1);
+        return fpMap.values().iterator().next();
+    }
+
+    private void assertExtractionIsCorrect(final Fingerprint extractedFP, final Fingerprint fpShouldMatch, final Fingerprint fpShouldNotMatch) {
+        final MatchResults matchResultsShouldMatch = FingerprintChecker.calculateMatchResults(extractedFP, fpShouldMatch);
+        assertTrue(matchResultsShouldMatch.getLOD() > 0);
+
+        final MatchResults matchResultsShouldNotMatch = FingerprintChecker.calculateMatchResults(extractedFP, fpShouldNotMatch);
+        assertTrue(matchResultsShouldNotMatch.getLOD() < 0);
+    }
+
+    private void assertFirstExtractionBetterThanSecond(final Fingerprint firstExtractedFP, final Fingerprint secondExtractedFP, final Fingerprint fpShouldMatch) {
+        assertFirstExtractionBetterThanSecond(firstExtractedFP, secondExtractedFP, fpShouldMatch, null);
+    }
+    private void assertFirstExtractionBetterThanSecond(final Fingerprint firstExtractedFP, final Fingerprint secondExtractedFP, final Fingerprint fpShouldMatch, final Fingerprint fpShouldNotMatch) {
+        final MatchResults matchResultsShouldMatchFirst = FingerprintChecker.calculateMatchResults(firstExtractedFP, fpShouldMatch);
+        final MatchResults matchResultsShouldMatchSecond = FingerprintChecker.calculateMatchResults(secondExtractedFP, fpShouldMatch);
+        assertTrue(matchResultsShouldMatchFirst.getLOD() > matchResultsShouldMatchSecond.getLOD());
+
+        if (fpShouldNotMatch != null) {
+            final MatchResults matchResultsShouldNotMatchFirst = FingerprintChecker.calculateMatchResults(firstExtractedFP, fpShouldNotMatch);
+            final MatchResults matchResultsShouldNotMatchSecond = FingerprintChecker.calculateMatchResults(secondExtractedFP, fpShouldNotMatch);
+            assertTrue(matchResultsShouldNotMatchFirst.getLOD() < matchResultsShouldNotMatchSecond.getLOD());
+        }
     }
 }

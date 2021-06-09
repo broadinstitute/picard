@@ -24,8 +24,13 @@
 
 package picard.fingerprint;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
@@ -33,7 +38,11 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Program to create a fingerprint for the <b>contaminating</b> sample when the level of contamination is both known and
@@ -67,6 +76,16 @@ public class ExtractFingerprint extends CommandLineProgram {
             "If argument EXTRACT_CONTAMINATION=true the resulting samplename will be \"<SAMPLE>-contamination\" (if not provided).", optional = true)
     public String SAMPLE_ALIAS = null;
 
+    @Argument(doc = "SAM/BAM or VCF file of uncontaminated sample of the same individual whose information we are trying to remove.  If we are extracting the fingerprint of the contaminating sample," +
+            " this should be a sample from the same individual as the contaminated sample.  If we are extracting the fingerprint of the contaminated sample, this should be a sample from the same " +
+            "individual as the contaminating sample.  If the sample being removed is a tumor sample, this sample should optimally be a normal sample from the same individual.", optional = true)
+    public File BACKGROUND = null;
+
+    @Argument(doc = "Whether the sample being removed (not the sample whose fingerprint is being extracted) is a tumor sample.  This argument can only be set to true if a BACKGROUND sample is included." +
+            "  In this case, the BACKGROUND sample will be assumed to be a normal sample from the same individual.  In order to avoid potential confounding due to LoH, all fingerprinting sites which genotype " +
+            "as het in the BACKGROUND sample will be removed from the output fingerprint.  If this argument is set to true and no BACKGROUND sample is provided the tool will throw an exception.", optional = true)
+    public boolean REMOVED_IS_TUMOR = false;
+
     @Argument(doc = "The maximum number of reads to use as evidence for any given locus. This is provided as a way to limit the " +
             "effect that any given locus may have.")
     public int LOCUS_MAX_READS = 50;
@@ -89,6 +108,10 @@ public class ExtractFingerprint extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(referenceSequence.getReferenceFile());
 
+        if (BACKGROUND == null && REMOVED_IS_TUMOR) {
+            throw new IllegalArgumentException("Cannot have REMOVED_IS_TUMOR true without providing a BACKGROUND sample.");
+        }
+
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
         // if we want the contaminated fingerprint instead, we need to change the value of CONTAMINATION:
@@ -104,7 +127,9 @@ public class ExtractFingerprint extends CommandLineProgram {
             checker.setDefaultSampleID(SAMPLE_ALIAS);
         }
 
-        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION);
+
+        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION, BACKGROUND == null ? null : BACKGROUND.toPath(),
+                BACKGROUND == null ? null : getCorrespondingSampleMap(INPUT, BACKGROUND), REMOVED_IS_TUMOR);
 
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());
@@ -131,4 +156,33 @@ public class ExtractFingerprint extends CommandLineProgram {
             return SAMPLE_ALIAS;
         }
     }
+
+    static Map<String, String> getCorrespondingSampleMap(final File inputFile, final File backgroundFile) {
+        final String sample = getSingleSampleNameFromReadFile(inputFile);
+        final String backgroundSample = CheckFingerprint.fileContainsReads(backgroundFile.toPath()) ? getSingleSampleNameFromReadFile(backgroundFile) : getSingleSampleNameFromVCFFile(backgroundFile);
+
+        return Collections.singletonMap(backgroundSample, sample);
+    }
+
+    static String getSingleSampleNameFromReadFile(final File readFile) {
+        final SamReader samReader = SamReaderFactory.makeDefault().open(readFile);
+        final Set<String> samples = samReader.getFileHeader().getReadGroups().stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
+        if (samples.size() != 1) {
+            throw new IllegalArgumentException("must have only one sample in input file " + readFile);
+        }
+
+        return samples.iterator().next();
+    }
+
+    static String getSingleSampleNameFromVCFFile(final File vcfFile) {
+        final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+        final VCFHeader header = vcfReader.getHeader();
+        final Set<String> samples = new HashSet<>(header.getGenotypeSamples());
+        if (samples.size() != 1) {
+            throw new IllegalArgumentException("must have only one sample in input file " + vcfFile);
+        }
+
+        return samples.iterator().next();
+    }
+
 }

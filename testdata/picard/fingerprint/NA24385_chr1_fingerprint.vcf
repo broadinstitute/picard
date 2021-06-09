@@ -1,0 +1,31 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+##contig=<ID=chr1,length=248956422,assembly=38>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SM-G947H
+chr1	7142130	.	T	C	.	.	.	AD:DP:PL	44,0:44:1300,132,0
+chr1	11796321	.	G	A	.	.	.	AD:DP:PL	29,14:43:731,0,291
+chr1	13770326	.	T	C	.	.	.	AD:DP:PL	22,23:45:525,0,545
+chr1	14478378	.	A	G	.	.	.	AD:DP:PL	16,26:42:354,0,634
+chr1	19174057	.	T	C	.	.	.	AD:DP:PL	0,41:41:0,123,1190
+chr1	29148829	.	C	T	.	.	.	AD:DP:PL	133,98:231:2538,0,2216
+chr1	29149136	.	T	G	.	.	.	AD:DP:PL	236,161:397:2038,0,2038
+chr1	31298097	.	T	C	.	.	.	AD:DP:PL	417,0:417:3231,1253,0
+chr1	51800570	.	G	A	.	.	.	AD:DP:PL	0,26:26:0,78,750
+chr1	55039974	.	G	T	.	.	.	AD:DP:PL	0,47:47:0,141,1370
+chr1	55063514	.	G	A	.	.	.	AD:DP:PL	45,0:45:1340,135,0
+chr1	74198025	.	G	A	.	.	.	AD:DP:PL	216,0:216:3232,649,0
+chr1	78112493	.	T	C	.	.	.	AD:DP:PL	0,44:44:0,132,1320
+chr1	82678092	.	G	A	.	.	.	AD:DP:PL	464,0:464:3231,1394,0
+chr1	99851033	.	A	G	.	.	.	AD:DP:PL	26,20:46:632,0,452
+chr1	150681174	.	T	C	.	.	.	AD:DP:PL	321,370:692:1153,0,1153
+chr1	150968149	.	T	G	.	.	.	AD:DP:PL	0,47:47:0,141,1400
+chr1	151399662	.	G	A	.	.	.	AD:DP:PL	45,0:45:1330,135,0
+chr1	154601491	.	T	C	.	.	.	AD:DP:PL	47,0:47:1400,141,0
+chr1	156232382	.	A	G	.	.	.	AD:DP:PL	19,30:49:413,0,753
+chr1	156236330	.	G	A	.	.	.	AD:DP:PL	16,30:46:332,0,752
+chr1	189648927	.	C	T	.	.	.	AD:DP:PL	128,126:254:2468,0,2468
+chr1	214785415	.	C	T	.	.	.	AD:DP:PL	450,0:451:3230,1351,0
+chr1	230710048	.	A	G	.	.	.	AD:DP:PL	21,22:43:501,0,521
+chr1	236535170	.	G	A	.	.	.	AD:DP:PL	464,0:467:3230,1394,0
