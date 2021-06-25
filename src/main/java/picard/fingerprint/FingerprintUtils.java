@@ -173,18 +173,19 @@ public class FingerprintUtils {
             obsAlt = haplotypeProbabilities.getObsAllele2();
         }
 
-        final double[] origPLs = haplotypeProbabilities.getLogLikelihoods();
-        final double[] PLs =  Arrays.copyOf(origPLs,origPLs.length);
+        final double[] origGLs = haplotypeProbabilities.getLogLikelihoods();
+        final double[] GLs =  Arrays.copyOf(origGLs, origGLs.length);
+
         if (swap12) {
-            ArrayUtils.reverse(PLs);
+            ArrayUtils.reverse(GLs);
         }
         final List<Allele> alleles = Arrays.asList(alleleRef, alleleAlt);
 
         final Genotype gt = new GenotypeBuilder()
                 .DP(haplotypeProbabilities.getTotalObs())
                 .noAttributes()
-                .PL(PLs)
-                .AD(new int[]{obsAlt, obsRef})
+                .PL(GLs)
+                .AD(new int[]{obsRef, obsAlt})
                 .name(sample)
                 .make();
         try {

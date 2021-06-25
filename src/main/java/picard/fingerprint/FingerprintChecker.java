@@ -481,9 +481,9 @@ public class FingerprintChecker {
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
         if (!in.hasIndex()) {
-            log.warn(String.format("Operating without an index! We could be here for a while. (%s)", samFile));
+            log.warn(String.format("Operating without an index! We could be here for a while. (%s)", samFile.toUri().toString()));
         } else {
-            log.info(String.format("Reading an indexed file (%s)", samFile));
+            log.info(String.format("Reading an indexed file (%s)", samFile.toUri().toString()));
         }
 
         final SamLocusIterator iterator = new SamLocusIterator(in, this.haplotypes.getIntervalList(), in.hasIndex());

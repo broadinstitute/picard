@@ -28,11 +28,14 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Hidden;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -50,7 +53,7 @@ import java.util.Map;
 public class ExtractFingerprint extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file.")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output fingerprint file (VCF).")
     public File OUTPUT;
@@ -75,6 +78,10 @@ public class ExtractFingerprint extends CommandLineProgram {
             "It names the sample in the VCF <SAMPLE>-contaminant, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATION = false;
 
+    @Hidden
+    @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
+    public boolean TEST_INPUT_READABILITY = true;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -84,7 +91,17 @@ public class ExtractFingerprint extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+//        IOUtil.assertFileIsReadable(INPUT);
+        final Path inputPath;
+        try {
+            inputPath = IOUtil.getPath(INPUT);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (TEST_INPUT_READABILITY) {
+            IOUtil.assertFileIsReadable(inputPath);
+        }
+
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(referenceSequence.getReferenceFile());
@@ -104,7 +121,7 @@ public class ExtractFingerprint extends CommandLineProgram {
             checker.setDefaultSampleID(SAMPLE_ALIAS);
         }
 
-        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(INPUT.toPath(), CONTAMINATION);
+        final Map<String, Fingerprint> fingerprintMap = checker.identifyContaminant(inputPath, CONTAMINATION);
 
         if (fingerprintMap.size() != 1) {
             log.error("Expected exactly 1 fingerprint, found " + fingerprintMap.size());

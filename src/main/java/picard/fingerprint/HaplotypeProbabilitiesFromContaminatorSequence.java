@@ -90,10 +90,11 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
         for (final Genotype contGeno : Genotype.values()) {
             for (final Genotype mainGeno : Genotype.values()) {
-                //theta is the expected frequency of the alternate allele
+                // theta is the expected frequency of the alternate allele
                 final double theta = 0.5 * ((1 - contamination) * mainGeno.v + contamination * contGeno.v);
-                likelihoodMap[contGeno.v][mainGeno.v] *= ((altAllele ? theta : (1 - theta)) * (1 - pErr) +
-                        (!altAllele ? theta : (1 - theta)) * pErr);
+                likelihoodMap[contGeno.v][mainGeno.v] *=
+                        (( altAllele ? theta : (1 - theta)) * (1 - pErr) +
+                         (!altAllele ? theta : (1 - theta)) * pErr         );
             }
         }
     }
