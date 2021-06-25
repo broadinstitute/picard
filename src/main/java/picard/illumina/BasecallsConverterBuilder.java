@@ -100,7 +100,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
             return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lanes, readStructure,
                     barcodeRecordWriterMap, demultiplex, firstTile, tileLimit,
                     bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads,
-                    writerPool, barcodeExtractor);
+                    writerPool, barcodeExtractor, numProcessors);
         }
     }
 

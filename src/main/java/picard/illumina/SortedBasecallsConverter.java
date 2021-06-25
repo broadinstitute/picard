@@ -253,6 +253,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         if (tileReadExecutor.hasError()) {
             interruptAndShutdownExecutors(tileReadExecutor, tileWriteExecutor);
         }
+        tileReadExecutor.cleanUp();
 
         int tileProcessingIndex = 0;
 
@@ -283,6 +284,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
         if (tileWriteExecutor.hasError()) {
             interruptAndShutdownExecutors(tileWriteExecutor);
         }
+        tileWriteExecutor.cleanUp();
         closeWriters();
     }
 }

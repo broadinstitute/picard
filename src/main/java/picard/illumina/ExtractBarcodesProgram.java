@@ -243,7 +243,7 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
             List<String> validBarcodeColumns = barcodesParser.columnLabels().stream().filter(name -> {
                 boolean isValidPrefix = false;
                 for (String columnPrefix : BARCODE_PREFIXES) {
-                    isValidPrefix |= name.toUpperCase().startsWith(columnPrefix.toUpperCase());
+                    isValidPrefix |= name.toUpperCase().startsWith(columnPrefix.toUpperCase()) && !name.equalsIgnoreCase(BARCODE_NAME_COLUMN);
                 }
                 return isValidPrefix;
             }).collect(Collectors.toList());
