@@ -486,19 +486,6 @@ final public class MathUtil {
     }
 
     /**
-     * Calculates the product of a scalar by an array.
-     */
-    public static double[] multiply(final double lhs, final double[] rhs) {
-
-        final int len = rhs.length;
-        final double[] result = new double[len];
-        for (int i = 0; i < len; ++i) {
-            result[i] = lhs * rhs[i];
-        }
-        return result;
-    }
-
-    /**
      * calculates the sum of the arrays as a third array.
      */
     public static double[] sum(final double[] lhs, final double[] rhs) {
