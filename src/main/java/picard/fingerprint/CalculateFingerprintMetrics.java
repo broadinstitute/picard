@@ -33,6 +33,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
@@ -70,7 +71,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
 
     static final String USAGE_DETAILS =
             "This tools collects various statistics that pertain to a single fingerprint (<b>not</b> the comparison, or " +
-                    "\'fingerprinting\' of two distinct samples) and reports the results in a metrics file. " +
+                    "'fingerprinting' of two distinct samples) and reports the results in a metrics file. " +
                     "<p>" +
                     "The statistics collected are p-values, where the null-hypothesis is that the fingerprint is collected from " +
                     "a non-contaminated, diploid human, whose genotypes are modelled by the probabilities given in the " +
@@ -112,6 +113,10 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
     @Argument(doc="Number of randomization trials for calculating the DISCRIMINATORY_POWER metric.")
     public final int NUMBER_OF_SAMPLING = 100;
 
+    @Hidden
+    @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
+    public boolean TEST_INPUT_READABILITY = true;
+
     // a fixed random seed for reproducibility;
     private static final int RANDOM_SEED = 42;
     private static final ChiSquareTest chiSquareTest = new ChiSquareTest();
@@ -120,7 +125,9 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
     protected int doWork() {
 
         final List<Path> inputPaths = IOUtil.getPaths(INPUT);
-        IOUtil.assertPathsAreReadable(inputPaths);
+        if (TEST_INPUT_READABILITY) {
+            IOUtil.assertPathsAreReadable(inputPaths);
+        }
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsWritable(OUTPUT);
 
@@ -197,7 +204,7 @@ public class CalculateFingerprintMetrics extends CommandLineProgram {
         fingerprintMetrics.LOG10_HOM_CHI_SQUARED_PVALUE = Math.log10(homsChiSquaredTest);
 
         // calculate LOD (cross-entropy)
-        fingerprintMetrics.HOM_CROSS_ENTROPY_LOD = MathUtil.klDivergance(homAllele1VsAllele2Counts, homAllele1VsAllele2Expect);;
+        fingerprintMetrics.HOM_CROSS_ENTROPY_LOD = MathUtil.klDivergance(homAllele1VsAllele2Counts, homAllele1VsAllele2Expect);
 
         final MathUtils.RunningStat randomTrials = new MathUtils.RunningStat();
 
