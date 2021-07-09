@@ -1,13 +1,17 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.util.MathUtil;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
@@ -316,8 +320,45 @@ public class FingerprintCheckerTest {
         }
     }
 
+    @DataProvider
+    Object[][] deepDataProvider() {
+        return new Object[][]{{10}, {50}, {100}, {500}, {1000}, {5000}, {10000}, {50000}};
+    }
+
+    @Test(dataProvider = "deepDataProvider")
+    void testCanHandleDeepData(int counts) {
+        final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);
+        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele1());
+        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele2());
+
+        final double[] logLikelihoods = hp1.getLogLikelihoods();
+        Assert.assertTrue( MathUtil.min(logLikelihoods) < 0 );
+    }
+
+    @Test(dataProvider = "deepDataProvider")
+    void testCanHandleDeepDataHPFromContamination(int counts) throws IOException {
+        final double maf = 0.4;
+        final Snp snp = new Snp("test", "chr1", 1, (byte) 'A', (byte) 'T', maf, Collections.singletonList("dummy"));
+        final HaplotypeBlock hb = new HaplotypeBlock(maf);
+        hb.addSnp(snp);
+
+        final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromContaminatorSequence(hb,.999);
+        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele1());
+        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele2());
+
+        final double[] logLikelihoods = hp1.getLogLikelihoods();
+        Assert.assertTrue( MathUtil.min(logLikelihoods) < 0);
+
+        final File fasta = new File(TEST_DATA_DIR, "reference.fasta");
+
+        try (final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(fasta)) {
+            final VariantContext vc = FingerprintUtils.getVariantContext(ref, "test", hp1);
+            Assert.assertTrue(MathUtil.max(MathUtil.promote(vc.getGenotype(0).getPL())) > 0);
+        }
+    }
+
     @DataProvider()
-    Object[][] mergeIsDafeProvider() {
+    Object[][] mergeIsSafeProvider() {
         final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);
         final HaplotypeProbabilitiesFromSequence hp2 = new HaplotypeProbabilitiesFromSequence(hb);
 
@@ -353,7 +394,7 @@ public class FingerprintCheckerTest {
         }
     }
 
-    @Test(dataProvider = "mergeIsDafeProvider")
+    @Test(dataProvider = "mergeIsSafeProvider")
     public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1,
                                                       final HaplotypeProbabilities hp2) {
 
@@ -363,7 +404,7 @@ public class FingerprintCheckerTest {
         Assert.assertEquals(merged1.getLikelihoods(), merged2.getLikelihoods());
     }
 
-    @Test(dataProvider = "mergeIsDafeProvider")
+    @Test(dataProvider = "mergeIsSafeProvider")
     public void testMergeFingerprintIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2) {
 
         final Fingerprint fpA = new Fingerprint("test2", null, "none");

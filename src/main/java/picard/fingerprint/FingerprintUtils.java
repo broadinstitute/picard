@@ -24,6 +24,7 @@
 
 package picard.fingerprint;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
@@ -143,7 +144,8 @@ public class FingerprintUtils {
         return variantContexts;
     }
 
-    private static VariantContext getVariantContext(final ReferenceSequenceFile reference,
+    @VisibleForTesting
+    static VariantContext getVariantContext(final ReferenceSequenceFile reference,
                                                     final String sample,
                                                     final HaplotypeProbabilities haplotypeProbabilities) {
         final Snp snp = haplotypeProbabilities.getRepresentativeSnp();
