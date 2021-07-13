@@ -31,6 +31,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static picard.util.TestNGUtil.compareDoubleWithAccuracy;
+import static picard.util.TestNGUtil.interaction;
 
 /**
  * Created by farjoun on 8/27/15.
@@ -38,7 +39,7 @@ import static picard.util.TestNGUtil.compareDoubleWithAccuracy;
 public class FingerprintCheckerTest {
 
     private final double maf = 0.4;
-    private final Snp snp = new Snp("test", "chr1", 1, (byte) 'A', (byte) 'C', maf, Collections.singletonList("dummy"));
+    private final Snp snp = new Snp("test", "chr1", 1, (byte) 'A', (byte) 'T', maf, Collections.singletonList("dummy"));
     private final HaplotypeBlock hb = new HaplotypeBlock(maf);
 
     private static final double DELTA = 1e-6;
@@ -320,42 +321,36 @@ public class FingerprintCheckerTest {
         }
     }
 
-    @DataProvider
-    Object[][] deepDataProvider() {
+    Object[][] deepData() {
         return new Object[][]{{10}, {50}, {100}, {500}, {1000}, {5000}, {10000}, {50000}};
     }
 
-    @Test(dataProvider = "deepDataProvider")
-    void testCanHandleDeepData(int counts) {
-        final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);
-        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele1());
-        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele2());
+    Object[][] haplotypeProbabilities() {
+        return new Object[][]{{new HaplotypeProbabilitiesFromSequence(hb)}, {new HaplotypeProbabilitiesFromContaminatorSequence(hb, 0.999)}};
+    }
 
-        final double[] logLikelihoods = hp1.getLogLikelihoods();
-        Assert.assertTrue( MathUtil.min(logLikelihoods) < 0 );
+    @DataProvider
+    Iterator<Object[]> deepDataProvider(){
+        return interaction(haplotypeProbabilities(), deepData());
     }
 
     @Test(dataProvider = "deepDataProvider")
-    void testCanHandleDeepDataHPFromContamination(int counts) throws IOException {
-        final double maf = 0.4;
-        final Snp snp = new Snp("test", "chr1", 1, (byte) 'A', (byte) 'T', maf, Collections.singletonList("dummy"));
-        final HaplotypeBlock hb = new HaplotypeBlock(maf);
-        hb.addSnp(snp);
+    void testCanHandleDeepData(final HaplotypeProbabilitiesFromSequence hp, final int counts)  throws IOException {
 
-        final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromContaminatorSequence(hb,.999);
-        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele1());
-        addObservation(hp1, hb, counts, hb.getFirstSnp().getAllele2());
+        addObservation(hp, hb, counts, hb.getFirstSnp().getAllele1());
+        addObservation(hp, hb, counts, hb.getFirstSnp().getAllele2());
 
-        final double[] logLikelihoods = hp1.getLogLikelihoods();
-        Assert.assertTrue( MathUtil.min(logLikelihoods) < 0);
+        final double[] logLikelihoods = hp.getLogLikelihoods();
+        Assert.assertTrue( MathUtil.min(logLikelihoods) < 0 );
 
         final File fasta = new File(TEST_DATA_DIR, "reference.fasta");
 
         try (final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(fasta)) {
-            final VariantContext vc = FingerprintUtils.getVariantContext(ref, "test", hp1);
+            final VariantContext vc = FingerprintUtils.getVariantContext(ref, "test", hp);
             Assert.assertTrue(MathUtil.max(MathUtil.promote(vc.getGenotype(0).getPL())) > 0);
         }
     }
+
 
     @DataProvider()
     Object[][] mergeIsSafeProvider() {
