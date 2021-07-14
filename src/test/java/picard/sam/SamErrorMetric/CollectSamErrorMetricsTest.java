@@ -230,6 +230,10 @@ public class CollectSamErrorMetricsTest {
                 // There should be zero errors because insertions and deletions aren't included as errors.
                 {".error_by_base_quality", simpleSamWithIndels, priorQ,
                         new BaseErrorMetric("32", 71L, 0L)},
+                // Total bases should be 71 because low quality bases should not be included
+                // Error bases should be zero because a low quality mismatch does not count as an error
+                {".error_by_all", simpleSamWithIndels, priorQ,
+                        new BaseErrorMetric("all", 71L, 0L)},
                 // simpleSamWithBaseErrors2 contains 2 differences from the reference
                 // after 2 different homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
