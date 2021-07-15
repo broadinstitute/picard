@@ -196,6 +196,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
             while (provider.hasNext()) {
                 addCluster(provider.next());
             }
+            provider.close();
         });
     }
 

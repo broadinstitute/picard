@@ -312,7 +312,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 .withApplyEamssFiltering(APPLY_EAMSS_FILTER)
                 .withIncludeNonPfReads(INCLUDE_NON_PF_READS)
                 .withIgnoreUnexpectedBarcodes(IGNORE_UNEXPECTED_BARCODES)
-                .withBclQualityEvaluationStrategy(bclQualityEvaluationStrategy);
+                .withBclQualityEvaluationStrategy(bclQualityEvaluationStrategy)
+                .withMaxRecordsInRam(MAX_RECORDS_IN_RAM);
 
         if (SORT) {
             converterBuilder = converterBuilder
@@ -551,7 +552,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         // Remove once deprecated parameter is deleted.
         if (MAX_READS_IN_RAM_PER_TILE != -1) {
             log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
-            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE * NUM_PROCESSORS;
         }
 
         final ArrayList<String> messages = new ArrayList<>();
