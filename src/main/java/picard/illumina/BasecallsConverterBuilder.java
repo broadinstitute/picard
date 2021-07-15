@@ -39,6 +39,7 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
     private boolean ignoreUnexpectedBarcodes = false;
     private boolean applyEamssFiltering = false;
     private boolean includeNonPfReads = false;
+    private BarcodeExtractor barcodeExtractor = null;
     private AsyncWriterPool writerPool = null;
 
     /**
@@ -94,12 +95,12 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
                     firstTile, tileLimit, outputRecordComparator,
                     codecPrototype,
                     outputRecordClass, bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering,
-                    includeNonPfReads, writerPool);
+                    includeNonPfReads, writerPool, barcodeExtractor);
         } else {
             return new UnsortedBasecallsConverter<>(basecallsDir, barcodesDir, lanes, readStructure,
                     barcodeRecordWriterMap, demultiplex, firstTile, tileLimit,
                     bclQualityEvaluationStrategy, ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads,
-                    writerPool);
+                    writerPool, barcodeExtractor, numProcessors);
         }
     }
 
@@ -200,8 +201,8 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
      * @param barcodesDir Where to read barcodes from (optional; use basecallsDir if not specified).
      * @return A builder that will create a converter with barcodesDir set.
      */
-    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> barcodesDir(File barcodesDir) {
-        this.barcodesDir = (barcodesDir == null) ? basecallsDir : barcodesDir;
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withBarcodesDir(File barcodesDir) {
+        this.barcodesDir = barcodesDir;
         return this;
     }
 
@@ -219,6 +220,11 @@ public class BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> {
 
     public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withAsyncWriterPool(AsyncWriterPool writerPool) {
         this.writerPool = writerPool;
+        return this;
+    }
+
+    public BasecallsConverterBuilder<CLUSTER_OUTPUT_RECORD> withBarcodeExtractor(BarcodeExtractor barcodeExtractor) {
+        this.barcodeExtractor = barcodeExtractor;
         return this;
     }
 }
