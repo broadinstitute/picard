@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,59 +138,59 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     }
 
     // Below are a bunch of utility methods for adding records to the SAMRecordSetBuilder
-    public void addUnmappedFragment(final int referenceSequenceIndex,
+    public List<SAMRecord> addUnmappedFragment(final int referenceSequenceIndex,
                                     final int defaultQualityScore) {
-        addFragment(referenceSequenceIndex, -1, true, false, null, null, defaultQualityScore, false);
+        return addFragment(referenceSequenceIndex, -1, true, false, null, null, defaultQualityScore, false);
     }
 
-    public void addUnmappedFragment(final int referenceSequenceIndex,
+    public List<SAMRecord> addUnmappedFragment(final int referenceSequenceIndex,
                                     final String qualityString) {
-        addFragment(referenceSequenceIndex, -1, true, false, null, qualityString, -1, false);
+        return addFragment(referenceSequenceIndex, -1, true, false, null, qualityString, -1, false);
     }
 
-    public void addUnmappedPair(final int referenceSequenceIndex,
+    public List<SAMRecord> addUnmappedPair(final int referenceSequenceIndex,
                                 final int defaultQualityScore) {
-        addMatePair(referenceSequenceIndex, -1, -1, true, true, false, false, null, null, false, false, false, false, false, defaultQualityScore);
+        return addMatePair(referenceSequenceIndex, -1, -1, true, true, false, false, null, null, false, false, false, false, false, defaultQualityScore);
     }
 
-    public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate,
+    public List<SAMRecord> addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate,
                                   final int defaultQualityScore) {
-        addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, null, null, defaultQualityScore, false);
+        return addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, null, null, defaultQualityScore, false);
     }
 
-    public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate,
+    public List<SAMRecord> addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate,
                                   final int defaultQualityScore, final boolean isSecondary) {
-        addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, null, null, defaultQualityScore, isSecondary);
+        return addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, null, null, defaultQualityScore, isSecondary);
     }
 
-    public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
+    public List<SAMRecord> addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
                                   final int defaultQualityScore) {
-        addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, null, defaultQualityScore, false);
+        return addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, null, defaultQualityScore, false);
     }
 
-    public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
+    public List<SAMRecord> addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
                                   final String qualityString,
                                   final int defaultQualityScore) {
-        addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore, false);
+        return addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore, false);
     }
 
-    public void addMappedFragment(final String readName, final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
+    public List<SAMRecord> addMappedFragment(final String readName, final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
                                   final String qualityString, final boolean isSecondary, final boolean isSupplementary,
                                   final int defaultQualityScore) {
-        addFragment(readName, referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore, isSecondary, isSupplementary);
+        return addFragment(readName, referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore, isSecondary, isSupplementary);
     }
 
-    public void addMappedPair(final int referenceSequenceIndex,
+    public List<SAMRecord> addMappedPair(final int referenceSequenceIndex,
                               final int alignmentStart1,
                               final int alignmentStart2,
                               final boolean isDuplicate1,
                               final boolean isDuplicate2,
                               final int defaultQualityScore) {
-        addMappedPair(referenceSequenceIndex, alignmentStart1, alignmentStart2, isDuplicate1, isDuplicate2, null, null,
+        return addMappedPair(referenceSequenceIndex, alignmentStart1, alignmentStart2, isDuplicate1, isDuplicate2, null, null,
                 false, defaultQualityScore);
     }
 
-    public void addMappedPair(final int referenceSequenceIndex,
+    public List<SAMRecord> addMappedPair(final int referenceSequenceIndex,
                               final int alignmentStart1,
                               final int alignmentStart2,
                               final boolean isDuplicate1,
@@ -198,11 +199,11 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                               final String cigar2,
                               final boolean firstOnly,
                               final int defaultQualityScore) {
-        addMappedPair(referenceSequenceIndex, alignmentStart1, alignmentStart2, isDuplicate1, isDuplicate2, cigar1,
+        return addMappedPair(referenceSequenceIndex, alignmentStart1, alignmentStart2, isDuplicate1, isDuplicate2, cigar1,
                 cigar2, false, true, firstOnly, defaultQualityScore);
     }
 
-    public void addMappedPair(final int referenceSequenceIndex,
+    public List<SAMRecord> addMappedPair(final int referenceSequenceIndex,
                               final int alignmentStart1,
                               final int alignmentStart2,
                               final boolean isDuplicate1,
@@ -213,11 +214,11 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                               final boolean strand2,
                               final boolean firstOnly,
                               final int defaultQualityScore) {
-        addMatePair(referenceSequenceIndex, alignmentStart1, alignmentStart2, false, false, isDuplicate1, isDuplicate2, cigar1, cigar2,
+        return addMatePair(referenceSequenceIndex, alignmentStart1, alignmentStart2, false, false, isDuplicate1, isDuplicate2, cigar1, cigar2,
                 strand1, strand2, firstOnly, false, false, defaultQualityScore);
     }
 
-    public void addMatePair(final int referenceSequenceIndex,
+    public List<SAMRecord> addMatePair(final int referenceSequenceIndex,
                             final int alignmentStart1,
                             final int alignmentStart2,
                             final boolean record1Unmapped,
@@ -232,18 +233,18 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final boolean record1NonPrimary,
                             final boolean record2NonPrimary,
                             final int defaultQualityScore) {
-        addMatePair("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
+        return addMatePair("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
                 isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary,
                 defaultQualityScore);
     }
 
-    private void addFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean recordUnmapped, final boolean isDuplicate, final String cigar,
+    private List<SAMRecord> addFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean recordUnmapped, final boolean isDuplicate, final String cigar,
                              final String qualityString, final int defaultQualityScore, final boolean isSecondary) {
-        addFragment("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart, recordUnmapped, isDuplicate, cigar,
+        return addFragment("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart, recordUnmapped, isDuplicate, cigar,
                 qualityString, defaultQualityScore, isSecondary, false);
     }
 
-    private void addFragment(final String readName, final int referenceSequenceIndex, final int alignmentStart, final boolean recordUnmapped, final boolean isDuplicate, final String cigar,
+    private List<SAMRecord> addFragment(final String readName, final int referenceSequenceIndex, final int alignmentStart, final boolean recordUnmapped, final boolean isDuplicate, final String cigar,
                              final String qualityString, final int defaultQualityScore, final boolean isSecondary, final boolean isSupplementary) {
 
         final SAMRecord record = samRecordSetBuilder.addFrag(readName, referenceSequenceIndex, alignmentStart, false,
@@ -252,9 +253,10 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         final String key = samRecordToDuplicatesFlagsKey(record);
         Assert.assertFalse(this.duplicateFlags.containsKey(key));
         this.duplicateFlags.put(key, isDuplicate);
+        return Collections.singletonList(record);
     }
 
-    public void addMatePair(final String readName,
+    public List<SAMRecord> addMatePair(final String readName,
                             final int referenceSequenceIndex1,
                             final int referenceSequenceIndex2,
                             final int alignmentStart1,
@@ -299,9 +301,10 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         final String key2 = samRecordToDuplicatesFlagsKey(record2);
         Assert.assertFalse(this.duplicateFlags.containsKey(key2));
         this.duplicateFlags.put(key2, isDuplicate2);
+        return samRecordList;
     }
 
-    public void addMatePair(final String readName,
+    public List<SAMRecord> addMatePair(final String readName,
                             final int referenceSequenceIndex1,
                             final int referenceSequenceIndex2,
                             final int alignmentStart1,
@@ -318,11 +321,11 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final boolean record1NonPrimary,
                             final boolean record2NonPrimary,
                             final int defaultQuality) {
-        addMatePair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
+        return addMatePair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
                 record1Unmapped, record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2,
                 firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality, null);
     }
-    public void addMatePair(final String readName,
+    public List<SAMRecord> addMatePair(final String readName,
                             final int referenceSequenceIndex,
                             final int alignmentStart1,
                             final int alignmentStart2,
@@ -338,7 +341,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final boolean record1NonPrimary,
                             final boolean record2NonPrimary,
                             final int defaultQuality) {
-        addMatePair(readName, referenceSequenceIndex, referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
+        return addMatePair(readName, referenceSequenceIndex, referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
                 isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality);
     }
 

@@ -51,4 +51,11 @@ public class SimpleMarkDuplicatesWithMateCigarTest extends AbstractMarkDuplicate
     @Override
     public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicates(final String readName1, final String readName2) {
     }
+
+    // To enable this test a change in htsjdk would be required. In particular the duplicateSetIterator would need to be modified.
+    @Test(enabled = false)
+    @Override
+    public void testDuplicateWithLowMappingQ() {
+
+    }
 }

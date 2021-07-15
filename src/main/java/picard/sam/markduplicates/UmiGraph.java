@@ -62,6 +62,7 @@ public class UmiGraph {
     private final boolean allowMissingUmis;
     private final boolean duplexUmis;
 
+
     /**
      * Creates a UmiGraph object
      * @param set Set of reads that have the same start-stop positions, these will be broken up by UMI

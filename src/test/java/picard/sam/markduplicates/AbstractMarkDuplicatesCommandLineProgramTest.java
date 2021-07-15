@@ -23,15 +23,25 @@
  */
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.CollectionUtil;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.markduplicates.util.MarkDuplicatesUtil;
+import picard.sam.util.Pair;
 import picard.sam.util.PhysicalLocationInt;
 import picard.sam.util.ReadNameParser;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * This class defines the individual test cases to run.  The actual running of the test is done
@@ -41,7 +51,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
 
     protected abstract AbstractMarkDuplicatesCommandLineProgramTester getTester();
 
-    protected static final int DEFAULT_BASE_QUALITY = 10;
+    static final int DEFAULT_BASE_QUALITY = 10;
 
     protected boolean markSecondaryAndSupplementaryRecordsLikeTheCanonical() {
         return false;
@@ -49,6 +59,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
 
     protected boolean markUnmappedRecordsLikeTheirMates() {
         return false;
+    }
+
+    private final short LOW_MAPPING_Q = 1;
+
+    @BeforeSuite
+    public void setMinInformativeMQ() {
+        MarkDuplicatesUtil.setMinInformativeMappingQuality((short) (LOW_MAPPING_Q + 1));
+
     }
 
     @Test
@@ -409,8 +427,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     public void testMappedPairAndMappedFragmentAndMatePairSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.getSamRecordSetBuilder().setReadLength(76);
-        tester.addMatePair(1, 10040, 10040, false, true, true, markUnmappedRecordsLikeTheirMates(), "76M", null, false, false, false, false, false, DEFAULT_BASE_QUALITY); // first a duplicate,
         // second end unmapped
+        tester.addMatePair(1, 10040, 10040, false, true, true, markUnmappedRecordsLikeTheirMates(), "76M", null, false, false, false, false, false, DEFAULT_BASE_QUALITY); // first a duplicate,
         tester.addMappedPair(1, 10189, 10040, false, false, "41S35M", "65M11S", true, false, false, DEFAULT_BASE_QUALITY); // mapped OK
         tester.addMappedFragment(1, 10040, true, DEFAULT_BASE_QUALITY); // duplicate
         tester.runTest();
@@ -747,6 +765,35 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMatePair("RUNID:1:1:16020:13352", 2, 41212324, 41212319, false, false, true, true, "33S35M", "28S40M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
         tester.addMappedFragment(fragLikeFirst ? "RUNID:1:1:15993:13361" : "RUNID:1:1:16020:13352", 4, 400, markSecondaryAndSupplementaryRecordsLikeTheCanonical() && !fragLikeFirst, null, null, additionalFragSecondary, additionalFragSupplementary, DEFAULT_BASE_QUALITY);
+        tester.runTest();
+    }
+
+
+    @Test
+    public void testDuplicateWithLowMappingQ() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        tester.getSamRecordSetBuilder().setReadLength(68);
+        tester.setMinInformativeMappingQ(LOW_MAPPING_Q + 1);
+
+        tester.addMatePair("RUNID:3:1:15029:113060", 0, 129384554, 129384355, false, false, true, markUnmappedRecordsLikeTheirMates(), "68M", "66M1I1M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:2:2:15029:113060", 0, 129384554, 129384554, false, false, false, false, "68M", "68M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+
+        // Create the pathology
+        final CloseableIterator<SAMRecord> iterator = tester.getRecordIterator();
+        final Map<Pair<String, Boolean>, Short> mappingQuality = new CollectionUtil.DefaultingMap<>((short) (LOW_MAPPING_Q + 1));
+        mappingQuality.put(new Pair<>("RUNID:3:1:15029:113060", false), LOW_MAPPING_Q);
+
+        while (iterator.hasNext()) {
+            final SAMRecord record = iterator.next();
+            record.setMappingQuality(mappingQuality.get(new Pair<>(record.getReadName(),record.getFirstOfPairFlag())));
+            record.setAttribute(SAMTag.MQ.name(), mappingQuality.get(new Pair<>(record.getReadName(),!record.getFirstOfPairFlag())));
+
+        }
+        iterator.close();
+
+        builder.getRecords().forEach(tester::addRecord);
         tester.runTest();
     }
 }

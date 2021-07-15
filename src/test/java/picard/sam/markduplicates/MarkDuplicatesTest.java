@@ -34,14 +34,17 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class defines the individual test cases to run. The actual running of the test is done
@@ -322,7 +325,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
                         Arrays.asList(false, true),           // Is duplicate
                         Arrays.asList(false, false),          // Negative Strand Flag of first in pair
                         Arrays.asList(true, true),            // Negative Strand Flag of second in pair
-                },{
+                },
+                {
                         // Test case where UMIs are not duplex, but are different.  None of the reads should be duplicates.
                         false,                                // Use duplex UMI (true), or single stranded UMI (false)
                         Arrays.asList("ATC", "GCG"),          // UMIs

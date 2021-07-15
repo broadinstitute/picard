@@ -25,14 +25,7 @@
 package picard.sam.markduplicates.util;
 
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import htsjdk.samtools.MergingSamRecordIterator;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamFileHeaderMerger;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
@@ -45,12 +38,7 @@ import picard.sam.DuplicationMetrics;
 import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
@@ -83,6 +71,13 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise. " +
                     "Deprecated, used ASSUME_SORT_ORDER=coordinate instead.", mutex = {"ASSUME_SORT_ORDER"})
     public boolean ASSUME_SORTED = false;
+
+    @Argument(shortName = "MIN_MQ",
+            doc = "The minimal value of the mapping quality that is considered informative for the purpose of creating " +
+                    "mapped-pairs. If a read has mapping quality smaller than this, the tool will consider it as unaligned " +
+                    "for the purpose of duplicate mapping (though it will remain mapped).",
+                    optional = true)
+    public short MIN_INFORMATIVE_MAPPING_Q = 0;
 
     @Argument(shortName = StandardOptionDefinitions.ASSUME_SORT_ORDER_SHORT_NAME,
             doc = "If not null, assume that the input file has this order even if the header says otherwise.",
@@ -218,6 +213,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
         } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
             ++metrics.UNPAIRED_READS_EXAMINED;
+        }  else if (!MarkDuplicatesUtil.pairedForMarkDuplicates(rec)) {
+            ++metrics.UNPAIRED_READS_EXAMINED;
         } else {
             ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
         }
@@ -228,7 +225,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         // only update duplicate counts for "decider" reads, not tag-a-long reads
         if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
             // Update the duplication metrics
-            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+            if (!MarkDuplicatesUtil.pairedForMarkDuplicates(rec)) {
                 ++metrics.UNPAIRED_READ_DUPLICATES;
             } else {
                 ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
@@ -375,6 +372,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             opticalDuplicatesByLibraryId.increment(list.get(0).getLibraryId(), opticalDuplicates);
         }
         return opticalDuplicates;
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        MarkDuplicatesUtil.setMinInformativeMappingQuality(MIN_INFORMATIVE_MAPPING_Q);
+        return super.customCommandLineValidation();
     }
 
     private static void trackDuplicateCounts(final int listSize,

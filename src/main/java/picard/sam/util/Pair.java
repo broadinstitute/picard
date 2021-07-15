@@ -68,8 +68,7 @@ public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements C
     }
 
     /**
-     * Basic hashcode function.  Assume hashcodes of left and right are
-     * randomly distributed and return the XOR of the two.
+     * Basic hashcode function.
      *
      * @return hashcode of the pair.
      */
@@ -85,8 +84,13 @@ public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements C
     @Override
     public int compareTo(final Pair<X, Y> o) {
         final int leftCompare;
+
         if (this.left == null && o.left == null) {
             leftCompare = 0;
+        } else if (this.left == null) {
+            return -1;
+        } else if (o.left == null) {
+            return 1;
         } else {
             leftCompare = this.left.compareTo(o.left);
         }
@@ -95,8 +99,12 @@ public class Pair<X extends Comparable<X>, Y extends Comparable<Y>> implements C
 
         if (this.right == null && o.right == null) {
             return 0;
+        } else if (this.right == null) {
+            return -1;
+        } else if (o.right == null) {
+            return 1;
+        } else {
+            return this.right.compareTo(o.right);
         }
-
-        return this.right.compareTo(o.right);
     }
 }

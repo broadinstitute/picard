@@ -126,4 +126,10 @@ public class MarkDuplicatesWithMateCigarTest extends AbstractMarkDuplicatesComma
 
         tester.runTest();
     }
+
+    @Test(enabled = false)
+    @Override
+    public void testDuplicateWithLowMappingQ() {
+
+    }
 }

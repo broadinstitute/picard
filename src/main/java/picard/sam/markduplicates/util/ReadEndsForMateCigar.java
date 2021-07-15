@@ -52,9 +52,12 @@ public class ReadEndsForMateCigar extends ReadEnds {
      */
     private PhysicalLocationForMateCigarSet locationSet = null;
 
+    private final short minInformativeMappingQuality;
+
     /** Builds a read ends object that represents a single read. */
     public ReadEndsForMateCigar(final SAMFileHeader header, final SamRecordWithOrdinal samRecordWithOrdinal,
-                                final OpticalDuplicateFinder opticalDuplicateFinder, final short libraryId) {
+                                final OpticalDuplicateFinder opticalDuplicateFinder, final short libraryId, final short minInformativeMappingQuality) {
+        this.minInformativeMappingQuality = minInformativeMappingQuality;
 
         this.readGroup = -1;
         this.tile = -1;
@@ -72,7 +75,7 @@ public class ReadEndsForMateCigar extends ReadEnds {
             throw new PicardException("Found an unexpected unmapped read");
         }
 
-        if (record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag()) {
+        if (MarkDuplicatesUtil.pairedForMarkDuplicates(record, minInformativeMappingQuality)) {
             this.read2ReferenceIndex = record.getMateReferenceIndex();
             this.read2Coordinate = record.getMateNegativeStrandFlag() ? SAMUtils.getMateUnclippedEnd(record) : SAMUtils.getMateUnclippedStart(record);
 
@@ -96,7 +99,7 @@ public class ReadEndsForMateCigar extends ReadEnds {
         this.libraryId = libraryId;
 
         // Is this unmapped or its mate?
-        if (record.getReadUnmappedFlag() || (record.getReadPairedFlag() && record.getMateUnmappedFlag())) {
+        if (!MarkDuplicatesUtil.pairedForMarkDuplicates(record, minInformativeMappingQuality)) {
             this.hasUnmapped = 1;
         }
 
@@ -117,7 +120,8 @@ public class ReadEndsForMateCigar extends ReadEnds {
     }
 
     /** Creates a shallow copy from the "other" */
-    public ReadEndsForMateCigar(final ReadEndsForMateCigar other, final SamRecordWithOrdinal samRecordWithOrdinal) {
+    public ReadEndsForMateCigar(final ReadEndsForMateCigar other, final SamRecordWithOrdinal samRecordWithOrdinal, final short minInformativeMappingQuality) {
+        this.minInformativeMappingQuality = minInformativeMappingQuality;
         this.readGroup = other.readGroup;
         this.tile = other.tile;
         this.x = other.x;

@@ -109,6 +109,7 @@ public class MarkQueue {
     /** The nonDuplicateReadEndsSet of all read ends sorted by 5' start unclipped position.  Some read ends in this nonDuplicateReadEndsSet may eventually be duplicates. */
     private final TreeSet<ReadEndsForMateCigar> nonDuplicateReadEndsSet = new TreeSet<ReadEndsForMateCigar>(new MarkQueueComparator());
 
+    private final short minInformativeMappingQuality;
     /**
      * Reads in the main nonDuplicateReadEndsSet may occasionally have mates with the same chromosome, coordinate, and orientation, causing collisions
      * We store the 'best' end of the mate pair in the main nonDuplicateReadEndsSet, and the other end in this nonDuplicateReadEndsSet.  We only remove from this.otherEndOfNonDuplicateReadEndsSet when
@@ -125,8 +126,9 @@ public class MarkQueue {
     /** temporary so we do not need to create many objects */
     private ReadEndsForMateCigar tmpReadEnds = null;
 
-    public MarkQueue(final ScoringStrategy duplicateScoringStrategy) {
+    public MarkQueue(final ScoringStrategy duplicateScoringStrategy, final short minInformativeMappingQuality) {
         comparator = new ReadEndsMCComparator(duplicateScoringStrategy);
+        this.minInformativeMappingQuality = minInformativeMappingQuality;
     }
 
     /** Returns the number of duplicates detected */
@@ -171,7 +173,7 @@ public class MarkQueue {
     /** Updates the duplication metrics given the provided duplicate */
     private void updateDuplicationMetrics(final ReadEndsForMateCigar duplicate, final DuplicationMetrics metrics) {
         // Update the duplication metrics
-        if (!duplicate.getRecord().getReadPairedFlag() || duplicate.getRecord().getMateUnmappedFlag()) {
+        if (!MarkDuplicatesUtil.pairedForMarkDuplicates(duplicate.getRecord(), minInformativeMappingQuality)) {
             ++metrics.UNPAIRED_READ_DUPLICATES;
         } else {
             ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
@@ -209,7 +211,7 @@ public class MarkQueue {
 
             // NB: only care about read1ReferenceIndex, read1Coordinate, and orientation in the nonDuplicateReadEndsSet
             if (null == this.tmpReadEnds) { // initialize
-                this.tmpReadEnds = new ReadEndsForMateCigar(header, current.getSamRecordIndex(), opticalDuplicateFinder, current.libraryId);
+                this.tmpReadEnds = new ReadEndsForMateCigar(header, current.getSamRecordIndex(), opticalDuplicateFinder, current.libraryId, minInformativeMappingQuality);
                 this.tmpReadEnds.read2ReferenceIndex = this.tmpReadEnds.read2Coordinate = -1;
                 this.tmpReadEnds.samRecordWithOrdinal = null; // nullify so we do not hold onto it forever
             } else {
@@ -356,7 +358,7 @@ public class MarkQueue {
 
         // add to the physical locations for optical duplicate tracking
         final SAMRecord record = other.getRecord();
-        if (record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag() && addToLocationSet) {
+        if (MarkDuplicatesUtil.pairedForMarkDuplicates(record,minInformativeMappingQuality) && addToLocationSet) {
             if (null == locationSet) throw new PicardException("location nonDuplicateReadEndsSet was null: " + record.getSAMString());
             locationSet.add(other);
         }
