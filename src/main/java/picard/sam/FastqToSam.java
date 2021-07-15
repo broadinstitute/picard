@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -173,7 +173,7 @@ public class FastqToSam extends CommandLineProgram {
             "If this value is not specified, the quality format will be detected automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
-    @Argument(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc="Output BAM/SAM/CRAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT ;
 
     @Argument(shortName="RG", doc="Read group name")
@@ -212,7 +212,7 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName = "DT", doc = "Date the run was produced, to insert into the read group header", optional = true)
     public Iso8601Date RUN_DATE;
 
-    @Argument(shortName="SO", doc="The sort order for the output sam/bam file.")
+    @Argument(shortName="SO", doc="The sort order for the output BAM/SAM/CRAM file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
     @Argument(doc="Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.")
@@ -316,7 +316,7 @@ public class FastqToSam extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final SAMFileHeader header = createSamFileHeader();
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, false, OUTPUT, REFERENCE_SEQUENCE);
 
         // Set the quality format
         QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ),

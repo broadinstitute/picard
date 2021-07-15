@@ -134,7 +134,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     private static final int DOUBLETON_SIZE = 2, TRIPLETON_SIZE = 3;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Write metrics to this file")

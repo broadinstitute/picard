@@ -85,8 +85,8 @@ import java.util.List;
 @DocumentedFeature
 public class ValidateSamFile extends CommandLineProgram {
     private static final Log log = Log.getInstance(ValidateSamFile.class);
-    static final String USAGE_SUMMARY = "Validates a SAM or BAM file.";
-    static final String USAGE_DETAILS = "<p>This tool reports on the validity of a SAM or BAM file relative to the SAM format " +
+    static final String USAGE_SUMMARY = "Validates a SAM/BAM/CRAM file.";
+    static final String USAGE_DETAILS = "<p>This tool reports on the validity of a SAM/BAM/CRAM file relative to the SAM format " +
             "specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper " +
             "formatting, faulty alignments, incorrect flag values, etc. </p> " +
 
@@ -122,7 +122,7 @@ public class ValidateSamFile extends CommandLineProgram {
     public enum Mode {VERBOSE, SUMMARY}
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "Input SAM/BAM file")
+            doc = "Input SAM/BAM/CRAM file")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
@@ -156,7 +156,7 @@ public class ValidateSamFile extends CommandLineProgram {
     public IndexValidationStringency INDEX_VALIDATION_STRINGENCY = IndexValidationStringency.EXHAUSTIVE;
 
     @Argument(shortName = "BISULFITE",
-            doc = "Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
+            doc = "Whether the input file consists of bisulfite sequenced reads. " +
                     "If so, C->T is not counted as an error in computing the value of the NM tag.")
     public boolean IS_BISULFITE_SEQUENCED = false;
 

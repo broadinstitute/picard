@@ -57,10 +57,10 @@ import java.io.File;
 public class SamFormatConverter extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
-    @Argument(doc = "The BAM or SAM file to parse.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "The SAM/BAM/CRAM file to parse.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "The BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc = "The SAM/BAM/CRAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
     protected int doWork() {

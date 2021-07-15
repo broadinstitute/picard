@@ -34,7 +34,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * <p/>
  * <p>This program verifies the input parameters to TargetMetricsCollector and converts all files to
  * the format desired by TargetMetricsCollector.  Then it instantiates a TargetMetricsCollector and
- * collects metric information for all reads in the INPUT sam file.</p>
+ * collects metric information for all reads in the INPUT file.</p>
  */
 public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, COLLECTOR extends TargetMetricsCollector<METRIC>> extends CommandLineProgram {
 
@@ -64,7 +64,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Argument(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
     public List<File> TARGET_INTERVALS;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM/BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file to write the metrics to.")
