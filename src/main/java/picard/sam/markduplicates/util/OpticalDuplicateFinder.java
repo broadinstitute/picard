@@ -31,7 +31,10 @@ import picard.sam.util.ReadNameParser;
 import picard.util.GraphUtils;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Contains methods for finding optical/co-localized/sequencing duplicates.
@@ -327,16 +330,19 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
     /** Simple method to test whether two physical locations are close enough to each other to be deemed optical dupes. */
     private boolean closeEnough(final PhysicalLocation lhs, final PhysicalLocation rhs, final int distance) {
         return lhs != rhs &&                                    // no comparing an object to itself (checked using object identity)!
-               lhs.hasLocation() && rhs.hasLocation() &&        // no comparing objects without locations
-               lhs.getReadGroup() == rhs.getReadGroup() &&      // must be in the same RG to be optical duplicates
-               lhs.getTile()      == rhs.getTile()      &&      // and the same tile
-               Math.abs(lhs.getX() - rhs.getX()) <= distance &&
-               Math.abs(lhs.getY() - rhs.getY()) <= distance;
+                lhs.hasLocation() && rhs.hasLocation() &&        // no comparing objects without locations
+                lhs.getReadGroup() == rhs.getReadGroup() &&      // must be in the same RG to be optical duplicates
+                lhs.getTile() == rhs.getTile() &&      // and the same tile
+                closeEnoughShort(lhs, rhs, distance);
     }
 
     private boolean closeEnoughShort(final PhysicalLocation lhs, final PhysicalLocation rhs, final int distance) {
         return lhs != rhs &&
-                Math.abs(lhs.getX() - rhs.getX()) <= distance &&
-                Math.abs(lhs.getY() - rhs.getY()) <= distance;
+                // Since the X and Y coordinates are constrained to short values, they can also become negative when
+                // cast from int to short. This code compares them while taking that into account.
+                (Math.abs((lhs.getX() - rhs.getX()) % Short.MAX_VALUE) <= distance ||
+                        Math.abs((rhs.getX() - lhs.getX()) % Short.MAX_VALUE) <= distance) &&
+                (Math.abs((lhs.getY() - rhs.getY()) % Short.MAX_VALUE) <= distance ||
+                        Math.abs((rhs.getY() - lhs.getY()) % Short.MAX_VALUE) <= distance);
     }
 }

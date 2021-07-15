@@ -34,14 +34,17 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class defines the individual test cases to run. The actual running of the test is done
@@ -193,6 +196,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
         // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
         markDuplicates.PROGRAM_RECORD_ID = null;
+        markDuplicates.OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500;
         Assert.assertEquals(markDuplicates.doWork(), 0);
         Assert.assertEquals(markDuplicates.numOpticalDuplicates(), expectedNumOpticalDuplicates);
         IOUtil.recursiveDelete(outputDir.toPath());
@@ -204,6 +208,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         return new Object[][] {
                 {new File(TEST_DATA_DIR, "optical_dupes.sam"), 1L},
                 {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 1L},
+                {new File(TEST_DATA_DIR, "GH1141.optical_dups.sam"), 1L},
         };
     }
 
