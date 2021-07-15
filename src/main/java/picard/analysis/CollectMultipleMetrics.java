@@ -688,9 +688,6 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Override
     public int doWork() {
-        if (OUTPUT.endsWith(".")) {
-            OUTPUT = OUTPUT.substring(0, OUTPUT.length() - 1);
-        }
 
         final Map<ProgramInterface, List<String>> additionalArguments = processAdditionalArguments(EXTRA_ARGUMENT);
 

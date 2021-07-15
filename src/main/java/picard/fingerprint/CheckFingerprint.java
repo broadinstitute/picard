@@ -210,8 +210,8 @@ public class CheckFingerprint extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CheckFingerprint.class);
 
-    public static final String FINGERPRINT_SUMMARY_FILE_SUFFIX = "fingerprinting_summary_metrics";
-    public static final String FINGERPRINT_DETAIL_FILE_SUFFIX = "fingerprinting_detail_metrics";
+    public static final String FINGERPRINT_SUMMARY_FILE_SUFFIX = ".fingerprinting_summary_metrics";
+    public static final String FINGERPRINT_DETAIL_FILE_SUFFIX = ".fingerprinting_detail_metrics";
 
     private Path inputPath;
     private Path genotypesPath;
@@ -223,7 +223,6 @@ public class CheckFingerprint extends CommandLineProgram {
             outputDetailMetricsFile = DETAIL_OUTPUT;
             outputSummaryMetricsFile = SUMMARY_OUTPUT;
         } else {
-            OUTPUT += ".";
             outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
             outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
