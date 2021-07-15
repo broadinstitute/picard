@@ -28,6 +28,8 @@ import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.Tuple;
+import picard.PicardException;
 
 /**
  * Utilities to clip the adapter sequence from a SAMRecord read
@@ -62,17 +64,17 @@ public class ClippingUtility {
     private static final Log log = Log.getInstance(ClippingUtility.class);
 
     /**
-     * @deprecated          Use the varargs version.  This no longer returns a warning string..
+     * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
     public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter) {
         adapterTrimIlluminaSingleRead(read, MIN_MATCH_BASES, MAX_ERROR_RATE, adapter);
     }
 
     /**
-     * @deprecated          Use the varargs version.  This no longer returns a warning string..
+     * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
     public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter,
-        final int minMatchBases, final double maxErrorRate) {
+                                                     final int minMatchBases, final double maxErrorRate) {
         adapterTrimIlluminaSingleRead(read, minMatchBases, maxErrorRate, adapter);
     }
 
@@ -82,11 +84,11 @@ public class ClippingUtility {
      * Simpler, more common of two overloads. Accepts multiple adapters
      * and tries them all until it finds the first one that matches.
      *
-     * @param read    SAM/BAM read to trim
+     * @param read     SAM/BAM read to trim
      * @param adapters which adapters to try to use (indexed, paired_end, or single_end)
      * @return AdapterPair    the AdapterPair matched, or null
      */
-    public static AdapterPair adapterTrimIlluminaSingleRead(final SAMRecord read,final AdapterPair ... adapters) {
+    public static AdapterPair adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair... adapters) {
         return adapterTrimIlluminaSingleRead(read, MIN_MATCH_BASES, MAX_ERROR_RATE, adapters);
     }
 
@@ -103,7 +105,7 @@ public class ClippingUtility {
      * @return AdapterPair    the AdapterPair matched, or null
      */
     public static AdapterPair adapterTrimIlluminaSingleRead(final SAMRecord read, final int minMatchBases,
-                                                     final double maxErrorRate, final AdapterPair ... adapters) {
+                                                            final double maxErrorRate, final AdapterPair... adapters) {
         for (AdapterPair adapter : adapters) {
             final int indexOfAdapterSequence = findIndexOfClipSequence(
                     getReadBases(read), adapter.get3PrimeAdapterBytes(), minMatchBases, maxErrorRate);
@@ -115,8 +117,42 @@ public class ClippingUtility {
         }
         return null;
     }
+
     /**
-     * @deprecated          Use the varargs version.  This no longer returns a warning string..
+     * Return the adapter to be trimmed from a read represented as an array of bytes[]
+     * @param read The byte array of read data
+     * @param minMatchBases The minimum number of base matches required for adapter matching
+     * @param maxErrorRate The maximum error rate allowed for adapter matching
+     * @param templateIndex The paired index of the reads (1 or 2, 1 for single ended reads)
+     * @param adapters The set of adapters to search for
+     * @return The adapter pair that matched the read and its index in the read or null
+     */
+    public static Tuple<AdapterPair, Integer> findAdapterPairAndIndexForSingleRead(final byte[] read,
+                                                                                   final int minMatchBases,
+                                                                                   final double maxErrorRate,
+                                                                                   final int templateIndex,
+                                                                                   final AdapterPair... adapters) {
+        for (AdapterPair adapter : adapters) {
+            int indexOfAdapterSequence;
+            if (templateIndex == 1) {
+                indexOfAdapterSequence = findIndexOfClipSequence(
+                        read, adapter.get3PrimeAdapterBytes(), minMatchBases, maxErrorRate);
+            } else if (templateIndex == 2) {
+                indexOfAdapterSequence = findIndexOfClipSequence(
+                        read, adapter.get5PrimeAdapterBytesInReadOrder(), minMatchBases, maxErrorRate);
+            } else {
+                throw new PicardException("Read template index must be 1 or 2");
+            }
+            if (indexOfAdapterSequence != NO_MATCH) {
+                // Convert to a one-based index for storage on the read.
+                return new Tuple<>(adapter, indexOfAdapterSequence);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
     public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2, final AdapterPair adapters) {
         adapterTrimIlluminaPairedReads(read1, read2, MIN_MATCH_PE_BASES, MAX_PE_ERROR_RATE, adapters);
@@ -124,10 +160,10 @@ public class ClippingUtility {
     }
 
     /**
-     * @deprecated          Use the varargs version.  This no longer returns a warning string..
+     * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
     public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
-        final AdapterPair adapters, final int minMatchBases, final double maxErrorRate) {
+                                                        final AdapterPair adapters, final int minMatchBases, final double maxErrorRate) {
 
         adapterTrimIlluminaPairedReads(read1, read2, minMatchBases, maxErrorRate, adapters);
         return null;
@@ -138,12 +174,12 @@ public class ClippingUtility {
      * If the read is a negative strand, its bases will be reverse complemented
      * Simpler, more common of two overloads.
      *
-     * @param  read1    first read of the pair
-     * @param  read2    second read of the pair
-     * @param  adapters which adapters to use (indexed, paired_end, or single_end, nextera), attempted in order
+     * @param read1    first read of the pair
+     * @param read2    second read of the pair
+     * @param adapters which adapters to use (indexed, paired_end, or single_end, nextera), attempted in order
      * @return int     number of bases trimmed
      */
-    public static AdapterPair adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2, final AdapterPair ... adapters) {
+    public static AdapterPair adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2, final AdapterPair... adapters) {
         return adapterTrimIlluminaPairedReads(read1, read2, MIN_MATCH_PE_BASES, MAX_PE_ERROR_RATE, adapters);
     }
 
@@ -153,16 +189,16 @@ public class ClippingUtility {
      * Returns a warning string when the trim positions found differed for each read.
      *
      * @param read1         first read of the pair.
-     * If read1 is a negative strand, a copy of its bases will be reverse complemented.
+     *                      If read1 is a negative strand, a copy of its bases will be reverse complemented.
      * @param read2         second read of the pair.
-     * If read2 is a negative strand, a copy of its bases will be reverse complemented
+     *                      If read2 is a negative strand, a copy of its bases will be reverse complemented
      * @param minMatchBases minimum number of contiguous bases to match against in a read
      * @param maxErrorRate  maximum error rate when matching read bases
-     * @param  adapters which adapters to use (indexed, paired_end, or single_end, nextera), attempted in order
+     * @param adapters      which adapters to use (indexed, paired_end, or single_end, nextera), attempted in order
      * @return int     number of bases trimmed
      */
     public static AdapterPair adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
-        final int minMatchBases, final double maxErrorRate, final AdapterPair ... adapters) {
+                                                             final int minMatchBases, final double maxErrorRate, final AdapterPair... adapters) {
         AdapterPair matched = null;
 
         for (final AdapterPair adapterPair : adapters) {
@@ -177,8 +213,7 @@ public class ClippingUtility {
                     read1.setAttribute(ReservedTagConstants.XT, index1 + 1);
                     read2.setAttribute(ReservedTagConstants.XT, index2 + 1);
                     return adapterPair;
-                }
-                else {
+                } else {
                     // Otherwise they were both no match, we just keep trying
                 }
             } else if (index1 == NO_MATCH || index2 == NO_MATCH) {
@@ -186,7 +221,7 @@ public class ClippingUtility {
                 // Try matching the one that did match again with a little tighter
                 // stringency and, if that works, trim both reads at the matching point.
                 // This is only the second-best possibility... keep looking for a perfect match.
-                if(attemptOneSidedMatch(read1, read2, index1, index2, 2 * minMatchBases)) {
+                if (attemptOneSidedMatch(read1, read2, index1, index2, 2 * minMatchBases)) {
                     matched = adapterPair;
                 }
 
@@ -203,12 +238,12 @@ public class ClippingUtility {
      * When an adapter is matched in only one end of a pair, we check it again with
      * stricter thresholds.  If it still matches, then we trim both ends of the read
      * at the same location.
-      */
+     */
     private static boolean attemptOneSidedMatch(final SAMRecord read1,
-                                             final SAMRecord read2,
-                                             final int index1,
-                                             final int index2,
-                                             final int stricterMinMatchBases) {
+                                                final SAMRecord read2,
+                                                final int index1,
+                                                final int index2,
+                                                final int stricterMinMatchBases) {
 
         // Save all the data about the read where we found the adapter match
         final int matchedIndex = index1 == NO_MATCH ? index2 : index1;
@@ -230,14 +265,13 @@ public class ClippingUtility {
     }
 
     /**
-     *  Returns an array of bytes representing the bases in the read,
-     *  reverse complementing them if the read is on the negative strand
+     * Returns an array of bytes representing the bases in the read,
+     * reverse complementing them if the read is on the negative strand
      */
     private static byte[] getReadBases(final SAMRecord read) {
         if (!read.getReadNegativeStrandFlag()) {
             return read.getReadBases();
-        }
-        else {
+        } else {
             final byte[] reverseComplementedBases = new byte[read.getReadBases().length];
             System.arraycopy(read.getReadBases(), 0, reverseComplementedBases, 0, reverseComplementedBases.length);
             SequenceUtil.reverseComplement(reverseComplementedBases);
@@ -258,13 +292,13 @@ public class ClippingUtility {
 
         // Walk backwards down the read looking for the sequence
         READ_LOOP:
-        for (int start = read.length - minMatch; start > minClipPosition -1; --start) {
+        for (int start = read.length - minMatch; start > minClipPosition - 1; --start) {
             final int length = Math.min(read.length - start, adapterSequence.length);
             final int mismatchesAllowed = (int) (length * maxErrorRate);
             int mismatches = 0;
 
             for (int i = 0; i < length; ++i) {
-                if (!SequenceUtil.isNoCall(adapterSequence[i]) && 
+                if (!SequenceUtil.isNoCall(adapterSequence[i]) &&
                         !SequenceUtil.basesEqual(adapterSequence[i], read[start + i]) &&
                         ++mismatches > mismatchesAllowed) {
                     continue READ_LOOP;
