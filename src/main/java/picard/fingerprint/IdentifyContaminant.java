@@ -26,6 +26,7 @@ package picard.fingerprint;
 
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Hidden;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
@@ -48,7 +49,7 @@ import java.io.File;
 public class IdentifyContaminant extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output fingerprint file (VCF).")
     public File OUTPUT;
@@ -71,6 +72,10 @@ public class IdentifyContaminant extends CommandLineProgram {
             "It names the sample in the VCF <SAMPLE>, using the SM value from the SAM header.")
     public boolean EXTRACT_CONTAMINATED = false;
 
+    @Hidden
+    @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
+    public boolean TEST_INPUT_READABILITY = true;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -90,6 +95,7 @@ public class IdentifyContaminant extends CommandLineProgram {
         extractFingerprint.SAMPLE_ALIAS = SAMPLE_ALIAS;
         extractFingerprint.VALIDATION_STRINGENCY = VALIDATION_STRINGENCY;
         extractFingerprint.VERBOSITY = VERBOSITY;
+        extractFingerprint.TEST_INPUT_READABILITY = TEST_INPUT_READABILITY;
         extractFingerprint.referenceSequence = referenceSequence;
 
         extractFingerprint.doWork();

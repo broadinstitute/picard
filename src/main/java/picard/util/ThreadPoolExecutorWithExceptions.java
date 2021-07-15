@@ -63,7 +63,7 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
     }
 
     /**
-     * Calls `shutdownNow, adjusts the core size to 0 and low timeout to ensure threads get killed an GCd
+     * Calls `shutdownNow, adjusts the core size to 0 and low timeout to ensure threads get killed and garbage collected.
      */
     public void cleanUp() {
         shutdownNow();

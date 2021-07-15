@@ -4,6 +4,7 @@ import htsjdk.io.AsyncWriterPool;
 import htsjdk.io.Writer;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
 import picard.illumina.parser.BaseIlluminaDataProvider;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -152,7 +153,14 @@ public class UnsortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends Basecalls
 
                     ThreadPoolExecutorWithExceptions finalTileWriters = new ThreadPoolExecutorWithExceptions(numThreads);
                     tileWriter = finalTileWriters;
-                    barcodeToClusterData.keySet().forEach(barcode -> finalTileWriters.submit(new TileRecordToWriterPump(barcodeToClusterData.get(barcode), barcodeRecordWriterMap.get(barcode))));
+                    barcodeToClusterData.keySet().forEach(barcode -> {
+                        Writer<CLUSTER_OUTPUT_RECORD> writer = barcodeRecordWriterMap.get(barcode);
+                        if (writer != null) {
+                            finalTileWriters.submit(new TileRecordToWriterPump(barcodeToClusterData.get(barcode), writer));
+                        } else if (!ignoreUnexpectedBarcodes) {
+                            throw new PicardException(String.format("Read records with barcode %s, but this barcode was not expected.  (Is it referenced in the parameters file?)", barcode));
+                        }
+                    });
                 }
             }
             awaitTileWriting(tileWriter);
