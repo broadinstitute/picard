@@ -128,7 +128,7 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/jway/source/picard/.",
+      "defaultValue": "/Users/ggrant/Documents/dev/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
