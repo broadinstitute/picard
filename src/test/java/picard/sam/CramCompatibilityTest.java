@@ -26,7 +26,7 @@ public class CramCompatibilityTest {
     public static final String REFERENCE_FILE = "testdata/picard/sam/test_cram_file.ref.fa";
     public static final String FASTQ_FILE = "testdata/picard/sam/fastq2bam/fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq";
 
-    public static final String CRAM_UNMAPPED = "testdata/picard/sam/SamFileConverterTest/unmapped.cram";
+    public static final String CRAM_UNMAPPED = "testdata/picard/sam/SamFormatConverterTest/unmapped.cram";
     public static final String CRAM_UNMAPPED_WITH_OQ_TAG = "testdata/picard/sam/unmapped_with_oq_tag.cram";
 
     public static final String CRAM_UNMAPPED_PART_1 = "testdata/picard/sam/unmapped_part_1.cram";
@@ -65,7 +65,7 @@ public class CramCompatibilityTest {
                 {"picard.sam.PositionBasedDownsampleSam", "FRACTION=0.5", CRAM_FILE, REFERENCE_FILE},
                 {"picard.sam.SortSam", "SORT_ORDER=queryname", CRAM_FILE, REFERENCE_FILE},
                 {"picard.sam.ReplaceSamHeader", "HEADER=" + CRAM_FILE_2, CRAM_FILE, REFERENCE_FILE},
-                {"picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", null, CRAM_FILE_QUERY_SORTED, REFERENCE_FILE},
+                {"picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "CREATE_INDEX=false", CRAM_FILE_QUERY_SORTED, REFERENCE_FILE},
                 {"picard.sam.GatherBamFiles",
                         "I=" + new File(CRAM_UNMAPPED).getAbsolutePath(),
                         CRAM_FILE_QUERY_SORTED,
@@ -82,7 +82,7 @@ public class CramCompatibilityTest {
                         REFERENCE_FILE
                 },
                 {"picard.sam.ReorderSam",
-                        null,
+                        "SEQUENCE_DICTIONARY=" + REFERENCE_FILE,
                         CRAM_FILE,
                         REFERENCE_FILE
                 },
@@ -155,7 +155,7 @@ public class CramCompatibilityTest {
         };
     }
 
-    @Test(dataProvider = "programArgsForCRAMWithoutReferenceToFail", expectedExceptions = CRAMException.class)
+    @Test(dataProvider = "programArgsForCRAMWithoutReferenceToFail", expectedExceptions = {CRAMException.class, IllegalArgumentException.class})
     public void testShouldFailWhenCRAMWithoutReference(String program,
                                                        String parameters,
                                                        String cramFile) throws IOException, IllegalAccessException, InstantiationException, ClassNotFoundException {
@@ -184,9 +184,9 @@ public class CramCompatibilityTest {
                 },
                 {"picard.sam.MergeSamFiles", null, CRAM_UNMAPPED},
                 {"picard.sam.PositionBasedDownsampleSam", "FRACTION=0.5", CRAM_UNMAPPED},
-                {"picard.sam.SortSam", "SORT_ORDER=unsorted", CRAM_UNMAPPED},
+                {"picard.sam.SortSam", "SORT_ORDER=queryname", CRAM_UNMAPPED},
                 {"picard.sam.ReplaceSamHeader", "HEADER=" + MBA_UNMAPPED_CRAM, CRAM_UNMAPPED},
-                {"picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", null, CRAM_UNMAPPED_WITH_OQ_TAG},
+                {"picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "CREATE_INDEX=false", CRAM_UNMAPPED_WITH_OQ_TAG},
                 {"picard.sam.GatherBamFiles",
                         "I=" + new File(CRAM_UNMAPPED_PART_2).getAbsolutePath(),
                         CRAM_UNMAPPED_PART_1
@@ -194,7 +194,7 @@ public class CramCompatibilityTest {
                 {"picard.sam.FastqToSam", "F1=" + FASTQ_FILE + " SAMPLE_NAME=s1", null},
                 {"picard.illumina.IlluminaBasecallsToSam",
                         "BASECALLS_DIR=" + new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls") +
-                        " LANE=1 READ_STRUCTURE=25S8S25T RUN_BARCODE=HiMom SAMPLE_ALIAS=HiDad LIBRARY_NAME=HelloWorld",
+                        " LANE=1 READ_STRUCTURE=25S8S25T RUN_BARCODE=HiMom SAMPLE_ALIAS=HiDad LIBRARY_NAME=HelloWorld SEQUENCING_CENTER=BI" ,
                         null
                 },
                 {"picard.illumina.MarkIlluminaAdapters",
@@ -253,9 +253,10 @@ public class CramCompatibilityTest {
         }
 
         if (reference != null) {
-            args.add(!programClassname.equals("picard.sam.ReorderSam")
-                    ? "REFERENCE_SEQUENCE="+ new File(reference).getAbsolutePath()
-                    : "REFERENCE=" + new File(reference).getAbsolutePath());
+            args.add(
+                    programClassname.equals("picard.sam.ReorderSam") ?
+                    "REFERENCE=" + new File(reference).getAbsolutePath() :
+                    "REFERENCE_SEQUENCE=" + new File(reference).getAbsolutePath());
         }
 
 
@@ -263,7 +264,7 @@ public class CramCompatibilityTest {
         program.instanceMain(args.toArray(new String[0]));
     }
 
-    static void assertCRAM(File outputFile) {
+    static void assertCRAM(final File outputFile) {
         try (InputStream in = new FileInputStream(outputFile)) {
             Assert.assertTrue(SamStreams.isCRAMFile(new BufferedInputStream(in)), "File is not a CRAM.");
         } catch (IOException e) {
