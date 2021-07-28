@@ -126,6 +126,20 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testMismatchingSamples3() {
+        String[] args = new String[]{
+                "I=" + TEST_INPUT_VCF1,
+                "O=" + TEST_OUTPUT,
+                "G=" + TEST_GENOTYPES_VCF1,
+                "EXPECTED_SAMPLE_ALIAS=TEST123",
+                "EXIT_CODE_WHEN_EXPECTED_SAMPLE_NOT_FOUND=0",
+                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
+    @Test
     public void testSummaryAndDetailOutputs() {
         String[] args = new String[]{
                 "I=" + TEST_INPUT_VCF1,
