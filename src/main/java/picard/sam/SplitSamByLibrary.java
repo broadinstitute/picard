@@ -151,7 +151,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
                 final SAMFileHeader header = reader.getFileHeader().clone();
                 header.setReadGroups(entry.getValue());
                 libraryToWriter.put(lib, factory.makeWriter(header, true,
-                        new File(OUTPUT, IOUtil.makeFileNameSafe(lib) + "." + extension),
+                        new File(OUTPUT, IOUtil.makeFileNameSafe(lib) + extension),
                         REFERENCE_SEQUENCE));
             }
 
@@ -162,7 +162,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
                 } else {
                     if (unknown == null) {
                         unknown = factory.makeWriter(unknownHeader, true,
-                                new File(OUTPUT, "unknown." + extension),
+                                new File(OUTPUT, "unknown" + extension),
                                 REFERENCE_SEQUENCE);
                     }
                     unknown.addAlignment(sam);
