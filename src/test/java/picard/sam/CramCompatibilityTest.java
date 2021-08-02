@@ -48,57 +48,57 @@ public class CramCompatibilityTest {
     @DataProvider(name = "programArgsForCRAMWithReference")
     public Object[][] getArgsForCRAMWithReference() {
         return new Object[][] {
-//                {"picard.sam.AddOrReplaceReadGroups",
-//                        "RGID=4 RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=20",
-//                        CRAM_FILE,
-//                        REFERENCE_FILE
-//                },
-//                {"picard.sam.CleanSam", null, CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.DownsampleSam", null, CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.FixMateInformation", null, CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.markduplicates.MarkDuplicates",
-//                        "M=" + createTempFile("MarkDuplicates", ".dir").getAbsolutePath(),
-//                        CRAM_FILE,
-//                        REFERENCE_FILE
-//                },
-//                {"picard.sam.MergeSamFiles", null, CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.PositionBasedDownsampleSam", "FRACTION=0.5", CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.SortSam", "SORT_ORDER=queryname", CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.ReplaceSamHeader", "HEADER=" + CRAM_FILE_2, CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "CREATE_INDEX=false", CRAM_FILE_QUERY_SORTED, REFERENCE_FILE},
-//                {"picard.sam.GatherBamFiles",
-//                        "I=" + new File(CRAM_UNMAPPED).getAbsolutePath(),
-//                        CRAM_FILE_QUERY_SORTED,
-//                        REFERENCE_FILE
-//                },
-//                {"picard.sam.markduplicates.MarkDuplicatesWithMateCigar",
-//                        "M=" + createTempFile("MarkDuplicatesWithMateCigar", ".txt").getAbsolutePath(),
-//                        CRAM_FILE,
-//                        REFERENCE_FILE
-//                },
-//                {"picard.sam.markduplicates.SimpleMarkDuplicatesWithMateCigar",
-//                        "M=" + createTempFile("SimpleMarkDuplicatesWithMateCigar", ".txt").getAbsolutePath(),
-//                        CRAM_FILE_ONE_PAIR_MC,
-//                        REFERENCE_FILE
-//                },
+                {"picard.sam.AddOrReplaceReadGroups",
+                        "RGID=4 RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=20",
+                        CRAM_FILE,
+                        REFERENCE_FILE
+                },
+                {"picard.sam.CleanSam", null, CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.DownsampleSam", null, CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.FixMateInformation", null, CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.markduplicates.MarkDuplicates",
+                        "M=" + createTempFile("MarkDuplicates", ".dir").getAbsolutePath(),
+                        CRAM_FILE,
+                        REFERENCE_FILE
+                },
+                {"picard.sam.MergeSamFiles", null, CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.PositionBasedDownsampleSam", "FRACTION=0.5", CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.SortSam", "SORT_ORDER=queryname", CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.ReplaceSamHeader", "HEADER=" + CRAM_FILE_2, CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar", "CREATE_INDEX=false", CRAM_FILE_QUERY_SORTED, REFERENCE_FILE},
+                {"picard.sam.GatherBamFiles",
+                        "I=" + new File(CRAM_UNMAPPED).getAbsolutePath(),
+                        CRAM_FILE_QUERY_SORTED,
+                        REFERENCE_FILE
+                },
+                {"picard.sam.markduplicates.MarkDuplicatesWithMateCigar",
+                        "M=" + createTempFile("MarkDuplicatesWithMateCigar", ".txt").getAbsolutePath(),
+                        CRAM_FILE,
+                        REFERENCE_FILE
+                },
+                {"picard.sam.markduplicates.SimpleMarkDuplicatesWithMateCigar",
+                        "M=" + createTempFile("SimpleMarkDuplicatesWithMateCigar", ".txt").getAbsolutePath(),
+                        CRAM_FILE_ONE_PAIR_MC,
+                        REFERENCE_FILE
+                },
                 {"picard.sam.ReorderSam",
                         "SEQUENCE_DICTIONARY=" + REFERENCE_FILE,
                         CRAM_FILE,
                         REFERENCE_FILE
                 },
-//                {"picard.sam.SetNmMdAndUqTags", null, CRAM_FILE, REFERENCE_FILE},
-//                {"picard.sam.MergeBamAlignment",
-//                        "UNMAPPED=" + new File(MBA_UNMAPPED_CRAM).getAbsolutePath() +
-//                        " ALIGNED=" + new File(MBA_ALIGNED_CRAM).getAbsolutePath(),
-//                        null,
-//                        MBA_REFERENCE
-//                },
-//                {"picard.illumina.MarkIlluminaAdapters",
-//                        "METRICS=" + createTempFile("picard.illumina.MarkIlluminaAdapters", ".txt").getAbsolutePath(),
-//                        CRAM_FILE_QUERY_SORTED,
-//                        REFERENCE_FILE
-//                },
-//                {"picard.sam.SplitSamByLibrary", null, CRAM_FILE, REFERENCE_FILE}
+                {"picard.sam.SetNmMdAndUqTags", null, CRAM_FILE, REFERENCE_FILE},
+                {"picard.sam.MergeBamAlignment",
+                        "UNMAPPED=" + new File(MBA_UNMAPPED_CRAM).getAbsolutePath() +
+                        " ALIGNED=" + new File(MBA_ALIGNED_CRAM).getAbsolutePath(),
+                        null,
+                        MBA_REFERENCE
+                },
+                {"picard.illumina.MarkIlluminaAdapters",
+                        "METRICS=" + createTempFile("picard.illumina.MarkIlluminaAdapters", ".txt").getAbsolutePath(),
+                        CRAM_FILE_QUERY_SORTED,
+                        REFERENCE_FILE
+                },
+                {"picard.sam.SplitSamByLibrary", null, CRAM_FILE, REFERENCE_FILE}
         };
     }
 
@@ -253,13 +253,8 @@ public class CramCompatibilityTest {
         }
 
         if (reference != null) {
-            args.add(
-//                    programClassname.equals("picard.sam.ReorderSam") ?
-//                    "REFERENCE=" + new File(reference).getAbsolutePath() :
-                    "REFERENCE_SEQUENCE=" + new File(reference).getAbsolutePath()
-                    );
+            args.add("REFERENCE_SEQUENCE=" + new File(reference).getAbsolutePath());
         }
-
 
         final CommandLineProgram program = (CommandLineProgram) Class.forName(programClassname).newInstance();
         program.instanceMain(args.toArray(new String[0]));
