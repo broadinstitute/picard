@@ -109,7 +109,9 @@ public class BarcodeExtractor {
             if (match == null) {
               match = calculateBarcodeMatch(readSubsequences, qualityScores, isInlineMatching);
             }
-            if (match.isMatched()) barcodeLookupMap.put(barcodesAsString, match);
+            if (match.isMatched()) {
+                barcodeLookupMap.put(barcodesAsString, match);
+            }
             return match;
         }
         else {
@@ -306,7 +308,7 @@ public class BarcodeExtractor {
                 final ByteString that = (ByteString) obj;
                 if (this.hash != that.hash) return false;
                 if (this.bytes.length != that.bytes.length) return false;
-                for (int i=0; i<this.bytes.length; ++i) {
+                for (int i = 0; i < this.bytes.length; ++i) {
                     if (!Arrays.equals(this.bytes[i], that.bytes[i])) return false;
                 }
                 return true;
@@ -319,7 +321,7 @@ public class BarcodeExtractor {
         @Override
         public String toString() {
             StringBuilder barcodeBuilder = new StringBuilder();
-            for(byte[] barcode : bytes){
+            for(byte[] barcode : bytes) {
                 barcodeBuilder.append(new String(barcode, StandardCharsets.UTF_8));
             }
             return barcodeBuilder.toString();

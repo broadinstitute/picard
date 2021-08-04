@@ -320,7 +320,7 @@ public abstract class BasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     }
 
     protected synchronized void updateMetrics(Map<String, BarcodeMetric> metrics, BarcodeMetric noMatch) {
-        if(barcodeExtractor != null) {
+        if (barcodeExtractor != null) {
             for (final String key : metrics.keySet()) {
                 barcodeExtractor.getMetrics().get(key).merge(metrics.get(key));
             }

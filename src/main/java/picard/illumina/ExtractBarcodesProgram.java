@@ -118,7 +118,7 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
     }
 
     /**
-     * Validate that POSITION >= 1, and that all BARCODEs are the same length and unique
+     * Parses all barcodes from input files and validates all barcodes are the same length and unique
      *
      * @return null if command line is valid.  If command line is invalid, returns an array of error message
      * to be written to the appropriate place.
@@ -255,7 +255,9 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
 
             validBarcodeColumns.sort((s, t1) -> {
                 int lengthDiff =  s.length() - t1.length();
-                if(lengthDiff == 0) return s.compareTo(t1);
+                if (lengthDiff == 0) {
+                    return s.compareTo(t1);
+                }
                 return lengthDiff;
             });
 
@@ -296,7 +298,9 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
                 }
                 final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
                 // if the barcode is all Ns don't add it to metrics (we add noCallMetric separately)
-                if(bcStr.contains("N") || bcStr.contains("n")) continue;
+                if (bcStr.contains("N") || bcStr.contains("n")) {
+                    continue;
+                }
                 if (barcodes.contains(bcStr)) {
                     messages.add("Barcode " + bcStr + " specified more than once in " + inputFile);
                 }
