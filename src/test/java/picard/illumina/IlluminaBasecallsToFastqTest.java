@@ -78,7 +78,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "MACHINE_NAME=machine1",
                 "FLOWCELL_BARCODE=abcdeACXX",
-                "MAX_RECORDS_IN_RAM=100", //force spill to disk to test encode/decode
+                "MAX_RECORDS_IN_RAM=100" //force spill to disk to test encode/decode
         });
         IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
         IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));

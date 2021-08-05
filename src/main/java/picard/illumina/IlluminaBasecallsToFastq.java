@@ -559,8 +559,8 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
 
         /**
          * Performs adapter and quality trimming on a read.
-         * @param read The read to trim.
-         * @param templateIndex The index of the read.
+         * @param read the read to trim.
+         * @param templateIndex the index of the read.
          */
         private void trimRead(final ReadData read, final int templateIndex){
             byte[] bases = read.getBases();
