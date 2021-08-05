@@ -210,7 +210,7 @@ public class RevertSam extends CommandLineProgram {
             "only be enabled if the output sort order is queryname and will always cause sorting to occur.")
     public boolean SANITIZE = false;
 
-    @Argument(doc = "If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then" +
+    @Argument(doc = "If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then " +
             "the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.")
     public double MAX_DISCARD_FRACTION = 0.01;
 

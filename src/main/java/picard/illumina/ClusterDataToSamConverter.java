@@ -50,7 +50,7 @@ import java.util.*;
  * @author jburke@broadinstitute.org
  */
 public class ClusterDataToSamConverter implements
-        BasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
+        SortedBasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
 
     private final Map<Integer, String> laneToReadGroup;
     private final SamRecordFilter filters = new SolexaNoiseFilter();
