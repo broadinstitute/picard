@@ -38,6 +38,8 @@ import htsjdk.samtools.util.RuntimeEOFException;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.TrimmingUtil;
+import htsjdk.samtools.util.Tuple;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
