@@ -61,9 +61,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_0001.bam");
+        final File out1 = new File(tmpDir, "shard_0001.sam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_0002.bam");
+        final File out2 = new File(tmpDir, "shard_0002.sam");
         out2.deleteOnExit();
         final SamReader input = SamReaderFactory.makeDefault().open(PAIRED_FILE);
         final SAMRecordIterator inputIter = input.iterator();
@@ -95,9 +95,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_0001.bam");
+        final File out1 = new File(tmpDir, "shard_0001.sam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_0002.bam");
+        final File out2 = new File(tmpDir, "shard_0002.sam");
         out2.deleteOnExit();
         final SamReader input = SamReaderFactory.makeDefault().open(PAIRED_FILE);
         final SAMRecordIterator inputIter = input.iterator();
@@ -130,9 +130,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_0001.bam");
+        final File out1 = new File(tmpDir, "shard_0001.sam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_0002.bam");
+        final File out2 = new File(tmpDir, "shard_0002.sam");
         out2.deleteOnExit();
         final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(PAIRED_FILE).iterator();
         final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
@@ -158,7 +158,7 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         runPicardCommandLine(args);
 
-        final File out = new File(tmpDir, "shard_0001.bam");
+        final File out = new File(tmpDir, "shard_0001.sam");
         out.deleteOnExit();
         final SamReader outReader = SamReaderFactory.makeDefault().open(out);
         final SamReader inReader = SamReaderFactory.makeDefault().open(PAIRED_FILE);
@@ -179,9 +179,9 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_0001.bam");
+        final File out1 = new File(tmpDir, "shard_0001.sam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_0002.bam");
+        final File out2 = new File(tmpDir, "shard_0002.sam");
         out2.deleteOnExit();
         final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(PAIRED_FILE).iterator();
         final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
@@ -221,11 +221,11 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
 
         runPicardCommandLine(args);
 
-        final File out1 = new File(tmpDir, "shard_0001.bam");
+        final File out1 = new File(tmpDir, "shard_0001.sam");
         out1.deleteOnExit();
-        final File out2 = new File(tmpDir, "shard_0002.bam");
+        final File out2 = new File(tmpDir, "shard_0002.sam");
         out2.deleteOnExit();
-        final File out3 = new File(tmpDir, "shard_0003.bam");
+        final File out3 = new File(tmpDir, "shard_0003.sam");
         out3.deleteOnExit();
         final SAMRecordIterator inputIter = SamReaderFactory.makeDefault().open(THREE_READ_TEMPLATE).iterator();
         final SamReader reader1 = SamReaderFactory.makeDefault().open(out1);
@@ -265,10 +265,10 @@ public class SplitSamByNumberOfReadsTest extends CommandLineProgramTest {
         };
 
         runPicardCommandLine(args);
-        final File out1 = new File(tmpDir, "Sample01_0001.bam");
+        final File out1 = new File(tmpDir, "Sample01_0001.sam");
         out1.deleteOnExit();
         VALIDATE_SAM_TESTER.assertSamValid(out1);
-        final File out2 = new File(tmpDir, "Sample01_0002.bam");
+        final File out2 = new File(tmpDir, "Sample01_0002.sam");
         out2.deleteOnExit();
         VALIDATE_SAM_TESTER.assertSamValid(out2);
     }

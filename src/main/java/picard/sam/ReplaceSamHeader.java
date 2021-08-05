@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,9 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.cram.build.CramIO;
+import htsjdk.samtools.cram.structure.Container;
+import htsjdk.samtools.cram.structure.CramHeader;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -44,6 +47,10 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 /**
  * @author alecw@broadinstitute.org
@@ -54,8 +61,8 @@ import java.io.File;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class ReplaceSamHeader extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM or BAM file with the header of another" +
+    static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM/BAM/CRAM file.  ";
+    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM/BAM/CRAM file with the header of another" +
             "file, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must " +
             "be the same.<br /><br />" +
             "Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords " +
@@ -69,13 +76,13 @@ public class ReplaceSamHeader extends CommandLineProgram {
             "      O=bam_with_new_head.bam" +
             "</pre>" +
             "<hr />";
-    @Argument(doc = "SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "SAM/BAM/CRAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Argument(doc = "SAM file from which SAMFileHeader will be read.")
+    @Argument(doc = "SAM/BAM/CRAM file from which SAMFileHeader will be read.")
     public File HEADER;
 
-    @Argument(doc = "SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
+    @Argument(doc = "header from HEADER file will be written to this file, followed by records from INPUT file",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
@@ -87,11 +94,12 @@ public class ReplaceSamHeader extends CommandLineProgram {
      */
     @Override
     protected int doWork() {
+
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(HEADER);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final SAMFileHeader replacementHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(HEADER);
+        final SAMFileHeader replacementHeader = getHeaderFromFile(HEADER);
 
         if (BamFileIoUtils.isBamFile(INPUT)) {
             blockCopyReheader(replacementHeader);
@@ -108,7 +116,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
             throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
                     ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
         }
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(replacementHeader, true, OUTPUT, REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
         for (final SAMRecord rec : recordReader) {
@@ -122,5 +130,20 @@ public class ReplaceSamHeader extends CommandLineProgram {
 
     private void blockCopyReheader(final SAMFileHeader replacementHeader) {
         BamFileIoUtils.reheaderBamFile(replacementHeader, INPUT, OUTPUT, CREATE_MD5_FILE, CREATE_INDEX);
+    }
+
+    private SAMFileHeader getHeaderFromFile(final File file) {
+        if (SamReader.Type.CRAM_TYPE.hasValidFileExtension(file.toString())) {
+            try (InputStream in = new FileInputStream(file)) {
+                final CramHeader cramHeader = CramIO.readCramHeader(in);
+                final Optional<SAMFileHeader> samHeader = Optional.ofNullable(
+                        Container.readSAMFileHeaderContainer(cramHeader.getCRAMVersion(), in, file.toString()));
+                return samHeader.orElse(null);
+            } catch (IOException e) {
+                throw new PicardException("Trouble reading CRAM file " + file, e);
+            }
+        } else {
+            return SamReaderFactory.makeDefault().getFileHeader(file);
+        }
     }
 }
