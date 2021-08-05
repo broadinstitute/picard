@@ -39,8 +39,8 @@ import java.util.stream.Stream;
  * this class implements two heuristics to reduce computation:
  * - Adapter sequences are truncated, and then any adapter pairs that become identical after truncation are collapsed into a single pair.
  * - After a specified number of reads with adapter sequence has been seen, prune the list of adapter pairs to include only the most
- * frequently seen adapters.  For a flowcell, there should only be a single adapter pair found.
- * <p>
+ *   frequently seen adapters.  For a flowcell, there should only be a single adapter pair found.
+ *
  * Note that the AdapterPair object returned by all the adapterTrim* methods will not be one of the original AdapterPairs
  * passed to the ctor, but rather will be one of the truncated copies.
  */
@@ -276,7 +276,7 @@ public class AdapterMarker {
     /**
      * Keep track of every time an adapter is found, until it is time to prune the list of adapters.
      */
-    private void tallyFoundAdapter(final AdapterPair foundAdapter, boolean fixPreviousRecords) {
+    private void tallyFoundAdapter(final AdapterPair foundAdapter, final boolean fixPreviousRecords) {
         // If caller does not want adapter pruning, do nothing.
         if (thresholdForSelectingAdaptersToKeep < 1) return;
         synchronized (this) {
