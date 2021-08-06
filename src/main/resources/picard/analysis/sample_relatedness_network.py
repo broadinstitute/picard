@@ -6,9 +6,13 @@ from graphviz import Graph
 from colour import Color
 import umap.umap_ as umap
 import matplotlib.pyplot as plt
+import matplotlib
 
 
 '''
+Creates visualization of sample relatedness (using LOD scores from CrosscheckFingerprints)
+Samples with low coverage at fingerprinting sites will be more opaque than other samples
+
 Run command:
 
 python3 sample_relatedness_network.py \
@@ -24,12 +28,16 @@ def extract_sample_id(file_string):
 	sample_string = file_string.rsplit(':', 1)[-1]
 	return sample_string
 
-def LOD_to_distance(LOD):
+def convert_LOD_to_float(LOD):
 	LOD = str(LOD)
 	LOD_no_comma = LOD.replace(',', '')
-	LOD = float(LOD_no_comma)
+	LOD_float = float(LOD_no_comma)
+	return LOD_float
+
+def LOD_to_distance(LOD):
+	# adjust parameters here to change graph structure
 	if (LOD > -10):
-		distance = 1 / (1 + np.exp(-(-LOD)))
+		distance = 1 / (1 + np.exp(-.5 * (-LOD + 4)))
 	else:
 		distance = 1.2
 	return distance
@@ -42,10 +50,13 @@ def reformat_matrix_output(matrix_output):
 	new_names = {}
 	for column in matrix_df:
 		new_names[column] = extract_sample_id(column)
+		if column != 'FILE':
+			matrix_df[column] = matrix_df[column].apply(convert_LOD_to_float)
 	matrix_df = matrix_df.rename(columns=new_names)
+	return matrix_df
 
+def rescale_matrix(matrix_df):
 	new_matrix_df = pd.DataFrame()
-
 	for column in matrix_df:
 	    if column == 'FILE':
 	        continue
@@ -71,12 +82,26 @@ def create_color_map(sample_ind_map_dict, matrix_df):
 	for i in range(0, len(individuals)):
 		color_map[individuals[i]] = hex_codes[i]
 	colors = []
+	alphas = []
 	for column in matrix_df:
 		if column == 'FILE':
 			continue
+		mag_column = matrix_df[column].abs()
+		if ((mag_column.mean()) >= 5):
+			alphas.append(.5)
+		else:
+			alphas.append(.99)
 		individual = sample_ind_map_dict[column]
 		colors.append(color_map[individual])
-	return(colors)
+	alphas = list(map(float, alphas))
+	i = 0
+	color_array = []
+	for c, a in zip(colors,alphas):
+		col = list(matplotlib.colors.to_rgb(c))
+		col.append(a)
+		color_array.append(col)
+	color_array = np.array(color_array)
+	return color_array
 
 def font_color(hex_code):
 	c = Color(hex_code)
@@ -86,7 +111,7 @@ def font_color(hex_code):
 		return "black"
 
 
-def draw_graph(matrix_df, colors):
+def draw_graph(matrix_df, color_array):
 	reducer = umap.UMAP(n_components=2,
                     n_neighbors=2,
                     spread=3,
@@ -99,17 +124,18 @@ def draw_graph(matrix_df, colors):
 	    embeddings[:, 0],
 	    embeddings[:, 1],
 	    s = 100,
-	    alpha = .9,
-	    c= [colors[x] for x in range(embeddings.shape[0])])
+	    c= color_array)
 	plt.title('UMAP projection of Clusters', fontsize=24)
 	plt.show()
 
 def graph_network(sample_individual_map, matrix_output):
 	sample_individual_map_df = pd.read_csv(sample_individual_map, sep = "\t", error_bad_lines=False)
-	matrix_df = reformat_matrix_output(matrix_output)
 	sample_ind_map_dict = create_sample_map(sample_individual_map_df)
-	color_map = create_color_map(sample_ind_map_dict, matrix_df)
-	draw_graph(matrix_df, color_map)
+	matrix_df = reformat_matrix_output(matrix_output)
+	print(LOD_to_distance(0))
+	color_array = create_color_map(sample_ind_map_dict, matrix_df)
+	matrix_df = rescale_matrix(matrix_df)
+	draw_graph(matrix_df, color_array)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
