@@ -212,7 +212,7 @@ public class CheckFingerprint extends CommandLineProgram {
     public int EXIT_CODE_WHEN_EXPECTED_SAMPLE_NOT_FOUND = 1;
 
     @Argument(doc = "When all LOD score are zero, exit with this value.")
-    public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
+    public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 2;
 
     private final Log log = Log.getInstance(CheckFingerprint.class);
 
@@ -254,7 +254,7 @@ public class CheckFingerprint extends CommandLineProgram {
 
 
 
-        final String observedSampleAlias = extractObservedSampleName();
+        final String observedSampleAlias = extractObservedSampleName(inputPath, OBSERVED_SAMPLE_ALIAS);
 
         // If expected sample alias isn't supplied, assume it's the one from the INPUT file
         if (EXPECTED_SAMPLE_ALIAS == null) {
@@ -381,18 +381,18 @@ public class CheckFingerprint extends CommandLineProgram {
                 p.toUri().getRawPath().endsWith(SamReader.Type.CRAM_TYPE.fileExtension()));
     }
 
-    private boolean containsSample(final Path p, final String sample) {
+    static boolean containsSample(final Path p, final String sample) {
         try (final VCFFileReader fileReader = new VCFFileReader(p, false)) {
             final VCFHeader fileHeader = fileReader.getFileHeader();
             return fileHeader.getGenotypeSamples().contains(sample);
         }
     }
 
-    private String extractObservedSampleName() {
+    static String extractObservedSampleName(final Path p, final String alias) {
         String observedSampleAlias = null;
-        if (fileContainsReads(inputPath)) {
+        if (fileContainsReads(p)) {
             // Verify that there's only one sample in the SAM/BAM.
-            try (final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inputPath)) {
+            try (final SamReader in = SamReaderFactory.makeDefault().open(p)) {
                 for (final SAMReadGroupRecord rec : in.getFileHeader().getReadGroups()) {
                     if (observedSampleAlias == null) {
                         observedSampleAlias = rec.getSample();
@@ -401,20 +401,20 @@ public class CheckFingerprint extends CommandLineProgram {
                     }
                 }
             } catch (final IOException ex) {
-                throw new PicardException("Error reading " + inputPath, ex);
+                throw new PicardException("Error reading " + p, ex);
             }
         } else {
-            try(final VCFFileReader fileReader = new VCFFileReader(inputPath, false)) {
+            try(final VCFFileReader fileReader = new VCFFileReader(p, false)) {
 
                 final VCFHeader fileHeader = fileReader.getFileHeader();
                 if (fileHeader.getNGenotypeSamples() < 1) {
                     throw new PicardException("inputPath VCF file must contain at least one sample.");
                 }
-                if ((fileHeader.getNGenotypeSamples() > 1) && (OBSERVED_SAMPLE_ALIAS == null)) {
+                if ((fileHeader.getNGenotypeSamples() > 1) && (alias == null)) {
                     throw new PicardException("inputPath VCF file contains multiple samples and yet the OBSERVED_SAMPLE_ALIAS parameter is not set.");
                 }
                 // set observedSampleAlias to the parameter, if set.  Otherwise, if here, this must be a single sample VCF, get it's sample
-                observedSampleAlias = (OBSERVED_SAMPLE_ALIAS != null) ? OBSERVED_SAMPLE_ALIAS : fileHeader.getGenotypeSamples().get(0);
+                observedSampleAlias = (alias != null) ? alias : fileHeader.getGenotypeSamples().get(0);
 
                 // Now verify that observedSampleAlias is, in fact, in the VCF
                 if (!fileHeader.getGenotypeSamples().contains(observedSampleAlias)) {
