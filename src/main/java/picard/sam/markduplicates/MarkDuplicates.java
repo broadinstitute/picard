@@ -65,10 +65,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "referred to as optical duplicates.</p>" +
             "" +
             "<p>The MarkDuplicates tool works by comparing sequences in the 5 prime positions of both reads and read-pairs in a SAM/BAM file.  " +
-            "An BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are" +
+            "A BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are" +
             " collected, the tool differentiates the primary and duplicate reads using an algorithm that ranks reads by the sums " +
-            "of their base-quality scores (default method).</p>  " +
-
+            "of their base-quality scores (default method). Note that this is different from directly checking if the sequences match, which " +
+            "MarkDuplicates does not do.</p>  " +
+            "" +
             "<p>The tool's main output is a new SAM, BAM or CRAM file, in which duplicates have been identified in the SAM flags field for each" +
             " read.  Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024.  " +
             "If you are not familiar with this type of annotation, please see the following " +
