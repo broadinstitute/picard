@@ -265,6 +265,11 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
                 metrics.PCT_ADAPTER = adapterReads / (double) metrics.PF_READS;
                 metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
+                metrics.STANDARD_DEVIATION = readLengthHistogram.getStandardDeviation();
+                metrics.MIN_READ_LENGTH = readLengthHistogram.getMin();
+                metrics.MAX_READ_LENGTH = readLengthHistogram.getMax();
+                metrics.MEDIAN_READ_LENGTH = readLengthHistogram.getMedian();
+                metrics.MEDIAN_ABSOLUTE_DEVIATION = readLengthHistogram.getMedianAbsoluteDeviation();
 
                 //Calculate BAD_CYCLES
                 metrics.BAD_CYCLES = 0;

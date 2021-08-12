@@ -122,12 +122,32 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      */
     public double PF_INDEL_RATE;
 
+    /** The median read length. Computed using all read lengths including clipped bases. */
+    public double MEDIAN_READ_LENGTH;
+
+    /**
+     * The median absolute deviation of the distribution of all read lengths.  If the distribution is
+     * essentially normal then the standard deviation can be estimated as ~1.4826 * MAD. Computed using all
+     * read lengths including clipped bases.
+     */
+    public double MEDIAN_ABSOLUTE_DEVIATION;
+
+    /** The minimum read length. Computed using all read lengths including clipped bases. */
+    public double MIN_READ_LENGTH;
+
+    /** The maximum read length. Computed using all read lengths including clipped bases. */
+    public double MAX_READ_LENGTH;
+
     /**
      * The mean read length of the set of reads examined.  When looking at the data for a single lane with
      * equal length reads this number is just the read length.  When looking at data for merged lanes with
-     * differing read lengths this is the mean read length of all reads.
+     * differing read lengths this is the mean read length of all reads. Computed using all read lengths
+     * including clipped bases.
      */
     public double MEAN_READ_LENGTH;
+
+    /** The standard deviation of the read lengths. Computed using all read lengths including clipped bases. */
+    public double STANDARD_DEVIATION;
 
     /**
      * The number of aligned reads whose mate pair was also aligned to the reference.
