@@ -398,9 +398,9 @@ public class HaplotypeMap {
 
         for( final Snp snp : snps) {
             final ReferenceSequence seq = ref.getSubsequenceAt(snp.getChrom(), snp.getPos(), snp.getPos());
-            if (seq.getBases()[0] == snp.getAllele1()) {
+            if (SequenceUtil.basesEqual(seq.getBases()[0], snp.getAllele1())) {
                 allele1MatchesReference.put(snp, true);
-            } else if (seq.getBases()[0] == snp.getAllele2()) {
+            } else if (SequenceUtil.basesEqual(seq.getBases()[0], snp.getAllele2())) {
                 allele1MatchesReference.put(snp, false);
             } else {
                 throw new RuntimeException("One of the two alleles should agree with the reference: " + snp.toString());

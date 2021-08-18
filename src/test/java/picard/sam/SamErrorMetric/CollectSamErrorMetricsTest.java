@@ -48,6 +48,7 @@ public class CollectSamErrorMetricsTest {
         final File[] files = new File[]{
                 simpleSamWithBaseErrors1,
                 simpleSamWithBaseErrors2,
+                simpleSamWithIndels,
                 simpleSingleStrandConsensusSamWithBaseErrors,
                 simpleDuplexConsensusSamWithBaseErrors,
                 chrMReadsWithClips};
@@ -183,6 +184,7 @@ public class CollectSamErrorMetricsTest {
 
     private static final File simpleSamWithBaseErrors1 = new File(TEST_DIR, "simpleSamWithBaseErrors1.sam");
     private static final File simpleSamWithBaseErrors2 = new File(TEST_DIR, "simpleSamWithBaseErrors2.sam");
+    private static final File simpleSamWithIndels = new File(TEST_DIR, "simpleSamWithIndels.sam");
     private static final File simpleSingleStrandConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleSingleStrandConsensusSamWithBaseErrors.sam");
     private static final File simpleDuplexConsensusSamWithBaseErrors = new File(TEST_DIR, "simpleDuplexConsensusSamWithBaseErrors.sam");
     private static final File chrMReadsWithClips = new File(TEST_DIR, "chrMReadsWithClips.sam");
@@ -223,6 +225,15 @@ public class CollectSamErrorMetricsTest {
                 // There are two base qualities in the bam, the error occurs in quality "32", make sure we detect no errors in quality "33"
                 {".error_by_base_quality", simpleSamWithBaseErrors1, priorQ,
                         new BaseErrorMetric("33", 21L, 0L)},
+                // simpleSamWithIndels contains two insertions and one deletion.
+                // One of the insertions should not be counted in total bases because it has base quality < 20.
+                // There should be zero errors because insertions and deletions aren't included as errors.
+                {".error_by_base_quality", simpleSamWithIndels, priorQ,
+                        new BaseErrorMetric("32", 71L, 0L)},
+                // Total bases should be 71 because low quality bases should not be included
+                // Error bases should be zero because a low quality mismatch does not count as an error
+                {".error_by_all", simpleSamWithIndels, priorQ,
+                        new BaseErrorMetric("all", 71L, 0L)},
                 // simpleSamWithBaseErrors2 contains 2 differences from the reference
                 // after 2 different homopolymers.
                 {".error_by_homopolymer_and_following_ref_base", simpleSamWithBaseErrors2, priorQ,
@@ -319,13 +330,11 @@ public class CollectSamErrorMetricsTest {
 
         // Note that soft clipped bases are not counted
         List<BaseErrorMetric> metrics = MetricsFile.readBeans(new File(errorMetrics.get(samFile).getAbsolutePath() + errorSubscript));
-
         BaseErrorMetric metric = metrics
                 .stream()
                 .filter(m -> m.COVARIATE.equals(expectedMetric.COVARIATE))
                 .findAny()
                 .orElseThrow(() -> new AssertionError("didn't find metric with COVARIATE==" + expectedMetric.COVARIATE));
-
         Assert.assertEquals(metric, expectedMetric);
     }
 

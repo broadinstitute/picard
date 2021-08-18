@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,7 +56,7 @@ import java.util.Map;
 @DocumentedFeature
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";
-    static final String USAGE_DETAILS = "<p>This tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are " +
+    static final String USAGE_DETAILS = "<p>This tool locates and tags duplicate reads in a SAM, BAM or CRAM file, where duplicate reads are " +
             "defined as originating from a single fragment of DNA.  Duplicates can arise during sample preparation e.g. library " +
             "construction using PCR.  See also " +
             "<a href='https://broadinstitute.github.io/picard/command-line-overview.html#EstimateLibraryComplexity'>EstimateLibraryComplexity</a>" +
@@ -69,16 +69,16 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             " collected, the tool differentiates the primary and duplicate reads using an algorithm that ranks reads by the sums " +
             "of their base-quality scores (default method).</p>  " +
 
-            "<p>The tool's main output is a new SAM or BAM file, in which duplicates have been identified in the SAM flags field for each" +
+            "<p>The tool's main output is a new SAM, BAM or CRAM file, in which duplicates have been identified in the SAM flags field for each" +
             " read.  Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024.  " +
             "If you are not familiar with this type of annotation, please see the following " +
             "<a href='https://www.broadinstitute.org/gatk/blog?id=7019'>blog post</a> for additional information.</p>" +
             "" +
             "<p>Although the bitwise flag annotation indicates whether a read was marked as a duplicate, it does not identify the type of " +
             "duplicate.  To do this, a new tag called the duplicate type (DT) tag was recently added as an optional output in  " +
-            "the 'optional field' section of a SAM/BAM file.  Invoking the TAGGING_POLICY option," +
+            "the 'optional field' section of a SAM/BAM/CRAM file.  Invoking the TAGGING_POLICY option," +
             " you can instruct the program to mark all the duplicates (All), only the optical duplicates (OpticalOnly), or no " +
-            "duplicates (DontTag).  The records within the output of a SAM/BAM file will have values for the 'DT' tag (depending on the invoked " +
+            "duplicates (DontTag).  The records within the output of a SAM/BAM/CRAM file will have values for the 'DT' tag (depending on the invoked " +
             "TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or sequencing-platform artifact duplicates (SQ).  " +
             "This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary methods to identify " +
             "and differentiate duplicate types.  Set READ_NAME_REGEX to null to skip optical duplicate detection, e.g. for RNA-seq " +
@@ -116,7 +116,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * The optional attribute in SAM/BAM files used to store the duplicate type.
+     * The optional attribute in SAM/BAM/CRAM files used to store the duplicate type.
      */
     public static final String DUPLICATE_TYPE_TAG = "DT";
     /**
@@ -240,7 +240,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * Main work method.  Reads the BAM file once and collects sorted information about
+     * Main work method.  Reads the SAM file once and collects sorted information about
      * the 5' ends of both ends of each read (or just one end in the case of pairs).
      * Then makes a pass through those determining duplicates before re-reading the
      * input file and writing it out with duplication flags set correctly.
@@ -293,9 +293,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         // Key: previous PG ID on a SAM Record (or null).  Value: New PG ID to replace it.
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
 
-        try (SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
-                true,
-                OUTPUT)) {
+        try (SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader, true, OUTPUT,REFERENCE_SEQUENCE)){
 
             // Now copy over the file while marking all the necessary indexes as duplicates
             long recordInFileIndex = 0;

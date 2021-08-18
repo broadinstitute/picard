@@ -91,11 +91,12 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             final boolean ignoreUnexpectedBarcodes,
             final boolean applyEamssFiltering,
             final boolean includeNonPfReads,
-            final AsyncWriterPool writerPool
+            final AsyncWriterPool writerPool,
+            final BarcodeExtractor barcodeExtractor
     ) {
         super(basecallsDir, barcodesDir, lanes, readStructure, barcodeRecordWriterMap, demultiplex,
                 firstTile, tileLimit, bclQualityEvaluationStrategy,
-                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, writerPool);
+                ignoreUnexpectedBarcodes, applyEamssFiltering, includeNonPfReads, writerPool, barcodeExtractor);
 
         this.tmpDirs = tmpDirs;
         this.maxReadsInRamPerTile = maxReadsInRamPerTile;
@@ -159,10 +160,20 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     private class TileProcessor implements Runnable {
         private final int tileNum;
         private final Map<String, SortingCollection<CLUSTER_OUTPUT_RECORD>> barcodeToRecordCollection;
+        private Map<String, BarcodeMetric> metrics;
+        private BarcodeMetric noMatch;
 
         TileProcessor(final int tileNum, final Set<String> barcodes) {
             this.tileNum = tileNum;
             this.barcodeToRecordCollection = new HashMap<>(barcodes.size(), 1.0f);
+            if (barcodeExtractor != null) {
+                this.metrics = new LinkedHashMap<>(barcodeExtractor.getMetrics().size());
+                for (final String key : barcodeExtractor.getMetrics().keySet()) {
+                    this.metrics.put(key, barcodeExtractor.getMetrics().get(key).copy());
+                }
+
+                this.noMatch = barcodeExtractor.getNoMatchMetric().copy();
+            }
             for (String barcode : barcodes) {
                 SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection = createSortingCollection();
                 this.barcodeToRecordCollection.put(barcode, recordCollection);
@@ -171,7 +182,6 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
 
         @Override
         public void run() {
-            final List<SortedRecordToWriterPump> writerList = new ArrayList<>();
             for (IlluminaDataProviderFactory laneFactory : laneFactories) {
                 if (laneFactory.getAvailableTiles().contains(tileNum)) {
                     final BaseIlluminaDataProvider dataProvider = laneFactory.makeDataProvider(tileNum);
@@ -180,12 +190,15 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
                         final ClusterData cluster = dataProvider.next();
                         readProgressLogger.record(null, 0);
                         if (includeNonPfReads || cluster.isPf()) {
-                            addRecord(cluster.getMatchedBarcode(), converter.convertClusterToOutputRecord(cluster));
+                            final String barcode = maybeDemultiplex(cluster, metrics, noMatch, laneFactory.getOutputReadStructure());
+                            addRecord(barcode, converter.convertClusterToOutputRecord(cluster));
                         }
                     }
                     dataProvider.close();
                 }
             }
+
+            final List<SortedRecordToWriterPump> writerList = new ArrayList<>();
             barcodeToRecordCollection.forEach((barcode, value) -> {
                 value.doneAdding();
                 final Writer<CLUSTER_OUTPUT_RECORD> writer = barcodeRecordWriterMap.get(barcode);
@@ -194,6 +207,8 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             });
 
             completedWork.put(tileNum, writerList);
+
+            updateMetrics(metrics, noMatch);
 
             log.debug("Finished processing tile " + tileNum);
         }
