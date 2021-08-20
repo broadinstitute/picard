@@ -9,12 +9,16 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +39,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
     private static final String TEST_OUTPUT = new File(TEST_DATA_DIR + "/tempCheckFPDir/otp.fp").getAbsolutePath();
     private static final String TEST_GENOTYPES_VCF1 = new File(TEST_DATA_DIR, "NA12892.g.vcf").getAbsolutePath();
     private static final String TEST_GENOTYPES_VCF_NO_FILE = new File(TEST_DATA_DIR, "noFile.g.vcf").getAbsolutePath();
+    private static final String TEST_MISSING_DATA = new File(TEST_DATA_DIR, "empty.vcf").getAbsolutePath();
     private static final File RESULT_EXAMPLE_SUMMARY =
             new File(TEST_DATA_DIR, "fingerprinting_summary_metrics.example");
     private static final File RESULT_EXAMPLE_DETAIL =
@@ -100,29 +105,30 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
                 RESULT_EXAMPLE_DETAIL));
     }
 
-    @Test
-    public void testMismatchingSamples() {
-        String[] args = new String[]{
-                "I=" + NA12891_r1_sam,
-                "O=" + TEST_OUTPUT,
-                "G=" + TEST_GENOTYPES_VCF1,
-                "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
+    @DataProvider(name = "testMismatchingAndMissingDataProvider")
+    Object[][] testMismatchingAndMissingDataProvider() {
+        return new Object[][] {
+                {NA12891_r1_sam.getAbsolutePath(), Collections.emptyList(), 1},
+                {TEST_INPUT_VCF1, Collections.singletonList("EXPECTED_SAMPLE_ALIAS=TEST123"), 1},
+                {TEST_INPUT_VCF1, Arrays.asList("EXPECTED_SAMPLE_ALIAS=TEST123",
+                        "EXIT_CODE_WHEN_EXPECTED_SAMPLE_NOT_FOUND=0"), 0},
+                {TEST_MISSING_DATA, Collections.emptyList(), 2},
+                {TEST_MISSING_DATA, Collections.singletonList("EXIT_CODE_WHEN_NO_VALID_CHECKS=0"), 0}
         };
-
-        Assert.assertEquals(runPicardCommandLine(args), 1);
     }
 
-    @Test
-    public void testMismatchingSamples2() {
-        String[] args = new String[]{
-                "I=" + TEST_INPUT_VCF1,
+    @Test(dataProvider = "testMismatchingAndMissingDataProvider")
+    public void testMismatchingAndMissing(final String inputVcf, final List<String> addedArgs, final int expectedReturnCode) {
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "I=" + inputVcf,
                 "O=" + TEST_OUTPUT,
                 "G=" + TEST_GENOTYPES_VCF1,
-                "EXPECTED_SAMPLE_ALIAS=TEST123",
                 "H=" + SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING
-        };
+        ));
 
-        Assert.assertEquals(runPicardCommandLine(args), 1);
+        args.addAll(addedArgs);
+
+        Assert.assertEquals(runPicardCommandLine(args), expectedReturnCode);
     }
 
     @Test
@@ -288,5 +294,47 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         Assert.assertTrue(outputDetail.exists(), "Expected output file " + outputDetail.getAbsolutePath() + " to exist.");
 
         return outputSummary;
+    }
+
+    @DataProvider(name = "containsSampleDataProvider")
+    Object[][] containsSampleDataProvider() {
+        return new Object[][] {
+                {na12891_fp.toPath(), "NA12891", true},
+                {na12891_fp.toPath(), "NA12892", false},
+                {na12892_fp.toPath(), "NA12891", false},
+                {na12892_fp.toPath(), "NA12892", true}
+        };
+    }
+
+    @Test(dataProvider = "containsSampleDataProvider")
+    void testContainsSample(final Path vcf, final String sample, final boolean expectedResult) {
+        Assert.assertEquals(CheckFingerprint.containsSample(vcf, sample), expectedResult);
+    }
+
+    @DataProvider(name = "extractObservedSampleNameDataProvider")
+    Object[][] extractObservedSampleNameDataProvider() {
+        return new Object[][] {
+                {na12891_fp.toPath(), null, "NA12891"},
+                {na12892_fp.toPath(), null, "NA12892"},
+                {TEST_DATA_DIR.toPath().resolve("NA12891andNA12892.vcf"), "NA12892", "NA12892"}
+        };
+    }
+
+    @Test(dataProvider = "extractObservedSampleNameDataProvider")
+    void testExtractObservedSampleNameDataProvider(final Path vcf, final String alias, final String expectedSampleName) {
+        Assert.assertEquals(CheckFingerprint.extractObservedSampleName(vcf, alias), expectedSampleName);
+    }
+
+    @DataProvider(name = "extractObservedSampleNameExceptionDataProvider")
+    Object[][] extractObservedSampleNameExceptionDataProvider() {
+        return new Object[][] {
+                {na12891_fp.toPath(), "NA12892"}, //wrong alias
+                {TEST_DATA_DIR.toPath().resolve("NA12891andNA12892.vcf"), null} //no alias specified with multisample fp
+        };
+    }
+
+    @Test(dataProvider = "extractObservedSampleNameExceptionDataProvider", expectedExceptions = PicardException.class)
+    void extractObservedSampleNameExceptionTest(final Path vcf, final String alias) {
+        CheckFingerprint.extractObservedSampleName(vcf, alias);
     }
 }
