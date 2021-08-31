@@ -99,7 +99,7 @@ public class CollectRrbsMetrics extends CommandLineProgram {
 
 private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 
-    @Argument(doc = "The BAM or SAM file containing aligned reads. Must be coordinate sorted", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Argument(doc = "The SAM/BAM/CRAM file containing aligned reads. Must be coordinate sorted", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
     @Argument(doc = "Base name for output files", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
     public String METRICS_FILE_PREFIX;
@@ -152,7 +152,7 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         final File PLOTS_OUT = new File(METRICS_FILE_PREFIX + PDF_FILE_EXTENSION);
         assertIoFiles(SUMMARY_OUT, DETAILS_OUT, PLOTS_OUT);
 
-        final SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
+        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         if (!ASSUME_SORTED && samReader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             throw new PicardException("The input file " + INPUT.getAbsolutePath() + " does not appear to be coordinate sorted");
         }

@@ -302,6 +302,12 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     Assert.assertEquals(metrics.PF_ALIGNED_BASES, 0);
                     Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
                     Assert.assertEquals(metrics.BAD_CYCLES, 22);
+                    Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
+                    Assert.assertEquals(metrics.SD_READ_LENGTH, 0.0);
+                    Assert.assertEquals(metrics.MEDIAN_READ_LENGTH, 101.0);
+                    Assert.assertEquals(metrics.MAD_READ_LENGTH, 0.0);
+                    Assert.assertEquals(metrics.MIN_READ_LENGTH, 101.0);
+                    Assert.assertEquals(metrics.MAX_READ_LENGTH, 101.0);
                     break;
                 case UNPAIRED:
                 default:
