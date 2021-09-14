@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2021 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,35 @@
  * THE SOFTWARE.
  */
 
-package picard.analysis;
+package picard.util;
 
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.analysis.CollectQualityYieldMetrics;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-/**
- * Created by kbergin on 11/23/15.
- */
-public class CollectQualityYieldMetricsTest extends CommandLineProgramTest {
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
+public class AccumulateQualityYieldMetricsTest extends CommandLineProgramTest {
+
+    private static final File TEST_DATA_DIR = new File("testdata/picard/quality");
 
     public String getCommandLineProgramName() {
-        return CollectQualityYieldMetrics.class.getSimpleName();
+        return AccumulateQualityYieldMetrics.class.getSimpleName();
     }
 
     @Test
     public void test() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
-        final File outfile   = File.createTempFile("test", ".quality_yield_metrics");
+        final File input1 = new File(TEST_DATA_DIR, "insert_size_metrics_test.quality_yield_metrics");
+        final File input2 = new File(TEST_DATA_DIR, "insert_size_metrics_test_fake.quality_yield_metrics");
+        final File outfile = File.createTempFile("test", ".quality_yield_metrics");
         outfile.deleteOnExit();
-        final String[] args = new String[] {
-                "INPUT="  + input.getAbsolutePath(),
+        final String[] args = new String[]{
+                "INPUT=" + input1.getAbsolutePath(),
+                "INPUT=" + input2.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
         };
 
@@ -58,20 +59,20 @@ public class CollectQualityYieldMetricsTest extends CommandLineProgramTest {
         final MetricsFile<CollectQualityYieldMetrics.QualityYieldMetrics, ?> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
-        Assert.assertEquals(output.getMetrics().size(),1);
+        Assert.assertEquals(output.getMetrics().size(), 1);
 
         final CollectQualityYieldMetrics.QualityYieldMetrics metrics = output.getMetrics().get(0);
-        Assert.assertEquals(metrics.TOTAL_READS, 52);
-        Assert.assertEquals(metrics.PF_READS, 52);
-        Assert.assertEquals(metrics.READ_LENGTH, 101);
-        Assert.assertEquals(metrics.TOTAL_BASES, 5252);
-        Assert.assertEquals(metrics.PF_BASES, 5252);
-        Assert.assertEquals(metrics.Q20_BASES, 3532);
-        Assert.assertEquals(metrics.PF_Q20_BASES, 3532);
-        Assert.assertEquals(metrics.Q30_BASES, 3145);
-        Assert.assertEquals(metrics.PF_Q30_BASES, 3145);
-        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 6497);
-        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 6497);
+        Assert.assertEquals(metrics.TOTAL_READS, 52 * 2 - 2);
+        Assert.assertEquals(metrics.PF_READS, 52 * 2 - 2);
+        Assert.assertEquals(metrics.READ_LENGTH, 102);
+        Assert.assertEquals(metrics.TOTAL_BASES, 5252 * 2 - 2);
+        Assert.assertEquals(metrics.PF_BASES, 5252 * 2 - 2);
+        Assert.assertEquals(metrics.Q20_BASES, 3532 * 2 - 2);
+        Assert.assertEquals(metrics.PF_Q20_BASES, 3532 * 2 - 2);
+        Assert.assertEquals(metrics.Q30_BASES, 3145 * 2 - 5);
+        Assert.assertEquals(metrics.PF_Q30_BASES, 3145 * 2 - 5);
+        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 6497 * 2 - 7);
+        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 6497 * 2 - 7);
 
     }
 }
