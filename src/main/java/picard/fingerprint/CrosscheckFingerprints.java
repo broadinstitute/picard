@@ -157,45 +157,23 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
 
 @CommandLineProgramProperties(
         summary =
-                "Checks that all data in the set of input files appear to come from the same " +
-                        "individual. Can be used to cross-check readgroups, libraries, samples, or files. " +
-                        "Operates on SAM/BAM/CRAM and VCF (including gVCF and gzipped-VCF). " +
+                "Checks the odds that all data in the set of input files come from the same individual. Can be used to cross-check readgroups, libraries, samples, or files. Acceptable inputs include BAM/SAM/CRAM and VCF/GVCF files. Output delivers LOD scores in the form of a CrosscheckMetric file. \n" +
                         "\n" +
                         "<h3>Summary</h3>\n" +
-                        "Checks if all the genetic data within a set of files appear to come from the same individual. " +
-                        "It quickly determines whether a group's genotype matches that of an input file by selective sampling, " +
-                        "and has been designed to work well for low-depth SAM (as well as high depth ones and VCFs.) " +
-                        "The tool collects fingerprints (essentially, genotype information from different parts of the genome) " +
-                        "at the finest level available in the data (readgroup for read-data files " +
-                        "and sample for variant-data files) and then optionally aggregates it by library, sample or file, to increase power and provide " +
-                        "results at the desired resolution. Output is in a \"Moltenized\" format, one row per comparison. The results are " +
-                        "emitted into a CrosscheckMetric metric file. " +
-                        "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
-                        "help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could cause it to " +
-                        "otherwise fail to notice that samples are from the same individual.) " +
-                        "A matrix output is also available to facilitate visual inspection of crosscheck results.\n " +
+                        "CrosscheckFingerprints rapidly checks the odds that all of the genetic data within a set of files come from the same individual. This is accomplished by selectively sampling from the input files, and determining whether the genotypes of the specified readgroups match to each other. \n " +
+                        "Output is generated in the form of a “molten” (one row per comparison) CrosscheckMetric file that includes the Logarithm of the Odds (LOD) score, as well as the tumor-aware LOD score. Tumor-aware LOD scores can be used to assess genotypic identity in the presence of a severe Loss of Heterozygosity (LOH) with high purity—this could otherwise lead to a failure of the tool to identify samples are from the same individual. Output is also available as a matrix, to facilitate visual inspection of crosscheck results. \n" +
+                        "Metric files can contain many rows of output. We therefore recommend following up CrosscheckFingerprints with a step using [ClusterCrosscheckMetrics (Picard)](https://gatk.broadinstitute.org/hc/en-us/articles/360045798972--Tool-Documentation-Index); this tool will cluster groups together that pass a designated LOD threshold, ensuring that groups within the cluster are related to each other. \n" +
+                        "There may be cases where several groups out of a collection of possible groups must be identified—for example, to link a BAM to its correct sample in a multi-sample VCF. In this case, it would not be necessary to cross-check the various samples in the VCF against each other, but only to check the identity of the BAM against the various samples in the VCF. For this application, the SECOND_INPUT argument is provided. With SECOND_INPUT, CrosscheckFingerprints does the following: \n" +
+                        " - Independently aggregates data for the input files in INPUT and SECOND_INPUT. \n" +
+                        " - Aggregates data at the SAMPLE level. \n" +
+                        " - Compares samples from INPUT to the same sample in SECOND_INPUT. \n" +
+                        " - Disables MATRIX_OUTPUT. \n" +
                         "\n" +
-                        "Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics " +
-                        "as a follow-up step to running CrosscheckFingerprints.\n " +
+                        "In other cases, the groups collected may not have any observations (‘reads’ for BAM files, or ‘calls’ for VCF files) at fingerprinting sites. Alternatively, a sample in INPUT may be missing from SECOND_INPUT. These cases are handled as follows: \n" +
+                        " - If running in CHECK_SAME_SAMPLES mode with the INPUT and SECOND_INPUT sets of input files: when either set of inputs (1) includes a sample not found in the other, or (2) contains a sample with no observations at any fingerprinting sites, then an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. \n" +
+                        " - If running in any other running mode: when a group which is being crosschecked does not have any observations at fingerprinting sites, a warning will be logged. \n" +
                         "\n" +
-                        "There are cases where one would like to identify a few groups out of a collection of many possible groups (say " +
-                        "to link a SAM to its correct sample in a multi-sample VCF. In this case one would not case for the cross-checking " +
-                        "of the various samples in the VCF against each other, but only in checking the identity of the SAM against the various " +
-                        "samples in the VCF. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints " +
-                        "does the following:\n" +
-                        " - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. \n" +
-                        " - aggregation of data happens at the SAMPLE level \n" +
-                        " - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n" +
-                        " - MATRIX_OUTPUT is disabled. " +
-                        "\n" +
-                        "In some cases, the groups collected may not have any observations (calls for a VCF, reads for a SAM) at fingerprinting sites, or " +
-                        "a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode " +
-                        "with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with " +
-                        "no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other " +
-                        "running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is " +
-                        "logged.  As long as there is at least one comparison where both sides have observations at fingerprinting sites, the tool will " +
-                        "return zero.  However, if all comparisons have at least one side with no observations at fingerprinting sites, an error will be " +
-                        "logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS." +
+                        "Note that, as long as there is at least one comparison in which both files have observations at fingerprinting sites, the tool will return a ‘zero’. However, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS if all comparisons have at least one side without observations at a fingerprinting site (ie. all LOD scores are zero). \n" +
                         "\n" +
                         "<hr/>" +
                         "<h3>Examples</h3>" +
