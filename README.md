@@ -28,7 +28,7 @@ As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last ver
     cd picard/
 ```
 
-* Picard is now built using [gradle](http://gradle.org/). A wrapper script (`gradlew`) is included which will download the appropriate version of gradle on the first invocation.
+* Picard is now built using [gradle](https://gradle.org/). A wrapper script (`gradlew`) is included which will download the appropriate version of gradle on the first invocation.
     
 * To build a fully-packaged, runnable Picard jar with all dependencies included, run:
 ```
@@ -137,7 +137,7 @@ jar, and should thus "Just Work".
 
 Please cite this repository when using Picard tools for your publications.
 
-“Picard Toolkit.” 2019. Broad Institute, GitHub Repository. http://broadinstitute.github.io/picard/; Broad Institute
+“Picard Toolkit.” 2019. Broad Institute, GitHub Repository. https://broadinstitute.github.io/picard/; Broad Institute
 
 ```
 @misc{Picard2019toolkit,
@@ -145,16 +145,16 @@ Please cite this repository when using Picard tools for your publications.
   year = {2019},
   publisher = {Broad Institute},
   journal = {Broad Institute, GitHub repository},
-  howpublished = {\url{http://broadinstitute.github.io/picard/}}
+  howpublished = {\url{https://broadinstitute.github.io/picard/}}
 }
 ```
 
 Identifiers from software registries are increasingly accepted by journals, as in (biotools:picard_tools) or (RRID:SCR_006525).
 
-Picard is migrating to semantic versioning (http://semver.org/). We will eventually adhere to it strictly and bump our major version whenever there are breaking changes to our API, but until we more clearly define what constitutes our official API, clients should assume that every release potentially contains at least minor changes to public methods.
+Picard is migrating to [semantic versioning](https://semver.org/). We will eventually adhere to it strictly and bump our major version whenever there are breaking changes to our API, but until we more clearly define what constitutes our official API, clients should assume that every release potentially contains at least minor changes to public methods.
 
-Please see the [Picard Documentation](http://broadinstitute.github.io/picard) for more information.
+Please see the [Picard Documentation](https://broadinstitute.github.io/picard) for more information.
 
-[1]: http://github.com/samtools/htsjdk
-[2]: http://samtools.sourceforge.net
-[3]: http://vcftools.sourceforge.net/specs.html
+[1]: https://github.com/samtools/htsjdk
+[2]: https://www.htslib.org/
+[3]: https://vcftools.github.io/specs.html
