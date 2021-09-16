@@ -156,5 +156,5 @@ Picard is migrating to [semantic versioning](https://semver.org/). We will event
 Please see the [Picard Documentation](https://broadinstitute.github.io/picard) for more information.
 
 [1]: https://github.com/samtools/htsjdk
-[2]: https://www.htslib.org/
-[3]: https://vcftools.github.io/specs.html
+[2]: https://samtools.github.io/hts-specs/
+[3]: https://samtools.github.io/hts-specs/
