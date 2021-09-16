@@ -37,7 +37,7 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Combines multiple Picard QualityYieldMetrics files a single file.
+ * Combines multiple Picard QualityYieldMetrics files into a single file.
  *
  * @author Yossi Farjoun
  */
