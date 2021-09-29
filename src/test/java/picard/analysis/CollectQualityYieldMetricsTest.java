@@ -55,21 +55,23 @@ public class CollectQualityYieldMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectQualityYieldMetrics.QualityYieldMetrics, Comparable<?>> output = new MetricsFile<CollectQualityYieldMetrics.QualityYieldMetrics, Comparable<?>>();
+        final MetricsFile<CollectQualityYieldMetrics.QualityYieldMetrics, ?> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
-        for (final CollectQualityYieldMetrics.QualityYieldMetrics metrics : output.getMetrics()) {
-                Assert.assertEquals(metrics.TOTAL_READS, 52);
-                Assert.assertEquals(metrics.PF_READS, 52);
-                Assert.assertEquals(metrics.READ_LENGTH, 101);
-                Assert.assertEquals(metrics.TOTAL_BASES, 5252);
-                Assert.assertEquals(metrics.PF_BASES, 5252);
-                Assert.assertEquals(metrics.Q20_BASES, 3532);
-                Assert.assertEquals(metrics.PF_Q20_BASES, 3532);
-                Assert.assertEquals(metrics.Q30_BASES, 3145);
-                Assert.assertEquals(metrics.PF_Q30_BASES, 3145);
-                Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 6497);
-                Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 6497);
-        }
+        Assert.assertEquals(output.getMetrics().size(),1);
+
+        final CollectQualityYieldMetrics.QualityYieldMetrics metrics = output.getMetrics().get(0);
+        Assert.assertEquals(metrics.TOTAL_READS, 52);
+        Assert.assertEquals(metrics.PF_READS, 52);
+        Assert.assertEquals(metrics.READ_LENGTH, 101);
+        Assert.assertEquals(metrics.TOTAL_BASES, 5252);
+        Assert.assertEquals(metrics.PF_BASES, 5252);
+        Assert.assertEquals(metrics.Q20_BASES, 3532);
+        Assert.assertEquals(metrics.PF_Q20_BASES, 3532);
+        Assert.assertEquals(metrics.Q30_BASES, 3145);
+        Assert.assertEquals(metrics.PF_Q30_BASES, 3145);
+        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 6497);
+        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 6497);
+
     }
 }

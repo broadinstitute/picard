@@ -99,7 +99,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 "<hr />"
 ;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
@@ -131,7 +131,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     public int SAMPLE_SIZE=10000;
 
     @ArgumentCollection
-    protected IntervalArgumentCollection intervalArugmentCollection = makeIntervalArgumentCollection();
+    protected IntervalArgumentCollection intervalArgumentCollection = makeIntervalArgumentCollection();
 
     @Argument(doc="Output for Theoretical Sensitivity metrics.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
@@ -189,7 +189,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        INTERVALS = intervalArugmentCollection.getIntervalFile();
+        INTERVALS = intervalArgumentCollection.getIntervalFile();
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
         }

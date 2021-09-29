@@ -95,7 +95,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (BAM or SAM or a GA4GH url).")
     public String INPUT = null;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (BAM or SAM).")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (SAM, BAM or CRAM).")
     public File OUTPUT = null;
 
     @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,
@@ -174,9 +174,10 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         outHeader.setReadGroups(Collections.singletonList(rg));
         if (SORT_ORDER != null) outHeader.setSortOrder(SORT_ORDER);
 
-        final SAMFileWriter outWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader,
+        final SAMFileWriter outWriter = new SAMFileWriterFactory().makeWriter(outHeader,
                 outHeader.getSortOrder() == inHeader.getSortOrder(),
-                OUTPUT);
+                OUTPUT,
+                REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(log);
         for (final SAMRecord read : in) {

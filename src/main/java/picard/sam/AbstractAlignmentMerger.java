@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,7 @@ import java.util.*;
  * <p/>
  * The order of processing is as follows:
  * <p/>
- * 1.  Get records from the unmapped bam and the alignment data
+ * 1.  Get records from the unmapped SAM/BAM/CRAM and the alignment data
  * 2.  Merge the alignment information and public tags ONLY from the aligned SAMRecords
  * 3.  Do additional modifications -- handle clipping, trimming, etc.
  * 4.  Fix up mate information on paired reads
@@ -409,7 +409,7 @@ public abstract class AbstractAlignmentMerger {
         else { // catches queryname and unsorted
             final SAMFileHeader header = this.header.clone();
             header.setSortOrder(this.sortOrder);
-            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, true, this.targetBamFile, referenceFasta);
             writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records to output in queryname order"));
             sink = new Sink(writer);
         }
@@ -577,7 +577,7 @@ public abstract class AbstractAlignmentMerger {
         // Write the records to the output file in specified sorted order,
         if (this.sortOrder == SortOrder.coordinate) {
             header.setSortOrder(this.sortOrder);
-            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, true, this.targetBamFile, referenceFasta);
             writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
             final ProgressLogger finalProgress = new ProgressLogger(log, 10000000, "Written in coordinate order to output", "records");
 

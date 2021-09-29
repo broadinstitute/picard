@@ -66,7 +66,7 @@ public class BinTdUtil {
                 makeCd(lane, tile, 1159, 2179, false,
                         new byte[]{G,T,T,A,G,C,A,C,A,G,A,T,A,T,T,G,G,A,T,G,A,G,T,G,A,A,A,A,A,A,A,A,A,T,T,T,T,T,T,T,T,T,A,T,T,T,T,T,C,T,A,A,A,T,A,C,T,T},
                         new byte[]{2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,28,28,28,32,32,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
-                        null),
+                        "AAAAAAAA"),
                 makeCd(lane, tile, 1103, 2184, true,
                         new byte[]{G,T,A,A,G,A,A,C,T,A,C,C,C,T,G,G,G,T,C,C,C,C,G,T,G,T,T,G,T,C,T,A,T,A,G,A,A,G,T,T,T,C,A,G,A,A,T,T,G,T,G,G,C,C,C,C,A,T},
                         new byte[]{31,31,33,37,37,37,37,37,39,39,39,39,39,41,41,41,41,38,40,41,41,41,41,39,40,31,34,34,37,37,37,37,37,33,31,33,37,37,35,36,37,39,39,39,39,39,41,41,41,38,39,40,41,41,41,41,41,40},

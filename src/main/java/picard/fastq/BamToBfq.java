@@ -129,7 +129,7 @@ public class BamToBfq extends CommandLineProgram {
         }
         outputPrefix += OUTPUT_FILE_PREFIX + ".";
 
-        BamToBfqWriter writer = new BamToBfqWriter(INPUT, outputPrefix, READS_TO_ALIGN,
+        SamToBfqWriter writer = new SamToBfqWriter(INPUT, REFERENCE_SEQUENCE, outputPrefix, READS_TO_ALIGN,
                 READ_CHUNK_SIZE, PAIRED_RUN, READ_NAME_PREFIX,
                 INCLUDE_NON_PF_READS, CLIP_ADAPTERS, BASES_TO_WRITE);
         writer.writeBfqFiles();

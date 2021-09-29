@@ -54,7 +54,7 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
     public void sanityCheckTheGathering() throws Exception {
         final File outputFile = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
         outputFile.deleteOnExit();
-        final List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         for (final File splitBam : SPLIT_BAMS) {
             args.add("INPUT=" + splitBam.getAbsolutePath());
         }
