@@ -276,7 +276,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         // Remove once deprecated parameter is deleted.
         if (MAX_READS_IN_RAM_PER_TILE != -1) {
             log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
-            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE * NUM_PROCESSORS;
         }
 
         if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && MACHINE_NAME == null) {
