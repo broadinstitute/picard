@@ -209,6 +209,8 @@ public class GtcToVcf extends CommandLineProgram {
             // The Call Rate in the Illumina GTC File does not take into account zeroed out SNPs.
             // So we recalculate it (and ignore zeroed out assays - which also includes intensity only probes)
             vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE, String.valueOf(callRate)));
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE_DETAIL,
+                    "The gtcCallRate is the Call Rate reported in the Illumina GTC file, corrected for the presence of Zeroed-Out SNPs"));
 
             writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
 
