@@ -497,9 +497,7 @@ public class GenotypeConcordance extends CommandLineProgram {
 
             // create the output header
             final List<String> sampleNames = Arrays.asList(OUTPUT_VCF_CALL_SAMPLE_NAME, OUTPUT_VCF_TRUTH_SAMPLE_NAME);
-            final Set<VCFHeaderLine> headerLines = new HashSet<>();
-            headerLines.addAll(callReader.getFileHeader().getMetaDataInInputOrder());
-            headerLines.addAll(truthReader.getFileHeader().getMetaDataInInputOrder());
+            final Set<VCFHeaderLine> headerLines = VCFHeaderMerger.getMergedHeaderLines(Arrays.asList(callReader.getFileHeader(), truthReader.getFileHeader()), true);
             headerLines.add(CONTINGENCY_STATE_HEADER_LINE);
             writer.writeHeader(new VCFHeader(headerLines, sampleNames));
             return Optional.of(writer);
