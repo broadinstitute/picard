@@ -118,9 +118,11 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
      */
     @Override
     public void processTilesAndWritePerSampleOutputs(final Set<String> barcodes) throws IOException {
+        log.info("Tile Read Executor - Queueing: ", tiles.size(), " TileProcessor jobs");
         for (final Integer tile : tiles) {
             tileReadExecutor.submit(new TileProcessor(tile, barcodes));
         }
+
         awaitTileProcessingCompletion();
     }
 
@@ -239,25 +241,22 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
     protected void awaitTileProcessingCompletion() throws IOException {
         tileReadExecutor.shutdown();
         // Wait for all the read threads to complete before checking for errors
-        awaitExecutor(tileReadExecutor);
+        awaitExecutor("Tile Read Executor", tileReadExecutor);
 
-        int tileProcessingIndex = 0;
-        ThreadPoolExecutorWithExceptions tileWriteExecutor = null;
-        while (tileProcessingIndex < tiles.size()) {
-                awaitExecutor(tileWriteExecutor);
-                tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
-                completedWork.get(tiles.get(tileProcessingIndex)).forEach(tileWriteExecutor::submit);
-                tileProcessingIndex++;
+        for (final Integer tile : tiles) {
+            log.info("Tile " + tile + " Writer Executor Starting");
+            ThreadPoolExecutorWithExceptions tileWriteExecutor = new ThreadPoolExecutorWithExceptions(numThreads);
+            completedWork.get(tile).forEach(tileWriteExecutor::submit);
+            awaitExecutor("Tile " + tile + " Writer Executor", tileWriteExecutor);
         }
 
-        awaitExecutor(tileWriteExecutor);
         closeWriters();
     }
 
-    private void awaitExecutor(ThreadPoolExecutorWithExceptions executor) {
+    private void awaitExecutor(final String executorName, ThreadPoolExecutorWithExceptions executor) {
         if (executor != null) {
             executor.shutdown();
-            ThreadPoolExecutorUtil.awaitThreadPoolTermination("Writing executor", executor, Duration.ofMinutes(5));
+            ThreadPoolExecutorUtil.awaitThreadPoolTermination(executorName, executor, Duration.ofMinutes(5));
 
             // Check for tile work synchronization errors
             if (executor.hasError()) {
@@ -265,6 +264,7 @@ public class SortedBasecallsConverter<CLUSTER_OUTPUT_RECORD> extends BasecallsCo
             }
 
             executor.cleanUp();
+            log.info("Done with awaitExecutor: " + executorName);
         }
     }
 }
