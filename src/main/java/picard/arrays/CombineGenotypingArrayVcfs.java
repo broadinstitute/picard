@@ -228,19 +228,20 @@ public class CombineGenotypingArrayVcfs extends CommandLineProgram {
                 depth += vc.getAttributeAsInt(VCFConstants.DEPTH_KEY, 0);
 
             // Go through all attributes - Ignore differences in AC, AF and AN as we recal later.
-            // Ignore differences in dev[XY]_AB and SOURCE as there are minor allowable changes
+            // Ignore differences in dev[XY]_AB and SOURCE/refSNP as there are minor allowable changes
             for (final Map.Entry<String, Object> p : vc.getAttributes().entrySet()) {
                 final String key = p.getKey();
                 if ((!key.equals("AC")) && (!key.equals("AF")) && (!key.equals("AN")) &&
-                        (!key.equals("devX_AB")) && (!key.equals("devY_AB")) && (!key.equals("SOURCE"))) {
+                        (!key.equals("devX_AB")) && (!key.equals("devY_AB")) &&
+                        (!key.equals("SOURCE")) && (!key.equals("refSNP"))) {
                     final Object value = p.getValue();
                     final Object extantValue = firstAttributes.get(key);
                     if (extantValue == null) {
-                        // attribute in one VCF but not another.  Die!
+                        // attribute in one VCF but not another.
                         throw new PicardException("Attribute '" + key + "' not found in all VCFs");
                     }
                     else if (!extantValue.equals(value)) {
-                        // Attribute disagrees in value between one VCF Die! (if not AC, AF, nor AN, skipped above)
+                        // Attribute disagrees in value between one VCF and the other
                         throw new PicardException("Values for attribute '" + key + "' disagrees among input VCFs");
                     }
                 }
