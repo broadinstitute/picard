@@ -388,7 +388,8 @@ public class GtcToVcf extends CommandLineProgram {
         builder.attribute(InfiniumVcfFields.ILLUMINA_CHR, record.getChr());
         builder.attribute(InfiniumVcfFields.ILLUMINA_POS, record.getPosition());
         builder.attribute(InfiniumVcfFields.ILLUMINA_BUILD, record.getGenomeBuild());
-        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(' ', '_'));
+        // Source field from the Illumina manifest may contain semicolons as separator characters.  Replace with a ',' for VCF
+        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(';', ',').replace(' ', '_'));
         builder.attribute(InfiniumVcfFields.GC_SCORE, formatFloatForVcf(egtFile.totalScore[egtIndex]));
 
         for (InfiniumVcfFields.GENOTYPE_VALUES gtValue : InfiniumVcfFields.GENOTYPE_VALUES.values()) {
