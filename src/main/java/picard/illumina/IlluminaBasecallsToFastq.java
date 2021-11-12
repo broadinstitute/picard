@@ -154,7 +154,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
             mutex = {"OUTPUT_PREFIX"})
     public File MULTIPLEX_PARAMS;
 
-    @Argument(doc = "Which adapters to look for in the read.", optional = true)
+    @Argument(doc = "Which adapters to look for in the reads. The default value is null, meaning that no adapters will be looked for in the reads.", optional = true)
     public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = null;
 
     @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
