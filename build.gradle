@@ -141,7 +141,9 @@ tasks.withType(Jar){
         attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
                 'Implementation-Title': 'Picard',
                 'Implementation-Vendor': 'Broad Institute',
-                'Implementation-Version': version
+                'htsjdk-Version': htsjdkVersion,
+                'Implementation-Version': version,
+                'Multi-Release': 'true'
     }
 }
 
