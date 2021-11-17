@@ -156,7 +156,7 @@ javadoc {
 
 // Generate Picard Online Doc
 task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
-    final File picardDocDir = new File("build/docs/picarddoc")
+    final File picardDocDir = file("build/docs/picarddoc")
     doFirst {
         // make sure the output folder exists or we can create it
         if (!picardDocDir.exists() && !picardDocDir.mkdirs()) {
@@ -192,7 +192,7 @@ task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
 
 task currentJar(type: Copy){
     from shadowJar
-    into new File(buildDir, "libs")
+    into file("$buildDir/libs")
     rename { string -> "picard.jar"}
 }
 
@@ -370,7 +370,7 @@ uploadArchives {
     }
 }
 
-ext.htmlDir = new File("build/docs/html")
+ext.htmlDir = file("build/docs/html")
 
 //update static web docs
 task copyJavadoc(dependsOn: 'javadoc', type: Copy) {

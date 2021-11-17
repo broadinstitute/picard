@@ -35,6 +35,7 @@ script:
       echo "Running tests using the legacy Picard command line parser.";
       ./gradlew jacocoTestReport;
     fi
+  - ./gradlew
 after_success:
   - ./gradlew coveralls
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
