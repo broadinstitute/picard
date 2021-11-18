@@ -35,7 +35,9 @@ script:
       echo "Running tests using the legacy Picard command line parser.";
       ./gradlew jacocoTestReport;
     fi
-  - ./gradlew
+  # build the jar and execute a non-trivial tool in order to verify Java command line execution compatibility
+  - ./gradlew currentJar
+  - java -jar build/libs/picard.jar MarkDuplicates -I testdata/picard/sam/aligned_queryname_sorted.bam -O out.bam --METRICS_FILE out.metrics
 after_success:
   - ./gradlew coveralls
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
