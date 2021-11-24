@@ -73,7 +73,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     public void testTileNumberComparator() {
         Assert.assertTrue(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
         Assert.assertTrue(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
-        Assert.assertTrue(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
+        Assert.assertEquals(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10), 0, "");
     }
 
     @Test
@@ -217,7 +217,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
      * Ensures that a run missing a barcode from the parameters file throws an error.
      */
     @Test
-    public void testCorruptDataReturnCode() throws Exception {
+    public void testCorruptDataReturnCode() {
         boolean exceptionThrown = false;
         try {
             runStandardTest(new int[]{9}, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false, 7, 0.038889);
