@@ -249,6 +249,17 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         };
     }
 
+    @DataProvider(name = "samsToFingerprintCustomBQ")
+    Object[][] samsToFingerprintCustomBQ() {
+        return new Object[][]{
+                {NA12891_r1_sam, na12891_fp, 1, -1},
+                {NA12891_r1_sam, na12891_fp, 1, 61},
+                {NA12891_r1_sam, na12891_fp, CheckFingerprint.EXT_CODE_WHEN_NO_VALID_CHECKS, 60},
+                {NA12891_r1_sam, na12891_fp, 0, FingerprintChecker.DEFAULT_MINIMUM_BASE_QUALITY},
+                {NA12891_r1_sam, na12891_fp, 0, 0},
+        };
+    }
+
     @DataProvider(name = "vcfsToFingerprint")
     Object[][] vcfsToFingerprint() {
         return new Object[][]{
@@ -262,6 +273,11 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         tester(false, file, genotypes, expectedRetVal);
     }
 
+    @Test(dataProvider = "samsToFingerprintCustomBQ")
+    void testCheckFingerprintSamCustomBaseQual(final File file, final File genotypes, final int expectedRetVal, final int minBaseQual) throws IOException {
+        testWithMinBaseQ(false, file, genotypes, expectedRetVal, minBaseQual);
+    }
+
     @Test(dataProvider = "vcfsToFingerprint")
     void testCheckFingerprintVcf(final File file, final File genotypes, final int expectedRetVal) throws IOException {
         tester(false, file, genotypes, expectedRetVal);
@@ -272,12 +288,8 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         tester(true, file, genotypes, expectedRetVal);
     }
 
-    private File tester(boolean ignoreRG, final File file, final File genotypes, final int expectedRetVal) throws IOException {
+    private List<String> buildArgs(boolean ignoreRG, final File file, final File genotypes) {
         final List<String> args = new ArrayList<>();
-        final File outputSummary = File.createTempFile("fingerprint", "summary_metrics");
-        outputSummary.deleteOnExit();
-        final File outputDetail = File.createTempFile("fingerprint", "detail_metrics");
-        outputSummary.deleteOnExit();
 
         args.add("INPUT=" + file.getAbsolutePath());
         args.add("G=" + genotypes.getAbsolutePath());
@@ -285,8 +297,36 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
             args.add("IGNORE_RG=true");
         }
         args.add("H=" + HAPLOTYPE_MAP.getAbsolutePath());
+
+        return args;
+    }
+
+    private File tester(boolean ignoreRG, final File file, final File genotypes, final int expectedRetVal) throws IOException {
+        final List<String> args = buildArgs(ignoreRG, file, genotypes);
+        final File outputSummary = File.createTempFile("fingerprint", "summary_metrics");
+        outputSummary.deleteOnExit();
+        final File outputDetail = File.createTempFile("fingerprint", "detail_metrics");
+        outputSummary.deleteOnExit();
         args.add("SUMMARY_OUTPUT=" + outputSummary.getAbsolutePath());
         args.add("DETAIL_OUTPUT=" + outputDetail.getAbsolutePath());
+
+        Assert.assertEquals(runPicardCommandLine(args), expectedRetVal);
+
+        Assert.assertTrue(outputSummary.exists(), "Expected output file " + outputSummary.getAbsolutePath() + " to exist.");
+        Assert.assertTrue(outputDetail.exists(), "Expected output file " + outputDetail.getAbsolutePath() + " to exist.");
+
+        return outputSummary;
+    }
+
+    private File testWithMinBaseQ(boolean ignoreRG, final File file, final File genotypes, final int expectedRetVal, final int minBaseQ) throws IOException {
+        final List<String> args = buildArgs(ignoreRG, file, genotypes);
+        final File outputSummary = File.createTempFile("fingerprint", "summary_metrics");
+        outputSummary.deleteOnExit();
+        final File outputDetail = File.createTempFile("fingerprint", "detail_metrics");
+        outputSummary.deleteOnExit();
+        args.add("SUMMARY_OUTPUT=" + outputSummary.getAbsolutePath());
+        args.add("DETAIL_OUTPUT=" + outputDetail.getAbsolutePath());
+        args.add("MIN_BASE_QUAL=" + String.valueOf(minBaseQ));
 
         Assert.assertEquals(runPicardCommandLine(args), expectedRetVal);
 

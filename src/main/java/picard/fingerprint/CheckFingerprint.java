@@ -28,7 +28,6 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
@@ -203,6 +202,10 @@ public class CheckFingerprint extends CommandLineProgram {
             "where the most likely haplotype achieves at least this LOD.")
     public double GENOTYPE_LOD_THRESHOLD = 5;
 
+    @Argument(shortName = "MINBQ", doc = "The minimum base quality for bases used " +
+            "when computing a fingerprint from sequence data.")
+    public int MIN_BASE_QUAL = FingerprintChecker.DEFAULT_MINIMUM_BASE_QUALITY;
+
     @Argument(optional = true, shortName = "IGNORE_RG", doc = "If the input is a SAM/BAM/CRAM, and this parameter is true, treat the " +
             "entire input BAM as one single read group in the calculation, " +
             "ignoring RG annotations, and producing a single fingerprint metric for the entire BAM.")
@@ -212,12 +215,13 @@ public class CheckFingerprint extends CommandLineProgram {
     public int EXIT_CODE_WHEN_EXPECTED_SAMPLE_NOT_FOUND = 1;
 
     @Argument(doc = "When all LOD score are zero, exit with this value.")
-    public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 2;
+    public int EXIT_CODE_WHEN_NO_VALID_CHECKS = EXT_CODE_WHEN_NO_VALID_CHECKS;
 
     private final Log log = Log.getInstance(CheckFingerprint.class);
 
     public static final String FINGERPRINT_SUMMARY_FILE_SUFFIX = "fingerprinting_summary_metrics";
     public static final String FINGERPRINT_DETAIL_FILE_SUFFIX = "fingerprinting_detail_metrics";
+    static final int EXT_CODE_WHEN_NO_VALID_CHECKS = 2;
 
     private Path inputPath;
     private Path genotypesPath;
@@ -248,6 +252,7 @@ public class CheckFingerprint extends CommandLineProgram {
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
         checker.setReferenceFasta(REFERENCE_SEQUENCE);
+        checker.setMinimumBaseQuality(MIN_BASE_QUAL);
 
         SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
         SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
@@ -363,6 +368,12 @@ public class CheckFingerprint extends CommandLineProgram {
             }
             if (fileContainsReads && OBSERVED_SAMPLE_ALIAS != null) {
                 return new String[]{"The parameter OBSERVED_SAMPLE_ALIAS can only be used with a VCF input."};
+            }
+
+            if (fileContainsReads) {
+                if (MIN_BASE_QUAL < 0 || (MIN_BASE_QUAL > 60)) {
+                    return new String[]{String.format("Requested minimal base quality (%d) isn't valid.", MIN_BASE_QUAL)};
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
