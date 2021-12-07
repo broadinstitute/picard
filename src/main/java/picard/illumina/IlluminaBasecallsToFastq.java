@@ -154,12 +154,8 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
             mutex = {"OUTPUT_PREFIX"})
     public File MULTIPLEX_PARAMS;
 
-    @Argument(doc = "Which adapters to look for in the read.")
-    public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<>(
-            Arrays.asList(IlluminaUtil.IlluminaAdapterPair.INDEXED,
-                    IlluminaUtil.IlluminaAdapterPair.DUAL_INDEXED,
-                    IlluminaUtil.IlluminaAdapterPair.NEXTERA_V2,
-                    IlluminaUtil.IlluminaAdapterPair.FLUIDIGM));
+    @Argument(doc = "Which adapters to look for in the reads. The default value is null, meaning that no adapters will be looked for in the reads.", optional = true)
+    public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = null;
 
     @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
     public String FIVE_PRIME_ADAPTER;

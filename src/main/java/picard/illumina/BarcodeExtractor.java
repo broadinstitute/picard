@@ -50,6 +50,7 @@ public class BarcodeExtractor {
             if (d.type == ReadType.Barcode) {
                 perfectScores[index] = new byte[d.length];
                 Arrays.fill(perfectScores[index], (byte) 60);
+                index++;
             }
         }
 
