@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 /**
  * Simple little class that combines multiple VCFs that have exactly the same set of samples
- * and totally discrete sets of loci.
+ * and nonoverlapping sets of loci.
  *
  * @author Tim Fennell
  */
