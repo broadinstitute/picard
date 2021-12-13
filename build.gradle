@@ -91,7 +91,7 @@ dependencies {
     compile 'org.apache.commons:commons-collections4:4.3'
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
-    compile 'org.broadinstitute:barclay:3.0.0'
+    compile 'org.broadinstitute:barclay:4.0.2'
     compileOnly(googleNio) {
         transitive = false
     }
