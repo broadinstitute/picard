@@ -91,7 +91,9 @@ dependencies {
     compile 'org.apache.commons:commons-collections4:4.3'
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
-    compile 'org.broadinstitute:barclay:3.0.0'
+    compile 'org.broadinstitute:barclay:4.0.2'
+    compile 'org.apache.logging.log4j:log4j-api:2.17.1'
+    compile 'org.apache.logging.log4j:log4j-core:2.17.1'
     compileOnly(googleNio) {
         transitive = false
     }
