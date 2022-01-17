@@ -323,7 +323,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         final File outputSummary = File.createTempFile("fingerprint", "summary_metrics");
         outputSummary.deleteOnExit();
         final File outputDetail = File.createTempFile("fingerprint", "detail_metrics");
-        outputSummary.deleteOnExit();
+        outputDetail.deleteOnExit();
         args.add("SUMMARY_OUTPUT=" + outputSummary.getAbsolutePath());
         args.add("DETAIL_OUTPUT=" + outputDetail.getAbsolutePath());
         args.add("MIN_BASE_QUAL=" + String.valueOf(minBaseQ));
