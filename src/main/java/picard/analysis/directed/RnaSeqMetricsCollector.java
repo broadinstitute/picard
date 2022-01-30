@@ -8,8 +8,8 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
-import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
+import picard.analysis.InsertSizeMetrics;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.RnaSeqMetrics;
 import picard.annotation.Gene;
@@ -19,13 +19,7 @@ import picard.metrics.SAMRecordMultiLevelCollector;
 import picard.util.MathUtil;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqMetrics, Integer> {
     public enum StrandSpecificity {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND}
@@ -81,15 +75,6 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 log.warn("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " does not contain intervals");
             }
 
-            final boolean CHECK_HEADER = false;
-            if (CHECK_HEADER) {
-                try {
-                    SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
-                } catch (SequenceUtil.SequenceListsDifferException e) {
-                    throw new PicardException("Sequence dictionaries differ in " + samFile.getAbsolutePath() + " and " + ribosomalIntervalsFile.getAbsolutePath(),
-                            e);
-                }
-            }
             final IntervalList uniquedRibosomalIntervals = ribosomalIntervals.uniqued();
             final List<Interval> intervals = uniquedRibosomalIntervals.getIntervals();
             ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
@@ -113,6 +98,11 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
         protected final RnaSeqMetrics metrics;
 
+        // Sato: if available collect per PairOrientation...(getPairOrientation not working...)
+        // final EnumMap<SamPairUtil.PairOrientation, Histogram<Integer>> insertSizeHistograms;
+        final Histogram<Integer> insertSizeHistogram;
+
+
         private final Map<Gene.Transcript, int[]> coverageByTranscript = new HashMap<Gene.Transcript, int[]>();
 
         /**
@@ -130,6 +120,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             this.metrics.READ_GROUP = readGroup;
             this.metrics.RIBOSOMAL_BASES = ribosomalBasesInitialValue;
 
+            this.insertSizeHistogram = new Histogram<>("insert_size", "count");
         }
 
         public PerUnitRnaSeqMetricsCollector(final String sample,
@@ -183,6 +174,8 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                     // Assume entire read is ribosomal.
                     metrics.RIBOSOMAL_BASES += getNumAlignedBases(rec);
                     metrics.PF_ALIGNED_BASES += getNumAlignedBases(rec);
+
+                    insertSizeHistogram.increment(rec.getInferredInsertSize());
                     return;
                 }
             }
@@ -335,6 +328,10 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 metrics.PCT_R1_TRANSCRIPT_STRAND_READS = metrics.NUM_R1_TRANSCRIPT_STRAND_READS / (double) readsExamined;
                 metrics.PCT_R2_TRANSCRIPT_STRAND_READS = metrics.NUM_R2_TRANSCRIPT_STRAND_READS / (double) readsExamined;
             }
+
+            final MetricsFile<InsertSizeMetrics, Integer> metricsFile = new MetricsFile<>();
+            metricsFile.addHistogram(insertSizeHistogram);
+            metricsFile.write(new File("ribosomal_insert_metrics.txt"));
         }
 
         @Override
