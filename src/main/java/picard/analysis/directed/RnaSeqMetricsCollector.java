@@ -37,10 +37,12 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
     private final boolean collectCoverageStatistics;
 
+    private File ribosomalInsertFile;
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
-                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics, final int endBiasBases) {
+                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics, final int endBiasBases,
+                                  final File ribosomalInsertFile) {
         this.ribosomalInitialValue  = ribosomalBasesInitialValue;
         this.ignoredSequenceIndices = ignoredSequenceIndices;
         this.geneOverlapDetector    = geneOverlapDetector;
@@ -51,13 +53,15 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.collectCoverageStatistics = collectCoverageStatistics;
         this.endBiasBases        = endBiasBases;
         setup(accumulationLevels, samRgRecords);
+        this.ribosomalInsertFile = ribosomalInsertFile;
     }
 
+    // sato: why is this constructor even here?
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
                                   final double rrnaFragmentPercentage, boolean collectCoverageStatistics) {
-        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases);
+        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases, null);
     }
 
     @Override
@@ -331,7 +335,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
             final MetricsFile<InsertSizeMetrics, Integer> metricsFile = new MetricsFile<>();
             metricsFile.addHistogram(insertSizeHistogram);
-            metricsFile.write(new File("ribosomal_insert_metrics.txt"));
+            metricsFile.write(ribosomalInsertFile);
         }
 
         @Override

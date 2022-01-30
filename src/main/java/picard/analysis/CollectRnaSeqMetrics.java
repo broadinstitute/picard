@@ -122,7 +122,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
-    public File ribosomalInsertHistogramFile = new File("ribosomal_insert_metrics.txt");
+    @Argument(doc="InsertSize", shortName="RRNA_INS", optional = true)
+    public File ribosomalInsertHistogramFile;
 
     @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. " +
     "These reads are not counted towards any metrics, except for the PF_BASES field.", optional = true)
@@ -173,7 +174,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE,
-                true, END_BIAS_BASES);
+                true, END_BIAS_BASES, ribosomalInsertHistogramFile);
 
         // If we're working with a single library, assign that library's name as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
@@ -194,8 +195,9 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         final MetricsFile<RnaSeqMetrics, Integer> file = getMetricsFile();
         collector.addAllLevelsToFile(file);
-        file.write(OUTPUT);
 
+        file.write(OUTPUT);
+        
         boolean atLeastOneHistogram = false;
         for (final Histogram<Integer> histo : file.getAllHistograms()) {
             atLeastOneHistogram = atLeastOneHistogram || !histo.isEmpty();
