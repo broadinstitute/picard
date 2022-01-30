@@ -104,7 +104,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
         // Sato: if available collect per PairOrientation...(getPairOrientation not working...)
         // final EnumMap<SamPairUtil.PairOrientation, Histogram<Integer>> insertSizeHistograms;
-        final Histogram<Integer> insertSizeHistogram;
+        final Histogram<Integer> rRNAInsertSizeHistogram;
 
 
         private final Map<Gene.Transcript, int[]> coverageByTranscript = new HashMap<Gene.Transcript, int[]>();
@@ -124,7 +124,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             this.metrics.READ_GROUP = readGroup;
             this.metrics.RIBOSOMAL_BASES = ribosomalBasesInitialValue;
 
-            this.insertSizeHistogram = new Histogram<>("insert_size", "count");
+            this.rRNAInsertSizeHistogram = new Histogram<>("insert_size", "count");
         }
 
         public PerUnitRnaSeqMetricsCollector(final String sample,
@@ -179,7 +179,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                     metrics.RIBOSOMAL_BASES += getNumAlignedBases(rec);
                     metrics.PF_ALIGNED_BASES += getNumAlignedBases(rec);
 
-                    insertSizeHistogram.increment(rec.getInferredInsertSize());
+                    rRNAInsertSizeHistogram.increment(Math.abs(rec.getInferredInsertSize()));
                     return;
                 }
             }
@@ -334,7 +334,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             }
 
             final MetricsFile<InsertSizeMetrics, Integer> metricsFile = new MetricsFile<>();
-            metricsFile.addHistogram(insertSizeHistogram);
+            metricsFile.addHistogram(rRNAInsertSizeHistogram);
             metricsFile.write(ribosomalInsertFile);
         }
 
