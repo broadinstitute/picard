@@ -197,7 +197,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         collector.addAllLevelsToFile(file);
 
         file.write(OUTPUT);
-        
+
         boolean atLeastOneHistogram = false;
         for (final Histogram<Integer> histo : file.getAllHistograms()) {
             atLeastOneHistogram = atLeastOneHistogram || !histo.isEmpty();
