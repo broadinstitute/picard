@@ -116,8 +116,8 @@ public class CollectIlluminaBasecallingMetricsTest {
 
         final IlluminaBasecallingMetrics laneMetric = metricsFile.getMetrics().get(34);
         Assert.assertEquals(laneMetric.LANE, "1");
-        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1, null);
-        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_NAME, null);
+        Assert.assertNull(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1);
+        Assert.assertNull(laneMetric.MOLECULAR_BARCODE_NAME);
         Assert.assertEquals(laneMetric.MEAN_CLUSTERS_PER_TILE, 60.0);
         Assert.assertEquals(laneMetric.SD_CLUSTERS_PER_TILE, 0.0);
         Assert.assertEquals(laneMetric.MEAN_PF_CLUSTERS_PER_TILE, 50.0);
@@ -136,8 +136,8 @@ public class CollectIlluminaBasecallingMetricsTest {
         final IlluminaBasecallingMetrics laneMetric = metricsFile.getMetrics().get(0);
 
         Assert.assertEquals(laneMetric.LANE, "1");
-        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1, null);
-        Assert.assertEquals(laneMetric.MOLECULAR_BARCODE_NAME, null);
+        Assert.assertNull(laneMetric.MOLECULAR_BARCODE_SEQUENCE_1);
+        Assert.assertNull(laneMetric.MOLECULAR_BARCODE_NAME);
         Assert.assertEquals(laneMetric.MEAN_CLUSTERS_PER_TILE, 2000.0);
         Assert.assertEquals(laneMetric.SD_CLUSTERS_PER_TILE, 0.0);
         Assert.assertEquals(laneMetric.MEAN_PF_CLUSTERS_PER_TILE,1863.0);
@@ -182,7 +182,7 @@ public class CollectIlluminaBasecallingMetricsTest {
         final File metricsFile = File.createTempFile("cibm.", ".metrics");
         metricsFile.deleteOnExit();
 
-        ArrayList<String> argsList = new ArrayList<String>();
+        ArrayList<String> argsList = new ArrayList<>();
         argsList.add("BASECALLS_DIR=" + basecallsDir.getPath());
         if (null != barcodesDir) argsList.add("BARCODES_DIR=" + barcodesDir.getPath());
         argsList.add("LANE=" + lane);
@@ -196,8 +196,7 @@ public class CollectIlluminaBasecallingMetricsTest {
 
         Assert.assertEquals(new CollectIlluminaBasecallingMetrics().instanceMain(args),0);
 
-        final MetricsFile<IlluminaBasecallingMetrics,Integer> retval =
-                new MetricsFile<IlluminaBasecallingMetrics,Integer>();
+        final MetricsFile<IlluminaBasecallingMetrics,Integer> retval = new MetricsFile<>();
         retval.read(new FileReader(metricsFile));
         return retval;
     }

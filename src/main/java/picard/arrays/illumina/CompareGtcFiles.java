@@ -68,6 +68,7 @@ public class CompareGtcFiles extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFilesAreReadable(INPUT);
+        IOUtil.assertFileIsReadable(ILLUMINA_BEAD_POOL_MANIFEST_FILE);
 
         try (InfiniumGTCFile gtcFileOne = new InfiniumGTCFile(INPUT.get(0), ILLUMINA_BEAD_POOL_MANIFEST_FILE);
              InfiniumGTCFile gtcFileTwo = new InfiniumGTCFile(INPUT.get(1), ILLUMINA_BEAD_POOL_MANIFEST_FILE)) {

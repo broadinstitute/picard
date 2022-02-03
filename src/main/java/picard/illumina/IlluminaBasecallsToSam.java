@@ -310,9 +310,9 @@ public class IlluminaBasecallsToSam extends ExtractBarcodesProgram {
         }
 
         final int numOutputRecords = readStructure.templates.length();
+
         // Combine any adapters and custom adapter pairs from the command line into an array for use in clipping
         final List<AdapterPair> adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
-
         if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
