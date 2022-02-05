@@ -663,14 +663,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             ends.readGroup = 0;
             final String rg = (String) rec.getAttribute(ReservedTagConstants.READ_GROUP_ID);
             final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
-
+            // sato: probably cleaner just to say "indexOf"
             if (rg != null && readGroups != null) {
                 for (final SAMReadGroupRecord readGroup : readGroups) {
                     if (readGroup.getReadGroupId().equals(rg)) {
                         break;
                     } else {
-                        ends.readGroup++; // Sato: when the read group is not found...probably
-                    } // an edge case but how will this help?
+                        ends.readGroup++;
+                    }
                 }
             }
         }
