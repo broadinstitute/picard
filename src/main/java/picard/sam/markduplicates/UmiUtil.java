@@ -86,7 +86,7 @@ class UmiUtil {
             case BOTTOM:
                 return split[1] + DUPLEX_UMI_DELIMITER + split[0];
                 default:
-                    return umi;
+                return umi;
         }
     }
 

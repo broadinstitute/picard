@@ -75,7 +75,8 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                 record.getFirstOfPairFlag() ||
                 record.isSecondaryOrSupplementary() ||
                 (record.getDuplicateReadFlag() && !this.includeDuplicates) ||
-                record.getInferredInsertSize() == 0) {
+                record.getInferredInsertSize() == 0 ||
+                record.getMappingQuality() > 20) {
             return;
         }
 

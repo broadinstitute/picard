@@ -233,8 +233,8 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                             ++metrics.CODING_BASES;
                             overlapsExon = true;
                             break;
-                        case RIBOSOMAL:
-                            ++metrics.RIBOSOMAL_BASES;
+                        case RIBOSOMAL: // sato: we never get here, so delete
+                            ++metrics.RIBOSOMAL_BASES; // sato: are we double counting here?
                             break;
                     }
                 }

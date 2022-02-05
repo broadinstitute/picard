@@ -140,8 +140,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * Enum for the possible values that a duplicate read can be tagged with in the DT attribute.
      */
     public enum DuplicateType {
-        LIBRARY(DUPLICATE_TYPE_LIBRARY),
-        SEQUENCING(DUPLICATE_TYPE_SEQUENCING);
+        LIBRARY(DUPLICATE_TYPE_LIBRARY), // sato: library duplicate...meaning regular duplicate
+        SEQUENCING(DUPLICATE_TYPE_SEQUENCING); // sato: optical?
 
         private final String code;
 
@@ -254,7 +254,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
-        buildSortedReadEndLists(useBarcodes);
+        buildSortedReadEndLists(useBarcodes); // sato: look into this.
         reportMemoryStats("After buildSortedReadEndLists");
         generateDuplicateIndexes(useBarcodes, this.REMOVE_SEQUENCING_DUPLICATES || this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag);
         reportMemoryStats("After generateDuplicateIndexes");
@@ -319,18 +319,18 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
 
             final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
-            final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
+            final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator; // sato: this is the input
             String duplicateQueryName = null;
 
             while (iterator.hasNext()) {
                 final SAMRecord rec = iterator.next();
-
+                // sato: creating a new metrics object for each read---is that wasteful? Why rely on garbage collection if we are only incrementing numbers...
                 DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator);
 
                 // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
                 // if the query name has changed.
                 nextDuplicateIndex = nextIndexIfNeeded(sortOrder, recordInFileIndex, nextDuplicateIndex, duplicateQueryName, rec, this.duplicateIndexes);
-
+                // sato: is index per-insert? or per-read?
                 final boolean isDuplicate = recordInFileIndex == nextDuplicateIndex ||
                         (sortOrder == SAMFileHeader.SortOrder.queryname &&
                                 recordInFileIndex > nextDuplicateIndex && rec.getReadName().equals(duplicateQueryName));
@@ -341,9 +341,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     AbstractMarkDuplicatesCommandLineProgram.addDuplicateReadToMetrics(rec, metrics);
                 } else {
                     rec.setDuplicateReadFlag(false);
-                }
+                } // sato: why next *optical* duplicate?
                 nextOpticalDuplicateIndex = nextIndexIfNeeded(sortOrder, recordInFileIndex, nextOpticalDuplicateIndex, duplicateQueryName, rec, this.opticalDuplicateIndexes);
-
+                // sato: so mark the read as a PCR duplicate. In addition, if optical, then mark as optical
                 final boolean isOpticalDuplicate = sortOrder == SAMFileHeader.SortOrder.queryname &&
                         recordInFileIndex > nextOpticalDuplicateIndex &&
                         rec.getReadName().equals(duplicateQueryName) ||
@@ -484,8 +484,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
         if (useBarcodes) {
-            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
-            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(); // sato: recall here fragment means not paired
+            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(); // sato: probably a very poorly written thing but keep an eye on it
             diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
         } else {
             fragCodec = new ReadEndsForMarkDuplicatesCodec();
@@ -525,7 +525,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
             // This doesn't have anything to do with building sorted ReadEnd lists, but it can be done in the same pass
             // over the input
-            if (PROGRAM_RECORD_ID != null) {
+            if (PROGRAM_RECORD_ID != null) { // Sato: did they mean rec.getStringAttribute(SAMTag.PG.name() != null...
                 // Gather all PG IDs seen in merged input files in first pass.  These are gathered for two reasons:
                 // - to know how many different PG records to create to represent this program invocation.
                 // - to know what PG IDs are already used to avoid collisions when creating new ones.
@@ -536,9 +536,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
             // If working in query-sorted, need to keep index of first record with any given query-name.
             if (assumedSortOrder == SAMFileHeader.SortOrder.queryname && !rec.getReadName().equals(duplicateQueryName)) {
-                duplicateQueryName = rec.getReadName();
-                duplicateIndex = index;
-            }
+                duplicateQueryName = rec.getReadName(); // sato: what is duplicateQueryName. Need to be renamed to something like currentReadName.
+                duplicateIndex = index; // Sato: Ah I see. duplicateIndex is updated per queryname. But index is global (i.e. is updated at every read)
+            } // note that for each read we hit the end of the while loop, where index is incremented.
 
             if (rec.getReadUnmappedFlag()) {
                 if (rec.getReferenceIndex() == -1 && assumedSortOrder == SAMFileHeader.SortOrder.coordinate) {
@@ -547,11 +547,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 }
                 // If this read is unmapped but sorted with the mapped reads, just skip it.
 
-            } else if (!rec.isSecondaryOrSupplementary()) {
-                final long indexForRead = assumedSortOrder == SAMFileHeader.SortOrder.queryname ? duplicateIndex : index;
-                final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, indexForRead, rec, useBarcodes);
-                this.fragSort.add(fragmentEnd);
-
+            } else if (!rec.isSecondaryOrSupplementary()) { // Sato. Do we skip secondary and supplementary reads?
+                final long indexForRead = assumedSortOrder == SAMFileHeader.SortOrder.queryname ? duplicateIndex : index; // sato: use the "query-name" index if sorted by query name
+                final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, indexForRead, rec, useBarcodes); // sato, a read converted to the data structure for sorting.
+                this.fragSort.add(fragmentEnd); // sato: fragsort...
+                // sato: what is duplicateIndex? Index (i.e. count) of fragments we've seen? Then it's not working as expected...
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
                     final StringBuilder key = new StringBuilder();
                     key.append(ReservedTagConstants.READ_GROUP_ID);
@@ -559,29 +559,29 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
 
                     // See if we've already seen the first end or not
-                    if (pairedEnds == null) {
+                    if (pairedEnds == null) { // sato: we have not encountered this read pair.
                         // at this point pairedEnds and fragmentEnd are the same, but we need to make
                         // a copy since pairedEnds will be modified when the mate comes along.
                         pairedEnds = fragmentEnd.clone();
-                        tmp.put(pairedEnds.read2ReferenceIndex, key.toString(), pairedEnds);
-                    } else {
-                        final int matesRefIndex = fragmentEnd.read1ReferenceIndex;
+                        tmp.put(pairedEnds.read2ReferenceIndex, key.toString(), pairedEnds); // sato: assume read1, so read2 is mate, which we have not seen. But we populated it when we build the fragmentEnd above (each read has the contig of its mate)
+                    } else { // sato: why does matesRefIndex = read1ReferenceIndex? Because we assume we see read1 first, then read2?
+                        final int matesRefIndex = fragmentEnd.read1ReferenceIndex; // sato: we are reading read2, so the mate is read1
                         final int matesCoordinate = fragmentEnd.read1Coordinate;
-
+                        // Sato: wait a sec...we only update readOne/TwoBarcode for the read we visit second.
                         // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
                         // before updating the orientation later.
-                        if (rec.getFirstOfPairFlag()) {
+                        if (rec.getFirstOfPairFlag()) { // sato: if read1...so hmmm. I guess we don't assume read1, then read2...
                             pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(), pairedEnds.orientation == ReadEnds.R);
-                            if (useBarcodes) {
+                            if (useBarcodes) { // sato: this read1 barcode has nothing to do with optical duplicates.
                                 ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readOneBarcode = getReadOneBarcodeValue(rec);
-                            }
-                        } else {
+                            } // sato: I suspect this is redundant (already done in buildReadEnds)...eh. I think it might be ok actually. The first read we encounter, we populate barcode in build(). For second one we do it here.
+                        } else { // sato: why is orientaition important for optical dups...anyway, this read is read2
                             pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(pairedEnds.orientation == ReadEnds.R, rec.getReadNegativeStrandFlag());
-                            if (useBarcodes) {
-                                ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readTwoBarcode = getReadTwoBarcodeValue(rec);
+                            if (useBarcodes) { // sato: F = 0, R = 1, FF = 2, FR = 3, RR = 4, RF = 5;
+                                ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readTwoBarcode = getReadTwoBarcodeValue(rec); // sato: good populate the correct barcode
                             }
                         }
-
+                        // sato: what? I see. Same fragment coordinates, but F1R2 vs F2R1, are stil duplicates. But matesRefIndexis always read1ReferenceIndex...naw, matesRefIndex comes from fragmentEnd, which comes from read2...
                         // If the other read is actually later, simply add the other read's data as read2, else flip the reads
                         if (matesRefIndex > pairedEnds.read1ReferenceIndex ||
                                 (matesRefIndex == pairedEnds.read1ReferenceIndex && matesCoordinate >= pairedEnds.read1Coordinate)) {
@@ -604,8 +604,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                             pairedEnds.read2ReferenceIndex = pairedEnds.read1ReferenceIndex;
                             pairedEnds.read2Coordinate = pairedEnds.read1Coordinate;
                             pairedEnds.read2IndexInFile = pairedEnds.read1IndexInFile;
-                            pairedEnds.read1ReferenceIndex = matesRefIndex;
-                            pairedEnds.read1Coordinate = matesCoordinate;
+                            pairedEnds.read1ReferenceIndex = matesRefIndex; // sato: this code is a nightmare
+                            pairedEnds.read1Coordinate = matesCoordinate; // sato: read1 means different things at different times....come on.
                             pairedEnds.read1IndexInFile = indexForRead;
                             pairedEnds.orientation = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(),
                                     pairedEnds.orientation == ReadEnds.R);
@@ -643,11 +643,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         } else {
             ends = new ReadEndsForMarkDuplicates();
         }
-        ends.read1ReferenceIndex = rec.getReferenceIndex();
+        ends.read1ReferenceIndex = rec.getReferenceIndex(); // sato: unclipped end means including the soft-clipped reads.
         ends.read1Coordinate = rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         ends.orientation = rec.getReadNegativeStrandFlag() ? ReadEnds.R : ReadEnds.F;
-        ends.read1IndexInFile = index;
-        ends.score = DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
+        ends.read1IndexInFile = index; // sato: what is this
+        ends.score = DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY); // sato: what is this
 
         // Doing this lets the ends object know that it's part of a pair
         if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
@@ -658,7 +658,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         ends.libraryId = libraryIdGenerator.getLibraryId(rec);
 
         // Fill in the location information for optical duplicates
-        if (this.opticalDuplicateFinder.addLocationInformation(rec.getReadName(), ends)) {
+        if (this.opticalDuplicateFinder.addLocationInformation(rec.getReadName(), ends)) { // sato: opticalDuplicateFinder...when will it be used again?
             // calculate the RG number (nth in list)
             ends.readGroup = 0;
             final String rg = (String) rec.getAttribute(ReservedTagConstants.READ_GROUP_ID);
@@ -669,21 +669,30 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     if (readGroup.getReadGroupId().equals(rg)) {
                         break;
                     } else {
-                        ends.readGroup++;
-                    }
+                        ends.readGroup++; // Sato: when the read group is not found...probably
+                    } // an edge case but how will this help?
                 }
             }
         }
 
         if (useBarcodes) {
-            final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
-            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
-            endsWithBarcode.barcode = Objects.hash(topStrandNormalizedUmi);
+            final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends; // sato: this is bizarre and probably wrong.
+            String umiTag = null;
+            if (BARCODE_TAG != null){
+                umiTag = BARCODE_TAG;
+            } else if (READ_ONE_BARCODE_TAG != null){
+                umiTag = READ_ONE_BARCODE_TAG;
+            } else if (READ_TWO_BARCODE_TAG != null){
+                umiTag = READ_TWO_BARCODE_TAG;
+            }
+            String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, DUPLEX_UMI);
 
+            endsWithBarcode.barcode = Objects.hash(topStrandNormalizedUmi); // sato: use a setter...
+            // sato: why 31?
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
                 endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
             } else {
-                endsWithBarcode.readTwoBarcode = getReadTwoBarcodeValue(rec);
+                endsWithBarcode.readTwoBarcode = getReadTwoBarcodeValue(rec); // Sato: will this be just null?
             }
         }
 
@@ -724,9 +733,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
         final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
 
-        // First just do the pairs
+        // First just do the pairs. Sato: What's this chunk stuff?
         log.info("Traversing read pair information and detecting duplicates.");
-        for (final ReadEndsForMarkDuplicates next : this.pairSort) {
+        for (final ReadEndsForMarkDuplicates next : this.pairSort) { // sato: are things already sorted here? Doesn't look like it.
             if (firstOfNextChunk != null && areComparableForDuplicates(firstOfNextChunk, next, true, useBarcodes)) {
                 nextChunk.add(next);
             } else {
@@ -755,13 +764,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 containsFrags = containsFrags || !next.isPaired();
             } else {
                 if (nextChunk.size() > 1 && containsFrags) {
-                    markDuplicateFragments(nextChunk, containsPairs);
+                    markDuplicateFragments(nextChunk, containsPairs); // sato: does fragment mean non-paired? Must be reworded.
                 }
                 nextChunk.clear();
                 nextChunk.add(next);
                 firstOfNextChunk = next;
                 containsPairs = next.isPaired();
-                containsFrags = !next.isPaired();
+                containsFrags = !next.isPaired(); // sato: yup. Fragment means not-paired...
             }
         }
         markDuplicateFragments(nextChunk, containsPairs);
@@ -797,7 +806,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
             areComparable = lhsWithBarcodes.barcode == rhsWithBarcodes.barcode &&
                     lhsWithBarcodes.readOneBarcode == rhsWithBarcodes.readOneBarcode &&
-                    lhsWithBarcodes.readTwoBarcode == rhsWithBarcodes.readTwoBarcode;
+                    lhsWithBarcodes.readTwoBarcode == rhsWithBarcodes.readTwoBarcode; // sato: use barcode here.
         }
 
         if (areComparable) {
@@ -859,7 +868,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     private void markDuplicatePairs(final List<ReadEndsForMarkDuplicates> list) {
         short maxScore = 0;
         ReadEndsForMarkDuplicates best = null;
-
+        // sato: is this the tie-breaking?
         /** All read ends should have orientation FF, FR, RF, or RR **/
         for (final ReadEndsForMarkDuplicates end : list) {
             if (end.score > maxScore || best == null) {
@@ -868,7 +877,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
         }
 
-        if (this.READ_NAME_REGEX != null) {
+        if (this.READ_NAME_REGEX != null) { // sato: skip optical duplicates for now.
             AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(list, best, opticalDuplicateFinder, libraryIdGenerator);
         }
 
@@ -881,7 +890,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 if (end.read2IndexInFile != end.read1IndexInFile) {
                     addIndexAsDuplicate(end.read2IndexInFile);
                 }
-
+                // sato: more optical duplicate stuff
                 if (end.isOpticalDuplicate && this.opticalDuplicateIndexes != null) {
                     this.opticalDuplicateIndexes.add(end.read1IndexInFile);
                     // We expect end.read2IndexInFile==read1IndexInFile when we are in queryname sorted files, as the read-pairs

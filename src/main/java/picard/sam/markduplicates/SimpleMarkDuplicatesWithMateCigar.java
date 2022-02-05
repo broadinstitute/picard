@@ -113,7 +113,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
 
         final SAMRecordDuplicateComparator comparator = new SAMRecordDuplicateComparator(Collections.singletonList(headerAndIterator.header));
         comparator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
-
+        // sato: Here we get the iterator
         final CloseableIterator<DuplicateSet> iterator = getDuplicateSetIterator(headerAndIterator, comparator);
 
         // progress logger!

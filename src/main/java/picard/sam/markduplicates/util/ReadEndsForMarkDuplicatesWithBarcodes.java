@@ -28,7 +28,7 @@ public class ReadEndsForMarkDuplicatesWithBarcodes extends ReadEndsForMarkDuplic
     public int barcode = 0; // primary barcode for this read (and pair)
     public int readOneBarcode = 0; // read one barcode, 0 if not present
     public int readTwoBarcode = 0; // read two barcode, 0 if not present or not paired
-
+    // sato: if memory efficiency is the goal, why not consolidate the two?
     public ReadEndsForMarkDuplicatesWithBarcodes() { }
 
     public ReadEndsForMarkDuplicatesWithBarcodes(final ReadEndsForMarkDuplicates read) {

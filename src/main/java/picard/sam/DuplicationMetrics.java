@@ -133,7 +133,7 @@ public class DuplicationMetrics extends MergeableMetricBase {
      * C = number of distinct fragments observed in read pairs
      */
     public static Long estimateLibrarySize(final long readPairs, final long uniqueReadPairs) {
-        final long readPairDuplicates = readPairs - uniqueReadPairs;
+        final long readPairDuplicates = readPairs - uniqueReadPairs; // I think we subtract optical duplicates twice
 
         if (readPairs > 0 && readPairDuplicates > 0) {
 

@@ -332,7 +332,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 readLengthHistogram.increment(record.getReadBases().length);
                 alignedReadLengthHistogram.increment(getUnclippedBaseCount(record.getCigar()));
 
-                // See if the read is an adapter sequence
+                // See if the read is an adapter sequence (i.e. the whole insert is an adapter dimer)
                 if (adapterUtility.isAdapter(record)) {
                     adapterReads++;
                 }

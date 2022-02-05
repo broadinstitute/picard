@@ -175,7 +175,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             final String libraryName = entry.getKey();
             final DuplicationMetrics metrics = entry.getValue();
 
-            metrics.READ_PAIRS_EXAMINED = metrics.READ_PAIRS_EXAMINED / 2;
+            metrics.READ_PAIRS_EXAMINED = metrics.READ_PAIRS_EXAMINED / 2; // Sato: Whaaaa
             metrics.READ_PAIR_DUPLICATES = metrics.READ_PAIR_DUPLICATES / 2;
 
             // Add the optical dupes to the metrics
@@ -225,7 +225,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     }
 
     public static void addDuplicateReadToMetrics(final SAMRecord rec, final DuplicationMetrics metrics) {
-        // only update duplicate counts for "decider" reads, not tag-a-long reads
+        // only update duplicate counts for "decider" reads, not tag-along reads
         if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
             // Update the duplication metrics
             if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
