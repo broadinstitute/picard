@@ -677,10 +677,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         if (useBarcodes) { // sato: ends is already endsWithBarcode
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends; // sato: this is bizarre and probably wrong.
-            String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
+            final String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
 
             endsWithBarcode.barcode = Objects.hash(topStrandNormalizedUmi); // sato: use a setter...
-            // sato: why 31?
+
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
                 endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
             } else {
