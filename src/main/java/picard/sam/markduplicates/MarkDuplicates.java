@@ -677,15 +677,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         if (useBarcodes) { // sato: ends is already endsWithBarcode
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends; // sato: this is bizarre and probably wrong.
-            String umiTag = null;
-            if (BARCODE_TAG != null){
-                umiTag = BARCODE_TAG;
-            } else if (READ_ONE_BARCODE_TAG != null){
-                umiTag = READ_ONE_BARCODE_TAG;
-            } else if (READ_TWO_BARCODE_TAG != null){
-                umiTag = READ_TWO_BARCODE_TAG;
-            }
-            String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, umiTag, DUPLEX_UMI);
+            String topStrandNormalizedUmi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
 
             endsWithBarcode.barcode = Objects.hash(topStrandNormalizedUmi); // sato: use a setter...
             // sato: why 31?
