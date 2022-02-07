@@ -495,7 +495,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
                 pairCodec,
-                new ReadEndsMDComparator(useBarcodes),
+                new ReadEndsMDComparator(useBarcodes), // sato: comparator specified here
                 maxInMemory,
                 TMP_DIR);
 
@@ -646,7 +646,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         ends.read1ReferenceIndex = rec.getReferenceIndex(); // sato: unclipped end means including the soft-clipped reads.
         ends.read1Coordinate = rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         ends.orientation = rec.getReadNegativeStrandFlag() ? ReadEnds.R : ReadEnds.F;
-        ends.read1IndexInFile = index; // sato: what is this
+        ends.read1IndexInFile = index; // sato: index here means the position of the read in the original sam file
         ends.score = DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY); // sato: what is this
 
         // Doing this lets the ends object know that it's part of a pair
@@ -692,8 +692,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * Goes through the accumulated ReadEndsForMarkDuplicates objects and determines which of them are
-     * to be marked as duplicates.
+     * Goes through the accumulated [sorted] ReadEndsForMarkDuplicates objects and determines which of them are
+     * to be marked as duplicates. [how is this represented?]
      */
     private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
         final int entryOverhead;
@@ -723,15 +723,15 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
 
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
-        final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
+        final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200); // sato: should be named duplicate set, really
 
         // First just do the pairs. Sato: What's this chunk stuff?
         log.info("Traversing read pair information and detecting duplicates.");
-        for (final ReadEndsForMarkDuplicates next : this.pairSort) { // sato: are things already sorted here? Doesn't look like it.
+        for (final ReadEndsForMarkDuplicates next : this.pairSort) { // sato: are things already sorted here? Doesn't look like it. But it must be (that's the whole point of pairSort)
             if (firstOfNextChunk != null && areComparableForDuplicates(firstOfNextChunk, next, true, useBarcodes)) {
                 nextChunk.add(next);
             } else {
-                handleChunk(nextChunk);
+                handleChunk(nextChunk); // Sato: his is where duplicateIndex is updated. First time through (nextChunk has size 0)---do nothing. Maybe make that explicit...
                 nextChunk.clear();
                 nextChunk.add(next);
                 firstOfNextChunk = next;
@@ -780,8 +780,11 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     private void handleChunk(List<ReadEndsForMarkDuplicates> nextChunk) {
-        if (nextChunk.size() > 1) {
+        if (nextChunk.size() > 1) { // sato: If "nextChunk" contains more than one readEnd, this is a nontrivial duplicate set
+            int nextChunkSize1 = nextChunk.size();
             markDuplicatePairs(nextChunk);
+            int nextChunkSize2 = nextChunk.size();
+            assert nextChunkSize1 == nextChunkSize2; // sato: check that nextChunk's size did not change (i.e. there was no removal as mentioned in the comment)
             if (TAG_DUPLICATE_SET_MEMBERS) {
                 addRepresentativeReadIndex(nextChunk);
             }
@@ -789,7 +792,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             addSingletonToCount(libraryIdGenerator);
         }
     }
-
+    // sato: comparable is not the right term here---AreDuplicates is more appropriate
     private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
         boolean areComparable = lhs.libraryId == rhs.libraryId;
 
@@ -806,7 +809,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     lhs.read1Coordinate == rhs.read1Coordinate &&
                     lhs.orientation == rhs.orientation;
         }
-
+        // Read1 and Read2
         if (areComparable && compareRead2) {
             areComparable = lhs.read2ReferenceIndex == rhs.read2ReferenceIndex &&
                     lhs.read2Coordinate == rhs.read2Coordinate;
@@ -856,6 +859,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     /**
      * Takes a list of ReadEndsForMarkDuplicates objects and removes from it all objects that should
      * not be marked as duplicates.  This assumes that the list contains objects representing pairs.
+     * sato: updates this.duplicateIndexes by side effect. I don't see any removal happening...
      */
     private void markDuplicatePairs(final List<ReadEndsForMarkDuplicates> list) {
         short maxScore = 0;
@@ -869,7 +873,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
         }
 
-        if (this.READ_NAME_REGEX != null) { // sato: skip optical duplicates for now.
+        if (this.READ_NAME_REGEX != null) { // sato: "track" optical duplicates means to mark readends as optical, and store respective counts in the histogram
             AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(list, best, opticalDuplicateFinder, libraryIdGenerator);
         }
 
@@ -877,7 +881,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (end != best) {
                 addIndexAsDuplicate(end.read1IndexInFile);
 
-                // in query-sorted case, these will be the same.
+                // in query-sorted case, these will be the same. [sato: ok]
                 // TODO: also in coordinate sorted, when one read is unmapped
                 if (end.read2IndexInFile != end.read1IndexInFile) {
                     addIndexAsDuplicate(end.read2IndexInFile);
@@ -888,7 +892,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     // We expect end.read2IndexInFile==read1IndexInFile when we are in queryname sorted files, as the read-pairs
                     // will be sorted together and nextIndexIfNeeded() will only pull one index from opticalDuplicateIndexes.
                     // This means that in queryname sorted order we will only pull from the sorting collection once,
-                    // where as we would pull twice for coordinate sorted files.
+                    // where as we would pull twice for coordinate sorted files. [sato: understand why twice for coordinate sorted]
                     if (end.read2IndexInFile != end.read1IndexInFile) {
                         this.opticalDuplicateIndexes.add(end.read2IndexInFile);
                     }

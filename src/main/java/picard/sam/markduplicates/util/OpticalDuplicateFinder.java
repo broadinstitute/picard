@@ -117,7 +117,7 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
      *               annotated as an optical duplicate. May in some cases be null, or a PhysicalLocation not
      *               contained within the list!
      * @return a boolean[] of the same length as the incoming list marking which reads are optical duplicates
-     */
+     */ // sato: this method returns a mask of which read pairs/reads are optical duplicates
     public boolean[] findOpticalDuplicates(final List<? extends PhysicalLocation> list, final PhysicalLocation keeper) {
         final int length = list.size();
         final boolean[] opticalDuplicateFlags = new boolean[length];

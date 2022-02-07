@@ -69,7 +69,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
 
         this.score = read.score;
 
-        this.read1IndexInFile = read.read1IndexInFile;
+        this.read1IndexInFile = read.read1IndexInFile; // sato: what are these? Not to be confused with reference contig (index...)
         this.read2IndexInFile = read.read2IndexInFile;
     }
 

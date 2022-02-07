@@ -292,7 +292,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * identified as an optical duplicate.
      */
     public static void trackOpticalDuplicates(List<? extends ReadEnds> ends,
-                                              final ReadEnds keeper,
+                                              final ReadEnds keeper, // sato: keeper? Just call it best, or anchor
                                               final OpticalDuplicateFinder opticalDuplicateFinder,
                                               final LibraryIdGenerator libraryIdGenerator) {
         boolean hasFR = false, hasRF = false;
@@ -317,27 +317,27 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             for (final ReadEnds end : ends) {
                 if (ReadEnds.FR == end.orientationForOpticalDuplicates) {
                     trackOpticalDuplicatesF.add(end);
-                } else if (ReadEnds.RF == end.orientationForOpticalDuplicates) {
+                } else if (ReadEnds.RF == end.orientationForOpticalDuplicates) { // sato: outies and innies having the same end coordinates---how often does this happen?
                     trackOpticalDuplicatesR.add(end);
                 } else {
                     throw new PicardException("Found an unexpected orientation: " + end.orientation);
                 }
             }
 
-            // track the duplicates
-            final int nOpticalDupF = trackOpticalDuplicates(trackOpticalDuplicatesF,
+            // track the duplicates [sato: i.e. count op dups and mark readEnds as optical duplicates
+            final int nOpticalDupF = countOpticalDuplicates(trackOpticalDuplicatesF,
                     keeper,
                     opticalDuplicateFinder,
                     libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
-            final int nOpticalDupR = trackOpticalDuplicates(trackOpticalDuplicatesR,
+            final int nOpticalDupR = countOpticalDuplicates(trackOpticalDuplicatesR,
                     keeper,
                     opticalDuplicateFinder,
                     libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
             nOpticalDup = nOpticalDupF + nOpticalDupR;
         } else { // No need to partition
-            nOpticalDup = trackOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            nOpticalDup = countOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
         }
-        trackDuplicateCounts(ends.size(),
+        trackDuplicateCounts(ends.size(), // sato: store the counts in the historgrams (there are 3: all duplicates, non-optical, optical). I feel like it should be a 2-d histogram (duplicate set size, optical duplicate size, etc.)
                 nOpticalDup,
                 libraryIdGenerator);
     }
@@ -357,7 +357,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * optical duplicate detection, we do not consider them duplicates if one read as FR and the other RF when we order orientation by the
      * first mate sequenced (read #1 of the pair).
      */
-    private static int trackOpticalDuplicates(final List<? extends ReadEnds> list,
+    private static int countOpticalDuplicates(final List<? extends ReadEnds> list, // sato: how about "count" instead of "track"
                                               final ReadEnds keeper,
                                               final OpticalDuplicateFinder opticalDuplicateFinder,
                                               final Histogram<Short> opticalDuplicatesByLibraryId) {
