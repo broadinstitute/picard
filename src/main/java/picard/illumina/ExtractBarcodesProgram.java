@@ -299,15 +299,15 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
                     ++barcodeNum;
                 }
                 final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
+
+                // Skip bcStr that looks like 'N', 'n', 'NN', 'N-N', 'NNN-NNN', etc.
+                final String bcStringWithoutSeparator = IlluminaUtil.stringSeqsToString(bcStrings, "");
+                Matcher nMatcher = onlyNsPattern.matcher(bcStringWithoutSeparator);
+
                 // if the barcode is all Ns don't add it to metrics (we add noCallMetric separately)
-                Matcher nMatcher = onlyNsPattern.matcher(bcStr);
                 if (nMatcher.matches()) {
-                    LOG.info("barcode string: " + bcStr + " contains only Ns");
                     continue;
                 }
-//                if (bcStr.contains("N") || bcStr.contains("n")) {
-//                    continue;
-//                }
                 if (barcodes.contains(bcStr)) {
                     messages.add("Barcode " + bcStr + " specified more than once in " + inputFile);
                 }
