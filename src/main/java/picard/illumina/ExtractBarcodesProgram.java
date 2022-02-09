@@ -1,6 +1,7 @@
 package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.Tuple;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -84,7 +85,7 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
             Arrays.asList(BARCODE_SEQUENCE_COLUMN, BARCODE_COLUMN)
     );
 
-
+    private static final Log LOG = Log.getInstance(ExtractBarcodesProgram.class);
 
     protected Map<String, BarcodeMetric> barcodeToMetrics = new LinkedHashMap<>();
     protected final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
@@ -262,6 +263,7 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
             });
 
             Matcher matcher = Pattern.compile("^(.*)_\\d").matcher(validBarcodeColumns.get(0));
+            Pattern onlyNsPattern = Pattern.compile("^[Nn]+$");
 
             final String sequenceColumn;
             boolean hasMultipleNumberedBarcodeColumns = matcher.matches();
@@ -298,9 +300,14 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
                 }
                 final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
                 // if the barcode is all Ns don't add it to metrics (we add noCallMetric separately)
-                if (bcStr.contains("N") || bcStr.contains("n")) {
+                Matcher nMatcher = onlyNsPattern.matcher(bcStr);
+                if (nMatcher.matches()) {
+                    LOG.info("barcode string: " + bcStr + " contains only Ns");
                     continue;
                 }
+//                if (bcStr.contains("N") || bcStr.contains("n")) {
+//                    continue;
+//                }
                 if (barcodes.contains(bcStr)) {
                     messages.add("Barcode " + bcStr + " specified more than once in " + inputFile);
                 }
