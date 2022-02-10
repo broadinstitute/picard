@@ -44,7 +44,7 @@ public class RefFlatReader {
     private static final Log LOG = Log.getInstance(RefFlatReader.class);
     // These are in the order that columns appear in refFlat format.
     public enum RefFlatColumns{GENE_NAME, TRANSCRIPT_NAME, CHROMOSOME, STRAND, TX_START, TX_END, CDS_START, CDS_END,
-        EXON_COUNT, EXON_STARTS, EXON_ENDS}
+        EXON_COUNT, EXON_STARTS, EXON_ENDS} // sato: the second field is not quite transcript name but ok. NO! They are right it is the transcript id...
 
     private static final String[] RefFlatColumnLabels = new String[RefFlatColumns.values().length];
 
@@ -67,12 +67,12 @@ public class RefFlatReader {
     }
 
     OverlapDetector<Gene> load() {
-        final OverlapDetector<Gene> overlapDetector = new OverlapDetector<Gene>(0, 0);
+        final OverlapDetector<Gene> overlapDetector = new OverlapDetector<>(0, 0);
 
         final int expectedColumns = RefFlatColumns.values().length;
         final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(refFlatFile, RefFlatColumnLabels);
         final Map<String, List<TabbedTextFileWithHeaderParser.Row>> refFlatLinesByGene =
-                new HashMap<String, List<TabbedTextFileWithHeaderParser.Row>>();
+                new HashMap<>();
 
         for (final TabbedTextFileWithHeaderParser.Row row : parser) {
             final int lineNumber = parser.getCurrentLineNumber(); // getCurrentLineNumber returns the number of the next line
@@ -89,7 +89,7 @@ public class RefFlatReader {
             } else {
                 List<TabbedTextFileWithHeaderParser.Row> transcriptLines = refFlatLinesByGene.get(geneName);
                 if (transcriptLines == null) {
-                    transcriptLines = new ArrayList<TabbedTextFileWithHeaderParser.Row>();
+                    transcriptLines = new ArrayList<>();
                     refFlatLinesByGene.put(geneName, transcriptLines);
                 }
                 transcriptLines.add(row);
