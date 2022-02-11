@@ -1,7 +1,6 @@
 package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.Tuple;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -85,7 +84,6 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
             Arrays.asList(BARCODE_SEQUENCE_COLUMN, BARCODE_COLUMN)
     );
 
-    private static final Log LOG = Log.getInstance(ExtractBarcodesProgram.class);
 
     protected Map<String, BarcodeMetric> barcodeToMetrics = new LinkedHashMap<>();
     protected final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
