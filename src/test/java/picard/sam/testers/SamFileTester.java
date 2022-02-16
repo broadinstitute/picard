@@ -265,15 +265,16 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final boolean isDuplicate2,
                             final String cigar1,
                             final String cigar2,
-                            final boolean strand1,
-                            final boolean strand2,
+                            final boolean negativeStrand1,
+                            final boolean negativeStrand2,
                             final boolean firstOnly,
                             final boolean record1NonPrimary,
                             final boolean record2NonPrimary,
                             final int defaultQuality,
-                            final String umi) {
+                            final String umi,
+                            final String read1UMI) {
         final List<SAMRecord> samRecordList = samRecordSetBuilder.addPair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
-                record1Unmapped, record2Unmapped, cigar1, cigar2, strand1, strand2, record1NonPrimary, record2NonPrimary, defaultQuality);
+                record1Unmapped, record2Unmapped, cigar1, cigar2, negativeStrand1, negativeStrand2, record1NonPrimary, record2NonPrimary, defaultQuality);
 
         final SAMRecord record1 = samRecordList.get(0);
         final SAMRecord record2 = samRecordList.get(1);
@@ -288,12 +289,16 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             record2.setAttribute("RX", umi);
         }
 
+        if (read1UMI != null){
+            record1.setAttribute("BX", read1UMI);
+        }
+
         if (firstOnly) {
             samRecordSetBuilder.getRecords().remove(record2);
         }
 
         final String key1 = samRecordToDuplicatesFlagsKey(record1);
-        Assert.assertFalse(this.duplicateFlags.containsKey(key1));
+        Assert.assertFalse(this.duplicateFlags.containsKey(key1)); // sato: what is this testing really...
         this.duplicateFlags.put(key1, isDuplicate1);
 
         final String key2 = samRecordToDuplicatesFlagsKey(record2);
@@ -320,7 +325,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final int defaultQuality) {
         addMatePair(readName, referenceSequenceIndex1, referenceSequenceIndex2, alignmentStart1, alignmentStart2,
                 record1Unmapped, record2Unmapped, isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2,
-                firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality, null);
+                firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality, null, null);
     }
     public void addMatePair(final String readName,
                             final int referenceSequenceIndex,
@@ -368,7 +373,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
 
             customPretestCallback();
             Assert.assertEquals(runPicardCommandLine(args), 0);
-            test();
+            test(); // sato: tests whether the reads should be duplicates
         } catch (IOException ex) {
             // Rethrows as unchecked exception to avoid having to change existing tests
             throw new RuntimeException(ex);

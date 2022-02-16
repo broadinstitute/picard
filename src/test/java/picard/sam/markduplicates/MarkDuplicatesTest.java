@@ -61,6 +61,10 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         return new MarkDuplicatesTester();
     }
 
+    protected AbstractMarkDuplicatesCommandLineProgramTester getTester(SAMFileHeader.SortOrder sortOrder) {
+        return new MarkDuplicatesTester(sortOrder);
+    }
+
     // NB: this test should return different results than MarkDuplicatesWithMateCigar
     @Test
     public void testTwoMappedPairsWithSoftClippingFirstOfPairOnly() {
@@ -366,14 +370,78 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.getSamRecordSetBuilder().setReadLength(10);
 
         for (int k = 0; k < UMIs.size();k++) {
-            tester.addMatePair("RUNID" + k, 2, 2, alignmentStart1.get(k), alignmentStart2.get(k), false, false, isDuplicate.get(k), isDuplicate.get(k),
+            tester.addMatePair("FLOWCELL:" + k, 2, 2, alignmentStart1.get(k), alignmentStart2.get(k), false, false, isDuplicate.get(k), isDuplicate.get(k),
                     "10M", "10M", isFirstNegativeStrand.get(k), isSecondNegativeStrand.get(k),
-                    false, false, false, DEFAULT_BASE_QUALITY, UMIs.get(k));
+                    false, false, false, DEFAULT_BASE_QUALITY, UMIs.get(k), null);
         }
         final String barcodeTag = "RX";
 
         tester.addArg("BARCODE_TAG=" + barcodeTag);
         tester.addArg("DUPLEX_UMI=" + duplexUmi);
+        tester.runTest();
+    }
+
+
+    @DataProvider(name = "RNAWithUMIDataProvider")
+    public Object[][] RNAWithUMIDataProvider() {
+        return new Object[][]{
+                // TODO: change to List and use Collecitons.nCopies() where appropriate
+                { new String[]{ "TAT-GTA", "ATC-ATG", "TAT-GTA", "ATC-ATG" }, // UMIs in the reads
+                        new boolean[]{ false, false, true, true }, // Duplicate Truth Flag
+                        new String[]{ "146M", "146M", "100M46S", "100M46S" }, // Cigars of read1 (forward)
+                        new String[]{ "146M", "146M", "46S100M", "46S100M" }, // Cigars of read2 (reverse)
+                        new int[]{1000, 1000, 1000, 1000}, // Alignment start of read1 (forward).
+                        // Note that when a reverse read has a soft-clipped end (e.g. 46S100M),
+                        // then the alignment start is defined to be the first M base
+                        new int[]{2000, 2000, 2046, 2046},
+                        true },
+                // Same test as above but now ignore UMIs
+                { new String[]{ "TAT-GTA", "ATC-ATG", "TAT-GTA", "ATC-ATG" }, // UMIs in the reads
+                        new boolean[]{ false, true, true, true }, // Duplicate Truth Flag
+                        new String[]{ "146M", "146M", "100M46S", "100M46S" }, // Cigars of read1 (forward)
+                        new String[]{ "146M", "146M", "46S100M", "46S100M" }, // Cigars of read2 (reverse)
+                        new int[]{1000, 1000, 1000, 1000}, // Alignment start of read1 (forward).
+                        // Note that when a reverse read has a soft-clipped end (e.g. 46S100M),
+                        // then the alignment start is defined to be the first M base
+                        new int[]{2000, 2000, 2046, 2046},
+                        false },
+                // Overlapping reads
+                { new String[]{ "TAT-GTA", "ATC-ATG", "TAT-GTA", "ATC-ATG" }, // UMIs in the reads
+                        new boolean[]{ false, false, true, false }, // Duplicate Truth Flag
+                        // Sometimes the first base or two of the adapter sequence matches the reference, making the cigars asymmetrical. See the fourth read pair.
+                        new String[]{ "100M46S", "100M46S", "100M46S", "99M47S" }, // Cigars of read1 (forward)
+                        new String[]{ "46S100M", "46S100M", "46S100M", "46S100M" }, // Cigars of read2 (reverse).
+                        new int[]{1000, 1000, 1000, 1001}, // Alignment start of read1 (forward). Note the last element.
+                        new int[]{2046, 2046, 2046, 2046},
+                        true } // Alignment start of read2 (reverse).
+        };
+    }
+    /**
+     * Test the scenario where the UMI for the paired is stored in read1, as is the case when
+     * umi-tools group is first run to correct errors in UMIs.
+     */
+    @Test(dataProvider="RNAWithUMIDataProvider")
+    public void testReadOneBarcodeOnly(final String[] umiList, final boolean[] duplicateTruth,
+                                       final String[] forwardCigars, final String[] reverseCigars,
+                                       final int[] alignmentStart1, final int[] alignmentStart2,
+                                       final boolean useReadOneBarcodeTag){
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester(SAMFileHeader.SortOrder.queryname);
+        tester.getSamRecordSetBuilder().setReadLength(146);
+        final String readBaseName = "SL-NVZ:HNJ2HDRXY211220:HNJ2HDRXY:2:2277:3649:";
+        final int defaultBaseQuality = 30;
+        final String read1BarcodeTag = "BX";
+
+        for (int i = 0; i < umiList.length; i++) {
+            final String yCoordinate = Integer.toString(1000*i); // Multiply by 1000 to avoid marked as optical duplicates
+            tester.addMatePair(readBaseName + yCoordinate, 2, 2, alignmentStart1[i], alignmentStart2[i],
+                    false, false, duplicateTruth[i], duplicateTruth[i],
+                    forwardCigars[i], reverseCigars[i], false, true,
+                    false, false, false, defaultBaseQuality, umiList[i], umiList[i]);
+        }
+
+        if (useReadOneBarcodeTag){
+            tester.addArg(MarkDuplicates.READ_ONE_BARCODE_TAG_NAME + "=" + read1BarcodeTag);
+        }
         tester.runTest();
     }
 }

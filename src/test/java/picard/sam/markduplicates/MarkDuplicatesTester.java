@@ -25,6 +25,7 @@
 package picard.sam.markduplicates;
 
 import htsjdk.samtools.DuplicateScoringStrategy;
+import htsjdk.samtools.SAMFileHeader;
 import picard.cmdline.CommandLineProgram;
 
 /**
@@ -35,6 +36,10 @@ public class MarkDuplicatesTester extends AbstractMarkDuplicatesCommandLineProgr
 
     public MarkDuplicatesTester() {
         super(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH);
+    }
+
+    public MarkDuplicatesTester(SAMFileHeader.SortOrder sortOrder) {
+        super(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH, sortOrder);
     }
 
     @Override

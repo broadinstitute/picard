@@ -133,7 +133,7 @@ public class ReadNameParser implements Serializable {
     }
 
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc){
-        if (!readName.equals(readNameStored)) {
+        if (!readName.equals(readNameStored)) { // sato: why store readName...
             if (readLocationInformation(readName, loc)) {
                 readNameStored = readName;
                 physicalLocationStored.setX(loc.getX());

@@ -177,7 +177,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Argument(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
     public String BARCODE_TAG = null;
 
-    @Argument(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    public static String READ_ONE_BARCODE_TAG_NAME = "READ_ONE_BARCODE_TAG";
+    @Argument(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true) // sato: why won't this work...fullName = READ_ONE_BARCODE_TAG_NAME)
     public String READ_ONE_BARCODE_TAG = null;
 
     @Argument(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
@@ -546,7 +547,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     break;
                 }
                 // If this read is unmapped but sorted with the mapped reads, just skip it.
-
+            // sato: duplicate index increments by 2
             } else if (!rec.isSecondaryOrSupplementary()) { // Sato. Do we skip secondary and supplementary reads?
                 final long indexForRead = assumedSortOrder == SAMFileHeader.SortOrder.queryname ? duplicateIndex : index; // sato: use the "query-name" index if sorted by query name
                 final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, indexForRead, rec, useBarcodes); // sato, a read converted to the data structure for sorting.
@@ -556,21 +557,25 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     final StringBuilder key = new StringBuilder();
                     key.append(ReservedTagConstants.READ_GROUP_ID);
                     key.append(rec.getReadName());
-                    ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
 
+                    // sato: check if we have seen this read before (e.g. when rec is read2, or secondary, etc. in a query name sorted bam)
+                    ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
+                    // sato: I see, tmp.remove looks for this particular read (if query sorted it's probably not necessary to use a map)
                     // See if we've already seen the first end or not
                     if (pairedEnds == null) { // sato: we have not encountered this read pair.
                         // at this point pairedEnds and fragmentEnd are the same, but we need to make
                         // a copy since pairedEnds will be modified when the mate comes along.
-                        pairedEnds = fragmentEnd.clone(); // we put pairedEnds back into tmp with the read2 contig, so when the mate comes along comes along we can remove from tmp by (read2 contig, read_name) key
-                        tmp.put(pairedEnds.read2ReferenceIndex, key.toString(), pairedEnds); // sato: assume read1, so read2 is mate, which we have not seen. But we populated it when we build the fragmentEnd above (each read has the contig of its mate)
-                    } else { // sato: why does matesRefIndex = read1ReferenceIndex? Because we assume we see read1 first, then read2?
-                        final int matesRefIndex = fragmentEnd.read1ReferenceIndex; // sato: we are reading read2, so the mate is read1
-                        final int matesCoordinate = fragmentEnd.read1Coordinate;
+                        pairedEnds = fragmentEnd.clone(); // we put pairedEnds back into tmp with the read2 contig, so when the mate comes along we can remove from tmp by (read2 contig, read_name) key
+                        tmp.put(pairedEnds.read2ReferenceIndex, key.toString(), pairedEnds); // sato: assume read1, so read2 is mate, which we have not seen. But we populated it when we build the fragmentEnd above (each read has the contig of its mate). We put read2 here so when read2 comes along (next iteration of while loop) then it can find itself in tmp.
+                    } else {
+                        // sato: matesRefIndex = read2 ref index. why does matesRefIndex = read1ReferenceIndex? Because we assume we see read1 first, then read2?
+                        final int matesRefIndex = fragmentEnd.read1ReferenceIndex; // sato: the read of the same name, which must be read1, is in tmp. So we are reading read2, if queryname sorted
+                        final int matesCoordinate = fragmentEnd.read1Coordinate; // sato: a bit confusing by this is correct. The fragmentEnd here refers to read2, and its read1 coordinate is the start position of read2
                         // Sato: wait a sec...we only update readOne/TwoBarcode for the read we visit second.
                         // Set orientationForOpticalDuplicates, which always goes by the first then the second end for the strands.  NB: must do this
                         // before updating the orientation later.
                         if (rec.getFirstOfPairFlag()) { // sato: if read1...so hmmm. I guess read2 can come before read1 if coordinate sorted
+                            // sato: nothing complicated here. Get orientation (FR, RF, i.e. innie/outie), feeding different arguments denepending on whether rec is read1 or read2
                             pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(), pairedEnds.orientation == ReadEnds.R);
                             if (useBarcodes) { // sato: this read1 barcode has nothing to do with optical duplicates.
                                 ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readOneBarcode = getReadOneBarcodeValue(rec);
@@ -585,8 +590,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                         // If the other read is actually later, simply add the other read's data as read2, else flip the reads
                         if (matesRefIndex > pairedEnds.read1ReferenceIndex ||
                                 (matesRefIndex == pairedEnds.read1ReferenceIndex && matesCoordinate >= pairedEnds.read1Coordinate)) {
-                            pairedEnds.read2ReferenceIndex = matesRefIndex;
-                            pairedEnds.read2Coordinate = matesCoordinate;
+                            pairedEnds.read2ReferenceIndex = matesRefIndex; // sato: recall matesRefIndex is read2 ref index, so this is correct. matesRefIndex refers to the index of read2, which we encounter second (at least in queryname sorted)
+                            pairedEnds.read2Coordinate = matesCoordinate; // sato: this is the END of read2...
                             pairedEnds.read2IndexInFile = indexForRead;
                             pairedEnds.orientation = ReadEnds.getOrientationByte(pairedEnds.orientation == ReadEnds.R,
                                     rec.getReadNegativeStrandFlag());
@@ -644,6 +649,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             ends = new ReadEndsForMarkDuplicates();
         }
         ends.read1ReferenceIndex = rec.getReferenceIndex(); // sato: unclipped end means including the soft-clipped reads.
+        // sato: nice, this is how why we don't need mate cigar.
+        // sato: unclipped = include clipped. But in this instance the start of the forward strand and the "end" of the reverse strand
+        // should not have many clips.
         ends.read1Coordinate = rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         ends.orientation = rec.getReadNegativeStrandFlag() ? ReadEnds.R : ReadEnds.F;
         ends.read1IndexInFile = index; // sato: index here means the position of the read in the original sam file
@@ -693,7 +701,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
     /**
      * Goes through the accumulated [sorted] ReadEndsForMarkDuplicates objects and determines which of them are
-     * to be marked as duplicates. [how is this represented?]
+     * to be marked as duplicates. [Q: how is this represented? A: this.duplicateIndexes]
      */
     private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
         final int entryOverhead;
