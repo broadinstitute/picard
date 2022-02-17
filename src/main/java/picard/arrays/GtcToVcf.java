@@ -508,7 +508,7 @@ public class GtcToVcf extends CommandLineProgram {
     }
 
     public static String formatFloatForVcf(final float value) {
-        if (Float.isNaN(value)) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
             return DOT;
         }
         return df.format(value);
