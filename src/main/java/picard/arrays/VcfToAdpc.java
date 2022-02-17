@@ -215,7 +215,7 @@ public class VcfToAdpc extends CommandLineProgram {
 
     private Float getFloatAttribute(final Genotype genotype, final String key) {
         final Object value = genotype.getAnyAttribute(key);
-        if (value != null) {
+        if ((value != null) && (!value.equals("?"))) {
             return Float.parseFloat(value.toString());
         }
         return null;
