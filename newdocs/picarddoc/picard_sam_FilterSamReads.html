@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,8 +435,8 @@
 
 		<h1>FilterSamReads</h1>
 
-		<p class="lead">Subsets reads from a SAM or BAM file by applying one of several filters.
-Takes a SAM or BAM file and subsets it by either excluding or only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.
+		<p class="lead">Subsets reads from a SAM/BAM/CRAM file by applying one of several filters.
+Takes a SAM/BAM/CRAM file and subsets it by either excluding or only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.
 <br /><h3>Usage example:</h3><h4>Filter by queryname</h4><pre>java -jar picard.jar FilterSamReads \<br />       I=input.bam \ <br />       O=output.bam \ <br />       READ_LIST_FILE=read_names.txt \ <br />      FILTER=includeReadList</pre> <h4>Filter by interval</h4><pre>java -jar picard.jar FilterSamReads \ <br />       I=input.bam \ <br />       O=output.bam \ <br />       INTERVAL_LIST=regions.interval_list \ <br/>      FILTER=includePairedIntervals</pre> <h4>Filter by Tag Value (type Z / String values only)</h4><pre>java -jar picard.jar FilterSamReads \ <br />       I=input.bam \ <br />       O=output.bam \ <br />       TAG=CR \ <br/>      TAG_VALUE=TTTGTCATCTCGAGTA \ <br/>      FILTER=includeTagValues</pre> <h4>Filter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script</h4><pre>cat <<EOF > script.js <br/>/** reads having a soft clip larger than 2 bases in beginning of read*/ <br/>function accept(rec) {   <br/>    if (rec.getReadUnmappedFlag()) return false; <br/>    var cigar = rec.getCigar(); <br/>    if (cigar == null) return false; <br/>    var ce = cigar.getCigarElement(0); <br/>    return ce.getOperator().name() == "S" && ce.length() > 2; <br/>} <br /><br />accept(record); <br/>EOF <br/><br/>java -jar picard.jar FilterSamReads \ <br />       I=input.bam \ <br />       O=output.bam \ <br />       JAVASCRIPT_FILE=script.js \ <br/>      FILTER=includeJavascript</pre> </p>
 
 			<h3>Category
@@ -515,7 +518,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The SAM or BAM file that will be filtered.</td>
+					<td>The SAM/BAM/CRAM file that will be filtered.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -523,7 +526,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>SAM or BAM file for resulting reads.</td>
+					<td>SAM/BAM/CRAM file for resulting reads.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -568,7 +571,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=excludeReadList.</td>
+					<td>File containing reads that will be included in or excluded from the OUTPUT SAM/BAM/CRAM file, when using FILTER=includeReadList or FILTER=excludeReadList.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
@@ -775,21 +778,21 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 				The --FILTER argument is an enumerated type (Filter), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">includeAligned</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output aligned reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)</dd>
 					<dt class="enum">excludeAligned</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output Unmapped reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from OUTPUT.)</dd>
 					<dt class="enum">includeReadList</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output reads with names contained in READ_LIST_FILE. See READ_LIST_FILE for more detail.</dd>
 					<dt class="enum">excludeReadList</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output reads with names *not* contained in READ_LIST_FILE. See READ_LIST_FILE for more detail.</dd>
 					<dt class="enum">includeJavascript</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. See the JAVASCRIPT_FILE argument for more detail. </dd>
 					<dt class="enum">includePairedIntervals</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output reads that overlap with an interval from INTERVAL_LIST (and their mate). INPUT must be coordinate sorted.</dd>
 					<dt class="enum">includeTagValues</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output reads that have a value of tag TAG that is contained in the values for TAG_VALUES</dd>
 					<dt class="enum">excludeTagValues</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Output reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES</dd>
 			</dl>
 			</p>
 		<p>
@@ -826,7 +829,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The SAM or BAM file that will be filtered.</b><br />
+			<b>The SAM/BAM/CRAM file that will be filtered.</b><br />
 			
 		</p>
 		<p>
@@ -880,7 +883,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>SAM or BAM file for resulting reads.</b><br />
+			<b>SAM/BAM/CRAM file for resulting reads.</b><br />
 			
 		</p>
 		<p>
@@ -905,7 +908,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
 			 / <small>-RLF</small>
 		</h3>
 		<p class="args">
-			<b>File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=excludeReadList.</b><br />
+			<b>File containing reads that will be included in or excluded from the OUTPUT SAM/BAM/CRAM file, when using FILTER=includeReadList or FILTER=excludeReadList.</b><br />
 			
 		</p>
 		<p>
@@ -1105,7 +1108,7 @@ Takes a SAM or BAM file and subsets it by either excluding or only including cer
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

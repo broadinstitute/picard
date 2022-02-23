@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -789,11 +792,11 @@
 				The --ERROR_VALUE argument is an enumerated type (ErrorType), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">ERROR</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Collects the average (SNP) error at the bases provided. Suffix is: 'error'.</dd>
 					<dt class="enum">OVERLAPPING_ERROR</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Only considers bases from the overlapping parts of reads from the same template. For those bases, it calculates the error that can be attributable to pre-sequencing, versus during-sequencing. Suffix is: 'overlapping_error'.</dd>
 					<dt class="enum">INDEL_ERROR</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Collects insertion and deletion errors at the bases provided. Suffix is: 'indel_error'.</dd>
 			</dl>
 			</p>
 		<p>
@@ -1049,69 +1052,69 @@
 				The --STRATIFIER_VALUE argument is an enumerated type (Stratifier), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">ALL</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Puts all bases in the same stratum. Suffix is 'all'.</dd>
 					<dt class="enum">GC_CONTENT</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The GC-content of the read. Suffix is 'gc'.</dd>
 					<dt class="enum">READ_ORDINALITY</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The read ordinality (i.e. first or second). Suffix is 'read_ordinality'.</dd>
 					<dt class="enum">READ_BASE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">the base in the original reading direction. Suffix is 'read_base'.</dd>
 					<dt class="enum">READ_DIRECTION</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The alignment direction of the read (encoded as + or -). Suffix is 'read_direction'.</dd>
 					<dt class="enum">PAIR_ORIENTATION</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The read-pair's orientation (encoded as '[FR]1[FR]2'). Suffix is 'pair_orientation'.</dd>
 					<dt class="enum">PAIR_PROPERNESS</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The properness of the read-pair's alignment. Looks for indications of chimerism. Suffix is 'pair_proper'.</dd>
 					<dt class="enum">REFERENCE_BASE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The reference base in the read's direction. Suffix is 'ref_base'.</dd>
 					<dt class="enum">PRE_DINUC</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The read base at the previous cycle, and the current reference base. Suffix is 'pre_dinuc'.</dd>
 					<dt class="enum">POST_DINUC</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The read base at the subsequent cycle, and the current reference base. Suffix is 'post_dinuc'.</dd>
 					<dt class="enum">HOMOPOLYMER_LENGTH</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The length of homopolymer the base is part of (only accounts for bases that were read prior to the current base). Suffix is 'homopolymer_length'.</dd>
 					<dt class="enum">HOMOPOLYMER</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The length of homopolymer, the base that the homopolymer is comprised of, and the reference base. Suffix is 'homopolymer_and_following_ref_base'.</dd>
 					<dt class="enum">BINNED_HOMOPOLYMER</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The scale of homopolymer (long or short), the base that the homopolymer is comprised of, and the reference base. Suffix is 'binned_length_homopolymer_and_following_ref_base'.</dd>
 					<dt class="enum">FLOWCELL_TILE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The flowcell and tile where the base was read (taken from the read name). Suffix is 'tile'.</dd>
 					<dt class="enum">FLOWCELL_Y</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The y-coordinate of the read (taken from the read name) Suffix is 'y'.</dd>
 					<dt class="enum">FLOWCELL_X</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The x-coordinate of the read (taken from the read name) Suffix is 'x'.</dd>
 					<dt class="enum">READ_GROUP</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The read-group id of the read. Suffix is 'read_group'.</dd>
 					<dt class="enum">CYCLE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The machine cycle during which the base was read. Suffix is 'cycle'.</dd>
 					<dt class="enum">BINNED_CYCLE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads. Suffix is 'binned_cycle'.</dd>
 					<dt class="enum">SOFT_CLIPS</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of softclipped bases the read has. Suffix is 'softclipped_bases'.</dd>
 					<dt class="enum">INSERT_LENGTH</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The insert-size they came from (taken from the TLEN field.) Suffix is 'insert_length'.</dd>
 					<dt class="enum">BASE_QUALITY</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The base quality. Suffix is 'base_quality'.</dd>
 					<dt class="enum">MAPPING_QUALITY</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The read's mapping quality. Suffix is 'mapping_quality'.</dd>
 					<dt class="enum">MISMATCHES_IN_READ</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of bases in the read that mismatch the reference, excluding the current base.  This stratifier requires the NM tag. Suffix is 'mismatches_in_read'.</dd>
 					<dt class="enum">ONE_BASE_PADDED_CONTEXT</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The current reference base and a one base padded region from the read resulting in a 3-base context. Suffix is 'one_base_padded_context'.</dd>
 					<dt class="enum">TWO_BASE_PADDED_CONTEXT</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The current reference base and a two base padded region from the read resulting in a 5-base context. Suffix is 'two_base_padded_context'.</dd>
 					<dt class="enum">CONSENSUS</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used. Suffix is 'consensus'.</dd>
 					<dt class="enum">NS_IN_READ</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of Ns in the read. Suffix is 'ns_in_read'.</dd>
 					<dt class="enum">INSERTIONS_IN_READ</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of Insertions in the read cigar. Suffix is 'cigar_elements_I_in_read'.</dd>
 					<dt class="enum">DELETIONS_IN_READ</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of Deletions in the read cigar. Suffix is 'cigar_elements_D_in_read'.</dd>
 					<dt class="enum">INDELS_IN_READ</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of INDELs in the read cigar. Suffix is 'indels_in_read'.</dd>
 					<dt class="enum">INDEL_LENGTH</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The number of bases in an indel Suffix is 'indel_length'.</dd>
 			</dl>
 			</p>
 		<p>
@@ -1237,7 +1240,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

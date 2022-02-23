@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -973,9 +976,9 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
 				The --CROSSCHECK_MODE argument is an enumerated type (CrosscheckMode), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">CHECK_SAME_SAMPLE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">In this mode, each sample in INPUT will only be checked against a single corresponding sample in SECOND_INPUT. If a corresponding sample cannot be found, the program will proceed, but report the missing samples and return the value specified in EXIT_CODE_WHEN_MISMATCH. The corresponding samples are those that equal each other, after possible renaming via INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP. In this mode CROSSCHECK_BY must be SAMPLE.</dd>
 					<dt class="enum">CHECK_ALL_OTHERS</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">In this mode, each sample in INPUT will be checked against all the samples in SECOND_INPUT.</dd>
 			</dl>
 			</p>
 		<p>
@@ -1400,7 +1403,7 @@ LOD score 0 means equal likelihood that the groups match vs. come from different
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

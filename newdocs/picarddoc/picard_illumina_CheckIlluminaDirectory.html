@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -723,6 +726,21 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			<b>The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the individual records of the files themselves are spurious.</b><br />
 			
 		</p>
+			<p>
+				The --DATA_TYPES argument is an enumerated type (Set[IlluminaDataType]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">Position</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">BaseCalls</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">QualityScores</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">PF</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">Barcodes</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">Set[IlluminaDataType]</span>
 			&nbsp;<span class="label">[]</span>
@@ -975,7 +993,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

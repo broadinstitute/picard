@@ -1,5 +1,5 @@
 {
-  "summary": "Replaces the SAMFileHeader in a SAM or BAM file.  This tool makes it possible to replace the header of a SAM or BAM file with the header of anotherfile, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must be the same.\u003cbr /\u003e\u003cbr /\u003eNote that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords are present in the new header. \u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar ReplaceSamHeader \\\u003cbr /\u003e      I\u003dinput_1.bam \\\u003cbr /\u003e      HEADER\u003dinput_2.bam \\\u003cbr /\u003e      O\u003dbam_with_new_head.bam\u003c/pre\u003e\u003chr /\u003e",
+  "summary": "Replaces the SAMFileHeader in a SAM/BAM/CRAM file.  This tool makes it possible to replace the header of a SAM/BAM/CRAM file with the header of anotherfile, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must be the same.\u003cbr /\u003e\u003cbr /\u003eNote that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords are present in the new header. \u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar ReplaceSamHeader \\\u003cbr /\u003e      I\u003dinput_1.bam \\\u003cbr /\u003e      HEADER\u003dinput_2.bam \\\u003cbr /\u003e      O\u003dbam_with_new_head.bam\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -77,7 +77,7 @@
       "options": []
     },
     {
-      "summary": "SAM file from which SAMFileHeader will be read.",
+      "summary": "SAM/BAM/CRAM file from which SAMFileHeader will be read.",
       "name": "--HEADER",
       "synonyms": "NA",
       "type": "File",
@@ -107,7 +107,7 @@
       "options": []
     },
     {
-      "summary": "SAM file from which SAMRecords will be read.",
+      "summary": "SAM/BAM/CRAM file from which SAMRecords will be read.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
+      "summary": "header from HEADER file will be written to this file, followed by records from INPUT file",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",

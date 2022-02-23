@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -463,7 +466,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The BAM or SAM file containing aligned reads. Must be coordinate sorted</td>
+					<td>The SAM/BAM/CRAM file containing aligned reads. Must be coordinate sorted</td>
 				</tr>
 				<tr>
 					<td><a href="#--METRICS_FILE_PREFIX">--METRICS_FILE_PREFIX</a><br />
@@ -759,7 +762,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The BAM or SAM file containing aligned reads. Must be coordinate sorted</b><br />
+			<b>The SAM/BAM/CRAM file containing aligned reads. Must be coordinate sorted</b><br />
 			
 		</p>
 		<p>
@@ -803,6 +806,19 @@
 			<b>The level(s) at which to accumulate metrics.  </b><br />
 			
 		</p>
+			<p>
+				The --METRIC_ACCUMULATION_LEVEL argument is an enumerated type (Set[MetricAccumulationLevel]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ALL_READS</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SAMPLE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LIBRARY</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">READ_GROUP</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">Set[MetricAccumulationLevel]</span>
 			&nbsp;<span class="label">[ALL_READS]</span>
@@ -1003,7 +1019,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

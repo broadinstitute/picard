@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>RevertSam</h1>
 
-		<p class="lead">Reverts SAM or BAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.
+		<p class="lead">Reverts SAM/BAM/CRAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.
 <h3>Examples</h3>
 <h4>Example with single output:</h4>
 java -jar picard.jar RevertSam \
@@ -452,8 +455,8 @@ java -jar picard.jar RevertSam \
      OUTPUT_BY_READGROUP=true \
      O=/write/reverted/read/group/bams/in/this/dir
 
-Will output a BAM file per read group. Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.
-Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to LENIENT or SILENT if the failures are expected to be obviated by the reversion process (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).
+Will output one file per read group. Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.
+Note: If the program fails due to a validation error, consider setting the VALIDATION_STRINGENCY option to LENIENT or SILENT if the failures are expected to be obviated by the reversion process (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).
 </p>
 
 			<h3>Category
@@ -520,7 +523,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The input SAM/BAM file to revert the state of.</td>
+					<td>The input SAM/BAM/CRAM file to revert the state of.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -528,7 +531,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.</td>
+					<td>The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT_MAP">--OUTPUT_MAP</a><br />
@@ -583,7 +586,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 					</td>
 					<!--<td>double</td> -->
 					<td>0.01</td>
-					<td>If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization thenthe program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.</td>
+					<td>If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT_BY_READGROUP">--OUTPUT_BY_READGROUP</a><br />
@@ -857,7 +860,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The input SAM/BAM file to revert the state of.</b><br />
+			<b>The input SAM/BAM/CRAM file to revert the state of.</b><br />
 			
 		</p>
 		<p>
@@ -894,7 +897,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization thenthe program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.</b><br />
+			<b>If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.</b><br />
 			
 		</p>
 		<p>
@@ -922,7 +925,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.</b><br />
+			<b>The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.</b><br />
 			
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>OUTPUT_MAP</code>.</p>
@@ -955,13 +958,13 @@ Note: If the program fails due to a SAM validation error, consider setting the V
 				The --OUTPUT_BY_READGROUP_FILE_FORMAT argument is an enumerated type (FileType), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">sam</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Generate SAM files.</dd>
 					<dt class="enum">bam</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Generate BAM files.</dd>
 					<dt class="enum">cram</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Generate CRAM files.</dd>
 					<dt class="enum">dynamic</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Generate files based on the extention of INPUT.</dd>
 			</dl>
 			</p>
 		<p>
@@ -1223,7 +1226,7 @@ Note: If the program fails due to a SAM validation error, consider setting the V
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

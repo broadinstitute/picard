@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -444,8 +447,8 @@
 		<h2>Overview</h2>
 		Concatenate efficiently BAM files that resulted from a scattered parallel analysis.
  <p>
- This tool performs a rapid "gather" or concatenation on BAM files. 
- This is often needed in operations that have been run in parallel across genomics regions by scattering 
+ This tool performs a rapid "gather" or concatenation on BAM files.
+ This is often needed in operations that have been run in parallel across genomics regions by scattering
  their execution across computing nodes and cores thus resulting in smaller BAM files.
  </p>
  <p>
@@ -453,12 +456,12 @@
  </p>
  <h3>Inputs</h3>
  <p>
- A list of BAM files to combine using the <code>INPUT</code> argument. 
+ A list of BAM files to combine using the <code>INPUT</code> argument.
  These files must be provided in the order that they should be concatenated.
  </p>
 <h3>Output</h3>
  <p>
- A single BAM file. The header is copied from the first input file. 
+ A single BAM file. The header is copied from the first input file.
  </p>
  <h3>Usage example:</h3>
  <pre>
@@ -470,7 +473,7 @@
  <h3>Notes</h3>
  <p>
  Operates via copying of the gzip blocks directly for speed but also supports generation of an MD5 on the
- output and indexing of the output BAM file. 
+ output and indexing of the output BAM file.
  </p>
 
 
@@ -494,7 +497,7 @@
 					</td>
 					<!--<td>List[File]</td> -->
 					<td>[]</td>
-					<td>Two or more BAM files or text files containing lists of BAM files (one per line).</td>
+					<td>Two or more SAM/BAM/CRAM files or text files containing lists of SAM/BAM/CRAM files (one per line).</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -502,7 +505,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output BAM file to write to.</td>
+					<td>The output SAM/BAM/CRAM file to write.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -713,7 +716,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Two or more BAM files or text files containing lists of BAM files (one per line).</b><br />
+			<b>Two or more SAM/BAM/CRAM files or text files containing lists of SAM/BAM/CRAM files (one per line).</b><br />
 			
 		</p>
 		<p>
@@ -740,7 +743,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output BAM file to write to.</b><br />
+			<b>The output SAM/BAM/CRAM file to write.</b><br />
 			
 		</p>
 		<p>
@@ -890,7 +893,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

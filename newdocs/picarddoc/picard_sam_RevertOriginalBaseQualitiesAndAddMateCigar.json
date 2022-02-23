@@ -1,5 +1,5 @@
 {
-  "summary": "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
+  "summary": "Reverts the original base qualities and adds the mate cigar tag to read-group files.",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -92,7 +92,7 @@
       "options": []
     },
     {
-      "summary": "The input SAM/BAM file to revert the state of.",
+      "summary": "The input SAM/BAM/CRAM file to revert the state of.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "The output SAM/BAM file to create.",
+      "summary": "The output SAM/BAM/CRAM file to create.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -368,7 +368,7 @@
       "options": []
     }
   ],
-  "description": "This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped BAMs.\n If the file does not have OQs and already has mate cigar tags, nothing is done.\n New BAM/BAI/MD5 files are created.",
+  "description": "This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped SAM, BAM or CRAM files.\n If the file does not have OQs and already has mate cigar tags, nothing is done.\n New BAM/BAI/MD5 files are created.",
   "name": "RevertOriginalBaseQualitiesAndAddMateCigar",
   "group": "Read Data Manipulation",
   "beta": false,

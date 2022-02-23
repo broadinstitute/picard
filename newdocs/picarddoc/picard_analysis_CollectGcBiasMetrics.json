@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "Input SAM or BAM file.",
+      "summary": "Input SAM/BAM/CRAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -194,7 +194,24 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "ALL_READS"
+        },
+        {
+          "summary": "",
+          "name": "SAMPLE"
+        },
+        {
+          "summary": "",
+          "name": "LIBRARY"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP"
+        }
+      ]
     },
     {
       "summary": "For summary metrics, exclude GC windows that include less than this fraction of the genome.",

@@ -261,7 +261,7 @@
       "options": []
     },
     {
-      "summary": "One or more input SAM or BAM files to analyze. Must be coordinate sorted.",
+      "summary": "One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "List[String]",

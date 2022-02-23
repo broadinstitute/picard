@@ -227,7 +227,7 @@
       "options": []
     },
     {
-      "summary": "Output SAM/BAM file. ",
+      "summary": "Output BAM/SAM/CRAM file. ",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -450,7 +450,7 @@
       "options": []
     },
     {
-      "summary": "The sort order for the output sam/bam file.",
+      "summary": "The sort order for the output BAM/SAM/CRAM file.",
       "name": "--SORT_ORDER",
       "synonyms": "-SO",
       "type": "SortOrder",

@@ -1,5 +1,5 @@
 {
-  "summary": "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  \u003cp\u003eThis tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of a SAM file.  The SAM/BAM file must be sorted by query name.\u003c/p\u003e \u003cp\u003eOutputs a metrics file histogram showing counts of bases_clipped per read.\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MarkIlluminaAdapters \\\u003cbr /\u003e INPUT\u003dinput.sam \\\u003cbr /\u003eMETRICS\u003dmetrics.txt \u003c/pre\u003e\u003chr /\u003e",
+  "summary": "Reads a SAM/BAM/CRAM file and rewrites it with new adapter-trimming tags.  \u003cp\u003eThis tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of the input file.  The SAM/BAM/CRAM file must be sorted by query name.\u003c/p\u003e \u003cp\u003eOutputs a metrics file histogram showing counts of bases_clipped per read.\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MarkIlluminaAdapters \\\u003cbr /\u003e INPUT\u003dinput.sam \\\u003cbr /\u003eMETRICS\u003dmetrics.txt \u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.",
@@ -29,7 +29,44 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "The following sequences can be found in\n        https://support.illumina.com/content/dam/illumina-support/documents/documentation/chemistry_documentation/experiment-design/illumina-adapter-sequences_1000000002694-01.pdf\n        and are protected by the following copyright notice:\n\n        Oligonucleotide sequences (c) 2016 Illumina, Inc. All rights reserved. Derivative works created by\n        Illumina customers are authorized for use with Illumina instruments and products only. All other\n        uses are strictly prohibited.",
+          "name": "PAIRED_END"
+        },
+        {
+          "summary": "",
+          "name": "INDEXED"
+        },
+        {
+          "summary": "",
+          "name": "SINGLE_END"
+        },
+        {
+          "summary": "",
+          "name": "NEXTERA_V1"
+        },
+        {
+          "summary": "",
+          "name": "NEXTERA_V2"
+        },
+        {
+          "summary": "",
+          "name": "DUAL_INDEXED"
+        },
+        {
+          "summary": "",
+          "name": "FLUIDIGM"
+        },
+        {
+          "summary": "",
+          "name": "TRUSEQ_SMALLRNA"
+        },
+        {
+          "summary": "",
+          "name": "ALTERNATIVE_SINGLE_END"
+        }
+      ]
     },
     {
       "summary": "read one or more arguments files and add them to the command line",

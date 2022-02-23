@@ -1,5 +1,5 @@
 {
-  "summary": "Reverts SAM or BAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.\n\u003ch3\u003eExamples\u003c/h3\u003e\n\u003ch4\u003eExample with single output:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     O\u003dreverted.bam\n\n\u003ch4\u003eExample outputting by read group with output map:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     OUTPUT_BY_READGROUP\u003dtrue \\\n     OUTPUT_MAP\u003dreverted_bam_paths.tsv\n\nWill output a BAM/SAM file per read group.\n\u003ch4\u003eExample outputting by read group without output map:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     OUTPUT_BY_READGROUP\u003dtrue \\\n     O\u003d/write/reverted/read/group/bams/in/this/dir\n\nWill output a BAM file per read group. Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.\nNote: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to LENIENT or SILENT if the failures are expected to be obviated by the reversion process (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n",
+  "summary": "Reverts SAM/BAM/CRAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.\n\u003ch3\u003eExamples\u003c/h3\u003e\n\u003ch4\u003eExample with single output:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     O\u003dreverted.bam\n\n\u003ch4\u003eExample outputting by read group with output map:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     OUTPUT_BY_READGROUP\u003dtrue \\\n     OUTPUT_MAP\u003dreverted_bam_paths.tsv\n\nWill output a BAM/SAM file per read group.\n\u003ch4\u003eExample outputting by read group without output map:\u003c/h4\u003e\njava -jar picard.jar RevertSam \\\n     I\u003dinput.bam \\\n     OUTPUT_BY_READGROUP\u003dtrue \\\n     O\u003d/write/reverted/read/group/bams/in/this/dir\n\nWill output one file per read group. Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.\nNote: If the program fails due to a validation error, consider setting the VALIDATION_STRINGENCY option to LENIENT or SILENT if the failures are expected to be obviated by the reversion process (e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -107,7 +107,7 @@
       "options": []
     },
     {
-      "summary": "The input SAM/BAM file to revert the state of.",
+      "summary": "The input SAM/BAM/CRAM file to revert the state of.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -152,7 +152,7 @@
       "options": []
     },
     {
-      "summary": "If SANITIZE\u003dtrue and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization thenthe program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.",
+      "summary": "If SANITIZE\u003dtrue and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.",
       "name": "--MAX_DISCARD_FRACTION",
       "synonyms": "NA",
       "type": "double",
@@ -182,7 +182,7 @@
       "options": []
     },
     {
-      "summary": "The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.",
+      "summary": "The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -226,19 +226,19 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "Generate SAM files.",
           "name": "sam"
         },
         {
-          "summary": "",
+          "summary": "Generate BAM files.",
           "name": "bam"
         },
         {
-          "summary": "",
+          "summary": "Generate CRAM files.",
           "name": "cram"
         },
         {
-          "summary": "",
+          "summary": "Generate files based on the extention of INPUT.",
           "name": "dynamic"
         }
       ]

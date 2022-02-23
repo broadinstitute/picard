@@ -1,5 +1,5 @@
 {
-  "summary": "Subsets reads from a SAM or BAM file by applying one of several filters.\nTakes a SAM or BAM file and subsets it by either excluding or only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.\n\u003cbr /\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003ch4\u003eFilter by queryname\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\\u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       READ_LIST_FILE\u003dread_names.txt \\ \u003cbr /\u003e      FILTER\u003dincludeReadList\u003c/pre\u003e \u003ch4\u003eFilter by interval\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       INTERVAL_LIST\u003dregions.interval_list \\ \u003cbr/\u003e      FILTER\u003dincludePairedIntervals\u003c/pre\u003e \u003ch4\u003eFilter by Tag Value (type Z / String values only)\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       TAG\u003dCR \\ \u003cbr/\u003e      TAG_VALUE\u003dTTTGTCATCTCGAGTA \\ \u003cbr/\u003e      FILTER\u003dincludeTagValues\u003c/pre\u003e \u003ch4\u003eFilter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script\u003c/h4\u003e\u003cpre\u003ecat \u003c\u003cEOF \u003e script.js \u003cbr/\u003e/** reads having a soft clip larger than 2 bases in beginning of read*/ \u003cbr/\u003efunction accept(rec) {   \u003cbr/\u003e    if (rec.getReadUnmappedFlag()) return false; \u003cbr/\u003e    var cigar \u003d rec.getCigar(); \u003cbr/\u003e    if (cigar \u003d\u003d null) return false; \u003cbr/\u003e    var ce \u003d cigar.getCigarElement(0); \u003cbr/\u003e    return ce.getOperator().name() \u003d\u003d \"S\" \u0026\u0026 ce.length() \u003e 2; \u003cbr/\u003e} \u003cbr /\u003e\u003cbr /\u003eaccept(record); \u003cbr/\u003eEOF \u003cbr/\u003e\u003cbr/\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       JAVASCRIPT_FILE\u003dscript.js \\ \u003cbr/\u003e      FILTER\u003dincludeJavascript\u003c/pre\u003e ",
+  "summary": "Subsets reads from a SAM/BAM/CRAM file by applying one of several filters.\nTakes a SAM/BAM/CRAM file and subsets it by either excluding or only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.\n\u003cbr /\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003ch4\u003eFilter by queryname\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\\u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       READ_LIST_FILE\u003dread_names.txt \\ \u003cbr /\u003e      FILTER\u003dincludeReadList\u003c/pre\u003e \u003ch4\u003eFilter by interval\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       INTERVAL_LIST\u003dregions.interval_list \\ \u003cbr/\u003e      FILTER\u003dincludePairedIntervals\u003c/pre\u003e \u003ch4\u003eFilter by Tag Value (type Z / String values only)\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       TAG\u003dCR \\ \u003cbr/\u003e      TAG_VALUE\u003dTTTGTCATCTCGAGTA \\ \u003cbr/\u003e      FILTER\u003dincludeTagValues\u003c/pre\u003e \u003ch4\u003eFilter reads having a soft clip on the beginning of the read larger than 2 bases with a JavaScript script\u003c/h4\u003e\u003cpre\u003ecat \u003c\u003cEOF \u003e script.js \u003cbr/\u003e/** reads having a soft clip larger than 2 bases in beginning of read*/ \u003cbr/\u003efunction accept(rec) {   \u003cbr/\u003e    if (rec.getReadUnmappedFlag()) return false; \u003cbr/\u003e    var cigar \u003d rec.getCigar(); \u003cbr/\u003e    if (cigar \u003d\u003d null) return false; \u003cbr/\u003e    var ce \u003d cigar.getCigarElement(0); \u003cbr/\u003e    return ce.getOperator().name() \u003d\u003d \"S\" \u0026\u0026 ce.length() \u003e 2; \u003cbr/\u003e} \u003cbr /\u003e\u003cbr /\u003eaccept(record); \u003cbr/\u003eEOF \u003cbr/\u003e\u003cbr/\u003ejava -jar picard.jar FilterSamReads \\ \u003cbr /\u003e       I\u003dinput.bam \\ \u003cbr /\u003e       O\u003doutput.bam \\ \u003cbr /\u003e       JAVASCRIPT_FILE\u003dscript.js \\ \u003cbr/\u003e      FILTER\u003dincludeJavascript\u003c/pre\u003e ",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -76,35 +76,35 @@
       "kind": "required",
       "options": [
         {
-          "summary": "",
+          "summary": "Output aligned reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)",
           "name": "includeAligned"
         },
         {
-          "summary": "",
+          "summary": "Output Unmapped reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from OUTPUT.)",
           "name": "excludeAligned"
         },
         {
-          "summary": "",
+          "summary": "Output reads with names contained in READ_LIST_FILE. See READ_LIST_FILE for more detail.",
           "name": "includeReadList"
         },
         {
-          "summary": "",
+          "summary": "Output reads with names *not* contained in READ_LIST_FILE. See READ_LIST_FILE for more detail.",
           "name": "excludeReadList"
         },
         {
-          "summary": "",
+          "summary": "Output reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. See the JAVASCRIPT_FILE argument for more detail. ",
           "name": "includeJavascript"
         },
         {
-          "summary": "",
+          "summary": "Output reads that overlap with an interval from INTERVAL_LIST (and their mate). INPUT must be coordinate sorted.",
           "name": "includePairedIntervals"
         },
         {
-          "summary": "",
+          "summary": "Output reads that have a value of tag TAG that is contained in the values for TAG_VALUES",
           "name": "includeTagValues"
         },
         {
-          "summary": "",
+          "summary": "Output reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES",
           "name": "excludeTagValues"
         }
       ]
@@ -140,7 +140,7 @@
       "options": []
     },
     {
-      "summary": "The SAM or BAM file that will be filtered.",
+      "summary": "The SAM/BAM/CRAM file that will be filtered.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -200,7 +200,7 @@
       "options": []
     },
     {
-      "summary": "SAM or BAM file for resulting reads.",
+      "summary": "SAM/BAM/CRAM file for resulting reads.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -230,7 +230,7 @@
       "options": []
     },
     {
-      "summary": "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER\u003dincludeReadList or FILTER\u003dexcludeReadList.",
+      "summary": "File containing reads that will be included in or excluded from the OUTPUT SAM/BAM/CRAM file, when using FILTER\u003dincludeReadList or FILTER\u003dexcludeReadList.",
       "name": "--READ_LIST_FILE",
       "synonyms": "-RLF",
       "type": "File",

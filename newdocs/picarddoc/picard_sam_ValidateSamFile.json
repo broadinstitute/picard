@@ -1,5 +1,5 @@
 {
-  "summary": "Validates a SAM or BAM file.\u003cp\u003eThis tool reports on the validity of a SAM or BAM file relative to the SAM format specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper formatting, faulty alignments, incorrect flag values, etc. \u003c/p\u003e \u003cp\u003eBy default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout). Therefore, it is often more practical to run this tool initially using the MODE\u003dSUMMARY option.  This mode outputs a summary table listing the numbers of all \u0027errors\u0027 and \u0027warnings\u0027.\u003c/p\u003e \u003cp\u003eWhen fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful suggestions on error prioritization, please follow this link to obtain additional documentation on \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003eValidateSamFile\u003c/a\u003e.\u003c/p\u003e\u003cp\u003eAfter identifying and fixing your \u0027warnings/errors\u0027, we recommend that you rerun this tool to validate your SAM/BAM file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.\u003c/p\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003cpre\u003ejava -jar picard.jar ValidateSamFile \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      MODE\u003dSUMMARY\u003c/pre\u003e\u003cp\u003eTo obtain a complete list with descriptions of both \u0027ERROR\u0027 and \u0027WARNING\u0027 messages, please see our additional \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003edocumentation\u003c/a\u003e for this tool.\u003c/p\u003e\u003chr /\u003eReturn codes depend on the errors/warnings discovered:\u003cp\u003e-1 failed to complete execution\n0  ran successfully\n1  warnings but no errors\n2  errors and warnings\n3  errors but no warnings",
+  "summary": "Validates a SAM/BAM/CRAM file.\u003cp\u003eThis tool reports on the validity of a SAM/BAM/CRAM file relative to the SAM format specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper formatting, faulty alignments, incorrect flag values, etc. \u003c/p\u003e \u003cp\u003eBy default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout). Therefore, it is often more practical to run this tool initially using the MODE\u003dSUMMARY option.  This mode outputs a summary table listing the numbers of all \u0027errors\u0027 and \u0027warnings\u0027.\u003c/p\u003e \u003cp\u003eWhen fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful suggestions on error prioritization, please follow this link to obtain additional documentation on \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003eValidateSamFile\u003c/a\u003e.\u003c/p\u003e\u003cp\u003eAfter identifying and fixing your \u0027warnings/errors\u0027, we recommend that you rerun this tool to validate your SAM/BAM file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.\u003c/p\u003e\u003ch3\u003eUsage example:\u003c/h3\u003e\u003cpre\u003ejava -jar picard.jar ValidateSamFile \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      MODE\u003dSUMMARY\u003c/pre\u003e\u003cp\u003eTo obtain a complete list with descriptions of both \u0027ERROR\u0027 and \u0027WARNING\u0027 messages, please see our additional \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d7571\u0027\u003edocumentation\u003c/a\u003e for this tool.\u003c/p\u003e\u003chr /\u003eReturn codes depend on the errors/warnings discovered:\u003cp\u003e-1 failed to complete execution\n0  ran successfully\n1  warnings but no errors\n2  errors and warnings\n3  errors but no warnings",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -104,7 +104,276 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "INVALID_QUALITY_FORMAT"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_PROPER_PAIR"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_MATE_UNMAPPED"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_FLAG_MATE_UNMAPPED"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_MATE_NEG_STRAND"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_FLAG_MATE_NEG_STRAND"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_FIRST_OF_PAIR"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_SECOND_OF_PAIR"
+        },
+        {
+          "summary": "",
+          "name": "PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_NOT_PRIM_ALIGNMENT"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_FLAG_READ_UNMAPPED"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_INSERT_SIZE"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_MAPPING_QUALITY"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_CIGAR"
+        },
+        {
+          "summary": "",
+          "name": "ADJACENT_INDEL_IN_CIGAR"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_MATE_REF_INDEX"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_MATE_REF_INDEX"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_REFERENCE_INDEX"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_ALIGNMENT_START"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_MATE_ALIGNMENT_START"
+        },
+        {
+          "summary": "",
+          "name": "MATE_FIELD_MISMATCH"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_TAG_NM"
+        },
+        {
+          "summary": "",
+          "name": "MISSING_TAG_NM"
+        },
+        {
+          "summary": "",
+          "name": "MISSING_HEADER"
+        },
+        {
+          "summary": "",
+          "name": "MISSING_SEQUENCE_DICTIONARY"
+        },
+        {
+          "summary": "",
+          "name": "MISSING_READ_GROUP"
+        },
+        {
+          "summary": "",
+          "name": "RECORD_OUT_OF_ORDER"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP_NOT_FOUND"
+        },
+        {
+          "summary": "",
+          "name": "RECORD_MISSING_READ_GROUP"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_INDEXING_BIN"
+        },
+        {
+          "summary": "",
+          "name": "MISSING_VERSION_NUMBER"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_VERSION_NUMBER"
+        },
+        {
+          "summary": "",
+          "name": "TRUNCATED_FILE"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_READ_LENGTH_AND_QUALS_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "EMPTY_READ"
+        },
+        {
+          "summary": "",
+          "name": "CIGAR_MAPS_OFF_REFERENCE"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_READ_LENGTH_AND_E2_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_READ_LENGTH_AND_U2_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "E2_BASE_EQUALS_PRIMARY_BASE"
+        },
+        {
+          "summary": "",
+          "name": "BAM_FILE_MISSING_TERMINATOR_BLOCK"
+        },
+        {
+          "summary": "",
+          "name": "UNRECOGNIZED_HEADER_TYPE"
+        },
+        {
+          "summary": "",
+          "name": "POORLY_FORMATTED_HEADER_TAG"
+        },
+        {
+          "summary": "",
+          "name": "HEADER_TAG_MULTIPLY_DEFINED"
+        },
+        {
+          "summary": "",
+          "name": "HEADER_RECORD_MISSING_REQUIRED_TAG"
+        },
+        {
+          "summary": "",
+          "name": "HEADER_TAG_NON_CONFORMING_VALUE"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_DATE_STRING"
+        },
+        {
+          "summary": "",
+          "name": "TAG_VALUE_TOO_LARGE"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_INDEX_FILE_POINTER"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_PREDICTED_MEDIAN_INSERT_SIZE"
+        },
+        {
+          "summary": "",
+          "name": "DUPLICATE_READ_GROUP_ID"
+        },
+        {
+          "summary": "",
+          "name": "MISSING_PLATFORM_VALUE"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_PLATFORM_VALUE"
+        },
+        {
+          "summary": "",
+          "name": "DUPLICATE_PROGRAM_GROUP_ID"
+        },
+        {
+          "summary": "",
+          "name": "MATE_NOT_FOUND"
+        },
+        {
+          "summary": "",
+          "name": "MATES_ARE_SAME_END"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_MATE_CIGAR_STRING"
+        },
+        {
+          "summary": "",
+          "name": "MATE_CIGAR_STRING_INVALID_PRESENCE"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_UNPAIRED_MATE_REFERENCE"
+        },
+        {
+          "summary": "",
+          "name": "INVALID_UNALIGNED_MATE_START"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_CIGAR_SEQ_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_SEQ_QUAL_LENGTH"
+        },
+        {
+          "summary": "",
+          "name": "MISMATCH_FILE_SEQ_DICT"
+        },
+        {
+          "summary": "",
+          "name": "QUALITY_NOT_STORED"
+        },
+        {
+          "summary": "",
+          "name": "DUPLICATE_SAM_TAG"
+        },
+        {
+          "summary": "",
+          "name": "CG_TAG_FOUND_IN_ATTRIBUTES"
+        },
+        {
+          "summary": "",
+          "name": "REF_SEQ_TOO_LONG_FOR_BAI"
+        }
+      ]
     },
     {
       "summary": "If true, only report errors and ignore warnings.",
@@ -150,7 +419,7 @@
       ]
     },
     {
-      "summary": "Input SAM/BAM file",
+      "summary": "Input SAM/BAM/CRAM file",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -165,7 +434,7 @@
       "options": []
     },
     {
-      "summary": "Whether the SAM or BAM file consists of bisulfite sequenced reads. If so, C-\u003eT is not counted as an error in computing the value of the NM tag.",
+      "summary": "Whether the input file consists of bisulfite sequenced reads. If so, C-\u003eT is not counted as an error in computing the value of the NM tag.",
       "name": "--IS_BISULFITE_SEQUENCED",
       "synonyms": "-BISULFITE",
       "type": "boolean",

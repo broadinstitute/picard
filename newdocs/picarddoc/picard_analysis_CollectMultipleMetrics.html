@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -884,6 +887,19 @@
 			<b>The level(s) at which to accumulate metrics.</b><br />
 			
 		</p>
+			<p>
+				The --METRIC_ACCUMULATION_LEVEL argument is an enumerated type (Set[MetricAccumulationLevel]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ALL_READS</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SAMPLE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LIBRARY</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">READ_GROUP</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">Set[MetricAccumulationLevel]</span>
 			&nbsp;<span class="label">[ALL_READS]</span>
@@ -909,6 +925,29 @@
 			<b>Set of metrics programs to apply during the pass through the SAM file.</b><br />
 			
 		</p>
+			<p>
+				The --PROGRAM argument is an enumerated type (Set[Program]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">CollectAlignmentSummaryMetrics</dt>
+					<dd class="enum"><b>Produces a summary of alignment metrics from a SAM or BAM file.</b>  Creates output with ".alignment_summary_metrics, .read_length_histogram.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">CollectInsertSizeMetrics</dt>
+					<dd class="enum">Collect metrics about the insert size distribution of a paired-end library. Creates output with ".insert_size_metrics, .insert_size_histogram.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">QualityScoreDistribution</dt>
+					<dd class="enum">Chart the distribution of quality scores.  Creates output with ".quality_distribution_metrics, .quality_distribution.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">MeanQualityByCycle</dt>
+					<dd class="enum">Collect mean quality by cycle.Creates output with ".quality_by_cycle_metrics, .quality_by_cycle.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">CollectBaseDistributionByCycle</dt>
+					<dd class="enum">Chart the nucleotide distribution per cycle in a SAM or BAM fileCreates output with ".base_distribution_by_cycle_metrics, .base_distribution_by_cycle.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">CollectGcBiasMetrics</dt>
+					<dd class="enum">Collect metrics regarding GC bias. Creates output with ".gc_bias.detail_metrics, .gc_bias.summary_metrics, .gc_bias.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">RnaSeqMetrics</dt>
+					<dd class="enum">Produces RNA alignment metrics for a SAM or BAM file.  Creates output with ".rna_metrics, .rna_coverage.pdf" appended to OUTPUT.</dd>
+					<dt class="enum">CollectSequencingArtifactMetrics</dt>
+					<dd class="enum">Collect metrics to quantify single-base sequencing artifacts.  Creates output with ".bait_bias_detail_metrics, .bait_bias_summary_metrics, .pre_adapter_detail_metrics, .pre_adapter_summary_metrics, .error_summary_metrics" appended to OUTPUT.</dd>
+					<dt class="enum">CollectQualityYieldMetrics</dt>
+					<dd class="enum">Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  Creates output with ".quality_yield_metrics" appended to OUTPUT.</dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">Set[Program]</span>
 			&nbsp;<span class="label">[CollectAlignmentSummaryMetrics, CollectBaseDistributionByCycle, CollectInsertSizeMetrics, MeanQualityByCycle, QualityScoreDistribution]</span>
@@ -1081,7 +1120,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -433,7 +436,7 @@
 		<h1>PositionBasedDownsampleSam</h1>
 
 		<p class="lead"><h3>Summary</h3>
-Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the reads with the same queryname are either kept or dropped as a unit.
+Class to downsample a SAM/BAM/CRAM file based on the position of the read in a flowcell. As with DownsampleSam, all the reads with the same queryname are either kept or dropped as a unit.
 
  <h3>Details</h3>
 The downsampling is _not_ random (and there is no random seed). It is deterministically determined by the position of each read within its tile. Specifically, it draws an ellipse that covers a FRACTION of the total tile's area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the same for all of them. The main concern of this downsampling method is that due to "optical duplicates" downsampling randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except for reads near the boundary of the circle) optical duplicates are kept or dropped as a group. By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See DEFAULT_READ_NAME_REGEX for more detail. The program traverses the INPUT twice: first to find out the size of each of the tiles, and next to perform the downsampling. Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated after downsampling. Thus, the default setting also removes the duplicate information. 
@@ -546,7 +549,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The input SAM or BAM file to downsample.</td>
+					<td>The input SAM/BAM/CRAM file to downsample.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -554,7 +557,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output, downsampled, SAM or BAM file.</td>
+					<td>The output, downsampled, SAM/BAM/CRAM file.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -818,7 +821,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The input SAM or BAM file to downsample.</b><br />
+			<b>The input SAM/BAM/CRAM file to downsample.</b><br />
 			
 		</p>
 		<p>
@@ -845,7 +848,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output, downsampled, SAM or BAM file.</b><br />
+			<b>The output, downsampled, SAM/BAM/CRAM file.</b><br />
 			
 		</p>
 		<p>
@@ -1031,7 +1034,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

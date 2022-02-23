@@ -1,5 +1,5 @@
 {
-  "summary": "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  \u003cp\u003e For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.\u003c/p\u003e\u003cp\u003e For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary alignment flag. This ordering may change in future versions. \u003c/p\u003e\u003chr /\u003e\u003chr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar SortSam \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003dsorted.bam \\\u003cbr /\u003e      SORT_ORDER\u003dcoordinate\u003c/pre\u003e",
+  "summary": "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM record. The SortOrder of a SAM/BAM/CRAM file is found in the SAM file header tag @HD in the field labeled SO.  \u003cp\u003e For a coordinate sorted SAM/BAM/CRAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.\u003c/p\u003e\u003cp\u003e For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary alignment flag. This ordering may change in future versions. \u003c/p\u003e\u003chr /\u003e\u003chr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar SortSam \\\u003cbr /\u003e      I\u003dinput.bam \\\u003cbr /\u003e      O\u003dsorted.bam \\\u003cbr /\u003e      SORT_ORDER\u003dcoordinate\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -92,7 +92,7 @@
       "options": []
     },
     {
-      "summary": "Input BAM or SAM file to sort.",
+      "summary": "The SAM, BAM or CRAM file to sort.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -122,7 +122,7 @@
       "options": []
     },
     {
-      "summary": "Sorted BAM or SAM output file.",
+      "summary": "The sorted SAM, BAM or CRAM output file. ",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -196,15 +196,15 @@
       "kind": "required",
       "options": [
         {
-          "summary": "",
+          "summary": "Sorts according to the readname. This will place read-pairs and other derived reads (secondary and supplementary) adjacent to each other. Note that the readnames are compared lexicographically, even though they may include numbers. In paired reads, Read1 sorts before Read2.",
           "name": "queryname"
         },
         {
-          "summary": "",
+          "summary": "Sorts primarily according to the SEQ and POS fields of the record. The sequence will sorted according to the order in the sequence dictionary, taken from from the header of the file. Within each reference sequence, the reads are sorted by the position. Unmapped reads whose mates are mapped will be placed near their mates. Unmapped read-pairs are placed after all the mapped reads and their mates.",
           "name": "coordinate"
         },
         {
-          "summary": "",
+          "summary": "Sorts the reads so that duplicates reads are adjacent. Required that the mate-cigar (MC) tag is present. The resulting will be sorted by library, unclipped 5-prime position, orientation, and mate\u0027s unclipped 5-prime position.",
           "name": "duplicate"
         }
       ]

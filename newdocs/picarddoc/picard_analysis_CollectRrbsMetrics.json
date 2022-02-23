@@ -122,7 +122,7 @@
       "options": []
     },
     {
-      "summary": "The BAM or SAM file containing aligned reads. Must be coordinate sorted",
+      "summary": "The SAM/BAM/CRAM file containing aligned reads. Must be coordinate sorted",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -179,7 +179,24 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "ALL_READS"
+        },
+        {
+          "summary": "",
+          "name": "SAMPLE"
+        },
+        {
+          "summary": "",
+          "name": "LIBRARY"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP"
+        }
+      ]
     },
     {
       "summary": "Base name for output files",

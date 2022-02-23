@@ -182,7 +182,7 @@
       "options": []
     },
     {
-      "summary": "An aligned SAM or BAM file.",
+      "summary": "An aligned SAM/BAM/CRAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -224,7 +224,24 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "ALL_READS"
+        },
+        {
+          "summary": "",
+          "name": "SAMPLE"
+        },
+        {
+          "summary": "",
+          "name": "LIBRARY"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP"
+        }
+      ]
     },
     {
       "summary": "Minimum base quality for a base to contribute coverage.",

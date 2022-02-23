@@ -239,7 +239,20 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "FR"
+        },
+        {
+          "summary": "",
+          "name": "RF"
+        },
+        {
+          "summary": "",
+          "name": "TANDEM"
+        }
+      ]
     },
     {
       "summary": "Google Genomics API client_secrets.json file path.",
@@ -436,19 +449,19 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "Expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner.",
           "name": "BestMapq"
         },
         {
-          "summary": "",
+          "summary": "Prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads.",
           "name": "EarliestFragment"
         },
         {
-          "summary": "",
+          "summary": "Appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.",
           "name": "BestEndMapq"
         },
         {
-          "summary": "",
+          "summary": "Appropriate for a non-pair-aware aligner. Picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ. ",
           "name": "MostDistant"
         }
       ]

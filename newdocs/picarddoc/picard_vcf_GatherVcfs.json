@@ -332,7 +332,7 @@
       "options": []
     }
   ],
-  "description": "Simple little class that combines multiple VCFs that have exactly the same set of samples\n and totally discrete sets of loci.",
+  "description": "Simple little class that combines multiple VCFs that have exactly the same set of samples\n and nonoverlapping sets of loci.",
   "name": "GatherVcfs",
   "group": "Variant Manipulation",
   "beta": false,

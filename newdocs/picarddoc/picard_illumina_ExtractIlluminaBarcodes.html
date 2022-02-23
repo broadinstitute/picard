@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -498,17 +501,9 @@
 					<td><a href="#--LANE">--LANE</a><br />
 								&nbsp;<em>-L</em>
 					</td>
-					<!--<td>Integer</td> -->
-					<td>null</td>
-					<td>Lane number. </td>
-				</tr>
-				<tr>
-					<td><a href="#--METRICS_FILE">--METRICS_FILE</a><br />
-								&nbsp;<em>-M</em>
-					</td>
-					<!--<td>File</td> -->
-					<td>null</td>
-					<td>Per-barcode and per-lane metrics written to this file.</td>
+					<!--<td>List[Integer]</td> -->
+					<td>[]</td>
+					<td>Lane number. This can be specified multiple times. Reads with the same index in multiple lanes will be added to the same output file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--READ_STRUCTURE">--READ_STRUCTURE</a><br />
@@ -540,7 +535,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.</td>
+					<td>Compress output FASTQ files using gzip and append a .gz extension to the file names.</td>
 				</tr>
 				<tr>
 					<td><a href="#--DISTANCE_MODE">--DISTANCE_MODE</a><br />
@@ -558,6 +553,13 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>display the help message</td>
 				</tr>
 				<tr>
+					<td><a href="#--INPUT_PARAMS_FILE">--INPUT_PARAMS_FILE</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>The input file that defines parameters for the program. This is the BARCODE_FILE for `ExtractIlluminaBarcodes` or the MULTIPLEX_PARAMS or LIBRARY_PARAMS file for `IlluminaBasecallsToFastq`  or `IlluminaBasecallsToSam`</td>
+				</tr>
+				<tr>
 					<td><a href="#--MAX_MISMATCHES">--MAX_MISMATCHES</a><br />
 					</td>
 					<!--<td>int</td> -->
@@ -570,6 +572,14 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>int</td> -->
 					<td>2</td>
 					<td>Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.</td>
+				</tr>
+				<tr>
+					<td><a href="#--METRICS_FILE">--METRICS_FILE</a><br />
+								&nbsp;<em>-M</em>
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Per-barcode and per-lane metrics written to this file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MIN_MISMATCH_DELTA">--MIN_MISMATCH_DELTA</a><br />
@@ -591,7 +601,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					</td>
 					<!--<td>int</td> -->
 					<td>2</td>
-					<td>The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown.The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.</td>
+					<td>The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown. The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.</td>
 				</tr>
 				<tr>
 					<td><a href="#--NUM_PROCESSORS">--NUM_PROCESSORS</a><br />
@@ -777,7 +787,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>-GZIP</small>
 		</h3>
 		<p class="args">
-			<b>Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.</b><br />
+			<b>Compress output FASTQ files using gzip and append a .gz extension to the file names.</b><br />
 			
 		</p>
 		<p>
@@ -834,11 +844,11 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 				The --DISTANCE_MODE argument is an enumerated type (DistanceMetric), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">HAMMING</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Hamming distance: The n-th base in the read is compared against the n-th base in the barcode. Unequal bases and low quality bases are considered mismatches. No-call read-bases are not considered mismatches. </dd>
 					<dt class="enum">LENIENT_HAMMING</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Leniant Hamming distance: The n-th base in the read is compared against the n-th base in the barcode. Unequal bases are considered mismatches. No-call read-bases, or those with low quality are not considered mismatches.</dd>
 					<dt class="enum">FREE</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">FREE Metric: A Levenshtein-like metric that performs a simple Smith-Waterman with mismatch, gap open, and gap extend costs all equal to 1. Insertions or deletions at the ends of the read or barcode do not count toward the distance. No-call read-bases, or those with low quality are not considered mismatches.</dd>
 			</dl>
 			</p>
 		<p>
@@ -870,17 +880,29 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--INPUT_PARAMS_FILE">--INPUT_PARAMS_FILE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>The input file that defines parameters for the program. This is the BARCODE_FILE for `ExtractIlluminaBarcodes` or the MULTIPLEX_PARAMS or LIBRARY_PARAMS file for `IlluminaBasecallsToFastq`  or `IlluminaBasecallsToSam`</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--LANE">--LANE </a>
 			 / <small>-L</small>
 		</h3>
 		<p class="args">
-			<b>Lane number. </b><br />
+			<b>Lane number. This can be specified multiple times. Reads with the same index in multiple lanes will be added to the same output file.</b><br />
 			
 		</p>
 		<p>
 				<span class="badge badge-important">R</span>
-		<span class="label label-info ">Integer</span>
-			&nbsp;<span class="label">null</span>
+		<span class="label label-info ">List[Integer]</span>
+			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_MISMATCHES">--MAX_MISMATCHES </a>
@@ -933,7 +955,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			
 		</p>
 		<p>
-				<span class="badge badge-important">R</span>
 		<span class="label label-info ">File</span>
 			&nbsp;<span class="label">null</span>
 		</p>
@@ -970,7 +991,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown.The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.</b><br />
+			<b>The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown. The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.</b><br />
 			
 		</p>
 		<p>
@@ -1166,7 +1187,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

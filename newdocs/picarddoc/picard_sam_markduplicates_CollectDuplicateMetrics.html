@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -463,7 +466,7 @@ This tool only collects the duplicate metrics from a file that has already been 
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Input SAM or BAM file.</td>
+					<td>Input SAM/BAM/CRAM file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--METRICS_FILE">--METRICS_FILE</a><br />
@@ -709,7 +712,7 @@ This tool only collects the duplicate metrics from a file that has already been 
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Input SAM or BAM file.</b><br />
+			<b>Input SAM/BAM/CRAM file.</b><br />
 			
 		</p>
 		<p>
@@ -900,7 +903,7 @@ This tool only collects the duplicate metrics from a file that has already been 
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

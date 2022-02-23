@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,14 +435,14 @@
 
 		<h1>RevertOriginalBaseQualitiesAndAddMateCigar</h1>
 
-		<p class="lead">Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.</p>
+		<p class="lead">Reverts the original base qualities and adds the mate cigar tag to read-group files.</p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped BAMs.
+		This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped SAM, BAM or CRAM files.
  If the file does not have OQs and already has mate cigar tags, nothing is done.
  New BAM/BAI/MD5 files are created.
 
@@ -464,7 +467,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The input SAM/BAM file to revert the state of.</td>
+					<td>The input SAM/BAM/CRAM file to revert the state of.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -472,7 +475,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The output SAM/BAM file to create.</td>
+					<td>The output SAM/BAM/CRAM file to create.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -706,7 +709,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The input SAM/BAM file to revert the state of.</b><br />
+			<b>The input SAM/BAM/CRAM file to revert the state of.</b><br />
 			
 		</p>
 		<p>
@@ -747,7 +750,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The output SAM/BAM file to create.</b><br />
+			<b>The output SAM/BAM/CRAM file to create.</b><br />
 			
 		</p>
 		<p>
@@ -936,7 +939,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

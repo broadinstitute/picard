@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>CollectIlluminaLaneMetrics</h1>
 
-		<p class="lead">Collects Illumina lane metrics for the given BaseCalling analysis directory.  This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell.  This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics.  In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.<h4>Usage example:</h4><pre>java -jar picard.jar CollectIlluminaLaneMetrics \<br />      RUN_DIR=test_run \<br />      OUTPUT_DIRECTORY=Lane_output_metrics \<br />      OUTPUT_PREFIX=experiment1 \<br />      READ_STRUCTURE=25T8B25T </pre><p>Please see the CollectIlluminaLaneMetrics <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectIlluminaLaneMetrics'>definitions</a> for a complete description of the metrics produced by this tool.</p><hr /></p>
+		<p class="lead">Collects Illumina lane metrics for the given BaseCalling analysis directory.This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell. This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics. In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.<h4>Usage example:</h4><pre>java -jar picard.jar CollectIlluminaLaneMetrics \<br />      RUN_DIR=test_run \<br />      OUTPUT_DIRECTORY=Lane_output_metrics \<br />      OUTPUT_PREFIX=experiment1 \<br />      READ_STRUCTURE=25T8B25T </pre><p>Please see the CollectIlluminaLaneMetrics <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectIlluminaLaneMetrics'>definitions</a> for a complete description of the metrics produced by this tool.</p><hr /></p>
 
 			<h3>Category
 				<small> Base Calling</small>
@@ -626,16 +629,6 @@ If not given, will use the RunInfo.xml in the run directory.</td>
 					<td>false</td>
 					<td>display hidden arguments</td>
 				</tr>
-			<tr>
-				<th colspan="4" id="row-divider">Deprecated Arguments</th>
-			</tr>
-				<tr>
-					<td><a href="#--IS_NOVASEQ">--IS_NOVASEQ</a><br />
-					</td>
-					<!--<td>boolean</td> -->
-					<td>false</td>
-					<td>Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)</td>
-				</tr>
 					</tbody>
 				</table>
 
@@ -721,18 +714,6 @@ If not given, will use the RunInfo.xml in the run directory.</td>
 		</h3>
 		<p class="args">
 			<b>display the help message</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">boolean</span>
-			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--IS_NOVASEQ">--IS_NOVASEQ </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)</b><br />
 			
 		</p>
 		<p>
@@ -953,7 +934,7 @@ If not given, will use the RunInfo.xml in the run directory.</b><br />
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

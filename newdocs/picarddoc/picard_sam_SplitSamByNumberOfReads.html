@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>SplitSamByNumberOfReads</h1>
 
-		<p class="lead">Splits a SAM or BAM file to multiple BAMs.This tool splits the input query-grouped SAM/BAM file into multiple BAM files while maintaining the sort order. This can be used to split a large unmapped BAM in order to parallelize alignment. It will traverse the bam twice unless TOTAL_READS_IN_INPUT is provided.<br /><h4>Usage example:</h4><pre>java -jar picard.jar SplitSamByNumberOfReads \<br />     I=paired_unmapped_input.bam \<br />     OUTPUT=out_dir \ <br />     TOTAL_READS_IN_INPUT=800000000 \ <br />     SPLIT_TO_N_READS=48000000</pre><hr /></p>
+		<p class="lead">Splits a SAM/BAM/CRAM file to multiple files.This tool splits the input query-grouped SAM/BAM/CRAM file into multiple files while maintaining the sort order. This can be used to split a large unmapped input in order to parallelize alignment. It will traverse the input twice unless TOTAL_READS_IN_INPUT is provided. Output type (and extension) will agreewith that of the input.<br /><h4>Usage example:</h4><pre>java -jar picard.jar SplitSamByNumberOfReads \<br />     I=paired_unmapped_input.bam \<br />     OUTPUT=out_dir \ <br />     TOTAL_READS_IN_INPUT=800000000 \ <br />     SPLIT_TO_N_READS=48000000</pre><hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -440,7 +443,7 @@
 		<hr>
 		<h2>Overview</h2>
 		<p/>
- Splits the input queryname sorted or query-grouped SAM/BAM file and writes it into
+ Splits the input queryname sorted or query-grouped SAM/BAM/CRAM file and writes it into
  multiple BAM files, each with an approximately equal number of reads. This will retain the sort order
  within each output BAM and if the BAMs are concatenated in order (output files are named
  numerically) the order of the reads will match the original BAM. It will traverse the bam twice unless
@@ -467,7 +470,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Input SAM/BAM file to split</td>
+					<td>Input SAM/BAM/CRAM file to split</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -500,7 +503,7 @@
 					</td>
 					<!--<td>String</td> -->
 					<td>shard</td>
-					<td>Output files will be named <OUT_PREFIX>_N.bam, where N enumerates the output file.</td>
+					<td>Output files will be named <OUT_PREFIX>_N.EXT, where N enumerates the output file and EXT is the same as that of the input.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SPLIT_TO_N_FILES">--SPLIT_TO_N_FILES</a><br />
@@ -717,7 +720,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Input SAM/BAM file to split</b><br />
+			<b>Input SAM/BAM/CRAM file to split</b><br />
 			
 		</p>
 		<p>
@@ -744,7 +747,7 @@
 			 / <small>-OUT_PREFIX</small>
 		</h3>
 		<p class="args">
-			<b>Output files will be named <OUT_PREFIX>_N.bam, where N enumerates the output file.</b><br />
+			<b>Output files will be named <OUT_PREFIX>_N.EXT, where N enumerates the output file and EXT is the same as that of the input.</b><br />
 			
 		</p>
 		<p>
@@ -950,7 +953,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

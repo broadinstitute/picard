@@ -89,7 +89,28 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "Position"
+        },
+        {
+          "summary": "",
+          "name": "BaseCalls"
+        },
+        {
+          "summary": "",
+          "name": "QualityScores"
+        },
+        {
+          "summary": "",
+          "name": "PF"
+        },
+        {
+          "summary": "",
+          "name": "Barcodes"
+        }
+      ]
     },
     {
       "summary": "A flag to determine whether or not to create fake versions of the missing files.",

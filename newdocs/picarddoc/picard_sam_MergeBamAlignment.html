@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -1110,6 +1113,17 @@ This tool has been developing for a while and many arguments have been added to 
 			
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>JUMP_SIZE</code>.</p>
+			<p>
+				The --EXPECTED_ORIENTATIONS argument is an enumerated type (List[PairOrientation]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">FR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">RF</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">TANDEM</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">List[PairOrientation]</span>
 			&nbsp;<span class="label">[]</span>
@@ -1278,13 +1292,13 @@ This tool has been developing for a while and many arguments have been added to 
 				The --PRIMARY_ALIGNMENT_STRATEGY argument is an enumerated type (PrimaryAlignmentStrategy), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">BestMapq</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner.</dd>
 					<dt class="enum">EarliestFragment</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads.</dd>
 					<dt class="enum">BestEndMapq</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.</dd>
 					<dt class="enum">MostDistant</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Appropriate for a non-pair-aware aligner. Picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ. </dd>
 			</dl>
 			</p>
 		<p>
@@ -1613,7 +1627,7 @@ This tool has been developing for a while and many arguments have been added to 
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

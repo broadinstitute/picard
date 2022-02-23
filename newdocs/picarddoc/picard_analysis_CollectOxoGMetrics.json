@@ -152,7 +152,7 @@
       "options": []
     },
     {
-      "summary": "Input BAM file for analysis.",
+      "summary": "Input SAM/BAM/CRAM file for analysis.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",

@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>MarkDuplicates</h1>
 
-		<p class="lead">Identifies duplicate reads.  <p>This tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are defined as originating from a single fragment of DNA.  Duplicates can arise during sample preparation e.g. library construction using PCR.  See also <a href='https://broadinstitute.github.io/picard/command-line-overview.html#EstimateLibraryComplexity'>EstimateLibraryComplexity</a> for additional notes on PCR duplication artifacts.  Duplicate reads can also result from a single amplification cluster, incorrectly detected as multiple clusters by the optical sensor of the sequencing instrument.  These duplication artifacts are referred to as optical duplicates.</p><p>The MarkDuplicates tool works by comparing sequences in the 5 prime positions of both reads and read-pairs in a SAM/BAM file.  An BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are collected, the tool differentiates the primary and duplicate reads using an algorithm that ranks reads by the sums of their base-quality scores (default method).</p>  <p>The tool's main output is a new SAM or BAM file, in which duplicates have been identified in the SAM flags field for each read.  Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024.  If you are not familiar with this type of annotation, please see the following <a href='https://www.broadinstitute.org/gatk/blog?id=7019'>blog post</a> for additional information.</p><p>Although the bitwise flag annotation indicates whether a read was marked as a duplicate, it does not identify the type of duplicate.  To do this, a new tag called the duplicate type (DT) tag was recently added as an optional output in  the 'optional field' section of a SAM/BAM file.  Invoking the TAGGING_POLICY option, you can instruct the program to mark all the duplicates (All), only the optical duplicates (OpticalOnly), or no duplicates (DontTag).  The records within the output of a SAM/BAM file will have values for the 'DT' tag (depending on the invoked TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or sequencing-platform artifact duplicates (SQ).  This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary methods to identify and differentiate duplicate types.  Set READ_NAME_REGEX to null to skip optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim.  Note that without optical duplicate counts, library size estimation will be inaccurate.</p> <p>MarkDuplicates also produces a metrics file indicating the numbers of duplicates for both single- and paired-end reads.</p>  <p>The program can take either coordinate-sorted or query-sorted inputs, however the behavior is slightly different.  When the input is coordinate-sorted, unmapped mates of mapped records and supplementary/secondary alignments are not marked as duplicates.  However, when the input is query-sorted (actually query-grouped), then unmapped mates and secondary/supplementary reads are not excluded from the duplication test and can be marked as duplicate reads.</p>  <p>If desired, duplicates can be removed using the REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES options.</p><h4>Usage example:</h4><pre>java -jar picard.jar MarkDuplicates \<br />      I=input.bam \<br />      O=marked_duplicates.bam \<br />      M=marked_dup_metrics.txt</pre>Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#DuplicationMetrics'>MarkDuplicates</a> for detailed explanations of the output metrics.<hr /></p>
+		<p class="lead">Identifies duplicate reads.  <p>This tool locates and tags duplicate reads in a SAM, BAM or CRAM file, where duplicate reads are defined as originating from a single fragment of DNA.  Duplicates can arise during sample preparation e.g. library construction using PCR.  See also <a href='https://broadinstitute.github.io/picard/command-line-overview.html#EstimateLibraryComplexity'>EstimateLibraryComplexity</a> for additional notes on PCR duplication artifacts.  Duplicate reads can also result from a single amplification cluster, incorrectly detected as multiple clusters by the optical sensor of the sequencing instrument.  These duplication artifacts are referred to as optical duplicates.</p><p>The MarkDuplicates tool works by comparing sequences in the 5 prime positions of both reads and read-pairs in a SAM/BAM file.  A BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are collected, the tool differentiates the primary and duplicate reads using an algorithm that ranks reads by the sums of their base-quality scores (default method). Note that this is different from directly checking if the sequences match, which MarkDuplicates does not do.</p>  <p>The tool's main output is a new SAM, BAM or CRAM file, in which duplicates have been identified in the SAM flags field for each read.  Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024.  If you are not familiar with this type of annotation, please see the following <a href='https://www.broadinstitute.org/gatk/blog?id=7019'>blog post</a> for additional information.</p><p>Although the bitwise flag annotation indicates whether a read was marked as a duplicate, it does not identify the type of duplicate.  To do this, a new tag called the duplicate type (DT) tag was recently added as an optional output in  the 'optional field' section of a SAM/BAM/CRAM file.  Invoking the TAGGING_POLICY option, you can instruct the program to mark all the duplicates (All), only the optical duplicates (OpticalOnly), or no duplicates (DontTag).  The records within the output of a SAM/BAM/CRAM file will have values for the 'DT' tag (depending on the invoked TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or sequencing-platform artifact duplicates (SQ).  This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary methods to identify and differentiate duplicate types.  Set READ_NAME_REGEX to null to skip optical duplicate detection, e.g. for RNA-seq or other data where duplicate sets are extremely large and estimating library complexity is not an aim.  Note that without optical duplicate counts, library size estimation will be inaccurate.</p> <p>MarkDuplicates also produces a metrics file indicating the numbers of duplicates for both single- and paired-end reads.</p>  <p>The program can take either coordinate-sorted or query-sorted inputs, however the behavior is slightly different.  When the input is coordinate-sorted, unmapped mates of mapped records and supplementary/secondary alignments are not marked as duplicates.  However, when the input is query-sorted (actually query-grouped), then unmapped mates and secondary/supplementary reads are not excluded from the duplication test and can be marked as duplicate reads.</p>  <p>If desired, duplicates can be removed using the REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES options.</p><h4>Usage example:</h4><pre>java -jar picard.jar MarkDuplicates \<br />      I=input.bam \<br />      O=marked_duplicates.bam \<br />      M=marked_dup_metrics.txt</pre>Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#DuplicationMetrics'>MarkDuplicates</a> for detailed explanations of the output metrics.<hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -463,7 +466,7 @@
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
-					<td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.</td>
+					<td>One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.</td>
 				</tr>
 				<tr>
 					<td><a href="#--METRICS_FILE">--METRICS_FILE</a><br />
@@ -1002,7 +1005,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>One or more input SAM or BAM files to analyze. Must be coordinate sorted.</b><br />
+			<b>One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.</b><br />
 			
 		</p>
 		<p>
@@ -1418,7 +1421,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

@@ -1,5 +1,5 @@
 {
-  "summary": "Merges multiple SAM and/or BAM files into a single file.  This tool is used for combining SAM and/or BAM files from different runs or read groups into a single file, similarly to the \"merge\" function of Samtools (http://www.htslib.org/doc/samtools.html).  \u003cbr /\u003e\u003cbr /\u003eNote that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be unique. For more information about read groups, see the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6472\u0027\u003eGATK Dictionary entry.\u003c/a\u003e \u003cbr /\u003e\u003cbr /\u003e\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MergeSamFiles \\\u003cbr /\u003e      I\u003dinput_1.bam \\\u003cbr /\u003e      I\u003dinput_2.bam \\\u003cbr /\u003e      O\u003doutput_merged_files.bam\u003c/pre\u003e\u003chr /\u003e",
+  "summary": "Merges multiple SAM/BAM/CRAM (and/or) files into a single file.  This tool is used for combining SAM/BAM/CRAM (and/or) files from different runs or read groups into a single file, similarly to the \"merge\" function of Samtools (http://www.htslib.org/doc/samtools.html).  \u003cbr /\u003e\u003cbr /\u003eNote that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be unique. For more information about read groups, see the \u003ca href\u003d\u0027https://www.broadinstitute.org/gatk/guide/article?id\u003d6472\u0027\u003eGATK Dictionary entry.\u003c/a\u003e \u003cbr /\u003e\u003cbr /\u003e\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar MergeSamFiles \\\u003cbr /\u003e      I\u003dinput_1.bam \\\u003cbr /\u003e      I\u003dinput_2.bam \\\u003cbr /\u003e      O\u003doutput_merged_files.bam\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -122,7 +122,7 @@
       "options": []
     },
     {
-      "summary": "SAM or BAM input file",
+      "summary": "SAM/BAM/CRAM input file",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "List[String]",
@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "An interval list file that contains the locations of the positions to merge. Assume bam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.",
+      "summary": "An interval list file that contains the locations of the positions to merge. Assume sam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.",
       "name": "--INTERVALS",
       "synonyms": "-RGN",
       "type": "File",
@@ -182,7 +182,7 @@
       "options": []
     },
     {
-      "summary": "SAM or BAM file to write merged result to",
+      "summary": "SAM/BAM/CRAM file to write merged result to",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -323,7 +323,7 @@
       "options": []
     },
     {
-      "summary": "Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM file.",
+      "summary": "Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM/CRAM file.",
       "name": "--USE_THREADING",
       "synonyms": "NA",
       "type": "boolean",

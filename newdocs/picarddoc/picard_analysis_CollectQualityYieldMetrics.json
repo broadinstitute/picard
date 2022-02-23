@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "Input SAM or BAM file.",
+      "summary": "Input SAM/BAM/CRAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -377,7 +377,7 @@
       "options": []
     }
   ],
-  "description": "Command line program to calibrate quality yield metrics",
+  "description": "Command line program to calculate quality yield metrics",
   "name": "CollectQualityYieldMetrics",
   "group": "Diagnostics and Quality Control",
   "beta": false,

@@ -16,27 +16,27 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "The concatenation of all the intervals in all the INPUTs, no sorting or merging of overlapping/abutting intervals implied. Will result in a possibly unsorted list unless requested otherwise.",
           "name": "CONCAT"
         },
         {
-          "summary": "",
+          "summary": "Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, with overlapping and abutting intervals merged into one.",
           "name": "UNION"
         },
         {
-          "summary": "",
+          "summary": "The sorted and merged set of all loci that are contained in all of the INPUTs.",
           "name": "INTERSECT"
         },
         {
-          "summary": "",
+          "summary": "Subtracts the intervals in SECOND_INPUT from those in INPUT. The resulting loci are those in INPUT that are not in SECOND_INPUT.",
           "name": "SUBTRACT"
         },
         {
-          "summary": "",
+          "summary": "Results in loci that are in INPUT or SECOND_INPUT but are not in both.",
           "name": "SYMDIFF"
         },
         {
-          "summary": "",
+          "summary": "Outputs the entire intervals from INPUT that have bases which overlap any interval from SECOND_INPUT. Note that this is different than INTERSECT in that each original interval is either emitted in its entirety, or not at all.",
           "name": "OVERLAPS"
         }
       ]
@@ -429,19 +429,19 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the\n scatter count (except for possible variance in the final interval list).",
+          "summary": "Scatter the interval list into similarly sized interval lists (by base count), breaking up intervals as needed.",
           "name": "INTERVAL_SUBDIVISION"
         },
         {
-          "summary": "A scatter approach that differs from {@link #INTERVAL_SUBDIVISION} in a few ways.\n \u003col\u003e\n \u003cli\u003eNo interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a\n guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount \u003d 10 but there is only one input interval,\n only 1 interval list will be emitted).\u003c/li\u003e\n \u003cli\u003eWhen an interval would otherwise be split, it is instead deferred to the next scatter list.\u003c/li\u003e\n \u003cli\u003eThe \"target width\" of each scatter list may be wider than what is computed for INTERVAL_SUBDIVISION.\n Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that\n interval\u0027s width is used.\u003cbr/\u003e\u003cbr/\u003eThe reasoning for this is that this approach produces more consistently-sized interval lists,\n which is one of the objectives of scattering.\u003c/li\u003e\n \u003c/ol\u003e",
+          "summary": "Scatter the interval list into similarly sized interval lists (by base count), but without breaking up intervals.",
           "name": "BALANCING_WITHOUT_INTERVAL_SUBDIVISION"
         },
         {
-          "summary": "A scatter approach that differs from {@link IntervalListScatterMode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.\n \u003col\u003e\n \u003cli\u003eWe try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is\n computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most\n number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).\u003c/li\u003e\n \u003c/ol\u003e",
+          "summary": "Scatter the interval list into similarly sized interval lists (by base count), but without breaking up intervals. Will overflow current interval list so that the remaining lists will not have too many bases to deal with.",
           "name": "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
         },
         {
-          "summary": "A scatter by interval **count** which attempts to fill each resulting interval list with the same number\n of intervals, disregarding the base count. This approach can be useful for tools that operate on the interval level\n rather than the base level, for example CNV calling.",
+          "summary": "Scatter the interval list into similarly sized interval lists (by interval count, not by base count). Resulting interval lists will contain similar number of intervals.",
           "name": "INTERVAL_COUNT"
         }
       ]

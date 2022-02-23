@@ -239,7 +239,24 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "ALL_READS"
+        },
+        {
+          "summary": "",
+          "name": "SAMPLE"
+        },
+        {
+          "summary": "",
+          "name": "LIBRARY"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP"
+        }
+      ]
     },
     {
       "summary": "Base name of output files.",
@@ -269,7 +286,44 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "\u003cb\u003eProduces a summary of alignment metrics from a SAM or BAM file.\u003c/b\u003e  Creates output with \".alignment_summary_metrics, .read_length_histogram.pdf\" appended to OUTPUT.",
+          "name": "CollectAlignmentSummaryMetrics"
+        },
+        {
+          "summary": "Collect metrics about the insert size distribution of a paired-end library. Creates output with \".insert_size_metrics, .insert_size_histogram.pdf\" appended to OUTPUT.",
+          "name": "CollectInsertSizeMetrics"
+        },
+        {
+          "summary": "Chart the distribution of quality scores.  Creates output with \".quality_distribution_metrics, .quality_distribution.pdf\" appended to OUTPUT.",
+          "name": "QualityScoreDistribution"
+        },
+        {
+          "summary": "Collect mean quality by cycle.Creates output with \".quality_by_cycle_metrics, .quality_by_cycle.pdf\" appended to OUTPUT.",
+          "name": "MeanQualityByCycle"
+        },
+        {
+          "summary": "Chart the nucleotide distribution per cycle in a SAM or BAM fileCreates output with \".base_distribution_by_cycle_metrics, .base_distribution_by_cycle.pdf\" appended to OUTPUT.",
+          "name": "CollectBaseDistributionByCycle"
+        },
+        {
+          "summary": "Collect metrics regarding GC bias. Creates output with \".gc_bias.detail_metrics, .gc_bias.summary_metrics, .gc_bias.pdf\" appended to OUTPUT.",
+          "name": "CollectGcBiasMetrics"
+        },
+        {
+          "summary": "Produces RNA alignment metrics for a SAM or BAM file.  Creates output with \".rna_metrics, .rna_coverage.pdf\" appended to OUTPUT.",
+          "name": "RnaSeqMetrics"
+        },
+        {
+          "summary": "Collect metrics to quantify single-base sequencing artifacts.  Creates output with \".bait_bias_detail_metrics, .bait_bias_summary_metrics, .pre_adapter_detail_metrics, .pre_adapter_summary_metrics, .error_summary_metrics\" appended to OUTPUT.",
+          "name": "CollectSequencingArtifactMetrics"
+        },
+        {
+          "summary": "Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  Creates output with \".quality_yield_metrics\" appended to OUTPUT.",
+          "name": "CollectQualityYieldMetrics"
+        }
+      ]
     },
     {
       "summary": "Whether to suppress job-summary info on System.err.",

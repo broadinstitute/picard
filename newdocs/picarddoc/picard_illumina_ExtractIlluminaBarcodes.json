@@ -62,7 +62,7 @@
       "options": []
     },
     {
-      "summary": "Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.",
+      "summary": "Compress output FASTQ files using gzip and append a .gz extension to the file names.",
       "name": "--COMPRESS_OUTPUTS",
       "synonyms": "-GZIP",
       "type": "boolean",
@@ -136,15 +136,15 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "Hamming distance: The n-th base in the read is compared against the n-th base in the barcode. Unequal bases and low quality bases are considered mismatches. No-call read-bases are not considered mismatches. ",
           "name": "HAMMING"
         },
         {
-          "summary": "",
+          "summary": "Leniant Hamming distance: The n-th base in the read is compared against the n-th base in the barcode. Unequal bases are considered mismatches. No-call read-bases, or those with low quality are not considered mismatches.",
           "name": "LENIENT_HAMMING"
         },
         {
-          "summary": "",
+          "summary": "FREE Metric: A Levenshtein-like metric that performs a simple Smith-Waterman with mismatch, gap open, and gap extend costs all equal to 1. Insertions or deletions at the ends of the read or barcode do not count toward the distance. No-call read-bases, or those with low quality are not considered mismatches.",
           "name": "FREE"
         }
       ]
@@ -180,13 +180,28 @@
       "options": []
     },
     {
-      "summary": "Lane number. ",
-      "name": "--LANE",
-      "synonyms": "-L",
-      "type": "Integer",
-      "required": "yes",
+      "summary": "The input file that defines parameters for the program. This is the BARCODE_FILE for `ExtractIlluminaBarcodes` or the MULTIPLEX_PARAMS or LIBRARY_PARAMS file for `IlluminaBasecallsToFastq`  or `IlluminaBasecallsToSam`",
+      "name": "--INPUT_PARAMS_FILE",
+      "synonyms": "NA",
+      "type": "File",
+      "required": "no",
       "fulltext": "",
       "defaultValue": "null",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "Lane number. This can be specified multiple times. Reads with the same index in multiple lanes will be added to the same output file.",
+      "name": "--LANE",
+      "synonyms": "-L",
+      "type": "List[Integer]",
+      "required": "yes",
+      "fulltext": "",
+      "defaultValue": "[]",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
@@ -244,14 +259,14 @@
       "name": "--METRICS_FILE",
       "synonyms": "-M",
       "type": "File",
-      "required": "yes",
+      "required": "no",
       "fulltext": "",
       "defaultValue": "null",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "required",
+      "kind": "optional",
       "options": []
     },
     {
@@ -285,7 +300,7 @@
       "options": []
     },
     {
-      "summary": "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown.The default of 2 is what the Illumina\u0027s spec describes as the minimum, but in practice the value has been observed lower.",
+      "summary": "The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown. The default of 2 is what the Illumina\u0027s spec describes as the minimum, but in practice the value has been observed lower.",
       "name": "--MINIMUM_QUALITY",
       "synonyms": "NA",
       "type": "int",

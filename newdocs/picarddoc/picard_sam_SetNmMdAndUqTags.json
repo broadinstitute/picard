@@ -1,5 +1,5 @@
 {
-  "summary": "This tool takes in a coordinate-sorted SAM or BAM and calculatesthe NM, MD, and UQ tags by comparing with the reference.\u003cbr /\u003eThis may be needed when MergeBamAlignment was run with SORT_ORDER other than \u0027coordinate\u0027 and thuscould not fix these tags then. The input must be coordinate sorted in order to run. If specified,the MD and NM tags can be ignored and only the UQ tag be set.\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar SetNmMdAndUqTags \u003cbr /\u003e      R\u003dreference_sequence.fasta \u003cbr /\u003e      I\u003dsorted.bam \u003cbr /\u003e      O\u003dfixed.bam \u003cbr /\u003e\u003c/pre\u003e",
+  "summary": "This tool takes in a coordinate-sorted SAM/BAM/CRAM and calculatesthe NM, MD, and UQ tags by comparing with the reference.\u003cbr /\u003eThis may be needed when MergeBamAlignment was run with SORT_ORDER other than \u0027coordinate\u0027 and thuscould not fix these tags then. The input must be coordinate sorted in order to run. If specified,the MD and NM tags can be ignored and only the UQ tag be set.\u003cbr /\u003e\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar SetNmMDAndUqTags \\\u003cbr /\u003e      I\u003dsorted.bam \\\u003cbr /\u003e      O\u003dfixed.bam \\\u003cbr /\u003e\u003c/pre\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -92,7 +92,7 @@
       "options": []
     },
     {
-      "summary": "The BAM or SAM file to fix. ",
+      "summary": "The SAM/BAM/CRAM file to fix.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "The fixed BAM or SAM output file. ",
+      "summary": "The fixed SAM/BAM/CRAM output file. ",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",

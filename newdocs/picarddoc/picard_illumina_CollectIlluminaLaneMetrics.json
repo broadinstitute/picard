@@ -1,5 +1,5 @@
 {
-  "summary": "Collects Illumina lane metrics for the given BaseCalling analysis directory.  This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell.  This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics.  In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectIlluminaLaneMetrics \\\u003cbr /\u003e      RUN_DIR\u003dtest_run \\\u003cbr /\u003e      OUTPUT_DIRECTORY\u003dLane_output_metrics \\\u003cbr /\u003e      OUTPUT_PREFIX\u003dexperiment1 \\\u003cbr /\u003e      READ_STRUCTURE\u003d25T8B25T \u003c/pre\u003e\u003cp\u003ePlease see the CollectIlluminaLaneMetrics \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectIlluminaLaneMetrics\u0027\u003edefinitions\u003c/a\u003e for a complete description of the metrics produced by this tool.\u003c/p\u003e\u003chr /\u003e",
+  "summary": "Collects Illumina lane metrics for the given BaseCalling analysis directory.This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell. This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics. In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.\u003ch4\u003eUsage example:\u003c/h4\u003e\u003cpre\u003ejava -jar picard.jar CollectIlluminaLaneMetrics \\\u003cbr /\u003e      RUN_DIR\u003dtest_run \\\u003cbr /\u003e      OUTPUT_DIRECTORY\u003dLane_output_metrics \\\u003cbr /\u003e      OUTPUT_PREFIX\u003dexperiment1 \\\u003cbr /\u003e      READ_STRUCTURE\u003d25T8B25T \u003c/pre\u003e\u003cp\u003ePlease see the CollectIlluminaLaneMetrics \u003ca href\u003d\u0027http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectIlluminaLaneMetrics\u0027\u003edefinitions\u003c/a\u003e for a complete description of the metrics produced by this tool.\u003c/p\u003e\u003chr /\u003e",
   "arguments": [
     {
       "summary": "read one or more arguments files and add them to the command line",
@@ -104,21 +104,6 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
-    },
-    {
-      "summary": "Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)",
-      "name": "--IS_NOVASEQ",
-      "synonyms": "NA",
-      "type": "boolean",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "false",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "deprecated",
       "options": []
     },
     {

@@ -167,7 +167,7 @@
       "options": []
     },
     {
-      "summary": "Input SAM or BAM file.",
+      "summary": "Input SAM/BAM/CRAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",

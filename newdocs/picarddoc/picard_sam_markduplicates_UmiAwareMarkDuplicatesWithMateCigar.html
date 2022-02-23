@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -492,7 +495,7 @@
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
-					<td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.</td>
+					<td>One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.</td>
 				</tr>
 				<tr>
 					<td><a href="#--METRICS_FILE">--METRICS_FILE</a><br />
@@ -1072,7 +1075,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>One or more input SAM or BAM files to analyze. Must be coordinate sorted.</b><br />
+			<b>One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.</b><br />
 			
 		</p>
 		<p>
@@ -1527,7 +1530,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

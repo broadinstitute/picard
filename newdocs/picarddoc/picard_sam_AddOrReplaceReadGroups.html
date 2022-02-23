@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -516,7 +519,7 @@ For more information about read-groups, see the <a href='https://www.broadinstit
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Output file (BAM or SAM).</td>
+					<td>Output file (SAM, BAM or CRAM).</td>
 				</tr>
 				<tr>
 					<td><a href="#--RGLB">--RGLB</a><br />
@@ -866,7 +869,7 @@ For more information about read-groups, see the <a href='https://www.broadinstit
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>Output file (BAM or SAM).</b><br />
+			<b>Output file (SAM, BAM or CRAM).</b><br />
 			
 		</p>
 		<p>
@@ -1203,7 +1206,7 @@ For more information about read-groups, see the <a href='https://www.broadinstit
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

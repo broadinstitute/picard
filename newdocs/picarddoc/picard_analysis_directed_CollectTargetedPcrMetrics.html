@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -497,7 +500,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>An aligned SAM or BAM file.</td>
+					<td>An aligned SAM/BAM/CRAM file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -895,7 +898,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>An aligned SAM or BAM file.</b><br />
+			<b>An aligned SAM/BAM/CRAM file.</b><br />
 			
 		</p>
 		<p>
@@ -925,6 +928,19 @@
 			<b>The level(s) at which to accumulate metrics.</b><br />
 			
 		</p>
+			<p>
+				The --METRIC_ACCUMULATION_LEVEL argument is an enumerated type (Set[MetricAccumulationLevel]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">ALL_READS</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SAMPLE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">LIBRARY</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">READ_GROUP</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">Set[MetricAccumulationLevel]</span>
 			&nbsp;<span class="label">[ALL_READS]</span>
@@ -1189,7 +1205,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

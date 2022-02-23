@@ -1,5 +1,5 @@
 {
-  "summary": "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. All records are then written to the output file with the duplicate records flagged.",
+  "summary": "Examines aligned records in the supplied SAM/BAM/CRAM file to locate duplicate molecules. All records are then written to the output file with the duplicate records flagged.",
   "arguments": [
     {
       "summary": "Add PG tag to each read in a SAM or BAM",
@@ -246,7 +246,7 @@
       "options": []
     },
     {
-      "summary": "One or more input SAM or BAM files to analyze. Must be coordinate sorted.",
+      "summary": "One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "List[String]",

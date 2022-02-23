@@ -91,15 +91,15 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "Collects the average (SNP) error at the bases provided. Suffix is: \u0027error\u0027.",
           "name": "ERROR"
         },
         {
-          "summary": "",
+          "summary": "Only considers bases from the overlapping parts of reads from the same template. For those bases, it calculates the error that can be attributable to pre-sequencing, versus during-sequencing. Suffix is: \u0027overlapping_error\u0027.",
           "name": "OVERLAPPING_ERROR"
         },
         {
-          "summary": "",
+          "summary": "Collects insertion and deletion errors at the bases provided. Suffix is: \u0027indel_error\u0027.",
           "name": "INDEL_ERROR"
         }
       ]
@@ -389,131 +389,131 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "Puts all bases in the same stratum. Suffix is \u0027all\u0027.",
           "name": "ALL"
         },
         {
-          "summary": "",
+          "summary": "The GC-content of the read. Suffix is \u0027gc\u0027.",
           "name": "GC_CONTENT"
         },
         {
-          "summary": "",
+          "summary": "The read ordinality (i.e. first or second). Suffix is \u0027read_ordinality\u0027.",
           "name": "READ_ORDINALITY"
         },
         {
-          "summary": "",
+          "summary": "the base in the original reading direction. Suffix is \u0027read_base\u0027.",
           "name": "READ_BASE"
         },
         {
-          "summary": "",
+          "summary": "The alignment direction of the read (encoded as + or -). Suffix is \u0027read_direction\u0027.",
           "name": "READ_DIRECTION"
         },
         {
-          "summary": "",
+          "summary": "The read-pair\u0027s orientation (encoded as \u0027[FR]1[FR]2\u0027). Suffix is \u0027pair_orientation\u0027.",
           "name": "PAIR_ORIENTATION"
         },
         {
-          "summary": "",
+          "summary": "The properness of the read-pair\u0027s alignment. Looks for indications of chimerism. Suffix is \u0027pair_proper\u0027.",
           "name": "PAIR_PROPERNESS"
         },
         {
-          "summary": "",
+          "summary": "The reference base in the read\u0027s direction. Suffix is \u0027ref_base\u0027.",
           "name": "REFERENCE_BASE"
         },
         {
-          "summary": "",
+          "summary": "The read base at the previous cycle, and the current reference base. Suffix is \u0027pre_dinuc\u0027.",
           "name": "PRE_DINUC"
         },
         {
-          "summary": "",
+          "summary": "The read base at the subsequent cycle, and the current reference base. Suffix is \u0027post_dinuc\u0027.",
           "name": "POST_DINUC"
         },
         {
-          "summary": "",
+          "summary": "The length of homopolymer the base is part of (only accounts for bases that were read prior to the current base). Suffix is \u0027homopolymer_length\u0027.",
           "name": "HOMOPOLYMER_LENGTH"
         },
         {
-          "summary": "",
+          "summary": "The length of homopolymer, the base that the homopolymer is comprised of, and the reference base. Suffix is \u0027homopolymer_and_following_ref_base\u0027.",
           "name": "HOMOPOLYMER"
         },
         {
-          "summary": "",
+          "summary": "The scale of homopolymer (long or short), the base that the homopolymer is comprised of, and the reference base. Suffix is \u0027binned_length_homopolymer_and_following_ref_base\u0027.",
           "name": "BINNED_HOMOPOLYMER"
         },
         {
-          "summary": "",
+          "summary": "The flowcell and tile where the base was read (taken from the read name). Suffix is \u0027tile\u0027.",
           "name": "FLOWCELL_TILE"
         },
         {
-          "summary": "",
+          "summary": "The y-coordinate of the read (taken from the read name) Suffix is \u0027y\u0027.",
           "name": "FLOWCELL_Y"
         },
         {
-          "summary": "",
+          "summary": "The x-coordinate of the read (taken from the read name) Suffix is \u0027x\u0027.",
           "name": "FLOWCELL_X"
         },
         {
-          "summary": "",
+          "summary": "The read-group id of the read. Suffix is \u0027read_group\u0027.",
           "name": "READ_GROUP"
         },
         {
-          "summary": "",
+          "summary": "The machine cycle during which the base was read. Suffix is \u0027cycle\u0027.",
           "name": "CYCLE"
         },
         {
-          "summary": "",
+          "summary": "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads. Suffix is \u0027binned_cycle\u0027.",
           "name": "BINNED_CYCLE"
         },
         {
-          "summary": "",
+          "summary": "The number of softclipped bases the read has. Suffix is \u0027softclipped_bases\u0027.",
           "name": "SOFT_CLIPS"
         },
         {
-          "summary": "",
+          "summary": "The insert-size they came from (taken from the TLEN field.) Suffix is \u0027insert_length\u0027.",
           "name": "INSERT_LENGTH"
         },
         {
-          "summary": "",
+          "summary": "The base quality. Suffix is \u0027base_quality\u0027.",
           "name": "BASE_QUALITY"
         },
         {
-          "summary": "",
+          "summary": "The read\u0027s mapping quality. Suffix is \u0027mapping_quality\u0027.",
           "name": "MAPPING_QUALITY"
         },
         {
-          "summary": "",
+          "summary": "The number of bases in the read that mismatch the reference, excluding the current base.  This stratifier requires the NM tag. Suffix is \u0027mismatches_in_read\u0027.",
           "name": "MISMATCHES_IN_READ"
         },
         {
-          "summary": "",
+          "summary": "The current reference base and a one base padded region from the read resulting in a 3-base context. Suffix is \u0027one_base_padded_context\u0027.",
           "name": "ONE_BASE_PADDED_CONTEXT"
         },
         {
-          "summary": "",
+          "summary": "The current reference base and a two base padded region from the read resulting in a 5-base context. Suffix is \u0027two_base_padded_context\u0027.",
           "name": "TWO_BASE_PADDED_CONTEXT"
         },
         {
-          "summary": "",
+          "summary": "Whether or not duplicate reads were used to form a consensus read.  This stratifier makes use of the aD, bD, and cD tags for duplex consensus reads.  If the reads are single index consensus, only the cD tags are used. Suffix is \u0027consensus\u0027.",
           "name": "CONSENSUS"
         },
         {
-          "summary": "",
+          "summary": "The number of Ns in the read. Suffix is \u0027ns_in_read\u0027.",
           "name": "NS_IN_READ"
         },
         {
-          "summary": "",
+          "summary": "The number of Insertions in the read cigar. Suffix is \u0027cigar_elements_I_in_read\u0027.",
           "name": "INSERTIONS_IN_READ"
         },
         {
-          "summary": "",
+          "summary": "The number of Deletions in the read cigar. Suffix is \u0027cigar_elements_D_in_read\u0027.",
           "name": "DELETIONS_IN_READ"
         },
         {
-          "summary": "",
+          "summary": "The number of INDELs in the read cigar. Suffix is \u0027indels_in_read\u0027.",
           "name": "INDELS_IN_READ"
         },
         {
-          "summary": "",
+          "summary": "The number of bases in an indel Suffix is \u0027indel_length\u0027.",
           "name": "INDEL_LENGTH"
         }
       ]

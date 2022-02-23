@@ -17,7 +17,7 @@
 
 
 <h1 id="top">Picard Tool Documentation Index
-    <small>2.25.7-SNAPSHOT</small>
+    <small>2.26.11-SNAPSHOT</small>
 </h1>
 <div class="accordion" id="index">
 		<br />
@@ -46,7 +46,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_illumina_CollectIlluminaLaneMetrics.html">CollectIlluminaLaneMetrics</a></td>
-                                <td>Collects Illumina lane metrics for the given BaseCalling analysis directory.  </td>
+                                <td>Collects Illumina lane metrics for the given BaseCalling analysis directory.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_illumina_ExtractIlluminaBarcodes.html">ExtractIlluminaBarcodes</a></td>
@@ -58,11 +58,11 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_illumina_IlluminaBasecallsToSam.html">IlluminaBasecallsToSam</a></td>
-                                <td>Transforms raw Illumina sequencing data into an unmapped SAM or BAM file.</td>
+                                <td>Transforms raw Illumina sequencing data into an unmapped SAM, BAM or CRAM file.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_illumina_MarkIlluminaAdapters.html">MarkIlluminaAdapters</a></td>
-                                <td>Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  </td>
+                                <td>Reads a SAM/BAM/CRAM file and rewrites it with new adapter-trimming tags.  </td>
                             </tr>
                 </table>
             </div>
@@ -82,6 +82,10 @@
                         <th>Name</th>
                         <th>Summary</th>
                     </tr>
+                            <tr>
+                                <td><a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a></td>
+                                <td>Combines multiple QualityYieldMetrics files into a single file.</td>
+                            </tr>
                             <tr>
                                 <td><a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a></td>
                                 <td>Combines multiple Variant Calling Metrics files into a single file</td>
@@ -201,7 +205,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_CompareSAMs.html">CompareSAMs</a></td>
-                                <td>Compare two input ".sam" or ".bam" files.  </td>
+                                <td>Compare two input SAM/BAM/CRAM files.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a></td>
@@ -225,7 +229,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a></td>
-                                <td>Validates a SAM or BAM file.</td>
+                                <td>Validates a SAM/BAM/CRAM file.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_ViewSam.html">ViewSam</a></td>
@@ -373,7 +377,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_CleanSam.html">CleanSam</a></td>
-                                <td>Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads</td>
+                                <td>Cleans a SAM/BAM/CRAM files, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_markduplicates_CollectDuplicateMetrics.html">CollectDuplicateMetrics</a></td>
@@ -389,7 +393,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_FilterSamReads.html">FilterSamReads</a></td>
-                                <td>Subsets reads from a SAM or BAM file by applying one of several filters.</td>
+                                <td>Subsets reads from a SAM/BAM/CRAM file by applying one of several filters.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_FixMateInformation.html">FixMateInformation</a></td>
@@ -413,7 +417,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_MergeSamFiles.html">MergeSamFiles</a></td>
-                                <td>Merges multiple SAM and/or BAM files into a single file.  </td>
+                                <td>Merges multiple SAM/BAM/CRAM (and/or) files into a single file.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_PositionBasedDownsampleSam.html">PositionBasedDownsampleSam</a></td>
@@ -425,15 +429,15 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a></td>
-                                <td>Replaces the SAMFileHeader in a SAM or BAM file.  </td>
+                                <td>Replaces the SAMFileHeader in a SAM/BAM/CRAM file.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_RevertOriginalBaseQualitiesAndAddMateCigar.html">RevertOriginalBaseQualitiesAndAddMateCigar</a></td>
-                                <td>Reverts the original base qualities and adds the mate cigar tag to read-group BAMs</td>
+                                <td>Reverts the original base qualities and adds the mate cigar tag to read-group files</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_RevertSam.html">RevertSam</a></td>
-                                <td>Reverts SAM or BAM files to a previous state.  </td>
+                                <td>Reverts SAM/BAM/CRAM files to a previous state.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SamFormatConverter.html">SamFormatConverter</a></td>
@@ -441,7 +445,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SamToFastq.html">SamToFastq</a></td>
-                                <td>Converts a SAM or BAM file to FASTQ.</td>
+                                <td>Converts a SAM/BAM/CRAM file to FASTQ.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a></td>
@@ -449,7 +453,7 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a></td>
-                                <td>Fixes the NM, MD, and UQ tags in a SAM file </td>
+                                <td>Fixes the NM, MD, and UQ tags in a SAM/BAM/CRAM file </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a></td>
@@ -457,15 +461,15 @@
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SortSam.html">SortSam</a></td>
-                                <td>Sorts a SAM or BAM file</td>
+                                <td>Sorts a SAM, BAM or CRAM file.  </td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a></td>
-                                <td>Splits a SAM or BAM file into individual files by library</td>
+                                <td>Splits a SAM/BAM/CRAM file into individual files by library</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a></td>
-                                <td>Splits a SAM or BAM file to multiple BAMs.</td>
+                                <td>Splits a SAM/BAM/CRAM file to multiple files.</td>
                             </tr>
                             <tr>
                                 <td><a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a></td>
@@ -640,7 +644,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 </div></div>

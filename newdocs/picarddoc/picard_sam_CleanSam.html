@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>CleanSam</h1>
 
-		<p class="lead">Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads</p>
+		<p class="lead">Cleans a SAM/BAM/CRAM files, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads</p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -462,7 +465,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Input SAM to be cleaned.</td>
+					<td>Input SAM/BAM/CRAM file to be cleaned.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -470,7 +473,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Where to write cleaned SAM.</td>
+					<td>Where to write cleaned file.</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -681,7 +684,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Input SAM to be cleaned.</b><br />
+			<b>Input SAM/BAM/CRAM file to be cleaned.</b><br />
 			
 		</p>
 		<p>
@@ -708,7 +711,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>Where to write cleaned SAM.</b><br />
+			<b>Where to write cleaned file.</b><br />
 			
 		</p>
 		<p>
@@ -858,7 +861,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

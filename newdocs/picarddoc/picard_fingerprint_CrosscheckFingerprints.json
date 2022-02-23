@@ -138,11 +138,11 @@
       "kind": "optional",
       "options": [
         {
-          "summary": "",
+          "summary": "In this mode, each sample in INPUT will only be checked against a single corresponding sample in SECOND_INPUT. If a corresponding sample cannot be found, the program will proceed, but report the missing samples and return the value specified in EXIT_CODE_WHEN_MISMATCH. The corresponding samples are those that equal each other, after possible renaming via INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP. In this mode CROSSCHECK_BY must be SAMPLE.",
           "name": "CHECK_SAME_SAMPLE"
         },
         {
-          "summary": "",
+          "summary": "In this mode, each sample in INPUT will be checked against all the samples in SECOND_INPUT.",
           "name": "CHECK_ALL_OTHERS"
         }
       ]

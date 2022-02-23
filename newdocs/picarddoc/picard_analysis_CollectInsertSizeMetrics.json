@@ -167,7 +167,7 @@
       "options": []
     },
     {
-      "summary": "Input SAM or BAM file.",
+      "summary": "Input SAM/BAM/CRAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -209,7 +209,24 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
+      "options": [
+        {
+          "summary": "",
+          "name": "ALL_READS"
+        },
+        {
+          "summary": "",
+          "name": "SAMPLE"
+        },
+        {
+          "summary": "",
+          "name": "LIBRARY"
+        },
+        {
+          "summary": "",
+          "name": "READ_GROUP"
+        }
+      ]
     },
     {
       "summary": "Minimum width of histogram plots. In the case when the histogram would otherwise betruncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.",

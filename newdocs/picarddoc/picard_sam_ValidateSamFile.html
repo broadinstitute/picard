@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>ValidateSamFile</h1>
 
-		<p class="lead">Validates a SAM or BAM file.<p>This tool reports on the validity of a SAM or BAM file relative to the SAM format specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper formatting, faulty alignments, incorrect flag values, etc. </p> <p>By default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout). Therefore, it is often more practical to run this tool initially using the MODE=SUMMARY option.  This mode outputs a summary table listing the numbers of all 'errors' and 'warnings'.</p> <p>When fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful suggestions on error prioritization, please follow this link to obtain additional documentation on <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>ValidateSamFile</a>.</p><p>After identifying and fixing your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.</p><h3>Usage example:</h3><pre>java -jar picard.jar ValidateSamFile \<br />      I=input.bam \<br />      MODE=SUMMARY</pre><p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p><hr />Return codes depend on the errors/warnings discovered:<p>-1 failed to complete execution
+		<p class="lead">Validates a SAM/BAM/CRAM file.<p>This tool reports on the validity of a SAM/BAM/CRAM file relative to the SAM format specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper formatting, faulty alignments, incorrect flag values, etc. </p> <p>By default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout). Therefore, it is often more practical to run this tool initially using the MODE=SUMMARY option.  This mode outputs a summary table listing the numbers of all 'errors' and 'warnings'.</p> <p>When fixing errors in your file, it is often useful to prioritize the severe validation errors and ignore the errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For helpful suggestions on error prioritization, please follow this link to obtain additional documentation on <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>ValidateSamFile</a>.</p><p>After identifying and fixing your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.</p><h3>Usage example:</h3><pre>java -jar picard.jar ValidateSamFile \<br />      I=input.bam \<br />      MODE=SUMMARY</pre><p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p><hr />Return codes depend on the errors/warnings discovered:<p>-1 failed to complete execution
 0  ran successfully
 1  warnings but no errors
 2  errors and warnings
@@ -491,7 +494,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Input SAM/BAM file</td>
+					<td>Input SAM/BAM/CRAM file</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -538,7 +541,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Whether the SAM or BAM file consists of bisulfite sequenced reads. If so, C->T is not counted as an error in computing the value of the NM tag.</td>
+					<td>Whether the input file consists of bisulfite sequenced reads. If so, C->T is not counted as an error in computing the value of the NM tag.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_OPEN_TEMP_FILES">--MAX_OPEN_TEMP_FILES</a><br />
@@ -780,6 +783,145 @@
 			<b>List of validation error types to ignore.</b><br />
 			
 		</p>
+			<p>
+				The --IGNORE argument is an enumerated type (List[Type]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">INVALID_QUALITY_FORMAT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_PROPER_PAIR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_MATE_UNMAPPED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_FLAG_MATE_UNMAPPED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_MATE_NEG_STRAND</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_FLAG_MATE_NEG_STRAND</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_FIRST_OF_PAIR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_SECOND_OF_PAIR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_NOT_PRIM_ALIGNMENT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_FLAG_READ_UNMAPPED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_INSERT_SIZE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_MAPPING_QUALITY</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_CIGAR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">ADJACENT_INDEL_IN_CIGAR</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_MATE_REF_INDEX</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_MATE_REF_INDEX</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_REFERENCE_INDEX</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_ALIGNMENT_START</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_MATE_ALIGNMENT_START</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MATE_FIELD_MISMATCH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_TAG_NM</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISSING_TAG_NM</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISSING_HEADER</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISSING_SEQUENCE_DICTIONARY</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISSING_READ_GROUP</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">RECORD_OUT_OF_ORDER</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">READ_GROUP_NOT_FOUND</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">RECORD_MISSING_READ_GROUP</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_INDEXING_BIN</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISSING_VERSION_NUMBER</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_VERSION_NUMBER</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">TRUNCATED_FILE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_READ_LENGTH_AND_QUALS_LENGTH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">EMPTY_READ</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">CIGAR_MAPS_OFF_REFERENCE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_READ_LENGTH_AND_E2_LENGTH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_READ_LENGTH_AND_U2_LENGTH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">E2_BASE_EQUALS_PRIMARY_BASE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">BAM_FILE_MISSING_TERMINATOR_BLOCK</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">UNRECOGNIZED_HEADER_TYPE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">POORLY_FORMATTED_HEADER_TAG</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">HEADER_TAG_MULTIPLY_DEFINED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">HEADER_RECORD_MISSING_REQUIRED_TAG</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">HEADER_TAG_NON_CONFORMING_VALUE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_DATE_STRING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">TAG_VALUE_TOO_LARGE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_INDEX_FILE_POINTER</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_PREDICTED_MEDIAN_INSERT_SIZE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DUPLICATE_READ_GROUP_ID</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISSING_PLATFORM_VALUE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_PLATFORM_VALUE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DUPLICATE_PROGRAM_GROUP_ID</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MATE_NOT_FOUND</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MATES_ARE_SAME_END</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_MATE_CIGAR_STRING</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MATE_CIGAR_STRING_INVALID_PRESENCE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_UNPAIRED_MATE_REFERENCE</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">INVALID_UNALIGNED_MATE_START</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_CIGAR_SEQ_LENGTH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_SEQ_QUAL_LENGTH</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">MISMATCH_FILE_SEQ_DICT</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">QUALITY_NOT_STORED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DUPLICATE_SAM_TAG</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">CG_TAG_FOUND_IN_ATTRIBUTES</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">REF_SEQ_TOO_LONG_FOR_BAI</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">List[Type]</span>
 			&nbsp;<span class="label">[]</span>
@@ -824,7 +966,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Input SAM/BAM file</b><br />
+			<b>Input SAM/BAM/CRAM file</b><br />
 			
 		</p>
 		<p>
@@ -837,7 +979,7 @@
 			 / <small>-BISULFITE</small>
 		</h3>
 		<p class="args">
-			<b>Whether the SAM or BAM file consists of bisulfite sequenced reads. If so, C->T is not counted as an error in computing the value of the NM tag.</b><br />
+			<b>Whether the input file consists of bisulfite sequenced reads. If so, C->T is not counted as an error in computing the value of the NM tag.</b><br />
 			
 		</p>
 		<p>
@@ -1085,7 +1227,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "Input (indexed) BAM file.",
+      "summary": "Input (indexed) BAM/CRAM file.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",

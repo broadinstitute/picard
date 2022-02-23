@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>MarkIlluminaAdapters</h1>
 
-		<p class="lead">Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  <p>This tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of a SAM file.  The SAM/BAM file must be sorted by query name.</p> <p>Outputs a metrics file histogram showing counts of bases_clipped per read.<h4>Usage example:</h4><pre>java -jar picard.jar MarkIlluminaAdapters \<br /> INPUT=input.sam \<br />METRICS=metrics.txt </pre><hr /></p>
+		<p class="lead">Reads a SAM/BAM/CRAM file and rewrites it with new adapter-trimming tags.  <p>This tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of the input file.  The SAM/BAM/CRAM file must be sorted by query name.</p> <p>Outputs a metrics file histogram showing counts of bases_clipped per read.<h4>Usage example:</h4><pre>java -jar picard.jar MarkIlluminaAdapters \<br /> INPUT=input.sam \<br />METRICS=metrics.txt </pre><hr /></p>
 
 			<h3>Category
 				<small> Base Calling</small>
@@ -712,6 +715,35 @@
 			<b>Which adapters sequences to attempt to identify and clip.</b><br />
 			
 		</p>
+			<p>
+				The --ADAPTERS argument is an enumerated type (List[IlluminaAdapterPair]), which can have one of the following values:
+			<dl class="enum">
+					<dt class="enum">PAIRED_END</dt>
+					<dd class="enum">The following sequences can be found in
+        https://support.illumina.com/content/dam/illumina-support/documents/documentation/chemistry_documentation/experiment-design/illumina-adapter-sequences_1000000002694-01.pdf
+        and are protected by the following copyright notice:
+
+        Oligonucleotide sequences (c) 2016 Illumina, Inc. All rights reserved. Derivative works created by
+        Illumina customers are authorized for use with Illumina instruments and products only. All other
+        uses are strictly prohibited.</dd>
+					<dt class="enum">INDEXED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">SINGLE_END</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">NEXTERA_V1</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">NEXTERA_V2</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">DUAL_INDEXED</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">FLUIDIGM</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">TRUSEQ_SMALLRNA</dt>
+					<dd class="enum"></dd>
+					<dt class="enum">ALTERNATIVE_SINGLE_END</dt>
+					<dd class="enum"></dd>
+			</dl>
+			</p>
 		<p>
 		<span class="label label-info ">List[IlluminaAdapterPair]</span>
 			&nbsp;<span class="label">[INDEXED, DUAL_INDEXED, PAIRED_END]</span>
@@ -1104,7 +1136,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

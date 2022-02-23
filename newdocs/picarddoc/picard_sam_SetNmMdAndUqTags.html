@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>SetNmMdAndUqTags</h1>
 
-		<p class="lead">This tool takes in a coordinate-sorted SAM or BAM and calculatesthe NM, MD, and UQ tags by comparing with the reference.<br />This may be needed when MergeBamAlignment was run with SORT_ORDER other than 'coordinate' and thuscould not fix these tags then. The input must be coordinate sorted in order to run. If specified,the MD and NM tags can be ignored and only the UQ tag be set.<br /><h4>Usage example:</h4><pre>java -jar picard.jar SetNmMdAndUqTags <br />      R=reference_sequence.fasta <br />      I=sorted.bam <br />      O=fixed.bam <br /></pre></p>
+		<p class="lead">This tool takes in a coordinate-sorted SAM/BAM/CRAM and calculatesthe NM, MD, and UQ tags by comparing with the reference.<br />This may be needed when MergeBamAlignment was run with SORT_ORDER other than 'coordinate' and thuscould not fix these tags then. The input must be coordinate sorted in order to run. If specified,the MD and NM tags can be ignored and only the UQ tag be set.<br /><h4>Usage example:</h4><pre>java -jar picard.jar SetNmMDAndUqTags \<br />      I=sorted.bam \<br />      O=fixed.bam \<br /></pre><hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -491,7 +494,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The BAM or SAM file to fix. </td>
+					<td>The SAM/BAM/CRAM file to fix.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -499,7 +502,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>The fixed BAM or SAM output file. </td>
+					<td>The fixed SAM/BAM/CRAM output file. </td>
 				</tr>
 				<tr>
 					<td><a href="#--REFERENCE_SEQUENCE">--REFERENCE_SEQUENCE</a><br />
@@ -724,7 +727,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>The BAM or SAM file to fix. </b><br />
+			<b>The SAM/BAM/CRAM file to fix.</b><br />
 			
 		</p>
 		<p>
@@ -763,7 +766,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The fixed BAM or SAM output file. </b><br />
+			<b>The fixed SAM/BAM/CRAM output file. </b><br />
 			
 		</p>
 		<p>
@@ -926,7 +929,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

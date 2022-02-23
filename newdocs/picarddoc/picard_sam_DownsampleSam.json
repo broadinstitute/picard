@@ -152,7 +152,7 @@
       "options": []
     },
     {
-      "summary": "The output, downsampled, SAM or BAM file to write.",
+      "summary": "The output, downsampled, SAM, BAM or CRAM file to write.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",

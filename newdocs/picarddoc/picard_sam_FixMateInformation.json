@@ -137,7 +137,7 @@
       "options": []
     },
     {
-      "summary": "The input files to check and fix. Multiple files will be merged and sorted.",
+      "summary": "The SAM/BAM/CRAM input files to check and fix. Multiple files will be merged and sorted.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "List[File]",

@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>MergeSamFiles</h1>
 
-		<p class="lead">Merges multiple SAM and/or BAM files into a single file.  This tool is used for combining SAM and/or BAM files from different runs or read groups into a single file, similarly to the "merge" function of Samtools (http://www.htslib.org/doc/samtools.html).  <br /><br />Note that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be unique. For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>GATK Dictionary entry.</a> <br /><br /><br /><h4>Usage example:</h4><pre>java -jar picard.jar MergeSamFiles \<br />      I=input_1.bam \<br />      I=input_2.bam \<br />      O=output_merged_files.bam</pre><hr /></p>
+		<p class="lead">Merges multiple SAM/BAM/CRAM (and/or) files into a single file.  This tool is used for combining SAM/BAM/CRAM (and/or) files from different runs or read groups into a single file, similarly to the "merge" function of Samtools (http://www.htslib.org/doc/samtools.html).  <br /><br />Note that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be unique. For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>GATK Dictionary entry.</a> <br /><br /><br /><h4>Usage example:</h4><pre>java -jar picard.jar MergeSamFiles \<br />      I=input_1.bam \<br />      I=input_2.bam \<br />      O=output_merged_files.bam</pre><hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -476,7 +479,7 @@
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
-					<td>SAM or BAM input file</td>
+					<td>SAM/BAM/CRAM input file</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -484,7 +487,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>SAM or BAM file to write merged result to</td>
+					<td>SAM/BAM/CRAM file to write merged result to</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -526,7 +529,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>An interval list file that contains the locations of the positions to merge. Assume bam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.</td>
+					<td>An interval list file that contains the locations of the positions to merge. Assume sam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MERGE_SEQUENCE_DICTIONARIES">--MERGE_SEQUENCE_DICTIONARIES</a><br />
@@ -549,7 +552,7 @@
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM file.</td>
+					<td>Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM/CRAM file.</td>
 				</tr>
 				<tr>
 					<td><a href="#--version">--version</a><br />
@@ -766,7 +769,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>SAM or BAM input file</b><br />
+			<b>SAM/BAM/CRAM input file</b><br />
 			
 		</p>
 		<p>
@@ -779,7 +782,7 @@
 			 / <small>-RGN</small>
 		</h3>
 		<p class="args">
-			<b>An interval list file that contains the locations of the positions to merge. Assume bam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.</b><br />
+			<b>An interval list file that contains the locations of the positions to merge. Assume sam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.</b><br />
 			
 		</p>
 		<p>
@@ -817,7 +820,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>SAM or BAM file to write merged result to</b><br />
+			<b>SAM/BAM/CRAM file to write merged result to</b><br />
 			
 		</p>
 		<p>
@@ -929,7 +932,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM file.</b><br />
+			<b>Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM/CRAM file.</b><br />
 			
 		</p>
 		<p>
@@ -1006,7 +1009,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

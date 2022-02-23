@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>ReplaceSamHeader</h1>
 
-		<p class="lead">Replaces the SAMFileHeader in a SAM or BAM file.  This tool makes it possible to replace the header of a SAM or BAM file with the header of anotherfile, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must be the same.<br /><br />Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords are present in the new header. <br /><h4>Usage example:</h4><pre>java -jar picard.jar ReplaceSamHeader \<br />      I=input_1.bam \<br />      HEADER=input_2.bam \<br />      O=bam_with_new_head.bam</pre><hr /></p>
+		<p class="lead">Replaces the SAMFileHeader in a SAM/BAM/CRAM file.  This tool makes it possible to replace the header of a SAM/BAM/CRAM file with the header of anotherfile, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must be the same.<br /><br />Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords are present in the new header. <br /><h4>Usage example:</h4><pre>java -jar picard.jar ReplaceSamHeader \<br />      I=input_1.bam \<br />      HEADER=input_2.bam \<br />      O=bam_with_new_head.bam</pre><hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -461,7 +464,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>SAM file from which SAMFileHeader will be read.</td>
+					<td>SAM/BAM/CRAM file from which SAMFileHeader will be read.</td>
 				</tr>
 				<tr>
 					<td><a href="#--INPUT">--INPUT</a><br />
@@ -469,7 +472,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>SAM file from which SAMRecords will be read.</td>
+					<td>SAM/BAM/CRAM file from which SAMRecords will be read.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -477,7 +480,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file</td>
+					<td>header from HEADER file will be written to this file, followed by records from INPUT file</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -676,7 +679,7 @@
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>SAM file from which SAMFileHeader will be read.</b><br />
+			<b>SAM/BAM/CRAM file from which SAMFileHeader will be read.</b><br />
 			
 		</p>
 		<p>
@@ -701,7 +704,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>SAM file from which SAMRecords will be read.</b><br />
+			<b>SAM/BAM/CRAM file from which SAMRecords will be read.</b><br />
 			
 		</p>
 		<p>
@@ -728,7 +731,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file</b><br />
+			<b>header from HEADER file will be written to this file, followed by records from INPUT file</b><br />
 			
 		</p>
 		<p>
@@ -878,7 +881,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

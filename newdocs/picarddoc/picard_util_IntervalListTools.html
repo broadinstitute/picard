@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -846,17 +849,17 @@ chr2	100	100	+	interval with exactly one base
 				The --ACTION argument is an enumerated type (Action), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">CONCAT</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The concatenation of all the intervals in all the INPUTs, no sorting or merging of overlapping/abutting intervals implied. Will result in a possibly unsorted list unless requested otherwise.</dd>
 					<dt class="enum">UNION</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, with overlapping and abutting intervals merged into one.</dd>
 					<dt class="enum">INTERSECT</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">The sorted and merged set of all loci that are contained in all of the INPUTs.</dd>
 					<dt class="enum">SUBTRACT</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Subtracts the intervals in SECOND_INPUT from those in INPUT. The resulting loci are those in INPUT that are not in SECOND_INPUT.</dd>
 					<dt class="enum">SYMDIFF</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Results in loci that are in INPUT or SECOND_INPUT but are not in both.</dd>
 					<dt class="enum">OVERLAPS</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Outputs the entire intervals from INPUT that have bases which overlap any interval from SECOND_INPUT. Note that this is different than INTERSECT in that each original interval is either emitted in its entirety, or not at all.</dd>
 			</dl>
 			</p>
 		<p>
@@ -1185,31 +1188,13 @@ chr2	100	100	+	interval with exactly one base
 				The --SUBDIVISION_MODE argument is an enumerated type (IntervalListScatterMode), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A simple scatter approach in which all output intervals have size equal to the total base count of the source list divide by the
- scatter count (except for possible variance in the final interval list).</dd>
+					<dd class="enum">Scatter the interval list into similarly sized interval lists (by base count), breaking up intervals as needed.</dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION</dt>
-					<dd class="enum">A scatter approach that differs from {@link #INTERVAL_SUBDIVISION} in a few ways.
- <ol>
- <li>No interval will be subdivided, and consequently, the requested scatter count is an upper bound of scatter count, not a
- guarantee as to how many {@link IntervalList}s will be produced (e.g., if scatterCount = 10 but there is only one input interval,
- only 1 interval list will be emitted).</li>
- <li>When an interval would otherwise be split, it is instead deferred to the next scatter list.</li>
- <li>The "target width" of each scatter list may be wider than what is computed for INTERVAL_SUBDIVISION.
- Specifically, if the widest interval in the source interval list is larger than what would otherwise be the target width, that
- interval's width is used.<br/><br/>The reasoning for this is that this approach produces more consistently-sized interval lists,
- which is one of the objectives of scattering.</li>
- </ol></dd>
+					<dd class="enum">Scatter the interval list into similarly sized interval lists (by base count), but without breaking up intervals.</dd>
 					<dt class="enum">BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW</dt>
-					<dd class="enum">A scatter approach that differs from {@link IntervalListScatterMode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
- <ol>
- <li>We try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is
- computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
- number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
- </ol></dd>
+					<dd class="enum">Scatter the interval list into similarly sized interval lists (by base count), but without breaking up intervals. Will overflow current interval list so that the remaining lists will not have too many bases to deal with.</dd>
 					<dt class="enum">INTERVAL_COUNT</dt>
-					<dd class="enum">A scatter by interval **count** which attempts to fill each resulting interval list with the same number
- of intervals, disregarding the base count. This approach can be useful for tools that operate on the interval level
- rather than the base level, for example CNV calling.</dd>
+					<dd class="enum">Scatter the interval list into similarly sized interval lists (by interval count, not by base count). Resulting interval lists will contain similar number of intervals.</dd>
 			</dl>
 			</p>
 		<p>
@@ -1334,7 +1319,7 @@ chr2	100	100	+	interval with exactly one base
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

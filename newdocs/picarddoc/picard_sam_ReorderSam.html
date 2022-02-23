@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>ReorderSam</h1>
 
-		<p class="lead">Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new reference are unmapped. Runs substantially faster if the input is an indexed BAM file.
+		<p class="lead">Not to be confused with SortSam which sorts a file with a valid sequence dictionary, ReorderSam reorders reads in a SAM/BAM/CRAM file to match the contig ordering in a provided reference file, as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new reference are unmapped. Runs substantially faster if the input is an indexed BAM file.
 Example
 
  java -jar picard.jar ReorderSam \
@@ -487,7 +490,7 @@ Example
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Input file (SAM or BAM) to extract reads from.</td>
+					<td>Input file (SAM/BAM/CRAM) to extract reads from.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -495,7 +498,7 @@ Example
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Output file (SAM or BAM) to write extracted reads to.</td>
+					<td>Output file (SAM/BAM/CRAM) to write extracted reads to.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SEQUENCE_DICTIONARY">--SEQUENCE_DICTIONARY</a><br />
@@ -503,7 +506,7 @@ Example
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)</td>
+					<td>A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, CRAM, VCF, BCF, Interval List, Fasta, or Dict)</td>
 				</tr>
 			<tr>
 				<th colspan="4" id="row-divider">Optional Tool Arguments</th>
@@ -754,7 +757,7 @@ Example
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Input file (SAM or BAM) to extract reads from.</b><br />
+			<b>Input file (SAM/BAM/CRAM) to extract reads from.</b><br />
 			
 		</p>
 		<p>
@@ -781,7 +784,7 @@ Example
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>Output file (SAM or BAM) to write extracted reads to.</b><br />
+			<b>Output file (SAM/BAM/CRAM) to write extracted reads to.</b><br />
 			
 		</p>
 		<p>
@@ -818,7 +821,7 @@ Example
 			 / <small>-SD</small>
 		</h3>
 		<p class="args">
-			<b>A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)</b><br />
+			<b>A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, CRAM, VCF, BCF, Interval List, Fasta, or Dict)</b><br />
 			
 		</p>
 		<p>
@@ -944,7 +947,7 @@ Example
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>

@@ -1,5 +1,5 @@
 {
-  "summary": "Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new reference are unmapped. Runs substantially faster if the input is an indexed BAM file.\nExample\n\n java -jar picard.jar ReorderSam \\\n      INPUT\u003dsample.bam \\\n      OUTPUT\u003dreordered.bam \\\n      SEQUENCE_DICTIONARY\u003dreference_with_different_order.dict\n",
+  "summary": "Not to be confused with SortSam which sorts a file with a valid sequence dictionary, ReorderSam reorders reads in a SAM/BAM/CRAM file to match the contig ordering in a provided reference file, as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new reference are unmapped. Runs substantially faster if the input is an indexed BAM file.\nExample\n\n java -jar picard.jar ReorderSam \\\n      INPUT\u003dsample.bam \\\n      OUTPUT\u003dreordered.bam \\\n      SEQUENCE_DICTIONARY\u003dreference_with_different_order.dict\n",
   "arguments": [
     {
       "summary": "If true, then permits mapping from a read contig to a new reference contig with the same name but a different length.  Highly dangerous, only use if you know what you are doing.",
@@ -122,7 +122,7 @@
       "options": []
     },
     {
-      "summary": "Input file (SAM or BAM) to extract reads from.",
+      "summary": "Input file (SAM/BAM/CRAM) to extract reads from.",
       "name": "--INPUT",
       "synonyms": "-I",
       "type": "File",
@@ -152,7 +152,7 @@
       "options": []
     },
     {
-      "summary": "Output file (SAM or BAM) to write extracted reads to.",
+      "summary": "Output file (SAM/BAM/CRAM) to write extracted reads to.",
       "name": "--OUTPUT",
       "synonyms": "-O",
       "type": "File",
@@ -197,7 +197,7 @@
       "options": []
     },
     {
-      "summary": "A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, VCF, BCF, Interval List, Fasta, or Dict)",
+      "summary": "A Sequence Dictionary for the OUTPUT file (can be read from one of the following file types (SAM, BAM, CRAM, VCF, BCF, Interval List, Fasta, or Dict)",
       "name": "--SEQUENCE_DICTIONARY",
       "synonyms": "-SD",
       "type": "File",

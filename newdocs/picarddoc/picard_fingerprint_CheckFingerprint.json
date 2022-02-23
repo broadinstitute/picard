@@ -77,6 +77,36 @@
       "options": []
     },
     {
+      "summary": "When the expected fingerprint sample is not found in the genotypes file, this exit code is returned.",
+      "name": "--EXIT_CODE_WHEN_EXPECTED_SAMPLE_NOT_FOUND",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "1",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
+      "summary": "When all LOD score are zero, exit with this value.",
+      "name": "--EXIT_CODE_WHEN_NO_VALID_CHECKS",
+      "synonyms": "NA",
+      "type": "int",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "2",
+      "minValue": "-Infinity",
+      "maxValue": "Infinity",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "This parameter can be used to specify which sample\u0027s genotypes to use from the expected VCF file (the GENOTYPES file).  If it is not supplied, the sample name from the input (VCF or BAM read group header) will be used.",
       "name": "--EXPECTED_SAMPLE_ALIAS",
       "synonyms": "-SAMPLE_ALIAS",

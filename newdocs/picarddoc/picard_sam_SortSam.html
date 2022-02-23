@@ -65,6 +65,9 @@
 								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
 								<ul>
 											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
 												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
 											</li>
 											<li>
@@ -432,7 +435,7 @@
 
 		<h1>SortSam</h1>
 
-		<p class="lead">This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  <p> For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p><p> For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary alignment flag. This ordering may change in future versions. </p><hr /><hr /><h4>Usage example:</h4><pre>java -jar picard.jar SortSam \<br />      I=input.bam \<br />      O=sorted.bam \<br />      SORT_ORDER=coordinate</pre></p>
+		<p class="lead">This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property of the SAM record. The SortOrder of a SAM/BAM/CRAM file is found in the SAM file header tag @HD in the field labeled SO.  <p> For a coordinate sorted SAM/BAM/CRAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p><p> For queryname-sorted alignments, the tool orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary alignment flag. This ordering may change in future versions. </p><hr /><hr /><h4>Usage example:</h4><pre>java -jar picard.jar SortSam \<br />      I=input.bam \<br />      O=sorted.bam \<br />      SORT_ORDER=coordinate</pre><hr /></p>
 
 			<h3>Category
 				<small> Read Data Manipulation</small>
@@ -488,7 +491,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Input BAM or SAM file to sort.</td>
+					<td>The SAM, BAM or CRAM file to sort.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -496,7 +499,7 @@
 					</td>
 					<!--<td>File</td> -->
 					<td>null</td>
-					<td>Sorted BAM or SAM output file.</td>
+					<td>The sorted SAM, BAM or CRAM output file. </td>
 				</tr>
 				<tr>
 					<td><a href="#--SORT_ORDER">--SORT_ORDER</a><br />
@@ -715,7 +718,7 @@
 			 / <small>-I</small>
 		</h3>
 		<p class="args">
-			<b>Input BAM or SAM file to sort.</b><br />
+			<b>The SAM, BAM or CRAM file to sort.</b><br />
 			
 		</p>
 		<p>
@@ -742,7 +745,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>Sorted BAM or SAM output file.</b><br />
+			<b>The sorted SAM, BAM or CRAM output file. </b><br />
 			
 		</p>
 		<p>
@@ -798,11 +801,11 @@
 				The --SORT_ORDER argument is an enumerated type (SortOrder), which can have one of the following values:
 			<dl class="enum">
 					<dt class="enum">queryname</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Sorts according to the readname. This will place read-pairs and other derived reads (secondary and supplementary) adjacent to each other. Note that the readnames are compared lexicographically, even though they may include numbers. In paired reads, Read1 sorts before Read2.</dd>
 					<dt class="enum">coordinate</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Sorts primarily according to the SEQ and POS fields of the record. The sequence will sorted according to the order in the sequence dictionary, taken from from the header of the file. Within each reference sequence, the reads are sorted by the position. Unmapped reads whose mates are mapped will be placed near their mates. Unmapped read-pairs are placed after all the mapped reads and their mates.</dd>
 					<dt class="enum">duplicate</dt>
-					<dd class="enum"></dd>
+					<dd class="enum">Sorts the reads so that duplicates reads are adjacent. Required that the mate-cigar (MC) tag is present. The resulting will be sorted by library, unclipped 5-prime position, orientation, and mate's unclipped 5-prime position.</dd>
 			</dl>
 			</p>
 		<p>
@@ -916,7 +919,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.25.7-SNAPSHOT built at 21-04-2021 02:04:13.
+        <p class="version">Picard version 2.26.11-SNAPSHOT built at 23-43-2022 03:43:11.
         </p>
 
 	</div>
