@@ -37,18 +37,22 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
     //calculated value using median + deviations is smaller.
     private final Integer minHistogramWidth;
 
+    // If false, do not truncate the histogram
+    private final boolean truncateHistogram;
+
     // If set to true, then duplicates will also be included in the histogram
     private final boolean includeDuplicates;
 
     public InsertSizeMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                       final double minimumPct, final Integer histogramWidth, final Integer minHistogramWidth,
-                                      final double deviations, final boolean includeDuplicates) {
+                                      final double deviations, final boolean includeDuplicates, final boolean truncateHistogram) {
         this.minimumPct = minimumPct;
         this.histogramWidth = histogramWidth;
         this.minHistogramWidth = minHistogramWidth;
         this.deviations = deviations;
         this.includeDuplicates = includeDuplicates;
         setup(accumulationLevels, samRgRecords);
+        this.truncateHistogram = truncateHistogram;
     }
 
     // We will pass insertSize and PairOrientation with the DefaultPerRecordCollectorArgs passed to the record collectors
@@ -183,15 +187,17 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                     }
 
                     // Trim the Histogram down to get rid of outliers that would make the chart useless.
-                    final Histogram<Integer> trimmedHistogram = histogram; // alias it
-                    trimmedHistogram.trimByWidth(getWidthToTrimTo(metrics));
+                    if (truncateHistogram){
+                        histogram.trimByWidth(getWidthToTrimTo(metrics));
 
-                    if (!trimmedHistogram.isEmpty()) {
-                        metrics.MEAN_INSERT_SIZE = trimmedHistogram.getMean();
-                        metrics.STANDARD_DEVIATION = trimmedHistogram.getStandardDeviation();
+                        // Recompute metrics that are sensitive to outliers after trimming.
+                        if (!histogram.isEmpty()) {
+                            metrics.MEAN_INSERT_SIZE = histogram.getMean();
+                            metrics.STANDARD_DEVIATION = histogram.getStandardDeviation();
+                        }
                     }
 
-                    file.addHistogram(trimmedHistogram);
+                    file.addHistogram(histogram);
                     file.addMetric(metrics);
                 }
             }
