@@ -23,10 +23,7 @@
  */
 package picard.analysis;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -249,6 +246,54 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testNotTruncatingHistogram() throws IOException {
+        // Make a test file
+        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
+        testSamFile.deleteOnExit();
+        final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replaceAll("bam$","bai"));
+        testSamFileIndex.deleteOnExit();
+
+        final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true);
+        final int readLength = 10;
+        setBuilder.setReadLength(readLength);
+        final int minInsertSize = 100;
+        final int maxInsertSize = 400;
+        int i = 0;
+        int start = 1000;
+        String cigar = readLength + "M";
+        for (int j = minInsertSize; j < maxInsertSize; j++) {
+            setBuilder.addPair("read:" + i++, 0, start, start + j - readLength, false, false,
+                    cigar, cigar, false, true, 60);
+        }
+
+        // Add an outlier
+        int outlierInsertSize = 2000;
+        setBuilder.addPair("outlierRead", 0, start, start + outlierInsertSize - readLength,
+                false, false, cigar, cigar, false, true, 60);
+
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
+        setBuilder.forEach(writer::addAlignment);
+        writer.close();
+
+        final File outfile = File.createTempFile("test", ".insert_size_metrics");
+        final File pdf = File.createTempFile("test", ".pdf");
+        outfile.deleteOnExit();
+        pdf.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + testSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "Histogram_FILE=" + pdf.getAbsolutePath(),
+                "TR=false"
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        Assert.assertEquals(output.getAllHistograms().get(0).get(outlierInsertSize).getValue(), 1.0);
+    }
+
+    @Test
     public void testMultipleOrientationsForHistogram() throws IOException {
         final File output = new File("testdata/picard/analysis/directed/CollectInsertSizeMetrics", "multiple_orientation.sam.insert_size_metrics");
         final File pdf = File.createTempFile("test", ".pdf");
@@ -290,8 +335,6 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replaceAll("bam$","bai"));
         testSamFileIndex.deleteOnExit();
 
-
-        new File(testSamFile.getAbsolutePath().replace(".bam$",".bai")).deleteOnExit();
 
         final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true);
         setBuilder.setReadLength(10);
