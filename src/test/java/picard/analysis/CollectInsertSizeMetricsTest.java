@@ -246,7 +246,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
     }
 
     @Test
-    public void testNotTruncatingHistogram() throws IOException {
+    public void testSkipTruncatingHistogram() throws IOException {
         // Make a test file
         final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
         testSamFile.deleteOnExit();
