@@ -105,8 +105,8 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "truncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.", optional=true)
     public Integer MIN_HISTOGRAM_WIDTH = null;
 
-    @Argument(shortName = "TR", doc="Truncate the insert size histogram to throw out outliers.", optional = true)
-    public boolean TRUNCATE_HISTOGRAMS = true;
+    @Argument(shortName = "TR", doc="Do not truncate the insert size histogram.", optional = true)
+    public boolean DO_NOT_TRUNCATE_HISTOGRAMS = false;
 
     @Argument(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1).")
@@ -149,9 +149,13 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(Histogram_FILE);
 
+        if (DO_NOT_TRUNCATE_HISTOGRAMS){
+            HISTOGRAM_WIDTH = Integer.MAX_VALUE;
+        }
+
         //Delegate actual collection to InsertSizeMetricCollector
         multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT,
-                HISTOGRAM_WIDTH, MIN_HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES, TRUNCATE_HISTOGRAMS);
+                HISTOGRAM_WIDTH, MIN_HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES);
     }
 
     @Override protected void acceptRead(final SAMRecord record, final ReferenceSequence ref) {
