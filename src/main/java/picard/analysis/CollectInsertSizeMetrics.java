@@ -105,7 +105,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "truncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.", optional=true)
     public Integer MIN_HISTOGRAM_WIDTH = null;
 
-    @Argument(shortName = "TR", doc="Truncate the insert size histogram to throw out outliers", optional = true)
+    @Argument(shortName = "TR", doc="Truncate the insert size histogram to throw out outliers.", optional = true)
     public boolean TRUNCATE_HISTOGRAMS = true;
 
     @Argument(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
