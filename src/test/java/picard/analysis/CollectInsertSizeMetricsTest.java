@@ -276,8 +276,6 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         try ( final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(setBuilder.getHeader(), false, testSamFile)) {
             setBuilder.forEach(writer::addAlignment);
-        } catch (Exception e){
-            throw new PicardException("");
         }
 
         final File outfile = File.createTempFile("test", ".insert_size_metrics");
@@ -387,10 +385,9 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         // Add one to make the an odd # of pairs for the median
         setBuilder.addPair("query:" + queryIndex, 0, 1, 50, false, false, "10M", "10M", false, true, 60);
 
-        try(final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
-                .makeBAMWriter(setBuilder.getHeader(), false, testSamFile)){
-            setBuilder.forEach(writer::addAlignment);
-        }
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
+        setBuilder.forEach(writer::addAlignment);
+        writer.close();
 
         final File outfile = File.createTempFile("test", ".insert_size_metrics");
         final File pdf     = File.createTempFile("test", ".pdf");
