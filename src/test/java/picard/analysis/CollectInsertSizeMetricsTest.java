@@ -250,7 +250,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         // Make a test file
         final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
         testSamFile.deleteOnExit();
-        final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replaceAll("bam$","bai"));
+        final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replace("bam$","bai"));
         testSamFileIndex.deleteOnExit();
 
         final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true);
