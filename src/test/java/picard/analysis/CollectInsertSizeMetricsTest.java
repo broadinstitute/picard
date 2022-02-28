@@ -30,6 +30,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.RExecutor;
 
@@ -250,22 +251,16 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
 
     @Test
     public void testSkipTruncatingHistogram() throws IOException {
-        // Make a test file
-        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
-        testSamFile.deleteOnExit();
-        final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replace("bam$","bai"));
-        testSamFileIndex.deleteOnExit();
-
         final SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true);
         final int readLength = 10;
         setBuilder.setReadLength(readLength);
         final int minInsertSize = 100;
         final int maxInsertSize = 400;
-        int i = 0;
-        int start = 1000;
-        String cigar = readLength + "M";
+        int readCount = 0;
+        final int start = 1000;
+        final String cigar = readLength + "M";
         for (int j = minInsertSize; j < maxInsertSize; j++) {
-            setBuilder.addPair("read:" + i++, 0, start, start + j - readLength, false, false,
+            setBuilder.addPair("read:" + readCount++, 0, start, start + j - readLength, false, false,
                     cigar, cigar, false, true, 60);
         }
 
@@ -274,9 +269,16 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         setBuilder.addPair("outlierRead", 0, start, start + outlierInsertSize - readLength,
                 false, false, cigar, cigar, false, true, 60);
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
-        setBuilder.forEach(writer::addAlignment);
-        writer.close();
+        final File testSamFile = File.createTempFile("CollectInsertSizeMetrics", ".bam");
+        testSamFile.deleteOnExit();
+        final File testSamFileIndex = new File(testSamFile.getParentFile(),testSamFile.getName().replace("bam$","bai"));
+        testSamFileIndex.deleteOnExit();
+        try ( final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+                .makeBAMWriter(setBuilder.getHeader(), false, testSamFile)) {
+            setBuilder.forEach(writer::addAlignment);
+        } catch (Exception e){
+            throw new PicardException("");
+        }
 
         final File outfile = File.createTempFile("test", ".insert_size_metrics");
         final File pdf = File.createTempFile("test", ".pdf");
@@ -286,7 +288,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
                 "INPUT=" + testSamFile.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "Histogram_FILE=" + pdf.getAbsolutePath(),
-                "TR=false"
+                "TR=" + true
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -294,6 +296,23 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(outfile));
 
         Assert.assertEquals(output.getAllHistograms().get(0).get(outlierInsertSize).getValue(), 1.0);
+
+        // Run again with truncation enabled
+        final File outfileWithTruncation = File.createTempFile("test", ".insert_size_metrics");
+        outfileWithTruncation.deleteOnExit();
+        final String[] argsWithTruncation = new String[]{
+                "INPUT=" + testSamFile.getAbsolutePath(),
+                "OUTPUT=" + outfileWithTruncation.getAbsolutePath(),
+                "Histogram_FILE=" + pdf.getAbsolutePath()
+        };
+
+        Assert.assertEquals(runPicardCommandLine(argsWithTruncation), 0);
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> outputWithTruncation = new MetricsFile<>();
+        outputWithTruncation.read(new FileReader(outfileWithTruncation));
+
+        // Check that the outlier has been removed when truncation is enabled
+        Assert.assertFalse(outputWithTruncation.getAllHistograms().get(0).containsKey(outlierInsertSize));
+
     }
 
     @Test
@@ -368,10 +387,10 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         // Add one to make the an odd # of pairs for the median
         setBuilder.addPair("query:" + queryIndex, 0, 1, 50, false, false, "10M", "10M", false, true, 60);
 
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(setBuilder.getHeader(), false, testSamFile);
-        setBuilder.forEach(writer::addAlignment);
-        writer.close();
-
+        try(final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+                .makeBAMWriter(setBuilder.getHeader(), false, testSamFile)){
+            setBuilder.forEach(writer::addAlignment);
+        }
 
         final File outfile = File.createTempFile("test", ".insert_size_metrics");
         final File pdf     = File.createTempFile("test", ".pdf");
