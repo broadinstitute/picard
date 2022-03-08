@@ -25,8 +25,10 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.FingerprintingDetailMetrics;
 import picard.analysis.FingerprintingSummaryMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Class for holding metrics on a single fingerprint.
@@ -43,6 +45,7 @@ import picard.analysis.FingerprintingSummaryMetrics;
  * for a complete description of the metrics produced by this tool.
  *
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class FingerprintMetrics extends MetricBase {
     /** The Sample alias taken from RG header or #CHROME line */
     public String SAMPLE_ALIAS;

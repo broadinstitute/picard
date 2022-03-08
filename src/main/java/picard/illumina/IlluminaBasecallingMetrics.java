@@ -25,6 +25,9 @@
 package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
+
 import java.lang.Override;
 import java.lang.String;
 
@@ -32,6 +35,7 @@ import java.lang.String;
  * Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.  Averages
  * and means are taken over all tiles.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class IlluminaBasecallingMetrics extends MetricBase
 {
     /** The lane for which the metrics were calculated. */

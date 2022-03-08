@@ -22,6 +22,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.pedigree.Sex;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.help.HelpConstants;
 import picard.vcf.processor.VariantProcessor;
 
 import java.io.File;
@@ -165,6 +166,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
     }
 
 
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class ArraysVariantCallingSummaryMetrics extends MergeableMetricBase {
         /**
          * The total number of assays (SNP and indels) in the VCF
@@ -272,6 +274,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
 
     }
 
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class ArraysControlCodesSummaryMetrics extends MetricBase {
 
         /**
@@ -312,6 +315,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
 
     }
 
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class ArraysVariantCallingDetailMetrics extends CollectArraysVariantCallingMetrics.ArraysVariantCallingSummaryMetrics {
         /**
          * The chip well barcode of the Illumina array being assayed

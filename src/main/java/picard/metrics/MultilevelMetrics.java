@@ -2,7 +2,10 @@ package picard.metrics;
 
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class MultilevelMetrics extends MetricBase {
      /** The sample to which these metrics apply.  If null, it means they apply
      * to all reads in the file. */

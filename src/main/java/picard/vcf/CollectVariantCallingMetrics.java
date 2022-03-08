@@ -41,6 +41,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.nio.PicardHtsPath;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.help.HelpConstants;
 import picard.vcf.processor.VariantProcessor;
 
 import java.io.File;
@@ -141,6 +142,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF). */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class VariantCallingSummaryMetrics extends MergeableMetricBase {
         /** The number of passing bi-allelic SNPs calls (i.e. non-reference genotypes) that were examined */
         @MergeByAdding
@@ -285,6 +287,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample. */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class VariantCallingDetailMetrics extends CollectVariantCallingMetrics.VariantCallingSummaryMetrics {
         /** The name of the sample being assayed */
         @MergeByAssertEquals

@@ -25,6 +25,8 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 /**
  * Summary fingerprinting metrics and statistics about the comparison of the sequence data
@@ -33,6 +35,7 @@ import htsjdk.samtools.metrics.MetricBase;
  *
  * @author Tim Fennell
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class FingerprintingSummaryMetrics extends MetricBase {
     /** The read group from which sequence data was drawn for comparison. */
     public String READ_GROUP;
