@@ -1,10 +1,17 @@
 package picard.util.help;
 
+import com.sun.javadoc.FieldDoc;
+import htsjdk.samtools.metrics.MetricBase;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DefaultDocWorkUnitHandler;
 import org.broadinstitute.barclay.help.DocWorkUnit;
 
 import org.broadinstitute.barclay.help.HelpDoclet;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Picard Documentation work unit handler class that is the companion to PicardHelpDoclet.
@@ -18,6 +25,13 @@ public class PicardHelpDocWorkUnitHandler extends DefaultDocWorkUnitHandler {
     private final static String PICARD_JAVADOC_TAG_PREFIX = "picard"; // prefix for custom javadoc tags used by Picard
 
     private final static String PICARD_FREEMARKER_TEMPLATE_NAME = "generic.template.html";
+    private final static String PICARD_METRICS_TEMPLATE_NAME = "metrics.template.html";
+
+    private final static String WORK_UNIT_SUMMARY_KEY = "summary";
+    private final static String METRICS_MAP_ENTRY_KEY = "metrics";
+    private final static String METRICS_MAP_NAME_KEY = "name";
+    private final static String METRICS_MAP_SUMMARY_KEY = "summary";
+
 
     public PicardHelpDocWorkUnitHandler(final HelpDoclet doclet) {
         super(doclet);
@@ -36,7 +50,14 @@ public class PicardHelpDocWorkUnitHandler extends DefaultDocWorkUnitHandler {
      * Javadoc.
      */
     @Override
-    public String getTemplateName(final DocWorkUnit workUnit) { return PICARD_FREEMARKER_TEMPLATE_NAME; }
+    public String getTemplateName(final DocWorkUnit workUnit) {
+        Class<?> clazz = workUnit.getClazz();
+        if (MetricBase.class.isAssignableFrom(clazz)) {
+            return PICARD_METRICS_TEMPLATE_NAME;
+        } else {
+            return PICARD_FREEMARKER_TEMPLATE_NAME;
+        }
+    }
 
     /**
      * Add any custom freemarker bindings discovered via custom javadoc tags. Subclasses can override this to
@@ -50,10 +71,23 @@ public class PicardHelpDocWorkUnitHandler extends DefaultDocWorkUnitHandler {
 
         // Picard tools use the summary line for the long overview section, so extract that
         // from Picard tools only, and put it in the freemarker map.
-        Class<?> toolClass = currentWorkUnit.getClazz();
-        if (picard.cmdline.CommandLineProgram.class.isAssignableFrom(toolClass)) {
+        final Class<?> clazz = currentWorkUnit.getClazz();
+        if (picard.cmdline.CommandLineProgram.class.isAssignableFrom(clazz)) {
             final CommandLineProgramProperties clpProperties = currentWorkUnit.getCommandLineProperties();
-            currentWorkUnit.setProperty("summary", clpProperties.summary());
+            currentWorkUnit.setProperty(WORK_UNIT_SUMMARY_KEY, clpProperties.summary());
+        } else if (MetricBase.class.isAssignableFrom(clazz)) {
+            currentWorkUnit.setProperty(WORK_UNIT_SUMMARY_KEY, currentWorkUnit.getSummary());
+            final List<Map<String, String>> metricsFields = new ArrayList<>();
+            currentWorkUnit.setProperty(METRICS_MAP_ENTRY_KEY, metricsFields);
+            final FieldDoc[] fieldDocs = currentWorkUnit.getClassDoc().fields(false);
+            for (final FieldDoc fd : fieldDocs) {
+                if (fd.isPublic()) {
+                    final Map<String, String> metricsField = new HashMap();
+                    metricsField.put(METRICS_MAP_NAME_KEY, fd.name());
+                    metricsField.put(METRICS_MAP_SUMMARY_KEY, fd.getRawCommentText());
+                    metricsFields.add(metricsField);
+                }
+            }
         }
     }
 
