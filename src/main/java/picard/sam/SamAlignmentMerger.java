@@ -194,7 +194,12 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
                     ".  Use Picard's CreateSequenceDictionary to create a sequence dictionary.");
         }
-        return SAMSequenceDictionary.mergeDictionaries(alignedSamDictionary, referenceDict, requiredMatchingDictionaryTags);
+
+        if (requiredMatchingDictionaryTags.isEmpty()){
+            return alignedSamDictionary;
+        } else {
+            return SAMSequenceDictionary.mergeDictionaries(alignedSamDictionary, referenceDict, requiredMatchingDictionaryTags);
+        }
     }
 
     /**
