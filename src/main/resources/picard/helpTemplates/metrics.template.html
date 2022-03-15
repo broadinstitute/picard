@@ -41,7 +41,7 @@
 		<h2>Overview</h2>
 		${description}
 
-			<#-- Create the argument summary -->
+			<#-- Create the metrics summary -->
 			<#if metrics?size != 0>
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -59,16 +59,6 @@
 					</#list>
 					</tbody>
 				</table>
-			</#if>
-
-			<#-- List all of the things -->
-			<#if arguments.all?size != 0>
-				<#-- Create the argument details -->
-					<h3>Argument details</h3>
-					<p>Arguments in this list are specific to this tool. Keep in mind that other arguments are available that are shared with other tools (e.g. command-line GATK arguments); see Inherited arguments above.</p>
-					<#list arguments.all as arg>
-						<@argumentDetails arg=arg/>
-					</#list>
 			</#if>
 
 			<@footerInfo />

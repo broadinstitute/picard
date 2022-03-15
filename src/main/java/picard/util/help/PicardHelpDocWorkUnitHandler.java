@@ -77,15 +77,15 @@ public class PicardHelpDocWorkUnitHandler extends DefaultDocWorkUnitHandler {
             currentWorkUnit.setProperty(WORK_UNIT_SUMMARY_KEY, clpProperties.summary());
         } else if (MetricBase.class.isAssignableFrom(clazz)) {
             currentWorkUnit.setProperty(WORK_UNIT_SUMMARY_KEY, currentWorkUnit.getSummary());
-            final List<Map<String, String>> metricsFields = new ArrayList<>();
-            currentWorkUnit.setProperty(METRICS_MAP_ENTRY_KEY, metricsFields);
+            final List<Map<String, String>> workUnitMetricsList = new ArrayList<>();
+            currentWorkUnit.setProperty(METRICS_MAP_ENTRY_KEY, workUnitMetricsList);
             final FieldDoc[] fieldDocs = currentWorkUnit.getClassDoc().fields(false);
             for (final FieldDoc fd : fieldDocs) {
                 if (fd.isPublic()) {
-                    final Map<String, String> metricsField = new HashMap();
-                    metricsField.put(METRICS_MAP_NAME_KEY, fd.name());
-                    metricsField.put(METRICS_MAP_SUMMARY_KEY, fd.getRawCommentText());
-                    metricsFields.add(metricsField);
+                    final Map<String, String> metricsFields = new HashMap();
+                    metricsFields.put(METRICS_MAP_NAME_KEY, fd.name());
+                    metricsFields.put(METRICS_MAP_SUMMARY_KEY, fd.getRawCommentText());
+                    workUnitMetricsList.add(metricsFields);
                 }
             }
         }
