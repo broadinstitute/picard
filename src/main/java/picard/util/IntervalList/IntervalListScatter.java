@@ -61,7 +61,7 @@ public class IntervalListScatter implements Iterable<IntervalList> {
             intervalsReturned++;
             final IntervalList runningIntervalList = new IntervalList(header);
 
-            while (!intervalQueue.isEmpty() && intervalsReturned < scatterCount ) {
+            while (!intervalQueue.isEmpty() && !scatterer.reachedOutputListLimit(intervalsReturned, scatterCount) ) {
                 final Interval interval = intervalQueue.pollFirst();
                 final long currentSize = scatterer.listWeight(runningIntervalList);
 

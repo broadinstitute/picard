@@ -33,6 +33,7 @@ import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Basic test for scatter functionality in IntervalListTools
@@ -42,6 +43,10 @@ public class IntervalListScattererTest {
 
     private static final File INTERVAL_FILE = new File(TEST_DATA_DIR, "scatterable.interval_list");
     private static final IntervalList LIST_TO_SCATTER = IntervalList.fromFile(INTERVAL_FILE);
+
+    private static final File LARGER_INTERVAL_FILE = new File(TEST_DATA_DIR, "test.hg38.200.interval_list");
+    private static final List<File> LARGER_INTERVAL_EXPECTEDS = Arrays.asList(new File(TEST_DATA_DIR, "largeScatters").listFiles());
+    private static final List<IntervalList> LARGER_EXPECTED_LISTS = LARGER_INTERVAL_EXPECTEDS.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
 
     private static final File INTERVAL_WITH_OVERFLOW_FILE = new File(TEST_DATA_DIR, "scatterable_with_overflow.interval_list");
     private static final IntervalList LIST_TO_SCATTER_WITH_OVERFLOW = IntervalList.fromFile(INTERVAL_WITH_OVERFLOW_FILE);
@@ -392,6 +397,11 @@ public class IntervalListScattererTest {
                                 IntervalList.overlaps(LIST_TO_SCATTER_MANY, third),
                                 IntervalList.overlaps(LIST_TO_SCATTER_MANY, secondThird))
                         ))))));
+
+        testCases.add(new Testcase(
+                LARGER_INTERVAL_FILE, 60, IntervalListScatterMode.INTERVAL_COUNT_WITH_REMAINDER_LISTS,
+                LARGER_EXPECTED_LISTS
+        ));
 
         return testCases.stream().map(tc -> new Object[]{tc}).iterator();
     }

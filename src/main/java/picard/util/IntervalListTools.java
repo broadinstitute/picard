@@ -467,7 +467,7 @@ public class IntervalListTools extends CommandLineProgram {
             LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
             if (scattered.size != SCATTER_COUNT) {
                 LOG.warn(String.format(
-                        "Requested scatter width of %s, but only emitted %s.  (This may be an expected consequence of running in %s mode.)",
+                        "Requested scatter width of %s, but emitted %s.  (This may be an expected consequence of running in %s mode.)",
                         SCATTER_COUNT,
                         scattered.size,
                         SUBDIVISION_MODE
