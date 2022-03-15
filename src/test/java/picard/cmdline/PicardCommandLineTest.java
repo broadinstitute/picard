@@ -5,6 +5,7 @@ import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import java.util.*;
 
@@ -81,4 +82,38 @@ public class PicardCommandLineTest {
             });
     }
 
+    @DataProvider(name="isLegacyPicardStyleTests")
+    public final Object[][] getIsLegacyPicardStyle() {
+        return new Object[][] {
+                //arg list, is legacy style
+
+                // legacy base cases
+                {Arrays.asList("--INPUT", "path/to/some.bam"), false},
+                {Arrays.asList("--INPUT", "path/to/some.bam", "--VALIDATION_STRINGENCY", "LENIENT"), false},
+
+                // posix base cases
+                {Arrays.asList("INPUT=path/to/some.bam"), true },
+                {Arrays.asList("INPUT=path/to/some.bam", "VALIDATION_STRINGENCY=LENIENT"), true},
+
+                // mixed syntax cases
+
+                // APPEARS to isLegacyPicardStyle to contain a mix of styles, but is actually (in theory) a legitimate
+                // posix style arg list, so select the posix parser, but issue a warning about possible mixed
+                // args set
+                {Arrays.asList("--INPUT", "path/to/some.bam", "--SOME_ARG", "date=01/01/2022"), false},
+
+                // appears to isLegacyPicardStyle to contain a mix of styles, but is probably not valid, so select the
+                // posix parser, issue a warning, and let the parser decide if its legitimate
+                {Arrays.asList("--INPUT", "path/to/some.bam", "VALIDATION_STRINGENCY=LENIENT"), false},
+
+                // appears to isLegacyPicardStyle to contain a mix of styles, but is probably not valid, so select the
+                // posix parser, issue a warning, and let the parser decide if its legitimate
+                {Arrays.asList("INPUT=path/to/some.bam", "--ARG=somevalue"), false},
+        };
+    }
+
+    @Test(dataProvider="isLegacyPicardStyleTests")
+    public void testIsLegacyPicardStyle(final List<String> args, final boolean isLegacy) {
+        Assert.assertEquals(CommandLineSyntaxTranslater.isLegacyPicardStyle(args.toArray(new String[0])), isLegacy);
+    }
 }

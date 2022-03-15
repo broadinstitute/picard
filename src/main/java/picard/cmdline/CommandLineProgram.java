@@ -51,7 +51,6 @@ import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
-import picard.PicardException;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
