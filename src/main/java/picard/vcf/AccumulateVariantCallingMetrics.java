@@ -24,9 +24,9 @@
 package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.*;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -34,9 +34,13 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Combines multiple Variant Calling Metrics files into a single file.
@@ -53,7 +57,7 @@ import java.util.*;
 public class AccumulateVariantCallingMetrics extends CommandLineProgram {
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Paths (except for the file extensions) of Variant Calling Metrics files to read and merge.", minElements=1)
-    public List<File> INPUT;
+    public List<String> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Path (except for the file extension) of output metrics files to write.")
     public File OUTPUT;
@@ -71,15 +75,17 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
         final Map<String, CollectVariantCallingMetrics.VariantCallingDetailMetrics> collapsedSampleDetailsMap = new HashMap<>();
         final CollectVariantCallingMetrics.VariantCallingSummaryMetrics collapsedSummary = new CollectVariantCallingMetrics.VariantCallingSummaryMetrics();
 
-        for (final File file : INPUT) {
-            final String inputPrefix = file.getAbsolutePath() + ".";
+        List<Path> inputPaths = IOUtil.getPaths(INPUT);
+        for (final Path path : inputPaths) {
+            final FileSystem fs = path.getFileSystem();
+            final String inputPrefix = path.toAbsolutePath()+ ".";
 
             try {
                 // read in the detailed metrics file
-                final File detail = new File(inputPrefix + CollectVariantCallingMetrics.VariantCallingDetailMetrics.getFileExtension());
+                final Path detail = fs.getPath(inputPrefix + CollectVariantCallingMetrics.VariantCallingDetailMetrics.getFileExtension());
                 IOUtil.assertFileIsReadable(detail);
                 MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, ?> detailedMetricsFile = getMetricsFile();
-                detailedMetricsFile.read(new FileReader(detail));
+                detailedMetricsFile.read(Files.newBufferedReader(detail));
 
                 // for each sample in the detailed metrics...
                 long totalHetDepth = 0L;
@@ -94,10 +100,10 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
                 }
 
                 // next, read in the new summary metrics
-                final File summary = new File(inputPrefix + CollectVariantCallingMetrics.VariantCallingSummaryMetrics.getFileExtension());
+                final Path summary = fs.getPath(inputPrefix + CollectVariantCallingMetrics.VariantCallingSummaryMetrics.getFileExtension());
                 IOUtil.assertFileIsReadable(summary);
                 MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
-                summaryMetricsFile.read(new FileReader(summary));
+                summaryMetricsFile.read(Files.newBufferedReader(summary));
                 if (summaryMetricsFile.getMetrics().size() != 1) {
                     throw new PicardException(String.format("Expected 1 row in the summary metrics file but saw %d", summaryMetricsFile.getMetrics().size()));
                 }
