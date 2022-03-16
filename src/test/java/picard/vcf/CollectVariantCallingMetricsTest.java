@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -43,8 +44,8 @@ public class CollectVariantCallingMetricsTest {
 
     @Test
     public void testMetricsTiny() throws IOException {
-        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
-        final File vcfFile = new File(TEST_DATA_DIR, "mini.vcf");
+        final Path dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf").toPath();
+        final Path vcfFile = new File(TEST_DATA_DIR, "mini.vcf").toPath();
 
         final File outFile = new File(TEST_DATA_DIR, "vcmetrics_tiny");
         final File summaryFile = new File(TEST_DATA_DIR, "vcmetrics_tiny.variant_calling_summary_metrics");
@@ -54,8 +55,8 @@ public class CollectVariantCallingMetricsTest {
         detailFile.deleteOnExit();
 
         final CollectVariantCallingMetrics program = new CollectVariantCallingMetrics();
-        program.INPUT = vcfFile;
-        program.DBSNP = dbSnpFile;
+        program.INPUT = vcfFile.toString();
+        program.DBSNP = dbSnpFile.toString();
         program.OUTPUT = outFile;
 
         Assert.assertEquals(program.doWork(), 0);
@@ -119,8 +120,8 @@ public class CollectVariantCallingMetricsTest {
 
     @Test
     public void testMetricsTinyGVCF() throws IOException {
-        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
-        final File vcfFile = new File(TEST_DATA_DIR, "mini_gvcf.vcf");
+        final Path dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf").toPath();
+        final Path vcfFile = new File(TEST_DATA_DIR, "mini_gvcf.vcf").toPath();
 
         final File outFile = new File(TEST_DATA_DIR, "vcmetrics_tiny_gvcf");
         final File summaryFile = new File(outFile+".variant_calling_summary_metrics");
@@ -130,8 +131,8 @@ public class CollectVariantCallingMetricsTest {
         detailFile.deleteOnExit();
 
         final CollectVariantCallingMetrics program = new CollectVariantCallingMetrics();
-        program.INPUT = vcfFile;
-        program.DBSNP = dbSnpFile;
+        program.INPUT = vcfFile.toString();
+        program.DBSNP = dbSnpFile.toString();
         program.OUTPUT = outFile;
         program.GVCF_INPUT = true;
         Assert.assertEquals(program.doWork(), 0);
@@ -194,9 +195,9 @@ public class CollectVariantCallingMetricsTest {
 
     @Test
     public void testAllHomRefVCF() throws IOException {
-        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
-        final File vcfFile = new File(TEST_DATA_DIR, "allHomRef.vcf");
-        final File indexedVcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "allHomRef.tmp.");
+        final Path dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf").toPath();
+        final Path vcfFile = new File(TEST_DATA_DIR, "allHomRef.vcf").toPath();
+        final Path indexedVcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile.toFile(), "allHomRef.tmp.").toPath();
         final File outFile = new File(TEST_DATA_DIR, "vcmetrics_allHomRef");
         final File summaryFile = new File(outFile + ".variant_calling_summary_metrics");
         final File detailFile = new File(outFile + ".variant_calling_detail_metrics");
@@ -206,8 +207,8 @@ public class CollectVariantCallingMetricsTest {
         detailFile.deleteOnExit();
 
         final CollectVariantCallingMetrics program = new CollectVariantCallingMetrics();
-        program.INPUT = indexedVcfFile;
-        program.DBSNP = dbSnpFile;
+        program.INPUT = indexedVcfFile.toUri().toString();
+        program.DBSNP = dbSnpFile.toUri().toString();
         program.OUTPUT = outFile;
         Assert.assertEquals(program.doWork(), 0);
 

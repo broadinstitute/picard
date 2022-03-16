@@ -23,23 +23,18 @@
  */
 package picard.vcf.processor;
 
-import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.util.Interval;
 
-import java.io.File;
-
+import java.nio.file.Path;
 /**
  * Describes a segment of a particular VCF file.
- * 
- * @author mccowan
- * @deprecated Use VcfPathSegment
  */
-@Deprecated
-public abstract class VcfFileSegment {
+public abstract class VcfPathSegment {
     abstract public int start();
     abstract public int stop();
     abstract public String contig();
-    abstract public File vcf();
+    abstract public Path vcf();
     
     public Interval correspondingInterval() {
         return new Interval(contig(), start(), stop());
@@ -47,25 +42,25 @@ public abstract class VcfFileSegment {
 
     @Override
     public String toString() {
-        return vcf().getName() + "::" + contig() + ":" + start() + "-" + stop();
+        return vcf().getFileName() + "::" + contig() + ":" + start() + "-" + stop();
     }
 
-    static VcfFileSegment ofWholeSequence(final SAMSequenceRecord sequence, final File vcf) {
+    static VcfPathSegment ofWholeSequence(final SAMSequenceRecord sequence, final Path vcf) {
         return new SequenceSizedChunk(sequence, vcf);
     }
     
-    static final class SequenceSizedChunk extends VcfFileSegment {
+    static final class SequenceSizedChunk extends VcfPathSegment {
         final SAMSequenceRecord sequence;
-        final File vcf;
+        final Path vcf;
 
-        private SequenceSizedChunk(final SAMSequenceRecord sequence, final File vcf) {
+        private SequenceSizedChunk(final SAMSequenceRecord sequence, final Path vcf) {
             this.sequence = sequence;
             this.vcf = vcf;
         }
 
         @Override
         public String toString() {
-            return vcf().getAbsolutePath() + "::" + sequence.getSequenceName() + ":1-" + sequence.getSequenceLength();
+            return vcf().toAbsolutePath() + "::" + sequence.getSequenceName() + ":1-" + sequence.getSequenceLength();
         }
 
         @Override
@@ -84,7 +79,7 @@ public abstract class VcfFileSegment {
         }
 
         @Override
-        public File vcf() {
+        public Path vcf() {
             return vcf;
         }
     }

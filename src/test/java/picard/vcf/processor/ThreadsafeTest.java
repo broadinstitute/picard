@@ -25,12 +25,14 @@ package picard.vcf.processor;
 
 import com.google.common.base.Joiner;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,20 +42,28 @@ import java.util.Set;
  */
 public class ThreadsafeTest {
     static final int TEN_MILLION = (int) 10e6;
-    static final File VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION = new File("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf");
+    static Path VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION = null;
+
+    static {
+        try {
+            VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION = IOUtil.getPath("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test
     public void ensureUniqueVariantObservationsEspeciallyMultiAllelicOnesThatAppearAtChunkingBoundaries() {
         final VariantIteratorProducer.Threadsafe iteratorFactory =
                 new VariantIteratorProducer.Threadsafe(
-                        VcfFileSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
+                        VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
                         Arrays.asList(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION)
                 );
-        final Set<String> observed = new HashSet<String>();
+        final Set<String> observed = new HashSet<>();
         for (final CloseableIterator<VariantContext> i : iteratorFactory.iterators()) {
             while (i.hasNext()) {
                 final VariantContext next = i.next();
-                Assert.assertTrue(observed.add(next.toString()), "Second observation for " + next.toString());
+                Assert.assertTrue(observed.add(next.toString()), "Second observation for " + next);
             }
         }
     }
@@ -74,11 +84,11 @@ public class ThreadsafeTest {
     public void ensureSameVariantsReadAsSimpleVcfFileIterator() {
         final VariantIteratorProducer.Threadsafe iteratorFactory =
                 new VariantIteratorProducer.Threadsafe(
-                        VcfFileSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
+                        VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
                         Arrays.asList(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION)
                 );
-        final Set<String> observedVcs = new HashSet<String>();
-        final Set<String> actual = new HashSet<String>();
+        final Set<String> observedVcs = new HashSet<>();
+        final Set<String> actual = new HashSet<>();
         final VCFFileReader actualVcs = new VCFFileReader(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION);
         for (final VariantContext actualVc : actualVcs) {
             actual.add(actualVc.toString());

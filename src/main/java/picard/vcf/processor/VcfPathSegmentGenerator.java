@@ -32,41 +32,38 @@ import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Describes a mechanism for producing {@link VcfFileSegment}s from a VCF file.
+ * Describes a mechanism for producing {@link VcfPathSegment}s from a VCF file path.
  *
- * @deprecated Use {@link VcfPathSegmentGenerator}
- * @author mccowan
  */
-@Deprecated
-public abstract class VcfFileSegmentGenerator {
-    final static Log LOG = Log.getInstance(VcfFileSegmentGenerator.class);
+public abstract class VcfPathSegmentGenerator {
+    final static Log LOG = Log.getInstance(VcfPathSegmentGenerator.class);
 
-    public abstract Iterable<VcfFileSegment> forVcf(final File vcf);
+    public abstract Iterable<VcfPathSegment> forVcf(final Path vcf);
 
-    public static VcfFileSegmentGenerator byWholeContigSubdividingWithWidth(final long segmentWidth) {
+    public static VcfPathSegmentGenerator byWholeContigSubdividingWithWidth(final long segmentWidth) {
         return WidthLimitingDecorator.wrapping(ByWholeContig.getInstance(), segmentWidth);
     }
 
     /**
-     * Returns a decorated {@link VcfFileSegmentGenerator} that filters out {@link VcfFileSegment}s that have no overlap with the provided
+     * Returns a decorated {@link VcfPathSegmentGenerator} that filters out {@link VcfPathSegment}s that have no overlap with the provided
      * {@link OverlapDetector}.
      */
-    public static <T> VcfFileSegmentGenerator excludingNonOverlaps(final VcfFileSegmentGenerator strategy, final OverlapDetector<T> overlaps) {
-        return  new VcfFileSegmentGenerator() {
+    public static <T> VcfPathSegmentGenerator excludingNonOverlaps(final VcfPathSegmentGenerator strategy, final OverlapDetector<T> overlaps) {
+        return new VcfPathSegmentGenerator() {
             @Override
-            public Iterable<VcfFileSegment> forVcf(final File vcf) {
+            public Iterable<VcfPathSegment> forVcf(final Path vcf) {
                 return StreamSupport.stream(strategy.forVcf(vcf).spliterator(), false).filter(segment -> {
                     final boolean keep = !overlaps.getOverlaps(new Interval(segment.contig(), segment.start(), segment.stop())).isEmpty();
                     if (!keep) {
                         LOG.debug(String.format("Ignoring segment because it does not overlap with detector, %s::%s:%s-%s",
-                                segment.vcf().getName(), segment.contig(), segment.start(), segment.stop())
+                                segment.vcf().getFileName(), segment.contig(), segment.start(), segment.stop())
                         );
                     }
                     return keep;
@@ -76,11 +73,11 @@ public abstract class VcfFileSegmentGenerator {
     }
 
     /**
-     * A very simple {@link VcfFileSegmentGenerator} that breaks up the provided vcfs into contig-sized chunks.
+     * A very simple {@link VcfPathSegmentGenerator} that breaks up the provided vcfs into contig-sized chunks.
      *
      * @author mccowan
      */
-    static class ByWholeContig extends VcfFileSegmentGenerator {
+    static class ByWholeContig extends VcfPathSegmentGenerator {
         // Singleton!
         ByWholeContig() {
         }
@@ -92,12 +89,12 @@ public abstract class VcfFileSegmentGenerator {
         }
 
         @Override
-        public Iterable<VcfFileSegment> forVcf(final File vcf) {
+        public Iterable<VcfPathSegment> forVcf(final Path vcf) {
             final List<SAMSequenceRecord> samSequenceRecords = readSequences(vcf);
-            return samSequenceRecords.stream().map(samSequenceRecord -> VcfFileSegment.ofWholeSequence(samSequenceRecord, vcf)).collect(Collectors.toList());
+            return samSequenceRecords.stream().map(samSequenceRecord -> VcfPathSegment.ofWholeSequence(samSequenceRecord, vcf)).collect(Collectors.toList());
         }
 
-        private static List<SAMSequenceRecord> readSequences(final File vcf) {
+        private static List<SAMSequenceRecord> readSequences(final Path vcf) {
             final VCFFileReader reader = new VCFFileReader(vcf);
             final VCFHeader header = reader.getFileHeader();
             final SAMSequenceDictionary dict = header.getSequenceDictionary();
@@ -107,37 +104,37 @@ public abstract class VcfFileSegmentGenerator {
     }
 
     /**
-     * Decorator to apply to other {@link VcfFileSegmentGenerator} to enforce that no segment is larger than the specified width.
+     * Decorator to apply to other {@link VcfPathSegmentGenerator} to enforce that no segment is larger than the specified width.
      *
      * @author mccowan
      */
-    static final class WidthLimitingDecorator extends VcfFileSegmentGenerator {
-        final VcfFileSegmentGenerator underlyingStrategy;
+    static final class WidthLimitingDecorator extends VcfPathSegmentGenerator {
+        final VcfPathSegmentGenerator underlyingStrategy;
         final long width;
 
-        public static WidthLimitingDecorator wrapping(final VcfFileSegmentGenerator basis, final long maximumWidth) {
+        public static WidthLimitingDecorator wrapping(final VcfPathSegmentGenerator basis, final long maximumWidth) {
             return new WidthLimitingDecorator(basis, maximumWidth);
         }
 
-        private WidthLimitingDecorator(final VcfFileSegmentGenerator underlyingStrategy, final long maximumWidth) {
+        private WidthLimitingDecorator(final VcfPathSegmentGenerator underlyingStrategy, final long maximumWidth) {
             this.underlyingStrategy = underlyingStrategy;
             this.width = maximumWidth - 1;
         }
 
         /**
-         * The thing that does the work; accepts a {@link VcfFileSegment} (produced by the parent {@link VcfFileSegmentGenerator}) and breaks
+         * The thing that does the work; accepts a {@link VcfPathSegment} (produced by the parent {@link VcfPathSegmentGenerator}) and breaks
          * it down into subsegments.
          */
-        private final class VcfFileSegmentSubdivider implements Iterable<VcfFileSegment> {
-            final VcfFileSegment basis;
+        private final class VcfPathSegmentSubdivider implements Iterable<VcfPathSegment> {
+            final VcfPathSegment basis;
 
-            private VcfFileSegmentSubdivider(final VcfFileSegment basis) {
+            private VcfPathSegmentSubdivider(final VcfPathSegment basis) {
                 this.basis = basis;
             }
 
             @Override
-            public Iterator<VcfFileSegment> iterator() {
-                return new Iterator<VcfFileSegment>() {
+            public Iterator<VcfPathSegment> iterator() {
+                return new Iterator<VcfPathSegment>() {
                     int nextStart = basis.start();
 
                     @Override
@@ -146,9 +143,9 @@ public abstract class VcfFileSegmentGenerator {
                     }
 
                     @Override
-                    public VcfFileSegment next() {
+                    public VcfPathSegment next() {
                         final int start = nextStart;
-                        final VcfFileSegment ret = new VcfFileSegment() {
+                        final VcfPathSegment ret = new VcfPathSegment() {
                             @Override
                             public int start() {
                                 return start;
@@ -165,7 +162,7 @@ public abstract class VcfFileSegmentGenerator {
                             }
 
                             @Override
-                            public File vcf() {
+                            public Path vcf() {
                                 return basis.vcf();
                             }
                         };
@@ -182,9 +179,10 @@ public abstract class VcfFileSegmentGenerator {
         }
 
         @Override
-        public Iterable<VcfFileSegment> forVcf(final File vcf) {
+        public Iterable<VcfPathSegment> forVcf(final Path vcf) {
             // Turn the VCF into segments, and then apply our 
-            return StreamSupport.stream(underlyingStrategy.forVcf(vcf).spliterator(), false).flatMap(vcfFileSegment -> StreamSupport.stream(new VcfFileSegmentSubdivider(vcfFileSegment).spliterator(), false)).collect(Collectors.toList());
+            return StreamSupport.stream(underlyingStrategy.forVcf(vcf).spliterator(), false)
+                    .flatMap(vcfFileSegment -> StreamSupport.stream(new VcfPathSegmentSubdivider(vcfFileSegment).spliterator(), false)).collect(Collectors.toList());
         }
     }
 
