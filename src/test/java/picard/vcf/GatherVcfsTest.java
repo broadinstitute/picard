@@ -67,12 +67,12 @@ public class GatherVcfsTest extends CommandLineProgramTest {
 
         final File output = VcfTestUtils.createTemporaryIndexedFile("result", expectedOutput.getAbsolutePath().endsWith(".vcf") ? ".vcf" : ".vcf.gz");
 
-        inputFiles.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
+        inputFiles.forEach(f -> args.add("INPUT=" + f.toPath().toUri()));
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("COMMENT=" + comment1);
         args.add("REORDER_INPUT_BY_FIRST_VARIANT=" +  reorder);
 
-        Assert.assertEquals(runPicardCommandLine(args.toArray(new String[args.size()])), expectedRetVal, "Program was expected to run successfully, but didn't.");
+        Assert.assertEquals(runPicardCommandLine(args.toArray(new String[]{})), expectedRetVal, "Program was expected to run successfully, but didn't.");
 
         if (expectedRetVal == 0) {
             final VCFFileReader expectedReader = new VCFFileReader(expectedOutput, false);
