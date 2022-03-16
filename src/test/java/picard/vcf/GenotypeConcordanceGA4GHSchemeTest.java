@@ -38,11 +38,11 @@ import java.util.List;
  * Created by kbergin on 6/24/15.
  */
 public class GenotypeConcordanceGA4GHSchemeTest{
-    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
-    final File ceuTrioSnpsVcf = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
+    private static final String TEST_DATA_PATH = new File("testdata/picard/vcf/").toString();
+    final String ceuTrioSnpsVcf = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf").toURI().toString();
     private final GenotypeConcordanceSchemeFactory schemeFactory = new GenotypeConcordanceSchemeFactory();
     final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(false);
-    final List<File> intervalList = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalListChr1Small.interval_list"));
+    final List<String> intervalList = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalListChr1Small.interval_list").toURI().toString());
 
     @Test
     public void testGA4GHScheme() throws Exception {
