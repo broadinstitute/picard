@@ -92,16 +92,5 @@ public interface IntervalListScatterer {
      * @return The ideal "weight" of the output {@link IntervalList}'s
      */
     int deduceIdealSplitWeight(final IntervalList intervalList, final int nCount);
-
-
-    /**
-     * If we have already returned the maximum number of scatters we are done
-     * @param intervalsReturned the number of {@link IntervalList}s already returned
-     * @param scatterCount the requested scatter count
-     * @return true if we should stop creating more interval lists
-     */
-    default boolean reachedOutputListLimit(final long intervalsReturned, final int scatterCount) {
-        return intervalsReturned >= scatterCount;
-    }
 }
 
