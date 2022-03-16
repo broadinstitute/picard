@@ -2,11 +2,7 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -22,6 +18,10 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Splits the input VCF file into two, one for indels and one for SNPs. The headers of the two output
@@ -51,7 +51,7 @@ public class SplitVcfs extends CommandLineProgram {
             "</pre>" +
             "<hr />" ;
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(doc = "The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
     public File SNP_OUTPUT;
@@ -60,7 +60,7 @@ public class SplitVcfs extends CommandLineProgram {
     public File INDEL_OUTPUT;
 
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
-    public File SEQUENCE_DICTIONARY;
+    public String SEQUENCE_DICTIONARY;
 
     @Argument(doc = "If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
@@ -73,16 +73,26 @@ public class SplitVcfs extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        Path inputPath;
+        try {
+            inputPath = IOUtil.getPath(INPUT);
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
+        IOUtil.assertPathsAreReadable(Stream.of(inputPath).collect(Collectors.toList()));
         final ProgressLogger progress = new ProgressLogger(log, 10000);
 
-        final VCFFileReader fileReader = new VCFFileReader(INPUT, false);
+        final VCFFileReader fileReader = new VCFFileReader(inputPath, false);
         final VCFHeader fileHeader = fileReader.getFileHeader();
 
-        final SAMSequenceDictionary sequenceDictionary =
-                SEQUENCE_DICTIONARY != null
-                        ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY).getSequenceDictionary()
-                        : fileHeader.getSequenceDictionary();
+        final SAMSequenceDictionary sequenceDictionary;
+        try {
+            sequenceDictionary = SEQUENCE_DICTIONARY != null
+                    ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(IOUtil.getPath(SEQUENCE_DICTIONARY)).getSequenceDictionary()
+                    : fileHeader.getSequenceDictionary();
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
         if (CREATE_INDEX && sequenceDictionary == null) {
             throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
         }

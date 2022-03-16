@@ -9,12 +9,14 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Queue;
 
 public class SplitVcfsTest extends CommandLineProgramTest {
 
     private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("SplitVcfsTest", null);
-    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
+    private static final Path TEST_DATA_PATH = Paths.get("testdata/picard/vcf/");
 
     public String getCommandLineProgramName() {
         return SplitVcfs.class.getSimpleName();
@@ -29,13 +31,13 @@ public class SplitVcfsTest extends CommandLineProgramTest {
     public void testSplit() {
         final File indelOutputFile = new File(OUTPUT_DATA_PATH, "split-vcfs-test-indels-delete-me.vcf");
         final File snpOutputFile = new File(OUTPUT_DATA_PATH, "split-vcfs-test-snps-delete-me.vcf");
-        final File input = new File(TEST_DATA_PATH, "CEUTrio-merged-indels-snps.vcf");
+        final Path input = Paths.get(TEST_DATA_PATH.toString(), "CEUTrio-merged-indels-snps.vcf");
 
         indelOutputFile.deleteOnExit();
         snpOutputFile.deleteOnExit();
 
         final String[] args = new String[]{
-                "INPUT=" + input.getAbsolutePath(),
+                "INPUT=" + input.toAbsolutePath(),
                 "SNP_OUTPUT=" + snpOutputFile.getAbsolutePath(),
                 "INDEL_OUTPUT=" + indelOutputFile.getAbsolutePath()
         };
