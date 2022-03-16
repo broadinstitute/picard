@@ -43,22 +43,22 @@ import java.io.IOException;
  * @author Nils Homer
  */
 public class FixVcfHeaderTest {
-    private File INPUT_VCF;
+    private String INPUT_VCF;
     private File OUTPUT_VCF;
-    private File HEADER_VCF;
-    private File HEADER_VCF_WITH_EXTRA_SAMPLE;
+    private String HEADER_VCF;
+    private String HEADER_VCF_WITH_EXTRA_SAMPLE;
 
     @BeforeTest
     void setup() {
         final File testDataPath      = new File("testdata/picard/vcf/FixVcfHeaderTest/");
-        INPUT_VCF                    = new File(testDataPath, "input.vcf");
+        INPUT_VCF                    = new File(testDataPath, "input.vcf").toURI().toString();
         OUTPUT_VCF                   = new File(testDataPath, "output.vcf");
-        HEADER_VCF                   = new File(testDataPath, "header.vcf");
-        HEADER_VCF_WITH_EXTRA_SAMPLE = new File(testDataPath, "header_with_extra_sample.vcf");
+        HEADER_VCF                   = new File(testDataPath, "header.vcf").toURI().toString();
+        HEADER_VCF_WITH_EXTRA_SAMPLE = new File(testDataPath, "header_with_extra_sample.vcf").toURI().toString();
     }
 
     private void runFixVcfHeader(final int checkFirstNRecords,
-                                 final File replacementHeader,
+                                 final String replacementHeader,
                                  final boolean enforceSampleSamples) throws IOException {
         final FixVcfHeader program = new FixVcfHeader();
         final File outputVcf = VcfTestUtils.createTemporaryIndexedFile("output.", ".vcf");
@@ -94,7 +94,7 @@ public class FixVcfHeaderTest {
 
     @Test(dataProvider = "testFixVcfHeaderDataProvider")
     public void testFixVcfHeader(final int checkFirstNRecords,
-                                 final File replacementHeader,
+                                 final String replacementHeader,
                                  final boolean enforceSampleSamples) throws IOException {
         runFixVcfHeader(checkFirstNRecords, replacementHeader, enforceSampleSamples);
     }

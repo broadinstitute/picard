@@ -25,10 +25,7 @@
 
 package picard.vcf;
 
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
@@ -45,11 +42,8 @@ import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * Tool for replacing or fixing up a VCF header.
@@ -83,7 +77,7 @@ public class FixVcfHeader extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input VCF/BCF file.")
-    public File INPUT;
+    public String INPUT;
 
     @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF/BCF file.")
     public File OUTPUT;
@@ -92,7 +86,7 @@ public class FixVcfHeader extends CommandLineProgram {
     public int CHECK_FIRST_N_RECORDS = -1;
 
     @Argument(shortName="H", doc="The replacement VCF header.", optional=true)
-    public File HEADER = null;
+    public String HEADER = null;
 
     @Argument(doc="Enforce that the samples are the same (and in the same order) when replacing the VCF header.", optional=true)
     public boolean ENFORCE_SAME_SAMPLES = true;
@@ -106,16 +100,25 @@ public class FixVcfHeader extends CommandLineProgram {
     }
 
     @Override protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        if (HEADER != null) IOUtil.assertFileIsReadable(HEADER);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        Path inputPath;
+        Path headerPath = null;
+        try {
+            inputPath = IOUtil.getPath(INPUT);
+            IOUtil.assertFileIsReadable(inputPath);
+            if (HEADER != null){
+                headerPath = IOUtil.getPath(HEADER);
+                IOUtil.assertFileIsReadable(headerPath);
+            }
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
 
-        final VCFFileReader reader     = new VCFFileReader(INPUT, false);
+        final VCFFileReader reader     = new VCFFileReader(inputPath, false);
         final VCFHeader existingHeader = reader.getFileHeader();
         final VCFHeader outHeader;
-        if (HEADER != null) { // read the header from the file
+        if (headerPath != null) { // read the header from the file
             final VCFHeader inputHeader;
-            try (VCFFileReader headerReader = new VCFFileReader(HEADER, false)) {
+            try (VCFFileReader headerReader = new VCFFileReader(headerPath, false)) {
                 inputHeader      = headerReader.getFileHeader();
                 if (ENFORCE_SAME_SAMPLES) {
                     outHeader = inputHeader;
@@ -147,7 +150,7 @@ public class FixVcfHeader extends CommandLineProgram {
             final Map<String, VCFInfoHeaderLine> infoHeaderLines = new HashMap<>();
             final Map<String, VCFFormatHeaderLine> formatHeaderLines = new HashMap<>();
             final ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
-            try (VCFFileReader in = new VCFFileReader(INPUT, false)) {
+            try (VCFFileReader in = new VCFFileReader(inputPath, false)) {
                 log.info("Reading in records to re-build the header.");
                 for (final VariantContext ctx : in) {
                     // FILTER
