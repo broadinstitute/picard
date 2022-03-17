@@ -25,13 +25,24 @@
 
 package picard.vcf;
 
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.*;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -39,11 +50,14 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Tool for replacing or fixing up a VCF header.
@@ -77,7 +91,7 @@ public class FixVcfHeader extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input VCF/BCF file.")
-    public String INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF/BCF file.")
     public File OUTPUT;
@@ -86,7 +100,7 @@ public class FixVcfHeader extends CommandLineProgram {
     public int CHECK_FIRST_N_RECORDS = -1;
 
     @Argument(shortName="H", doc="The replacement VCF header.", optional=true)
-    public String HEADER = null;
+    public PicardHtsPath HEADER = null;
 
     @Argument(doc="Enforce that the samples are the same (and in the same order) when replacing the VCF header.", optional=true)
     public boolean ENFORCE_SAME_SAMPLES = true;
@@ -100,25 +114,17 @@ public class FixVcfHeader extends CommandLineProgram {
     }
 
     @Override protected int doWork() {
-        Path inputPath;
-        Path headerPath = null;
-        try {
-            inputPath = IOUtil.getPath(INPUT);
-            IOUtil.assertFileIsReadable(inputPath);
-            if (HEADER != null){
-                headerPath = IOUtil.getPath(HEADER);
-                IOUtil.assertFileIsReadable(headerPath);
-            }
-        } catch (IOException e) {
-            throw new RuntimeIOException(e);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        if (HEADER != null){
+            IOUtil.assertFileIsReadable(HEADER.toPath());
         }
 
-        final VCFFileReader reader     = new VCFFileReader(inputPath, false);
+        final VCFFileReader reader     = new VCFFileReader(INPUT.toPath(), false);
         final VCFHeader existingHeader = reader.getFileHeader();
         final VCFHeader outHeader;
-        if (headerPath != null) { // read the header from the file
+        if (HEADER != null) { // read the header from the file
             final VCFHeader inputHeader;
-            try (VCFFileReader headerReader = new VCFFileReader(headerPath, false)) {
+            try (VCFFileReader headerReader = new VCFFileReader(HEADER.toPath(), false)) {
                 inputHeader      = headerReader.getFileHeader();
                 if (ENFORCE_SAME_SAMPLES) {
                     outHeader = inputHeader;
@@ -150,7 +156,7 @@ public class FixVcfHeader extends CommandLineProgram {
             final Map<String, VCFInfoHeaderLine> infoHeaderLines = new HashMap<>();
             final Map<String, VCFFormatHeaderLine> formatHeaderLines = new HashMap<>();
             final ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
-            try (VCFFileReader in = new VCFFileReader(inputPath, false)) {
+            try (VCFFileReader in = new VCFFileReader(INPUT.toPath(), false)) {
                 log.info("Reading in records to re-build the header.");
                 for (final VariantContext ctx : in) {
                     // FILTER

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2022 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,8 +25,7 @@ package picard.vcf.processor;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.Interval;
-
-import java.nio.file.Path;
+import picard.nio.PicardHtsPath;
 /**
  * Describes a segment of a particular VCF file.
  */
@@ -34,7 +33,7 @@ public abstract class VcfPathSegment {
     abstract public int start();
     abstract public int stop();
     abstract public String contig();
-    abstract public Path vcf();
+    abstract public PicardHtsPath vcf();
     
     public Interval correspondingInterval() {
         return new Interval(contig(), start(), stop());
@@ -42,25 +41,25 @@ public abstract class VcfPathSegment {
 
     @Override
     public String toString() {
-        return vcf().getFileName() + "::" + contig() + ":" + start() + "-" + stop();
+        return vcf() + "::" + contig() + ":" + start() + "-" + stop();
     }
 
-    static VcfPathSegment ofWholeSequence(final SAMSequenceRecord sequence, final Path vcf) {
+    static VcfPathSegment ofWholeSequence(final SAMSequenceRecord sequence, final PicardHtsPath vcf) {
         return new SequenceSizedChunk(sequence, vcf);
     }
     
     static final class SequenceSizedChunk extends VcfPathSegment {
         final SAMSequenceRecord sequence;
-        final Path vcf;
+        final PicardHtsPath vcf;
 
-        private SequenceSizedChunk(final SAMSequenceRecord sequence, final Path vcf) {
+        private SequenceSizedChunk(final SAMSequenceRecord sequence, final PicardHtsPath vcf) {
             this.sequence = sequence;
             this.vcf = vcf;
         }
 
         @Override
         public String toString() {
-            return vcf().toAbsolutePath() + "::" + sequence.getSequenceName() + ":1-" + sequence.getSequenceLength();
+            return vcf() + "::" + sequence.getSequenceName() + ":1-" + sequence.getSequenceLength();
         }
 
         @Override
@@ -79,7 +78,7 @@ public abstract class VcfPathSegment {
         }
 
         @Override
-        public Path vcf() {
+        public PicardHtsPath vcf() {
             return vcf;
         }
     }

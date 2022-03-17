@@ -30,11 +30,18 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import picard.nio.PicardHtsPath;
 import picard.vcf.ByIntervalListVariantContextIterator;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Utility class to use with DbSnp files to determine is a locus is
@@ -59,7 +66,7 @@ public class DbSnpBitSetUtil {
     }
 
     /** Constructor that creates a bit set with bits set to true for all variant types. */
-    public DbSnpBitSetUtil(final Path dbSnpFile, final SAMSequenceDictionary sequenceDictionary) {
+    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile, final SAMSequenceDictionary sequenceDictionary) {
         this(dbSnpFile, sequenceDictionary, EnumSet.noneOf(VariantType.class));
     }
 
@@ -71,7 +78,7 @@ public class DbSnpBitSetUtil {
     }
 
     /** Constructor that creates a bit set with bits set to true for the given variant types. */
-    public DbSnpBitSetUtil(final Path dbSnpFile,
+    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch) {
         this(dbSnpFile, sequenceDictionary, variantsToMatch, null);
@@ -87,7 +94,7 @@ public class DbSnpBitSetUtil {
     }
 
     /** Constructor that creates a bit set with bits set to true for the given variant types over the given regions. */
-    public DbSnpBitSetUtil(final Path dbSnpFile,
+    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch,
                            final IntervalList intervals) {
@@ -114,7 +121,7 @@ public class DbSnpBitSetUtil {
                            final IntervalList intervals,
                            final Optional<Log> log) {
 
-        this(dbSnpFile.toPath(), sequenceDictionary, variantsToMatch, intervals, log);
+        this(new PicardHtsPath(dbSnpFile), sequenceDictionary, variantsToMatch, intervals, log);
     }
 
     /**
@@ -131,7 +138,7 @@ public class DbSnpBitSetUtil {
      * @param variantsToMatch what types of variants to load.
      * @param intervals an interval list specifying the regions to load, or null, if we are return all dbSNP sites.
      */
-    public DbSnpBitSetUtil(final Path dbSnpFile,
+    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch,
                            final IntervalList intervals,
@@ -154,12 +161,12 @@ public class DbSnpBitSetUtil {
     public static DbSnpBitSets createSnpAndIndelBitSets(final File dbSnpFile,
                                                         final SAMSequenceDictionary sequenceDictionary,
                                                         final IntervalList intervals) {
-        return createSnpAndIndelBitSets(dbSnpFile.toPath(), sequenceDictionary, intervals);
+        return createSnpAndIndelBitSets(new PicardHtsPath(dbSnpFile), sequenceDictionary, intervals);
     }
 
     /** Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF.
      * If intervals are given, consider only SNP and indel sites that overlap the intervals. */
-    public static DbSnpBitSets createSnpAndIndelBitSets(final Path dbSnpFile,
+    public static DbSnpBitSets createSnpAndIndelBitSets(final PicardHtsPath dbSnpFile,
                                                         final SAMSequenceDictionary sequenceDictionary,
                                                         final IntervalList intervals) {
         return createSnpAndIndelBitSets(dbSnpFile, sequenceDictionary, intervals, Optional.empty());
@@ -173,7 +180,7 @@ public class DbSnpBitSetUtil {
                                                         final IntervalList intervals,
                                                         final Optional<Log> log) {
 
-        return createSnpAndIndelBitSets(dbSnpFile.toPath(), sequenceDictionary, intervals, log);
+        return createSnpAndIndelBitSets(new PicardHtsPath(dbSnpFile), sequenceDictionary, intervals, log);
     }
 
     /**
@@ -181,7 +188,7 @@ public class DbSnpBitSetUtil {
      * given, consider only SNP and indel sites that overlap the intervals. If log is given, progress loading the
      * variants will be written to the log.
      */
-    public static DbSnpBitSets createSnpAndIndelBitSets(final Path dbSnpFile,
+    public static DbSnpBitSets createSnpAndIndelBitSets(final PicardHtsPath dbSnpFile,
                                                         final SAMSequenceDictionary sequenceDictionary,
                                                         final IntervalList intervals,
                                                         final Optional<Log> log){
@@ -197,14 +204,14 @@ public class DbSnpBitSetUtil {
     }
 
     /** Private helper method to read through the VCF and create one or more bit sets. */
-    private static void loadVcf(final Path dbSnpFile,
+    private static void loadVcf(final PicardHtsPath dbSnpFile,
                                 final SAMSequenceDictionary sequenceDictionary,
                                 final Map<DbSnpBitSetUtil, Set<VariantType>> bitSetsToVariantTypes,
                                 final IntervalList intervals,
                                 final Optional<Log> log) {
 
         final Optional<ProgressLogger> progress = log.map(l -> new ProgressLogger(l, (int) 1e5, "Read", "variants"));
-        final VCFFileReader variantReader = new VCFFileReader(dbSnpFile, intervals != null);
+        final VCFFileReader variantReader = new VCFFileReader(dbSnpFile.toPath(), intervals != null);
         final Iterator<VariantContext> variantIterator;
         if (intervals != null) {
             variantIterator = new ByIntervalListVariantContextIterator(variantReader, intervals);

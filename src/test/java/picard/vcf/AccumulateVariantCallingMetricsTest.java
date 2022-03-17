@@ -28,6 +28,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.FileReader;
@@ -36,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Test for AccumulateVariantCallingMetrics
@@ -67,7 +69,7 @@ public class AccumulateVariantCallingMetricsTest {
         mergedDetailFile.deleteOnExit();
 
         final AccumulateVariantCallingMetrics program = new AccumulateVariantCallingMetrics();
-        program.INPUT = inputs;
+        program.INPUT = inputs.stream().map(PicardHtsPath::new).collect(Collectors.toList());
         program.OUTPUT = mergedFilePrefix;
 
         Assert.assertEquals(program.doWork(), 0);

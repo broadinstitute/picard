@@ -25,7 +25,10 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -36,12 +39,11 @@ import picard.analysis.MergeableMetricBase;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.DbSnpBitSetUtil;
 import picard.vcf.processor.VariantProcessor;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -55,21 +57,21 @@ import java.util.Optional;
 public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")
-    public String INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Path (except for the file extension) of output metrics files " +
             "to write.")
     public File OUTPUT;
 
     @Argument(doc = "Reference dbSNP file in dbSNP or VCF format.")
-    public String DBSNP;
+    public PicardHtsPath DBSNP;
 
     @Argument(shortName = "TI", doc = "Target intervals to restrict analysis to.", optional = true)
-    public String TARGET_INTERVALS;
+    public PicardHtsPath TARGET_INTERVALS;
 
     @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true,
             doc = "If present, speeds loading of dbSNP file, will look for dictionary in vcf if not present here.")
-    public String SEQUENCE_DICTIONARY = null;
+    public PicardHtsPath SEQUENCE_DICTIONARY = null;
 
     @Argument(doc = "Set to true if running on a single-sample gvcf.", optional = true)
     public boolean GVCF_INPUT = false;
@@ -81,41 +83,30 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        Path inputPath;
-        Path dbSnpPath;
-        Path targetIntervalsPath = null;
-        Path sequenceDictionaryPath = null;
-        try {
-            inputPath = IOUtil.getPath(INPUT);
-            dbSnpPath = IOUtil.getPath(DBSNP);
-            IOUtil.assertFileIsReadable(inputPath);
-            IOUtil.assertFileIsReadable(dbSnpPath);
 
-            if (TARGET_INTERVALS != null) {
-                targetIntervalsPath = IOUtil.getPath(TARGET_INTERVALS);
-                IOUtil.assertFileIsReadable(targetIntervalsPath);
-            }
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        IOUtil.assertFileIsReadable(DBSNP.toPath());
 
-            if (SEQUENCE_DICTIONARY != null) {
-                sequenceDictionaryPath = IOUtil.getPath(SEQUENCE_DICTIONARY);
-                IOUtil.assertFileIsReadable(sequenceDictionaryPath);
-            }
-        } catch(IOException e){
-            throw new RuntimeIOException(e);
+        if (TARGET_INTERVALS != null) {
+            IOUtil.assertFileIsReadable(TARGET_INTERVALS.toPath());
         }
 
-        final boolean requiresIndex = targetIntervalsPath != null || this.THREAD_COUNT > 1;
-        final VCFFileReader variantReader = new VCFFileReader(inputPath, requiresIndex);
+        if (SEQUENCE_DICTIONARY != null) {
+            IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY.toPath());
+        }
+
+        final boolean requiresIndex = TARGET_INTERVALS != null || this.THREAD_COUNT > 1;
+        final VCFFileReader variantReader = new VCFFileReader(INPUT.toPath(), requiresIndex);
         final VCFHeader vcfHeader = variantReader.getFileHeader();
         CloserUtil.close(variantReader);
 
         final SAMSequenceDictionary sequenceDictionary =
-                SAMSequenceDictionaryExtractor.extractDictionary(sequenceDictionaryPath == null ? inputPath : sequenceDictionaryPath);
+                SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT.toPath() : SEQUENCE_DICTIONARY.toPath());
 
-        final IntervalList targetIntervals = (targetIntervalsPath == null) ? null : IntervalList.fromPath(targetIntervalsPath).uniqued();
+        final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromPath(TARGET_INTERVALS.toPath()).uniqued();
 
         log.info("Loading dbSNP file ...");
-        final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(dbSnpPath, sequenceDictionary, targetIntervals, Optional.of(log));
+        final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary, targetIntervals, Optional.of(log));
 
         log.info("Starting iteration of variants.");
 
@@ -127,7 +118,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
                             return accumulator;
                         })
                         .combiningResultsBy(CallingMetricAccumulator.Result::merge)
-                        .withInput(inputPath)
+                        .withInput(INPUT)
                         .multithreadingBy(THREAD_COUNT);
 
         if (targetIntervals != null) {

@@ -38,12 +38,12 @@ import java.util.List;
  * Created by kbergin on 6/24/15.
  */
 public class GenotypeConcordanceGA4GHSchemeWithMissingTest{
-    private static final String TEST_DATA_PATH = new File("testdata/picard/vcf/").toString();
-    final String ceuTrioSNPSVCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf").toURI().toString();
-    final String nistTruthVCF = new File(TEST_DATA_PATH, "NIST.selected.vcf").toURI().toString();
+    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
+    final File ceuTrioSNPSVCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
+    final File nistTruthVCF = new File(TEST_DATA_PATH, "NIST.selected.vcf");
     private final GenotypeConcordanceSchemeFactory schemeFactory = new GenotypeConcordanceSchemeFactory();
     final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(true);
-    final List<String> intervalList = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list").toURI().toString());
+    final List<File> intervalList = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
 
     @Test
     public void testMissingHomRefSchemeWithIntervals() {

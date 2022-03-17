@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2022 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +28,12 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.OverlapDetector;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.nio.file.Path;
 
 public class VcfPathSegmentGeneratorTest {
-    final Path VCF_WITH_LOGS_OF_GAPS =  new File("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf").toPath();
+    final PicardHtsPath VCF_WITH_LOGS_OF_GAPS =  new PicardHtsPath(new File("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf"));
     static final int TEN_MILLION = (int) 10e6;
 
     @Test

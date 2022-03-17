@@ -25,10 +25,14 @@ package picard.vcf.processor;
 
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.variant.variantcontext.VariantContext;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -107,7 +111,7 @@ public class VariantProcessor<RESULT, ACCUMULATOR extends VariantProcessor.Accum
         final AccumulatorGenerator<A, R> accumulatorGenerator;
         ResultMerger<R> reducer = null;
         IntervalList intervals = null;
-        final List<Path> inputs = new ArrayList<>();
+        final List<PicardHtsPath> inputs = new ArrayList<>();
         int threadCount = 1;
 
         Builder(final AccumulatorGenerator<A, R> accumulatorGenerator) {
@@ -121,11 +125,11 @@ public class VariantProcessor<RESULT, ACCUMULATOR extends VariantProcessor.Accum
         }
 
         public Builder<A, R> withInput(final File... vcfs) {
-            final List<Path> paths = Arrays.stream(vcfs).map(File::toPath).collect(Collectors.toList());
-            return withInput(paths.toArray(new Path[]{}));
+            final List<PicardHtsPath> paths = Arrays.stream(vcfs).map(PicardHtsPath::new).collect(Collectors.toList());
+            return withInput(paths.toArray(new PicardHtsPath[]{}));
         }
 
-        public Builder<A, R> withInput(final Path... vcfs) {
+        public Builder<A, R> withInput(final PicardHtsPath... vcfs) {
             Collections.addAll(inputs, vcfs);
             return this;
         }

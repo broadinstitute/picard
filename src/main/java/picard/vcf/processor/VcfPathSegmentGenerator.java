@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2022 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import picard.nio.PicardHtsPath;
 
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -45,7 +46,7 @@ import java.util.stream.StreamSupport;
 public abstract class VcfPathSegmentGenerator {
     final static Log LOG = Log.getInstance(VcfPathSegmentGenerator.class);
 
-    public abstract Iterable<VcfPathSegment> forVcf(final Path vcf);
+    public abstract Iterable<VcfPathSegment> forVcf(final PicardHtsPath vcf);
 
     public static VcfPathSegmentGenerator byWholeContigSubdividingWithWidth(final long segmentWidth) {
         return WidthLimitingDecorator.wrapping(ByWholeContig.getInstance(), segmentWidth);
@@ -58,12 +59,12 @@ public abstract class VcfPathSegmentGenerator {
     public static <T> VcfPathSegmentGenerator excludingNonOverlaps(final VcfPathSegmentGenerator strategy, final OverlapDetector<T> overlaps) {
         return new VcfPathSegmentGenerator() {
             @Override
-            public Iterable<VcfPathSegment> forVcf(final Path vcf) {
+            public Iterable<VcfPathSegment> forVcf(final PicardHtsPath vcf) {
                 return StreamSupport.stream(strategy.forVcf(vcf).spliterator(), false).filter(segment -> {
                     final boolean keep = !overlaps.getOverlaps(new Interval(segment.contig(), segment.start(), segment.stop())).isEmpty();
                     if (!keep) {
                         LOG.debug(String.format("Ignoring segment because it does not overlap with detector, %s::%s:%s-%s",
-                                segment.vcf().getFileName(), segment.contig(), segment.start(), segment.stop())
+                                segment.vcf(), segment.contig(), segment.start(), segment.stop())
                         );
                     }
                     return keep;
@@ -89,8 +90,8 @@ public abstract class VcfPathSegmentGenerator {
         }
 
         @Override
-        public Iterable<VcfPathSegment> forVcf(final Path vcf) {
-            final List<SAMSequenceRecord> samSequenceRecords = readSequences(vcf);
+        public Iterable<VcfPathSegment> forVcf(final PicardHtsPath vcf) {
+            final List<SAMSequenceRecord> samSequenceRecords = readSequences(vcf.toPath());
             return samSequenceRecords.stream().map(samSequenceRecord -> VcfPathSegment.ofWholeSequence(samSequenceRecord, vcf)).collect(Collectors.toList());
         }
 
@@ -162,7 +163,7 @@ public abstract class VcfPathSegmentGenerator {
                             }
 
                             @Override
-                            public Path vcf() {
+                            public PicardHtsPath vcf() {
                                 return basis.vcf();
                             }
                         };
@@ -179,7 +180,7 @@ public abstract class VcfPathSegmentGenerator {
         }
 
         @Override
-        public Iterable<VcfPathSegment> forVcf(final Path vcf) {
+        public Iterable<VcfPathSegment> forVcf(final PicardHtsPath vcf) {
             // Turn the VCF into segments, and then apply our 
             return StreamSupport.stream(underlyingStrategy.forVcf(vcf).spliterator(), false)
                     .flatMap(vcfFileSegment -> StreamSupport.stream(new VcfPathSegmentSubdivider(vcfFileSegment).spliterator(), false)).collect(Collectors.toList());

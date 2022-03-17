@@ -32,6 +32,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Combines multiple Variant Calling Metrics files into a single file.
@@ -57,7 +59,7 @@ import java.util.Map;
 public class AccumulateVariantCallingMetrics extends CommandLineProgram {
 
     @Argument(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Paths (except for the file extensions) of Variant Calling Metrics files to read and merge.", minElements=1)
-    public List<String> INPUT;
+    public List<PicardHtsPath> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Path (except for the file extension) of output metrics files to write.")
     public File OUTPUT;
@@ -75,7 +77,7 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
         final Map<String, CollectVariantCallingMetrics.VariantCallingDetailMetrics> collapsedSampleDetailsMap = new HashMap<>();
         final CollectVariantCallingMetrics.VariantCallingSummaryMetrics collapsedSummary = new CollectVariantCallingMetrics.VariantCallingSummaryMetrics();
 
-        List<Path> inputPaths = IOUtil.getPaths(INPUT);
+        final List<Path> inputPaths = INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
         for (final Path path : inputPaths) {
             final FileSystem fs = path.getFileSystem();
             final String inputPrefix = path.toAbsolutePath()+ ".";

@@ -33,6 +33,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,22 +44,22 @@ import java.io.IOException;
  * @author Nils Homer
  */
 public class FixVcfHeaderTest {
-    private String INPUT_VCF;
+    private PicardHtsPath INPUT_VCF;
     private File OUTPUT_VCF;
-    private String HEADER_VCF;
-    private String HEADER_VCF_WITH_EXTRA_SAMPLE;
+    private PicardHtsPath HEADER_VCF;
+    private PicardHtsPath HEADER_VCF_WITH_EXTRA_SAMPLE;
 
     @BeforeTest
     void setup() {
         final File testDataPath      = new File("testdata/picard/vcf/FixVcfHeaderTest/");
-        INPUT_VCF                    = new File(testDataPath, "input.vcf").toURI().toString();
+        INPUT_VCF                    = new PicardHtsPath(new File(testDataPath, "input.vcf"));
         OUTPUT_VCF                   = new File(testDataPath, "output.vcf");
-        HEADER_VCF                   = new File(testDataPath, "header.vcf").toURI().toString();
-        HEADER_VCF_WITH_EXTRA_SAMPLE = new File(testDataPath, "header_with_extra_sample.vcf").toURI().toString();
+        HEADER_VCF                   = new PicardHtsPath(new File(testDataPath, "header.vcf"));
+        HEADER_VCF_WITH_EXTRA_SAMPLE = new PicardHtsPath(new File(testDataPath, "header_with_extra_sample.vcf"));
     }
 
     private void runFixVcfHeader(final int checkFirstNRecords,
-                                 final String replacementHeader,
+                                 final PicardHtsPath replacementHeader,
                                  final boolean enforceSampleSamples) throws IOException {
         final FixVcfHeader program = new FixVcfHeader();
         final File outputVcf = VcfTestUtils.createTemporaryIndexedFile("output.", ".vcf");
@@ -94,7 +95,7 @@ public class FixVcfHeaderTest {
 
     @Test(dataProvider = "testFixVcfHeaderDataProvider")
     public void testFixVcfHeader(final int checkFirstNRecords,
-                                 final String replacementHeader,
+                                 final PicardHtsPath replacementHeader,
                                  final boolean enforceSampleSamples) throws IOException {
         runFixVcfHeader(checkFirstNRecords, replacementHeader, enforceSampleSamples);
     }

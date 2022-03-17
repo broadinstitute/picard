@@ -26,14 +26,24 @@ package picard.vcf.processor;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import picard.nio.PicardHtsPath;
 import picard.vcf.processor.util.PredicateFilterDecoratingClosableIterator;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -60,30 +70,30 @@ public abstract class VariantIteratorProducer {
      * filtering of {@link VariantContext}
      */
     public static VariantIteratorProducer byHundredMegabaseChunksWithOnTheFlyFilteringByInterval(final List<File> vcfs, final IntervalList intervalList) {
-        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs.stream().map(File::toPath).collect(Collectors.toList()), intervalList);
+        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs.stream().map(PicardHtsPath::new).collect(Collectors.toList()), intervalList);
     }
 
     /**
      * Produces a chunking with segments of size 100 megabases (or less if a contig boundary is reached), that also performs on-the-fly
      * filtering of {@link VariantContext}
      */
-    public static VariantIteratorProducer byHundredMegabasePathChunksWithOnTheFlyFilteringByInterval(final List<Path> vcfs, final IntervalList intervalList) {
+    public static VariantIteratorProducer byHundredMegabasePathChunksWithOnTheFlyFilteringByInterval(final List<PicardHtsPath> vcfs, final IntervalList intervalList) {
         return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs, intervalList);
     }
 
     /** Produces a chunking with segments of size 100 megabases (or less if a contig boundary is reached). */
     public static VariantIteratorProducer byHundredMegabaseChunks(final List<File> vcfs) {
-        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs.stream().map(File::toPath).collect(Collectors.toList()), null);
+        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs.stream().map(PicardHtsPath::new).collect(Collectors.toList()), null);
     }
 
     /** Produces a chunking with segments of size 100 megabases (or less if a contig boundary is reached). */
-    public static VariantIteratorProducer byHundredMegabasePathChunks(final List<Path> vcfs) {
+    public static VariantIteratorProducer byHundredMegabasePathChunks(final List<PicardHtsPath> vcfs) {
         return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs, null);
     }
 
     /**
      * A {@link VariantIteratorProducer} that is based on a given {@link VcfPathSegmentGenerator} and a list of VCFs.  The chunks are ordered by VCF, and
-     * then by whatever ordering of segments are produced by {@link VcfPathSegmentGenerator#forVcf(java.nio.file.Path)} for each of those VCFs.
+     * then by whatever ordering of segments are produced by {@link VcfPathSegmentGenerator#forVcf(PicardHtsPath)} for each of those VCFs.
      * <p/>
      * The iterators produced by this class are safe to share between multiple threads.
      * <p/>
@@ -104,14 +114,14 @@ public abstract class VariantIteratorProducer {
         final OverlapDetector<Interval> intervalsOfInterestDetector;
 
         /** Maps directly to {@link #segments}; useful for determining if a given variant falls into multiple segments (don't double-count!). */
-        final Map<Path, OverlapDetector<VcfPathSegment>> multiSegmentDetectorPerFile =
+        final Map<PicardHtsPath, OverlapDetector<VcfPathSegment>> multiSegmentDetectorPerFile =
                 new CollectionUtil.DefaultingMap<>(f -> new OverlapDetector<>(0, 0), true);
 
-        Threadsafe(final VcfPathSegmentGenerator segmenter, final List<Path> vcfs) {
+        Threadsafe(final VcfPathSegmentGenerator segmenter, final List<PicardHtsPath> vcfs) {
             this(segmenter, vcfs, null);
         }
 
-        Threadsafe(final VcfPathSegmentGenerator segmenter, final List<Path> vcfs, final IntervalList intervals) {
+        Threadsafe(final VcfPathSegmentGenerator segmenter, final List<PicardHtsPath> vcfs, final IntervalList intervals) {
             if (intervals != null) {
                 final List<Interval> uniques = intervals.uniqued(false).getIntervals();
                 this.intervalsOfInterestDetector = new OverlapDetector<>(0, 0);
@@ -134,7 +144,7 @@ public abstract class VariantIteratorProducer {
             final VcfPathSegmentGenerator interestingSegmentSegmenter =
                     intervalsOfInterestDetector == null ? segmenter : VcfPathSegmentGenerator.excludingNonOverlaps(segmenter, intervalsOfInterestDetector);
             segments = new ArrayList<>();
-            for (final Path vcf : vcfs) {
+            for (final PicardHtsPath vcf : vcfs) {
                 for (final VcfPathSegment segment : interestingSegmentSegmenter.forVcf(vcf)) {
                     segments.add(segment);
                 }
@@ -167,9 +177,9 @@ public abstract class VariantIteratorProducer {
          * This is a {@link CollectionUtil.DefaultingMap} to effectively produce readers on-the-fly.  Note that it also adds every produced
          * reader into {@link #allReaders}.
          */
-        final ThreadLocal<CollectionUtil.DefaultingMap<Path, VCFFileReader>> localVcfFileReaders =
+        final ThreadLocal<CollectionUtil.DefaultingMap<PicardHtsPath, VCFFileReader>> localVcfFileReaders =
                 ThreadLocal.withInitial(() -> new CollectionUtil.DefaultingMap<>(path -> {
-                    final VCFFileReader reader = new VCFFileReader(path);
+                    final VCFFileReader reader = new VCFFileReader(path.toPath());
                     LOG.debug(String.format("Producing a reader of %s for %s.", path, Thread.currentThread()));
                     allReaders.add(reader);
                     return reader;

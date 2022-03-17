@@ -2,7 +2,12 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -16,12 +21,12 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Collections;
 
 /**
  * Splits the input VCF file into two, one for indels and one for SNPs. The headers of the two output
@@ -51,7 +56,7 @@ public class SplitVcfs extends CommandLineProgram {
             "</pre>" +
             "<hr />" ;
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
-    public String INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(doc = "The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
     public File SNP_OUTPUT;
@@ -73,13 +78,9 @@ public class SplitVcfs extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        Path inputPath;
-        try {
-            inputPath = IOUtil.getPath(INPUT);
-        } catch (IOException e) {
-            throw new RuntimeIOException(e);
-        }
-        IOUtil.assertPathsAreReadable(Stream.of(inputPath).collect(Collectors.toList()));
+        final Path inputPath = INPUT.toPath();
+
+        IOUtil.assertPathsAreReadable(Collections.singletonList(inputPath));
         final ProgressLogger progress = new ProgressLogger(log, 10000);
 
         final VCFFileReader fileReader = new VCFFileReader(inputPath, false);

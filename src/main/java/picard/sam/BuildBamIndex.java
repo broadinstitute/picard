@@ -30,19 +30,20 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Command line program to generate a BAM index (.bai) file from a BAM (.bam) file
@@ -69,7 +70,7 @@ public class BuildBamIndex extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.")
-    public String INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
@@ -82,12 +83,7 @@ public class BuildBamIndex extends CommandLineProgram {
      * all the records generating a BAM Index, then writes the bai file.
      */
     protected int doWork() {
-        Path inputPath;
-        try {
-            inputPath = IOUtil.getPath(INPUT);
-        } catch (IOException e) {
-            throw new RuntimeIOException(e);
-        }
+        final Path inputPath = INPUT.toPath();
 
         // set default output file - input-file.bai
         if (OUTPUT == null) {

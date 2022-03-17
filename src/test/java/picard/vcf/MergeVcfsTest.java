@@ -4,10 +4,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgram;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class MergeVcfsTest extends AbstractVcfMergingClpTester {
         final List<String> args = new ArrayList<>();
         final File output = VcfTestUtils.createTemporaryIndexedFile("result", ".vcf");
 
-        args.add("INPUT=" + Paths.get(TEST_DATA_PATH + "mini.vcf").toUri());
+        args.add("INPUT=" + new PicardHtsPath(TEST_DATA_PATH + "mini.vcf"));
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("COMMENT=" + comment1);
 

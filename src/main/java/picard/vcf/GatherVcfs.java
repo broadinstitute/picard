@@ -1,9 +1,20 @@
 package picard.vcf;
 
+import htsjdk.io.HtsPath;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.seekablestream.SeekablePathStream;
 import htsjdk.samtools.seekablestream.SeekableStream;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.BlockCompressedInputStream;
+import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.BlockCompressedStreamConstants;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.Options;
@@ -25,7 +36,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +59,7 @@ import java.util.stream.Collectors;
 public class GatherVcfs extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF file(s).")
-    public List<String> INPUT;
+    public List<HtsPath> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF file.")
     public File OUTPUT;
@@ -76,7 +92,7 @@ public class GatherVcfs extends CommandLineProgram {
     @Override
     protected int doWork() {
         log.info("Checking inputs.");
-        final List<Path> paths = IOUtil.getPaths(INPUT);
+        final List<Path> paths = INPUT.stream().map(HtsPath::toPath).collect(Collectors.toList());
         List<Path> unrolledPaths = IOUtil.unrollPaths(paths, FileExtensions.VCF_LIST.toArray(new String[]{}));
 
         IOUtil.assertPathsAreReadable(unrolledPaths);
