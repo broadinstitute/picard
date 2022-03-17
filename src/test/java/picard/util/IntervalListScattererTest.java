@@ -86,7 +86,7 @@ public class IntervalListScattererTest {
         Assert.assertEquals(LIST_TO_SCATTER_MANY.getIntervals().size(), 32, "Wrong unique interval count");
 
         testCases.add(new Testcase(
-                LARGER_INTERVAL_FILE, 60, IntervalListScatterMode.INTERVAL_COUNT_WITH_REMAINDER_LISTS,
+                LARGER_INTERVAL_FILE, 60, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
                 LARGER_EXPECTED_LISTS
         ));
 
