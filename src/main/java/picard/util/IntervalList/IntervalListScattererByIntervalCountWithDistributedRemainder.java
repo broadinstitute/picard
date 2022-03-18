@@ -14,8 +14,7 @@ public class IntervalListScattererByIntervalCountWithDistributedRemainder extend
 
     @Override
     public List<Interval> takeSome(final Interval interval, final long idealSplitWeight, final long currentSize, final double projectSizeOfRemaining) {
-        final double amount = projectSizeOfRemaining - currentSize;
-        if (amount > 0) {
+        if (projectSizeOfRemaining > currentSize) {
             return Arrays.asList(interval, null);
         } else {
             return Arrays.asList(null, interval);
