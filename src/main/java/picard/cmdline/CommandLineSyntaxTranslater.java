@@ -29,11 +29,12 @@ public class CommandLineSyntaxTranslater {
         if (anyLegacy && Arrays.stream(argv).anyMatch(
                 arg -> arg.startsWith(BARCLAY_SHORT_OPTION_PREFIX) || arg.startsWith(BARCLAY_LONG_OPTION_PREFIX))) {
             // There appear to be both legacy and posix style args. Prefer/choose posix in this case since there are
-            // legitimate cases where argument values might contains embedded "=" (i.e,
+            // legitimate cases where argument values might contain embedded "=" (i.e,
             // "--INPUT path/to/some.bam --SOME_ARG date=01/01/2022"), which makes them appear to be
-            // legacy style args, even though they are not), whereas its is very unlikely to encounter a legitimate
+            // legacy style args, even though they are not), whereas its very unlikely to encounter a legitimate
             // legacy option that starts with a posix prefix ("--" or "-")
-            log.warn("!!!!!!Possible mixed (legacy and new style) arguments detected!!!!!!!");
+            log.warn("!!!!!!Possible mixed (legacy and new style) arguments detected!!!!!!!\n"
+                    + "Assuming new-style arguments are intended. See: " + CommandLineProgram.SYNTAX_TRANSITION_URL);
             return false;
         }
         return anyLegacy;

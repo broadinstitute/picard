@@ -87,6 +87,8 @@ public abstract class CommandLineProgram {
     private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
+    public static String SYNTAX_TRANSITION_URL =
+            "https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)";
 
     /**
      * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
@@ -206,7 +208,7 @@ public abstract class CommandLineProgram {
                 "********** NOTE: Picard's command line syntax is changing.",
                 "**********",
                 "********** For more information, please see:",
-                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "********** ", SYNTAX_TRANSITION_URL,
                 "**********",
                 "********** The command line looks like this in the new syntax:",
                 "**********",
