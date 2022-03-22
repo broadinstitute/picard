@@ -31,6 +31,10 @@ import htsjdk.samtools.util.RuntimeIOException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * A Subclass of {@link HtsPath} with conversion to {@link Path} making use of {@link IOUtil}
@@ -82,5 +86,25 @@ public class PicardHtsPath extends HtsPath {
         } catch (IOException e) {
             throw new RuntimeIOException(e);
         }
+    }
+
+    /**
+     * Construct a {@link PicardHtsPath} from a {@link Path}
+     * @param path may NOT be null
+     * @return a new object representing path
+     */
+    public static PicardHtsPath fromPath(final Path path){
+        Objects.requireNonNull(path);
+        return new PicardHtsPath(new HtsPath(path.toUri().toString()));
+    }
+
+    /**
+     * Create a {@link List<Path>} from {@link PicardHtsPath}s
+     * @param picardHtsPaths may NOT be null
+     * @return Path representations of the input picardHtsPaths
+     */
+    public static List<Path> toPaths(final Collection<PicardHtsPath> picardHtsPaths){
+        Objects.requireNonNull(picardHtsPaths);
+        return picardHtsPaths.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
     }
 }

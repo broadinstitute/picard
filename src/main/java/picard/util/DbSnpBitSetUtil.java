@@ -34,6 +34,7 @@ import picard.nio.PicardHtsPath;
 import picard.vcf.ByIntervalListVariantContextIterator;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -66,7 +67,7 @@ public class DbSnpBitSetUtil {
     }
 
     /** Constructor that creates a bit set with bits set to true for all variant types. */
-    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile, final SAMSequenceDictionary sequenceDictionary) {
+    public DbSnpBitSetUtil(final Path dbSnpFile, final SAMSequenceDictionary sequenceDictionary) {
         this(dbSnpFile, sequenceDictionary, EnumSet.noneOf(VariantType.class));
     }
 
@@ -78,7 +79,7 @@ public class DbSnpBitSetUtil {
     }
 
     /** Constructor that creates a bit set with bits set to true for the given variant types. */
-    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile,
+    public DbSnpBitSetUtil(final Path dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch) {
         this(dbSnpFile, sequenceDictionary, variantsToMatch, null);
@@ -94,7 +95,7 @@ public class DbSnpBitSetUtil {
     }
 
     /** Constructor that creates a bit set with bits set to true for the given variant types over the given regions. */
-    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile,
+    public DbSnpBitSetUtil(final Path dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch,
                            final IntervalList intervals) {
@@ -121,7 +122,7 @@ public class DbSnpBitSetUtil {
                            final IntervalList intervals,
                            final Optional<Log> log) {
 
-        this(new PicardHtsPath(dbSnpFile), sequenceDictionary, variantsToMatch, intervals, log);
+        this(dbSnpFile.toPath(), sequenceDictionary, variantsToMatch, intervals, log);
     }
 
     /**
@@ -138,7 +139,7 @@ public class DbSnpBitSetUtil {
      * @param variantsToMatch what types of variants to load.
      * @param intervals an interval list specifying the regions to load, or null, if we are return all dbSNP sites.
      */
-    public DbSnpBitSetUtil(final PicardHtsPath dbSnpFile,
+    public DbSnpBitSetUtil(final Path dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
                            final Collection<VariantType> variantsToMatch,
                            final IntervalList intervals,
@@ -147,7 +148,7 @@ public class DbSnpBitSetUtil {
         if (dbSnpFile == null) throw new IllegalArgumentException("null dbSnpFile");
         final Map<DbSnpBitSetUtil, Set<VariantType>> tmp = new HashMap<>();
         tmp.put(this, EnumSet.copyOf(variantsToMatch));
-        loadVcf(dbSnpFile, sequenceDictionary, tmp, intervals, log);
+        loadVcf(PicardHtsPath.fromPath(dbSnpFile), sequenceDictionary, tmp, intervals, log);
     }
 
     /** Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF. */

@@ -42,7 +42,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Combines multiple Variant Calling Metrics files into a single file.
@@ -77,7 +76,7 @@ public class AccumulateVariantCallingMetrics extends CommandLineProgram {
         final Map<String, CollectVariantCallingMetrics.VariantCallingDetailMetrics> collapsedSampleDetailsMap = new HashMap<>();
         final CollectVariantCallingMetrics.VariantCallingSummaryMetrics collapsedSummary = new CollectVariantCallingMetrics.VariantCallingSummaryMetrics();
 
-        final List<Path> inputPaths = INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
+        final List<Path> inputPaths = PicardHtsPath.toPaths(INPUT);
         for (final Path path : inputPaths) {
             final FileSystem fs = path.getFileSystem();
             final String inputPrefix = path.toAbsolutePath()+ ".";
