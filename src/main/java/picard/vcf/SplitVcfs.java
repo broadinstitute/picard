@@ -7,7 +7,6 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -24,7 +23,6 @@ import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 
@@ -65,7 +63,7 @@ public class SplitVcfs extends CommandLineProgram {
     public File INDEL_OUTPUT;
 
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
-    public String SEQUENCE_DICTIONARY;
+    public PicardHtsPath SEQUENCE_DICTIONARY;
 
     @Argument(doc = "If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
@@ -87,13 +85,9 @@ public class SplitVcfs extends CommandLineProgram {
         final VCFHeader fileHeader = fileReader.getFileHeader();
 
         final SAMSequenceDictionary sequenceDictionary;
-        try {
-            sequenceDictionary = SEQUENCE_DICTIONARY != null
-                    ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(IOUtil.getPath(SEQUENCE_DICTIONARY)).getSequenceDictionary()
-                    : fileHeader.getSequenceDictionary();
-        } catch (IOException e) {
-            throw new RuntimeIOException(e);
-        }
+        sequenceDictionary = SEQUENCE_DICTIONARY != null
+                ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY.toPath()).getSequenceDictionary()
+                : fileHeader.getSequenceDictionary();
         if (CREATE_INDEX && sequenceDictionary == null) {
             throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
         }

@@ -70,7 +70,7 @@ public class GatherVcfsTest extends CommandLineProgramTest {
 
         final File output = VcfTestUtils.createTemporaryIndexedFile("result", expectedOutput.getAbsolutePath().endsWith(".vcf") ? ".vcf" : ".vcf.gz");
 
-        inputFiles.forEach(f -> args.add("INPUT=" + f.toPath().toUri()));
+        inputFiles.forEach(f -> args.add("INPUT=" + f.getURI()));
         args.add("OUTPUT=" + output.getAbsolutePath());
         args.add("COMMENT=" + comment1);
         args.add("REORDER_INPUT_BY_FIRST_VARIANT=" +  reorder);
