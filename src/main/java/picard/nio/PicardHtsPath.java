@@ -74,6 +74,16 @@ public class PicardHtsPath extends HtsPath {
     }
 
     /**
+     * Create a {@link List<PicardHtsPath>} from path representations.
+     * @param paths URIs or local paths. May not be null but may be empty.
+     * @return the converted {@link List}
+     */
+    public static List<PicardHtsPath> fromPaths(Collection<String> paths) {
+        Objects.requireNonNull(paths);
+        return paths.stream().map(PicardHtsPath::new).collect(Collectors.toList());
+    }
+
+    /**
      * Resolve the URI of this object to a {@link Path} object.
      *
      * @return the resulting {@link Path}

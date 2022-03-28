@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Test for AccumulateVariantCallingMetrics
@@ -69,7 +68,7 @@ public class AccumulateVariantCallingMetricsTest {
         mergedDetailFile.deleteOnExit();
 
         final AccumulateVariantCallingMetrics program = new AccumulateVariantCallingMetrics();
-        program.INPUT = inputs.stream().map(PicardHtsPath::new).collect(Collectors.toList());
+        program.INPUT = PicardHtsPath.fromPaths(inputs);
         program.OUTPUT = mergedFilePrefix;
 
         Assert.assertEquals(program.doWork(), 0);
