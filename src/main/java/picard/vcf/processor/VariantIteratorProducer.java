@@ -34,6 +34,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import picard.nio.PicardHtsPath;
 import picard.vcf.processor.util.PredicateFilterDecoratingClosableIterator;
 
 import java.io.File;
@@ -43,6 +44,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A mechanism for iterating over {@link CloseableIterator} of {@link VariantContext}s in in some fashion, given VCF files and optionally
@@ -68,17 +70,30 @@ public abstract class VariantIteratorProducer {
      * filtering of {@link VariantContext}
      */
     public static VariantIteratorProducer byHundredMegabaseChunksWithOnTheFlyFilteringByInterval(final List<File> vcfs, final IntervalList intervalList) {
-        return new Threadsafe(VcfFileSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs, intervalList);
+        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs.stream().map(PicardHtsPath::new).collect(Collectors.toList()), intervalList);
+    }
+
+    /**
+     * Produces a chunking with segments of size 100 megabases (or less if a contig boundary is reached), that also performs on-the-fly
+     * filtering of {@link VariantContext}
+     */
+    public static VariantIteratorProducer byHundredMegabasePathChunksWithOnTheFlyFilteringByInterval(final List<PicardHtsPath> vcfs, final IntervalList intervalList) {
+        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs, intervalList);
     }
 
     /** Produces a chunking with segments of size 100 megabases (or less if a contig boundary is reached). */
     public static VariantIteratorProducer byHundredMegabaseChunks(final List<File> vcfs) {
-        return new Threadsafe(VcfFileSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs, null);
+        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs.stream().map(PicardHtsPath::new).collect(Collectors.toList()), null);
+    }
+
+    /** Produces a chunking with segments of size 100 megabases (or less if a contig boundary is reached). */
+    public static VariantIteratorProducer byHundredMegabasePathChunks(final List<PicardHtsPath> vcfs) {
+        return new Threadsafe(VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(ONE_HUNDRED_MILLION), vcfs, null);
     }
 
     /**
-     * A {@link VariantIteratorProducer} that is based on a given {@link VcfFileSegmentGenerator} and a list of VCFs.  The chunks are ordered by VCF, and
-     * then by whatever ordering of segments are produced by {@link VcfFileSegmentGenerator#forVcf(java.io.File)} for each of those VCFs.
+     * A {@link VariantIteratorProducer} that is based on a given {@link VcfPathSegmentGenerator} and a list of VCFs.  The chunks are ordered by VCF, and
+     * then by whatever ordering of segments are produced by {@link VcfPathSegmentGenerator#forVcf(PicardHtsPath)} for each of those VCFs.
      * <p/>
      * The iterators produced by this class are safe to share between multiple threads.
      * <p/>
@@ -95,19 +110,18 @@ public abstract class VariantIteratorProducer {
         final static Log LOG = Log.getInstance(Threadsafe.class);
 
         /** A list of the segments for which the corresponding {@link VariantContext}s will be produced. */
-        final List<VcfFileSegment> segments;
+        final List<VcfPathSegment> segments;
         final OverlapDetector<Interval> intervalsOfInterestDetector;
 
         /** Maps directly to {@link #segments}; useful for determining if a given variant falls into multiple segments (don't double-count!). */
-        final Map<File, OverlapDetector<VcfFileSegment>> multiSegmentDetectorPerFile =
+        final Map<PicardHtsPath, OverlapDetector<VcfPathSegment>> multiSegmentDetectorPerFile =
                 new CollectionUtil.DefaultingMap<>(f -> new OverlapDetector<>(0, 0), true);
 
-
-        Threadsafe(final VcfFileSegmentGenerator segmenter, final List<File> vcfs) {
+        Threadsafe(final VcfPathSegmentGenerator segmenter, final List<PicardHtsPath> vcfs) {
             this(segmenter, vcfs, null);
         }
 
-        Threadsafe(final VcfFileSegmentGenerator segmenter, final List<File> vcfs, final IntervalList intervals) {
+        Threadsafe(final VcfPathSegmentGenerator segmenter, final List<PicardHtsPath> vcfs, final IntervalList intervals) {
             if (intervals != null) {
                 final List<Interval> uniques = intervals.uniqued(false).getIntervals();
                 this.intervalsOfInterestDetector = new OverlapDetector<>(0, 0);
@@ -116,28 +130,28 @@ public abstract class VariantIteratorProducer {
                 intervalsOfInterestDetector = null;
             }
 
-            /**
-             * Prepare {@link #segments} and {@link multiSegmentDetectorPerFile}.  First, we only want to accumulate segments that are
-             * interesting, e.g., only ones that do not lie completely outside of the interval list provided by the consumer (if it was
-             * provided).
-             *
-             * Then, break up our {@link VcfFileSegment}s by file, and build a corresponding {@link OverlapDetector} for those segments.  This
-             * will be used downstream to ensure that we don't emit a given VC from a VCF more than once.
-             *
-             * While we're at it, since this class expects the provided {@link VcfFileSegmentGenerator} produces non-overlapping segments, 
-             * assert that this is true.
+            /*
+              Prepare {@link #segments} and {@link multiSegmentDetectorPerFile}.  First, we only want to accumulate segments that are
+              interesting, e.g., only ones that do not lie completely outside of the interval list provided by the consumer (if it was
+              provided).
+
+              Then, break up our {@link VcfPathSegment}s by file, and build a corresponding {@link OverlapDetector} for those segments.  This
+              will be used downstream to ensure that we don't emit a given VC from a VCF more than once.
+
+              While we're at it, since this class expects the provided {@link VcfFileSegmentGenerator} produces non-overlapping segments,
+              assert that this is true.
              */
-            final VcfFileSegmentGenerator interestingSegmentSegmenter =
-                    intervalsOfInterestDetector == null ? segmenter : VcfFileSegmentGenerator.excludingNonOverlaps(segmenter, intervalsOfInterestDetector);
+            final VcfPathSegmentGenerator interestingSegmentSegmenter =
+                    intervalsOfInterestDetector == null ? segmenter : VcfPathSegmentGenerator.excludingNonOverlaps(segmenter, intervalsOfInterestDetector);
             segments = new ArrayList<>();
-            for (final File vcf : vcfs) {
-                for (final VcfFileSegment segment : interestingSegmentSegmenter.forVcf(vcf)) {
+            for (final PicardHtsPath vcf : vcfs) {
+                for (final VcfPathSegment segment : interestingSegmentSegmenter.forVcf(vcf)) {
                     segments.add(segment);
                 }
             }
-            for (final VcfFileSegment segment : segments) {
+            for (final VcfPathSegment segment : segments) {
                 final Interval segmentInterval = segment.correspondingInterval();
-                final OverlapDetector<VcfFileSegment> vcfSpecificDetector = multiSegmentDetectorPerFile.get(segment.vcf());
+                final OverlapDetector<VcfPathSegment> vcfSpecificDetector = multiSegmentDetectorPerFile.get(segment.vcf());
                 if (vcfSpecificDetector.getOverlaps(segmentInterval).isEmpty()) {
                     vcfSpecificDetector.addLhs(segment, new Interval(segment.contig(), segment.start(), segment.stop()));
                 } else {
@@ -163,24 +177,19 @@ public abstract class VariantIteratorProducer {
          * This is a {@link CollectionUtil.DefaultingMap} to effectively produce readers on-the-fly.  Note that it also adds every produced
          * reader into {@link #allReaders}.
          */
-        final ThreadLocal<CollectionUtil.DefaultingMap<File, VCFFileReader>> localVcfFileReaders =
-                new ThreadLocal<CollectionUtil.DefaultingMap<File, VCFFileReader>>() {
-                    @Override
-                    protected CollectionUtil.DefaultingMap<File, VCFFileReader> initialValue() {
-                        return new CollectionUtil.DefaultingMap<>(file -> {
-                            final VCFFileReader reader = new VCFFileReader(file);
-                            LOG.debug(String.format("Producing a reader of %s for %s.", file, Thread.currentThread()));
-                            allReaders.add(reader);
-                            return reader;
-                        }, true);
-                    }
-                };
+        final ThreadLocal<CollectionUtil.DefaultingMap<PicardHtsPath, VCFFileReader>> localVcfFileReaders =
+                ThreadLocal.withInitial(() -> new CollectionUtil.DefaultingMap<>(path -> {
+                    final VCFFileReader reader = new VCFFileReader(path.toPath());
+                    LOG.debug(String.format("Producing a reader of %s for %s.", path, Thread.currentThread()));
+                    allReaders.add(reader);
+                    return reader;
+                }, true));
 
         /**
-         * Converts a {@link VcfFileSegment} into a {@link VariantContext} iterator.  Applies filtering via {@link #intervalsOfInterestDetector}
+         * Converts a {@link VcfPathSegment} into a {@link VariantContext} iterator.  Applies filtering via {@link #intervalsOfInterestDetector}
          * if it is defined.
          */
-        private CloseableIterator<VariantContext> iteratorForSegment(final VcfFileSegment segment) {
+        private CloseableIterator<VariantContext> iteratorForSegment(final VcfPathSegment segment) {
             final CloseableIterator<VariantContext> query =
                     localVcfFileReaders.get() // Get the collection of VCF file readers local to this thread
                             .get(segment.vcf()) // Get or generate the reader for this segment's VCF file
@@ -212,14 +221,14 @@ public abstract class VariantIteratorProducer {
         /**
          * A predicate that I had difficulty naming. The value of this predicate is that it ensures that no single variant is produced multiple
          * times from a call to {@link Threadsafe#iterators()}.  It works by asking each variant "Hey variant, which of the
-         * {@link VcfFileSegment}s that this {@link Threadsafe} is producing variants from do you fall into (and thus,
+         * {@link VcfPathSegment}s that this {@link Threadsafe} is producing variants from do you fall into (and thus,
          * would be produced by a corresponding call to {@link VCFFileReader#query(String, int, int)}?  If it's more than one, we're only going
-         * to emit you from the query for the very first of those {@link VcfFileSegment}s."
+         * to emit you from the query for the very first of those {@link VcfPathSegment}s."
          */
         final class NonUniqueVariantPredicate implements Predicate<VariantContext> {
-            final VcfFileSegment sourceSegment;
+            final VcfPathSegment sourceSegment;
 
-            NonUniqueVariantPredicate(final VcfFileSegment sourceSegment) {
+            NonUniqueVariantPredicate(final VcfPathSegment sourceSegment) {
                 this.sourceSegment = sourceSegment;
             }
 
@@ -229,7 +238,7 @@ public abstract class VariantIteratorProducer {
                     // This isn't a multi-allelic segment, so it can only be produced by a single segment.
                     return true;
                 }
-                final Collection<VcfFileSegment> intersectingSegments =
+                final Collection<VcfPathSegment> intersectingSegments =
                         multiSegmentDetectorPerFile.get(sourceSegment.vcf()).getOverlaps(new Interval(vc.getContig(), vc.getStart(), vc.getEnd()));
                 if (intersectingSegments.size() < 2) {
                     // There's only one segment that produces this variant
@@ -239,7 +248,7 @@ public abstract class VariantIteratorProducer {
                 // The convention is: only emit the VC if it is produced from the first segment that can produce it in the list.
                 final int sourceSegmentIndex = segments.indexOf(sourceSegment);
                 LOG.debug("Found wide variant spanning multiple source segments: ", vc);
-                for (final VcfFileSegment intersectingSegment : intersectingSegments) {
+                for (final VcfPathSegment intersectingSegment : intersectingSegments) {
                     if (segments.indexOf(intersectingSegment) < sourceSegmentIndex) {
                         // There is a segment that produces this variant earlier in the segment list, exclude it.
                         return false;
