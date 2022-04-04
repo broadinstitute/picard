@@ -24,8 +24,14 @@
 
 package picard.sam;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Histogram;
 import picard.analysis.MergeableMetricBase;
+import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
+import picard.util.MathUtil;
+
+import java.util.List;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
@@ -231,6 +237,33 @@ public class DuplicationMetrics extends MergeableMetricBase {
         System.out.println("X Seq\tX Unique");
         for (Histogram.Bin<Double> bin : m.calculateRoiHistogram().values()) {
             System.out.println(bin.getId() + "\t" + bin.getValue());
+        }
+    }
+
+    public void addDuplicateReadToMetrics(final SAMRecord rec) {
+        // only update duplicate counts for "decider" reads, not tag-a-long reads
+        if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
+            // Update the duplication metrics
+            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+                ++UNPAIRED_READ_DUPLICATES;
+
+            } else {
+                ++READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
+            }
+        }
+    }
+
+    public void addReadToLibraryMetrics(final SAMRecord rec) {
+
+        // First bring the simple metrics up to date
+        if (rec.getReadUnmappedFlag()) {
+            ++UNMAPPED_READS;
+        } else if (rec.isSecondaryOrSupplementary()) {
+            ++SECONDARY_OR_SUPPLEMENTARY_RDS;
+        } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+            ++UNPAIRED_READS_EXAMINED;
+        } else {
+            ++READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
         }
     }
 }

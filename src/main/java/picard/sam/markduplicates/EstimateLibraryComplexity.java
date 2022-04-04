@@ -45,6 +45,7 @@ import picard.PicardException;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
 import picard.sam.util.PhysicalLocationShort;
 
@@ -583,7 +584,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         for (final String library : duplicationHistosByLibrary.keySet()) {
             final Histogram<Integer> duplicationHisto = duplicationHistosByLibrary.get(library);
             final Histogram<Integer> opticalHisto = opticalHistosByLibrary.get(library);
-            final DuplicationMetrics metrics = new DuplicationMetrics();
+            final DuplicationMetrics metrics = DuplicationMetricsFactory.createMetrics();
             metrics.LIBRARY = library;
 
             // Filter out any bins that have fewer than MIN_GROUP_COUNT entries in them and calculate derived metrics

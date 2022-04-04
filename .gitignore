@@ -15,3 +15,5 @@ report
 jacoco.data
 .gradle
 build
+*.log
+*.swp

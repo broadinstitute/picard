@@ -39,6 +39,7 @@ import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
 import picard.sam.markduplicates.util.LibraryIdGenerator;
 import picard.sam.markduplicates.util.ReadEnds;
@@ -138,7 +139,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
                 final String library = LibraryIdGenerator.getLibraryName(header, record);
                 DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
                 if (metrics == null) {
-                    metrics = new DuplicationMetrics();
+                    metrics = DuplicationMetricsFactory.createMetrics();
                     metrics.LIBRARY = library;
                     libraryIdGenerator.addMetricsByLibrary(library, metrics);
                 }

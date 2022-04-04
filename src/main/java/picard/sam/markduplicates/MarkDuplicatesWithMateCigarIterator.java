@@ -34,6 +34,7 @@ import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.*;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.util.CloseableIterator;
+import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.util.*;
 
 import java.io.File;
@@ -146,7 +147,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
             final String library = LibraryIdGenerator.getReadGroupLibraryName(readGroup);
             DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
             if (metrics == null) {
-                metrics = new DuplicationMetrics();
+                metrics = DuplicationMetricsFactory.createMetrics();
                 metrics.LIBRARY = library;
                 libraryIdGenerator.addMetricsByLibrary(library, metrics);
             }
@@ -610,7 +611,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
         final String library = LibraryIdGenerator.getLibraryName(header, record);
         DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
         if (metrics == null) {
-            metrics = new DuplicationMetrics();
+            metrics = DuplicationMetricsFactory.createMetrics();
             metrics.LIBRARY = library;
             libraryIdGenerator.addMetricsByLibrary(library, metrics);
         }

@@ -74,6 +74,11 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     }
 
     @Override
+    public String toString() {
+        return String.format("%d %d %d", read1IndexInFile, read1Coordinate, score);
+    }
+
+    @Override
     public ReadEndsForMarkDuplicates clone() {
         return new ReadEndsForMarkDuplicates(this);
     }
