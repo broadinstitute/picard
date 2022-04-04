@@ -66,7 +66,7 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
 ensureBuildPrerequisites(buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.24.1')
-final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
+final googleNio = 'com.google.cloud:google-cloud-nio:0.123.23'
 
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
@@ -94,9 +94,7 @@ dependencies {
     compile 'org.broadinstitute:barclay:4.0.2'
     compile 'org.apache.logging.log4j:log4j-api:2.17.1'
     compile 'org.apache.logging.log4j:log4j-core:2.17.1'
-    compileOnly(googleNio) {
-        transitive = false
-    }
+    compileOnly(googleNio)
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
     compileOnly(javadocJDKFiles)
@@ -178,7 +176,7 @@ task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
 
     // The picardDoc process instantiates any documented feature classes, so to run it we need the entire
     // runtime classpath, as well as jdk javadoc files such as tools.jar, where com.sun.javadoc lives.
-    // The compileClasspath is required in order for the picarDoc doclet process to resolve the googleNio
+    // The compileClasspath is required in order for the picardDoc doclet process to resolve the googleNio
     // classes, which are compile-time only.
     classpath = sourceSets.main.compileClasspath + sourceSets.main.runtimeClasspath + javadocJDKFiles
     options.docletpath = classpath.asType(List)

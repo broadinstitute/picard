@@ -28,10 +28,10 @@ package picard.nio;
 import com.google.cloud.storage.StorageOptions;
 import com.google.cloud.storage.contrib.nio.CloudStorageConfiguration;
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
-import shaded.cloud_nio.com.google.api.client.util.Strings;
-import shaded.cloud_nio.com.google.api.gax.retrying.RetrySettings;
-import shaded.cloud_nio.com.google.cloud.http.HttpTransportOptions;
-import shaded.cloud_nio.org.threeten.bp.Duration;
+import com.google.api.client.util.Strings;
+import com.google.api.gax.retrying.RetrySettings;
+import com.google.cloud.http.HttpTransportOptions;
+import org.threeten.bp.Duration;
 
 /**
  * This class serves as a connection to google's implementation of nio support for GCS housed files.
