@@ -82,7 +82,7 @@ public class PicardHelpDocWorkUnitHandler extends DefaultDocWorkUnitHandler {
             final FieldDoc[] fieldDocs = currentWorkUnit.getClassDoc().fields(false);
             for (final FieldDoc fd : fieldDocs) {
                 if (fd.isPublic()) {
-                    final Map<String, String> metricsFields = new HashMap();
+                    final Map<String, String> metricsFields = new HashMap<>();
                     metricsFields.put(METRICS_MAP_NAME_KEY, fd.name());
                     metricsFields.put(METRICS_MAP_SUMMARY_KEY, fd.getRawCommentText());
                     workUnitMetricsList.add(metricsFields);
