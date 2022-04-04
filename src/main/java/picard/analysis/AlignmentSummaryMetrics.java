@@ -133,7 +133,12 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     /** The standard deviation of the read lengths. Computed using all read lengths including clipped bases. */
     public double SD_READ_LENGTH;
 
-    /** The median read length. Computed using all read lengths including clipped bases. */
+    /**
+     * The median read length of the set of reads examined.  When looking at the data for a single lane with
+     * equal length reads this number is just the read length.  When looking at data for merged lanes with
+     * differing read lengths this is the median read length of all reads. Computed using all bases in reads,
+     * including clipped bases.
+     */
     public double MEDIAN_READ_LENGTH;
 
     /**
@@ -148,6 +153,13 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
 
     /** The maximum read length. Computed using all read lengths including clipped bases. */
     public double MAX_READ_LENGTH;
+
+    /**
+     * The mean aligned read length of the set of reads examined.  When looking at the data for a single lane with
+     * equal length reads this number is just the read length.  When looking at data for merged lanes with
+     * differing read lengths this is the mean read length of all reads. Clipped bases are not counted.
+     */
+    public double MEAN_ALIGNED_READ_LENGTH;
 
     /**
      * The number of aligned reads whose mate pair was also aligned to the reference.
