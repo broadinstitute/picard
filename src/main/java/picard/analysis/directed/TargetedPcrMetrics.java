@@ -25,8 +25,12 @@
 package picard.analysis.directed;
 
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
+
 /** Metrics class for the analysis of reads obtained from targeted pcr experiments e.g. the TruSeq Custom Amplicon
  * (TSCA) kit (Illumina).  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class TargetedPcrMetrics extends TargetMetricsBase {
 
     /**  The name of the amplicon set used in this metrics collection run */

@@ -42,6 +42,7 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
 import picard.util.RExecutor;
+import picard.util.help.HelpConstants;
 
 import java.io.File;
 import java.util.List;
@@ -87,6 +88,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     /**
      * Metrics for evaluating the performance of whole genome sequencing experiments.
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class WgsMetricsWithNonZeroCoverage extends WgsMetrics {
         public enum Category {WHOLE_GENOME, NON_ZERO_REGIONS}
 

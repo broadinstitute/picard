@@ -26,11 +26,14 @@
 package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.util.QualityUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
+import picard.util.help.HelpConstants;
 
 /**
  * Created by farjoun on 6/26/18.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class ErrorMetric extends MergeableMetricBase {
 
 

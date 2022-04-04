@@ -24,12 +24,15 @@
 
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Holds information about CpG sites encountered for RRBS processing QC
  * @author jgentry
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public final class RrbsCpgDetailMetrics extends MultilevelMetrics {
 	/** Sequence the CpG is seen in */
 	public String SEQUENCE_NAME;

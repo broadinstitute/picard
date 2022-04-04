@@ -24,13 +24,16 @@
 
 package picard.analysis.replicates;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
+import picard.util.help.HelpConstants;
 
 /**
  * A class to store information relevant for biological rate estimation
  *
  * @author Yossi Farjoun
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class IndependentReplicateMetric extends MergeableMetricBase {
 
     /**
