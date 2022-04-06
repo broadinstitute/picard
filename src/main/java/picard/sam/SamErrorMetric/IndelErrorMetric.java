@@ -25,9 +25,13 @@
 
 package picard.sam.SamErrorMetric;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
+
 /**
  * Metric to be used for InDel errors
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class IndelErrorMetric extends BaseErrorMetric {
 
     /**

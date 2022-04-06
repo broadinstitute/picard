@@ -29,10 +29,13 @@ package picard.metrics;
  */
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.GcBiasDetailMetrics;
 import picard.analysis.GcBiasSummaryMetrics;
 import htsjdk.samtools.metrics.MetricsFile;
+import picard.util.help.HelpConstants;
 
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class GcBiasMetrics extends MetricBase {
     public MetricsFile<GcBiasDetailMetrics, ?> DETAILS = new MetricsFile<GcBiasDetailMetrics, Comparable>();
 

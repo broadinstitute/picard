@@ -1,15 +1,15 @@
 package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.util.IlluminaUtil;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import picard.util.help.HelpConstants;
 
 /**
  * Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
  * the basecalls directory and determine to which barcode each read should be assigned.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class BarcodeMetric extends MetricBase {
     /**
      * The barcode (from the set of expected barcodes) for which the following metrics apply.

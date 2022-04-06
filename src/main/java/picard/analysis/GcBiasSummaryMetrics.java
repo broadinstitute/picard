@@ -24,13 +24,16 @@
 
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * High level metrics that capture how biased the coverage in a certain lane is.
  *
  * @author Tim Fennell
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class GcBiasSummaryMetrics extends MultilevelMetrics {
     public String ACCUMULATION_LEVEL;
 

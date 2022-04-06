@@ -35,6 +35,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.util.help.HelpConstants;
 
 import java.io.File;
 
@@ -203,6 +204,7 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     /**
      * A set of metrics used to describe the general quality of a BAM file
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class QualityYieldMetrics extends MergeableMetricBase {
 
         /**
