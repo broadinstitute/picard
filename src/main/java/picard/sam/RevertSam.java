@@ -57,6 +57,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
@@ -144,7 +145,7 @@ public class RevertSam extends CommandLineProgram {
             "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n" +
             "";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to revert the state of.")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT;
@@ -249,11 +250,11 @@ public class RevertSam extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
         ValidationUtil.assertWritable(OUTPUT, OUTPUT_BY_READGROUP);
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT.toPath());
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
@@ -327,7 +328,11 @@ public class RevertSam extends CommandLineProgram {
         } else {
             final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
             try {
-                readGroupToFormat = createReadGroupFormatMap(inHeader, REFERENCE_SEQUENCE, VALIDATION_STRINGENCY, INPUT, RESTORE_ORIGINAL_QUALITIES);
+                Path referenceSequencePath = null;
+                if (REFERENCE_SEQUENCE != null) {
+                    referenceSequencePath = REFERENCE_SEQUENCE.toPath();
+                }
+                readGroupToFormat = createReadGroupFormatMap(inHeader, referenceSequencePath, VALIDATION_STRINGENCY, INPUT.toPath(), RESTORE_ORIGINAL_QUALITIES);
             } catch (final PicardException e) {
                 log.error(e.getMessage());
                 return -1;
@@ -613,9 +618,9 @@ public class RevertSam extends CommandLineProgram {
 
     private Map<SAMReadGroupRecord, FastqQualityFormat> createReadGroupFormatMap(
             final SAMFileHeader inHeader,
-            final File referenceSequence,
+            final Path referenceSequence,
             final ValidationStringency validationStringency,
-            final File input,
+            final Path input,
             final boolean restoreOriginalQualities) {
 
         final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
