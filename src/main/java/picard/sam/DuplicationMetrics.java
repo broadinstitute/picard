@@ -25,12 +25,15 @@
 package picard.sam;
 
 import htsjdk.samtools.util.Histogram;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
+import picard.util.help.HelpConstants;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
  * within a stream of SAMRecords.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class DuplicationMetrics extends MergeableMetricBase {
     /**
      * The library on which the duplicate marking was performed.

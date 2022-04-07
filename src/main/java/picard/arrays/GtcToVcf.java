@@ -164,6 +164,8 @@ public class GtcToVcf extends CommandLineProgram {
         df.setGroupingSize(0);
     }
 
+    int NumZeroedOutAssays = 0;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -191,6 +193,24 @@ public class GtcToVcf extends CommandLineProgram {
 
             // fill the sorting collection
             fillContexts(contexts, infiniumGTCFile, manifest, infiniumEGTFile);
+
+            final int numCalls = infiniumGTCFile.getNumCalls();
+            final int numSnps = infiniumGTCFile.getNumberOfSnps();
+            final double callRate = ((double) numCalls) / (numSnps - NumZeroedOutAssays);
+
+            log.debug("NumCalls:    " + numCalls);
+            log.debug("NumNoCalls:  " + infiniumGTCFile.getNumNoCalls());
+            log.debug("NumSnps:     " + numSnps);
+            log.debug("Zeroed:      " + NumZeroedOutAssays);
+            log.debug("IntOnly:     " + infiniumGTCFile.getNumIntensityOnly());
+            log.debug("GtcCallRate: " + infiniumGTCFile.getCallRate());
+            log.debug("CallRate:    " + callRate);
+
+            // The Call Rate in the Illumina GTC File does not take into account zeroed out SNPs.
+            // So we recalculate it (and ignore zeroed out assays - which also includes intensity only probes)
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE, String.valueOf(callRate)));
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE_DETAIL,
+                    "The gtcCallRate is the Call Rate reported in the Illumina GTC file, corrected for the presence of Zeroed-Out SNPs"));
 
             writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
 
@@ -290,9 +310,17 @@ public class GtcToVcf extends CommandLineProgram {
         while (iterator.hasNext()) {
             final Build37ExtendedIlluminaManifestRecord record = iterator.next();
 
+            Integer egtIndex = egtFile.rsNameToIndex.get(record.getName());
+            if (egtIndex == null) {
+                throw new PicardException("Found no record in cluster file for manifest entry '" + record.getName() + "'");
+            }
+            if (egtFile.totalScore[egtIndex] == 0.0) {
+                NumZeroedOutAssays++;
+            }
+
             if (!record.isFail()) {
                 InfiniumGTCRecord gtcRecord = gtcFile.getRecord(gtcIndex);
-                VariantContext context = makeVariantContext(record, gtcRecord, egtFile, progressLogger);
+                VariantContext context = makeVariantContext(record, gtcRecord, egtFile, egtIndex, progressLogger);
                 numVariantsWritten++;
                 contexts.add(context);
             }
@@ -301,11 +329,12 @@ public class GtcToVcf extends CommandLineProgram {
 
         log.info(numVariantsWritten + " Variants were written to file");
         log.info(gtcFile.getNumberOfSnps() + " Variants in the GTC file");
+        log.info(NumZeroedOutAssays + " Assays were zeroed out in the EGT file");
         log.info(manifest.getNumAssays() + " Variants on the " + manifest.getDescriptorFileName() + " genotyping array manifest file");
     }
 
     private VariantContext makeVariantContext(Build37ExtendedIlluminaManifestRecord record, final InfiniumGTCRecord gtcRecord,
-                                              final InfiniumEGTFile egtFile, final ProgressLogger progressLogger) {
+                                              final InfiniumEGTFile egtFile, final int egtIndex, final ProgressLogger progressLogger) {
         // If the record is not flagged as errant in the manifest we include it in the VCF
         Allele A = record.getAlleleA();
         Allele B = record.getAlleleB();
@@ -313,11 +342,7 @@ public class GtcToVcf extends CommandLineProgram {
 
         final String chr = record.getB37Chr();
         final Integer position = record.getB37Pos();
-        final Integer endPosition = position + ref.length() - 1;
-        Integer egtIndex = egtFile.rsNameToIndex.get(record.getName());
-        if (egtIndex == null) {
-            throw new PicardException("Found no record in cluster file for manifest entry '" + record.getName() + "'");
-        }
+        final int endPosition = position + ref.length() - 1;
 
         progressLogger.record(chr, position);
 
@@ -363,7 +388,8 @@ public class GtcToVcf extends CommandLineProgram {
         builder.attribute(InfiniumVcfFields.ILLUMINA_CHR, record.getChr());
         builder.attribute(InfiniumVcfFields.ILLUMINA_POS, record.getPosition());
         builder.attribute(InfiniumVcfFields.ILLUMINA_BUILD, record.getGenomeBuild());
-        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(' ', '_'));
+        // Source field from the Illumina manifest may contain semicolons as separator characters.  Replace with a ',' for VCF
+        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(';', ',').replace(' ', '_'));
         builder.attribute(InfiniumVcfFields.GC_SCORE, formatFloatForVcf(egtFile.totalScore[egtIndex]));
 
         for (InfiniumVcfFields.GENOTYPE_VALUES gtValue : InfiniumVcfFields.GENOTYPE_VALUES.values()) {
@@ -482,7 +508,7 @@ public class GtcToVcf extends CommandLineProgram {
     }
 
     public static String formatFloatForVcf(final float value) {
-        if (Float.isNaN(value)) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
             return DOT;
         }
         return df.format(value);
@@ -554,7 +580,6 @@ public class GtcToVcf extends CommandLineProgram {
             lines.add(new VCFHeaderLine(controlInfo.getControl(), controlInfo.toString() + "|" + redIntensity + "|" + greenIntensity));
         }
         lines.add(new VCFHeaderLine(InfiniumVcfFields.FINGERPRINT_GENDER, fingerprintGender.name()));
-        lines.add(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE, String.valueOf(gtcFile.getCallRate())));
         if (gtcGender != null) {
             lines.add(new VCFHeaderLine(InfiniumVcfFields.AUTOCALL_GENDER, gtcGender));
         } else {

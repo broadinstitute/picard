@@ -66,7 +66,7 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
 ensureBuildPrerequisites(buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '2.24.1')
-final googleNio = 'com.google.cloud:google-cloud-nio:0.107.0-alpha:shaded'
+final googleNio = 'com.google.cloud:google-cloud-nio:0.123.25'
 
 // Get the jdk files we need to run javaDoc. We need to use these during compile, testCompile,
 // test execution, and gatkDoc generation, but we don't want them as part of the runtime
@@ -83,7 +83,7 @@ configurations {
 }
 
 dependencies {
-    compile('com.intel.gkl:gkl:0.8.5') {
+    compile('com.intel.gkl:gkl:0.8.8') {
         exclude module: 'htsjdk'
     }
     compile 'com.google.guava:guava:15.0'
@@ -91,10 +91,10 @@ dependencies {
     compile 'org.apache.commons:commons-collections4:4.3'
     compile 'commons-lang:commons-lang:2.6'
     compile 'com.github.samtools:htsjdk:' + htsjdkVersion
-    compile 'org.broadinstitute:barclay:3.0.0'
-    compileOnly(googleNio) {
-        transitive = false
-    }
+    compile 'org.broadinstitute:barclay:4.0.2'
+    compile 'org.apache.logging.log4j:log4j-api:2.17.1'
+    compile 'org.apache.logging.log4j:log4j-core:2.17.1'
+    compileOnly(googleNio)
 
     // javadoc utilities; compile/test only to prevent redistribution of sdk jars
     compileOnly(javadocJDKFiles)
@@ -141,7 +141,9 @@ tasks.withType(Jar){
         attributes 'Main-Class': 'picard.cmdline.PicardCommandLine',
                 'Implementation-Title': 'Picard',
                 'Implementation-Vendor': 'Broad Institute',
-                'Implementation-Version': version
+                'htsjdk-Version': htsjdkVersion,
+                'Implementation-Version': version,
+                'Multi-Release': 'true'
     }
 }
 
@@ -156,7 +158,7 @@ javadoc {
 
 // Generate Picard Online Doc
 task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
-    final File picardDocDir = new File("build/docs/picarddoc")
+    final File picardDocDir = file("build/docs/picarddoc")
     doFirst {
         // make sure the output folder exists or we can create it
         if (!picardDocDir.exists() && !picardDocDir.mkdirs()) {
@@ -192,7 +194,7 @@ task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
 
 task currentJar(type: Copy){
     from shadowJar
-    into new File(buildDir, "libs")
+    into file("$buildDir/libs")
     rename { string -> "picard.jar"}
 }
 
@@ -370,7 +372,7 @@ uploadArchives {
     }
 }
 
-ext.htmlDir = new File("build/docs/html")
+ext.htmlDir = file("build/docs/html")
 
 //update static web docs
 task copyJavadoc(dependsOn: 'javadoc', type: Copy) {

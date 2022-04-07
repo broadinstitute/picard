@@ -38,6 +38,8 @@ import htsjdk.samtools.util.RuntimeEOFException;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.TrimmingUtil;
+import htsjdk.samtools.util.Tuple;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -52,8 +54,8 @@ import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.IlluminaUtil;
-import picard.util.TabbedTextFileWithHeaderParser;
+import picard.util.*;
+import picard.util.IlluminaUtil.IlluminaAdapterPair;
 
 import java.io.File;
 import java.io.IOException;
@@ -152,9 +154,14 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
             mutex = {"OUTPUT_PREFIX"})
     public File MULTIPLEX_PARAMS;
 
-    @Deprecated
-    @Argument(doc = "Deprecated (No longer used). Which adapters to look for in the read.", optional = true)
-    public List<IlluminaUtil.IlluminaAdapterPair> ADAPTERS_TO_CHECK = null;
+    @Argument(doc = "Which adapters to look for in the reads. The default value is null, meaning that no adapters will be looked for in the reads.", optional = true)
+    public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = null;
+
+    @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
+    public String FIVE_PRIME_ADAPTER;
+
+    @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
+    public String THREE_PRIME_ADAPTER;
 
     @Argument(doc = "The number of threads to run in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will" +
@@ -200,6 +207,13 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
     @Argument(doc = "If true, match barcodes on the fly. Otherwise parse the barcodes from the barcodes file.")
     public Boolean MATCH_BARCODES_INLINE = false;
 
+    @Argument(doc = "The quality to use as a threshold for trimming.", optional = true)
+    public Integer TRIMMING_QUALITY = null;
+
+    @Argument(doc = "The minimum length for a trimmed read. " +
+            "If trimming would create a smaller read, then trim to this length instead", optional = true)
+    public Integer MIN_TRIMMED_LENGTH = 20;
+
     /**
      * Simple switch to control the read name format to emit.
      */
@@ -207,7 +221,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         CASAVA_1_8, ILLUMINA
     }
 
-    private final Map<String, Writer<ClusterData>> sampleBarcodeClusterWriterMap = new HashMap<String, Writer<ClusterData>>(1, 0.5f);
+    private final Map<String, Writer<ClusterData>> sampleBarcodeClusterWriterMap = new HashMap<>(1, 0.5f);
     final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
     private BasecallsConverter<?> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
@@ -215,6 +229,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
     private ReadNameEncoder readNameEncoder;
     boolean demultiplex;
     private AsyncWriterPool writerPool;
+    private List<AdapterPair> adapters;
 
     @Override
     protected int doWork() {
@@ -257,7 +272,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         // Remove once deprecated parameter is deleted.
         if (MAX_READS_IN_RAM_PER_TILE != -1) {
             log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
-            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE * NUM_PROCESSORS;
         }
 
         if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && MACHINE_NAME == null) {
@@ -268,8 +283,8 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
             errors.add("FLOWCELL_BARCODE is required when using Casava1.8-style read name headers.");
         }
 
-        if (ADAPTERS_TO_CHECK != null) {
-            log.warn("ADAPTERS_TO_CHECK is not used");
+        if ((FIVE_PRIME_ADAPTER == null) != (THREE_PRIME_ADAPTER == null)) {
+            errors.add("THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set.");
         }
         String[] superErrors = super.customCommandLineValidation();
 
@@ -281,6 +296,12 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
      */
     private void initialize() {
         fastqWriterFactory.setCreateMd5(CREATE_MD5_FILE);
+
+        // Combine any adapters and custom adapter pairs from the command line into an array for use in clipping
+        adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
+        if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+            adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
+        }
 
         switch (READ_NAME_FORMAT) {
             case CASAVA_1_8:
@@ -411,7 +432,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
      * @return AsyncClusterWriter that contains one or more ClusterWriters (amount depends on read structure), all using
      * outputPrefix to determine the filename(s).
      */
-    private Writer<ClusterData> buildWriter(final File outputPrefix, int numSamples) {
+    private Writer<ClusterData> buildWriter(final File outputPrefix, final int numSamples) {
         final File outputDir = outputPrefix.getAbsoluteFile().getParentFile();
         IOUtil.assertDirectoryIsWritable(outputDir);
         final String prefixString = outputPrefix.getName();
@@ -434,7 +455,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         }
 
         int queueSize = (MAX_RECORDS_IN_RAM / 2) / numSamples;
-        return writerPool.pool(new ClusterToFastqWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles), new LinkedBlockingQueue<>(queueSize), (int) (queueSize * 0.5));
+        return writerPool.pool(new ClusterToFastqWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles, TRIMMING_QUALITY, adapters), new LinkedBlockingQueue<>(queueSize), (int) (queueSize * 0.5));
     }
 
     /**
@@ -460,10 +481,15 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         private final boolean appendTemplateNumber;
         private final boolean appendMolecularBarcodeNumber;
         private final int numReads;
+        private final Integer trimmingQuality;
+        private final AdapterMarker adapterMarker;
 
         public ClusterToFastqWriter(final File[] templateFiles,
                                     final File[] sampleBarcodeFiles,
-                                    final File[] molecularBarcodeFiles) {
+                                    final File[] molecularBarcodeFiles,
+                                    final Integer trimmingQuality,
+                                    final List<AdapterPair> adapters
+        ) {
 
             this.templateOut = Arrays.stream(templateFiles).map(this::makeWriter).toArray(OutputStream[]::new);
             this.sampleBarcodeOut = Arrays.stream(sampleBarcodeFiles).map(this::makeWriter).toArray(OutputStream[]::new);
@@ -471,6 +497,12 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
             this.appendTemplateNumber = this.templateOut.length > 1;
             this.appendMolecularBarcodeNumber = this.molecularBarcodeOut.length > 1;
             this.numReads = templateOut.length + sampleBarcodeOut.length + molecularBarcodeOut.length;
+            this.trimmingQuality = trimmingQuality;
+            if (adapters.isEmpty()) {
+                this.adapterMarker = null;
+            } else {
+                this.adapterMarker = new AdapterMarker(adapters.toArray(new AdapterPair[0]));
+            }
         }
 
         private OutputStream makeWriter(final File file) {
@@ -482,8 +514,9 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
                 } else {
                     os = IOUtil.maybeBufferOutputStream(os);
                 }
-                if (Defaults.CREATE_MD5)
+                if (Defaults.CREATE_MD5) {
                     os = new Md5CalculatingOutputStream(os, IOUtil.addExtension(outputPath, ".md5"));
+                }
                 return os;
             } catch (final IOException ioe) {
                 throw new RuntimeIOException("Error opening file: " + outputPath.toUri(), ioe);
@@ -505,6 +538,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
                     case T:
                         out = templateOut[templateIndex++];
                         name = readNameEncoder.generateReadName(rec, appendTemplateNumber ? templateIndex : null);
+                        trimRead(read, templateIndex);
                         break;
                     case B:
                         out = sampleBarcodeOut[sampleBarcodeIndex++];
@@ -523,12 +557,47 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         }
 
         /**
+         * Performs adapter and quality trimming on a read.
+         * @param read the read to trim.
+         * @param templateIndex the index of the read.
+         */
+        private void trimRead(final ReadData read, final int templateIndex){
+            byte[] bases = read.getBases();
+            byte[] quals = read.getQualities();
+            if (trimmingQuality != null) {
+                int index = TrimmingUtil.findQualityTrimPoint(quals, trimmingQuality);
+                // Trim to a minimum of MIN_TRIMMED_LENGTH
+                if (index < MIN_TRIMMED_LENGTH) {
+                    index = MIN_TRIMMED_LENGTH;
+                }
+                quals = Arrays.copyOfRange(quals, 0, index);
+                bases = Arrays.copyOfRange(bases, 0, index);
+            }
+
+            if (adapterMarker != null) {
+                Tuple<AdapterPair, Integer> adapterPairAndIndex = adapterMarker.findAdapterPairAndIndexForSingleRead(bases, templateIndex);
+                if (adapterPairAndIndex != null) {
+                    int index = adapterPairAndIndex.b;
+                    // Trim to a minimum of MIN_TRIMMED_LENGTH
+                    if (index < MIN_TRIMMED_LENGTH) {
+                        index = MIN_TRIMMED_LENGTH;
+                    }
+                    quals = Arrays.copyOfRange(quals, 0, index);
+                    bases = Arrays.copyOfRange(bases, 0, index);
+                }
+            }
+
+            read.setBases(bases);
+            read.setQualities(quals);
+        }
+        /**
          * Writes out a single read to a single FASTQ's output stream.
          */
         private void writeSingle(final OutputStream out, final String name, final ReadData read) {
             try {
-                final byte[] bases = read.getBases();
-                final byte[] quals = read.getQualities();
+                byte[] bases = read.getBases();
+                byte[] quals = read.getQualities();
+
                 final int len = bases.length;
                 for (int i = 0; i < len; ++i) {
                     quals[i] = (byte) SAMUtils.phredToFastq(quals[i]);

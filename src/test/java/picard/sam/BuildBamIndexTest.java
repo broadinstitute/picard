@@ -3,9 +3,10 @@ package picard.sam;
 import htsjdk.samtools.SAMException;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
-import org.testng.annotations.Test;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.List;
 public class BuildBamIndexTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/indices/");
-    private static final File INPUT_FILE = new File(TEST_DATA_DIR, "index_test.sam");
+    private static final PicardHtsPath INPUT_FILE = new PicardHtsPath(new File(TEST_DATA_DIR, "index_test.sam").getPath());
     private static final File OUTPUT_SORTED_FILE = new File(TEST_DATA_DIR, "index_test_sorted.bam");
     private static final File OUTPUT_UNSORTED_FILE = new File(TEST_DATA_DIR, "/index_test_unsorted.bam");
     private static final File OUTPUT_INDEX_FILE = new File(TEST_DATA_DIR, "/index_test.bam.bai");
@@ -27,7 +28,7 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
     // Test that the index file for a sorted BAM is created
     @Test
     public void testBuildBamIndexOK() throws IOException {
-        final List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         /* First sort, before indexing */
         new SortSam().instanceMain(new String[]{
                 "I=" + INPUT_FILE,
@@ -43,7 +44,7 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
     // Test that the index creation fails when presented with a SAM file
     @Test(expectedExceptions = SAMException.class)
     public void testBuildSamIndexFail() {
-        final List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         args.add("INPUT=" + INPUT_FILE);
         args.add("OUTPUT=" + OUTPUT_INDEX_FILE);
         runPicardCommandLine(args);
@@ -52,7 +53,7 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
     // Test that the index creation fails when presented with an unsorted BAM file
     @Test(expectedExceptions = SAMException.class)
     public void testBuildBamIndexFail() {
-        final List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
         new SamFormatConverter().instanceMain(new String[]{
                 "INPUT=" + INPUT_FILE,
                 "OUTPUT=" + OUTPUT_UNSORTED_FILE});

@@ -73,7 +73,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     public void testTileNumberComparator() {
         Assert.assertTrue(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
         Assert.assertTrue(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
-        Assert.assertTrue(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
+        Assert.assertEquals(SortedBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10), 0, "");
     }
 
     @Test
@@ -191,20 +191,20 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] variousConfigurationsData() {
         return new Object[][]{
-                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, new File(TEST_DATA_DIR.getParentFile(),"sams_with_DS"), null, new int[]{1}, 7, 0.04},
-                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}, 7, 0.04},
-                {"multiplexedBarcode.", "library.params", 1, "25T8B4M21T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null, new int[]{1}, 7, 0.04},
-                {"multiplexedBarcode2.", "library.params", 1, "25T8B4M4M17T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null, new int[]{1}, 7, 0.04},
-                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}, 7, 0.04},
-                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null, new int[]{1}, 2, 0.033333},
-                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}, 1, 0.25},
-                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null, new int[]{1}, 4, 0.033333},
-                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, TEST_DATA_HISEQX_SINGLE_LOCS,HISEQX_TEST_DATA_DIR, null, new int[]{1}, 4, 0.033333},
-                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101, new int[]{1}, 2, 0.033333},
-                {"multilane.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101, new int[]{1,2}, 2, 0.033333},
-                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102, new int[]{1}, 0, 0.0},
+                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, new File(TEST_DATA_DIR.getParentFile(),"sams_with_DS"), null, new int[]{1}, 7L, 0.04},
+                {"multiplexedBarcode.", "library.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}, 7L, 0.04},
+                {"multiplexedBarcode.", "library.params", 1, "25T8B4M21T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX, null, new int[]{1}, 7L, 0.04},
+                {"multiplexedBarcode2.", "library.params", 1, "25T8B4M4M17T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX, null, new int[]{1}, 7L, 0.04},
+                {"singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, new int[]{1}, 7L, 0.04},
+                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, null, new int[]{1}, 2L, 0.033333},
+                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}, 1L, 0.25},
+                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, TEST_DATA_HISEQX_SINGLE_LOCS, HISEQX_TEST_DATA_DIR, null, new int[]{1}, 4L, 0.033333},
+                {"hiseqxSingleLocs.", "library_double.params", 2, "25T8B8B25T", TEST_DATA_HISEQX_SINGLE_LOCS, TEST_DATA_HISEQX_SINGLE_LOCS,HISEQX_TEST_DATA_DIR, null, new int[]{1}, 4L, 0.033333},
+                {"dualBarcode.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101, new int[]{1}, 2L, 0.033333},
+                {"multilane.", "library_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR, 1101, new int[]{1,2}, 2L, 0.033333},
+                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, 1102, new int[]{1}, 0L, 0.0},
                 // Test barcodes in a separate directory
-                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_BARCODES_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}, 1, 0.25},
+                {"cbclConvert.", "library_double.params", 2, "151T8B8B151T", TEST_DATA_DIR_WITH_CBCLS, TEST_DATA_BARCODES_DIR_WITH_CBCLS, DUAL_CBCL_TEST_DATA_DIR, null, new int[]{1}, 1L, 0.25},
         };
     }
 
@@ -217,7 +217,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
      * Ensures that a run missing a barcode from the parameters file throws an error.
      */
     @Test
-    public void testCorruptDataReturnCode() throws Exception {
+    public void testCorruptDataReturnCode() {
         boolean exceptionThrown = false;
         try {
             runStandardTest(new int[]{9}, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, BASECALLS_DIR, TEST_DATA_DIR, null, false, ClusterDataToSamConverter.PopulateBarcode.ORPHANS_ONLY, false, 7, 0.038889);

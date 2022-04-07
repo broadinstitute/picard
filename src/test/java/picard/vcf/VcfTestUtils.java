@@ -56,6 +56,7 @@ public class VcfTestUtils {
         return out;
     }
 
+
     /**
      * Given a VCF file, create a temporary VCF file with an index file. Both the temporary file and its index are
      * deleted when the JVM exits.
