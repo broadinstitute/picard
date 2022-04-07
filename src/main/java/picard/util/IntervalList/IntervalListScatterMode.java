@@ -76,6 +76,16 @@ public enum IntervalListScatterMode implements CommandLineParser.ClpEnum {
      */
     INTERVAL_COUNT(IntervalListScattererByIntervalCount::new, "Scatter the interval list into similarly sized interval lists " +
             "(by interval count, not by base count). " +
+            "Resulting interval lists will contain the same number of intervals except for the last, which contains the remainder."),
+
+    /***
+     * A scatter by interval **count** which attempts to fill each resulting interval list with approximately equal numbers
+     * of intervals, disregarding the base count. This approach distributes the remainder intervals across the initial interval lists.
+     * This is the preferred mode for whole genome joint calling and other scenarios where the interval list to be split
+     * contains a large number of intervals that should be distributed equally by count.
+     */
+    INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER(IntervalListScattererByIntervalCountWithDistributedRemainder::new, "Scatter the interval list into similarly sized interval lists " +
+            "(by interval count, not by base count). " +
             "Resulting interval lists will contain similar number of intervals.");
 
     private final Supplier<IntervalListScatterer> scattererSupplier;
