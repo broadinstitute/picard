@@ -699,7 +699,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         MergeBamAlignment mergeBamAlignment = new MergeBamAlignment();
 
-        mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file.toPath().toFile()); // will update to use path when MergeBamAlignment is update to use Path
+        mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file.toPath().toFile()); // TODO update to use Path when MergeBamAlignment is updated to use Path
         mergeBamAlignment.UNMAPPED_BAM = fileUnaligned;
         mergeBamAlignment.UNMAP_CONTAMINANT_READS = true;
 

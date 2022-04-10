@@ -438,7 +438,7 @@ public class FastqToSam extends CommandLineProgram {
         try {
             return new FastqReader(null, Files.newBufferedReader(path), ALLOW_AND_IGNORE_EMPTY_LINES);
         } catch (IOException e){
-            throw new PicardException("cannot create a reader for "+path, e);
+            throw new PicardException("cannot create a reader for " + path, e);
         }
     }
 
