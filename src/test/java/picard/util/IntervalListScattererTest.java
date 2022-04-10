@@ -33,6 +33,7 @@ import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Basic test for scatter functionality in IntervalListTools
@@ -42,6 +43,12 @@ public class IntervalListScattererTest {
 
     private static final File INTERVAL_FILE = new File(TEST_DATA_DIR, "scatterable.interval_list");
     private static final IntervalList LIST_TO_SCATTER = IntervalList.fromFile(INTERVAL_FILE);
+
+    static final File LARGER_INTERVAL_FILE = new File(TEST_DATA_DIR, "test.hg38.200.interval_list");
+    private static final List<File> LARGER_INTERVAL_EXPECTEDS = Arrays.asList(new File(TEST_DATA_DIR, "largeScatters").listFiles());
+    static final List<IntervalList> LARGER_EXPECTED_LISTS = LARGER_INTERVAL_EXPECTEDS.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
+    private static final List<File> LARGER_INTERVAL_NO_REMAINDER_EXPECTEDS = Arrays.asList(new File(TEST_DATA_DIR, "largeScattersNoRemainder").listFiles());
+    static final List<IntervalList> LARGER_NO_REMAINDER_EXPECTED_LISTS = LARGER_INTERVAL_NO_REMAINDER_EXPECTEDS.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
 
     private static final File INTERVAL_WITH_OVERFLOW_FILE = new File(TEST_DATA_DIR, "scatterable_with_overflow.interval_list");
     private static final IntervalList LIST_TO_SCATTER_WITH_OVERFLOW = IntervalList.fromFile(INTERVAL_WITH_OVERFLOW_FILE);
@@ -64,7 +71,7 @@ public class IntervalListScattererTest {
                     '}';
         }
 
-        private Testcase(final File file, final int scatterWidth, final IntervalListScatterMode mode, final List<IntervalList> expectedScatter) {
+        Testcase(final File file, final int scatterWidth, final IntervalListScatterMode mode, final List<IntervalList> expectedScatter) {
             this.source = IntervalList.fromFile(file);
             this.file = file;
             this.expectedScatter = expectedScatter;
@@ -73,8 +80,32 @@ public class IntervalListScattererTest {
         }
     }
 
-    @DataProvider
-    public static Iterator<Object[]> testScatterTestcases() {
+    /**
+     * These are split out separately and private because the treatment of remainders causes different behavior whether
+     * scatter count is specified (as similated here) versus whether scatter *content* is specified, as in in the IntervalListTools
+     * integration tests
+     * @return test cases with expected behavior for distributed remainder mode given a specified number of output lists
+     */
+    private static List<Testcase> getRemainderTestcases() {
+        final List<Testcase> testCases = new ArrayList<>();
+        testCases.add(new Testcase(
+                LARGER_INTERVAL_FILE, 60, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
+                LARGER_EXPECTED_LISTS
+        ));
+
+        testCases.add(new Testcase(
+                LARGER_INTERVAL_FILE, 20, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
+                LARGER_NO_REMAINDER_EXPECTED_LISTS
+        ));
+        return testCases;
+    }
+
+    /**
+     * These test cases for modes not including INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER have the same behavior
+     *
+     * @return
+     */
+    public static List<Testcase> getScatterTestcases() {
         final List<Testcase> testCases = new ArrayList<>();
         Assert.assertEquals(LIST_TO_SCATTER.getUniqueBaseCount(), 200, "Wrong unique base count");
         Assert.assertEquals(LIST_TO_SCATTER_MANY.getUniqueBaseCount(), 32 * 2, "Wrong unique base count");
@@ -393,7 +424,14 @@ public class IntervalListScattererTest {
                                 IntervalList.overlaps(LIST_TO_SCATTER_MANY, secondThird))
                         ))))));
 
-        return testCases.stream().map(tc -> new Object[]{tc}).iterator();
+        return testCases;
+    }
+
+    @DataProvider
+    public static Iterator<Object[]> testScatterTestcases() {
+        final List<Testcase> testcases = new ArrayList<>(getScatterTestcases());
+        testcases.addAll(getRemainderTestcases());
+        return testcases.stream().map(tc -> new Object[]{tc}).iterator();
     }
 
     @Test(dataProvider = "testScatterTestcases")
