@@ -327,10 +327,12 @@ public class RevertSam extends CommandLineProgram {
             out.close();
         } else {
             final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
+            final Path referenceSequencePath;
             try {
-                Path referenceSequencePath = null;
                 if (REFERENCE_SEQUENCE != null) {
                     referenceSequencePath = REFERENCE_SEQUENCE.toPath();
+                } else {
+                    referenceSequencePath = null;
                 }
                 readGroupToFormat = createReadGroupFormatMap(inHeader, referenceSequencePath, VALIDATION_STRINGENCY, INPUT.toPath(), RESTORE_ORIGINAL_QUALITIES);
             } catch (final PicardException e) {
