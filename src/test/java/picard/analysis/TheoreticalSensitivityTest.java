@@ -249,12 +249,16 @@ public class TheoreticalSensitivityTest {
             metrics.read(metricsFileReader);
         }
 
+        Object hi[] = metrics.getMetrics().toArray();
+
         final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
+        List<?> l = metrics.getMetrics();
         // We ensure that even using different random seeds we converge to roughly the same value.
         for (int i = 0; i < 3; i++) {
-            double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityHistogram, 3, sampleSize, alleleFraction, i);
+            double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityHistogram, 3,
+                    sampleSize, alleleFraction, i, 0.0);
             Assert.assertEquals(result, expected, tolerance);
         }
     }
@@ -267,15 +271,20 @@ public class TheoreticalSensitivityTest {
         // are not quite large enough to converge properly, but is used for the purpose of
         // keeping the compute time of the tests short.
         return new Object[][]{
-                {0.90, wgsMetricsFile, 0.5, 400},
-                {0.78, wgsMetricsFile, 0.3, 400},
-                {0.29, wgsMetricsFile, 0.1, 500},
-                {0.08, wgsMetricsFile, 0.05, 500},
+                {0.90, wgsMetricsFile, 0.5, 400, false},
+                {0.78, wgsMetricsFile, 0.3, 400, false},
+                {0.29, wgsMetricsFile, 0.1, 500, false},
+                {0.08, wgsMetricsFile, 0.05, 500, false},
+
+                {0.90, wgsMetricsFile, 0.5, 400, true},
+                {0.80, wgsMetricsFile, 0.3, 400, true},
+                {0.35, wgsMetricsFile, 0.1, 500, true},
+                {0.12, wgsMetricsFile, 0.05, 500, true}
         };
     }
 
     @Test(dataProvider = "TheoreticalSensitivityDataProvider")
-    public void testSensitivity(final double expected, final File metricsFile, final double alleleFraction, final int sampleSize) throws Exception {
+    public void testSensitivity(final double expected, final File metricsFile, final double alleleFraction, final int sampleSize, final boolean useOverlapProbability) throws Exception {
         // This tests Theoretical Sensitivity using distributions on both base quality scores
         // and the depth histogram.
 
@@ -292,7 +301,15 @@ public class TheoreticalSensitivityTest {
         final Histogram<Integer> depthHistogram = histograms.get(0);
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
-        final double result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction);
+        // Get overlap probability from PCT_EXC_OVERLAP
+        final double overlapProbability = ((WgsMetrics) metrics.getMetrics().toArray()[0]).PCT_EXC_OVERLAP;
+        final double result;
+        if (useOverlapProbability) {
+            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, overlapProbability);
+        }
+        else {
+            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction);
+        }
 
         Assert.assertEquals(result, expected, tolerance);
     }
@@ -327,6 +344,7 @@ public class TheoreticalSensitivityTest {
         final double[] qualityDistribution = TheoreticalSensitivity.normalizeHistogram(qualityHistogram);
         final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
 
+        // TS is TheoreticalSensitivity, THS is TheoreticalHetSensitivity
         final double resultFromTS = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, 0.5);
         final double resultFromTHS = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, 3);
 
@@ -382,7 +400,8 @@ public class TheoreticalSensitivityTest {
         final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
 
         final Histogram<Integer> qualityHistogram = histograms.get(1);
-        final TheoreticalSensitivity.RouletteWheel qualityRW = new TheoreticalSensitivity.RouletteWheel(TheoreticalSensitivity.trimDistribution(TheoreticalSensitivity.normalizeHistogram(qualityHistogram)));
+        final TheoreticalSensitivity.RouletteWheel qualityRW = new TheoreticalSensitivity.RouletteWheel(
+                TheoreticalSensitivity.trimDistribution(TheoreticalSensitivity.normalizeHistogram(qualityHistogram)));
 
         final Random randomNumberGenerator = new Random(51);
 
@@ -392,7 +411,8 @@ public class TheoreticalSensitivityTest {
 
         for (int k = 0; k < 1; k++) {
             int sumOfQualitiesFull = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
-            int sumOfQualities = TheoreticalSensitivity.drawSumOfQScores(altDepth, averageQuality, standardDeviationQuality, randomNumberGenerator.nextGaussian());
+            int sumOfQualities = TheoreticalSensitivity.drawSumOfQScores(altDepth, averageQuality,
+                    standardDeviationQuality, randomNumberGenerator.nextGaussian());
 
             Assert.assertEquals(sumOfQualitiesFull, sumOfQualities, sumOfQualitiesFull * tolerance);
         }

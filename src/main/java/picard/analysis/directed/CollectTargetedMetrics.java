@@ -169,7 +169,8 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
             // Write out theoretical sensitivity results.
             final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
             log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
-            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION);
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE,
+                    collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION, 0.0);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }

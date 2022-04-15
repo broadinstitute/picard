@@ -243,7 +243,8 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             // Write out theoretical sensitivity results.
             final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
             log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
-            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE,
+                    collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION, 0.0);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }
