@@ -134,8 +134,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
-    private final File theoreticalSensitivityOutput = null;
-
     private final int minimumMappingQuality;
     private final int minimumBaseQuality;
     private final boolean clipOverlappingReads;
