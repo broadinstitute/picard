@@ -308,7 +308,7 @@ public class TheoreticalSensitivityTest {
             result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, overlapProbability, 45);
         }
         else {
-            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction);
+            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, 0, 45);
         }
 
         Assert.assertEquals(result, expected, tolerance);
@@ -345,7 +345,7 @@ public class TheoreticalSensitivityTest {
         final double[] depthDistribution = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
 
         // TS is TheoreticalSensitivity, THS is TheoreticalHetSensitivity
-        final double resultFromTS = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, 0.5);
+        final double resultFromTS = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, 0.5, 0.0, 45);
         final double resultFromTHS = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, 3);
 
         Assert.assertEquals(resultFromTS, resultFromTHS, tolerance);

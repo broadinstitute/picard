@@ -270,7 +270,6 @@ public class TheoreticalSensitivity {
             int sumOfQualities;
             if (altDepth < LARGE_NUMBER_OF_DRAWS) {
                 // If the number of alt reads is "small" we draw from the actual base quality distribution.
-                //sumOfQualities = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
                 sumOfQualities = 0;
                 for(int i = 0;i < altDepth;i++) {
                     if(rg.nextDouble() > overlapProbability) {
@@ -335,15 +334,10 @@ public class TheoreticalSensitivity {
      * @param sampleSize the total number of simulations to run
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @param alleleFraction the allele fraction to evaluate sensitivity at
+     * @param overlapProbability the probability two bases from the same fragment are overlapping
+     * @param pcrErrorRate Upper bound for the effective base quality two bases in an overlapping read
      * @return Theoretical sensitivity for the given arguments over a particular depth distribution.
      */
-    public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram,
-                                                final Histogram<Integer> qualityHistogram, final int sampleSize,
-                                                final double logOddsThreshold, final double alleleFraction) {
-        return theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, logOddsThreshold, alleleFraction,
-                0.0, 45);
-    }
-
     public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram,
                                                 final Histogram<Integer> qualityHistogram, final int sampleSize,
                                                 final double logOddsThreshold, final double alleleFraction,
