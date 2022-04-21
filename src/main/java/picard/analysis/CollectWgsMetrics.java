@@ -139,6 +139,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @Argument(doc="Allele fraction for which to calculate theoretical sensitivity.", optional = true)
     public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
 
+    @Argument(doc="Phred scaled PCR Error Rate for Theoretical Sensitivity model.", optional = true)
+    public int PCR_ERROR_RATE = 45;
+
     @Argument(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
 
@@ -245,7 +248,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             log.info("Calculating theoretical sensitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
 
             List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE,
-                    collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION, collector.basesExcludedByOverlap);
+                    collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION, collector.basesExcludedByOverlap, PCR_ERROR_RATE);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }

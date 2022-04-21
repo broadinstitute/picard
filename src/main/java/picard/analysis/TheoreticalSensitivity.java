@@ -49,7 +49,6 @@ public class TheoreticalSensitivity {
     private static final int LARGE_NUMBER_OF_DRAWS = 10; // The number of draws at which we believe a Gaussian approximation to sum random variables.
     private static final double DEPTH_BIN_WIDTH = 0.01; // Minimal fraction of depth histogram to use when integrating theoretical sensitivity.  This ensures we don't calculate theoretical sensitivity at every depth, which would be computationally expensive.
     private static final int RANDOM_SEED = 51;
-    private static final int PCR_ERROR_RATE = 45;
 
     /**
      * @param depthDistribution   the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
@@ -247,7 +246,7 @@ public class TheoreticalSensitivity {
     public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram,
                                                     final double logOddsThreshold, final int sampleSize,
                                                     final double alleleFraction, final long randomSeed,
-                                                    final double overlapProbability) {
+                                                    final double overlapProbability, final int pcrErrorRate) {
         // If the depth is 0 at a particular locus, the sensitivity is trivially 0.0.
         if (depth == 0) {
             return 0.0;
@@ -275,12 +274,12 @@ public class TheoreticalSensitivity {
                 sumOfQualities = 0;
                 for(int i = 0;i < altDepth;i++) {
                     if(rg.nextDouble() > overlapProbability) {
-                        sumOfQualities += qualityRW.draw();
+                        sumOfQualities += Math.min(qualityRW.draw(), pcrErrorRate);
                     } else {
                         // Simulate overlapping reads by sampling from the quality distribution twice.
                         // Since PCR errors affect overlapping reads, the total contribution to the sum
                         // of qualities cannot exceed the PCR error rate.
-                        sumOfQualities += Math.min(qualityRW.draw() + qualityRW.draw(), PCR_ERROR_RATE);
+                        sumOfQualities += Math.min(qualityRW.draw() + qualityRW.draw(), pcrErrorRate);
                     }
                 }
             } else {
@@ -322,9 +321,10 @@ public class TheoreticalSensitivity {
      */
     private static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram,
                                                      final double logOddsThreshold, final int sampleSize,
-                                                     final double alleleFraction, final double overlapProbability) {
+                                                     final double alleleFraction, final double overlapProbability,
+                                                     final int pcrErrorRate) {
         return sensitivityAtConstantDepth(depth, qualityHistogram, logOddsThreshold, sampleSize, alleleFraction,
-                RANDOM_SEED, overlapProbability);
+                RANDOM_SEED, overlapProbability, pcrErrorRate);
     }
 
     /**
@@ -341,13 +341,13 @@ public class TheoreticalSensitivity {
                                                 final Histogram<Integer> qualityHistogram, final int sampleSize,
                                                 final double logOddsThreshold, final double alleleFraction) {
         return theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, logOddsThreshold, alleleFraction,
-                0.0);
+                0.0, 45);
     }
 
     public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram,
                                                 final Histogram<Integer> qualityHistogram, final int sampleSize,
                                                 final double logOddsThreshold, final double alleleFraction,
-                                                final double overlapProbability) {
+                                                final double overlapProbability, final int pcrErrorRate) {
         if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new IllegalArgumentException("Allele fractions must be between 0 and 1.");
         }
@@ -374,7 +374,7 @@ public class TheoreticalSensitivity {
             // Calculate sensitivity for a particular depth, and use trapezoid rule to integrate sensitivity.
             final double left = right;
             right = sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize,
-                    alleleFraction, overlapProbability);
+                    alleleFraction, overlapProbability, pcrErrorRate);
             sensitivity += deltaDepthProbability * (left + right) / 2.0;
         }
         return sensitivity;
@@ -417,7 +417,8 @@ public class TheoreticalSensitivity {
                                                                              final Histogram<Integer> depthHistogram,
                                                                              final Histogram<Integer> baseQHistogram,
                                                                              final List<Double> alleleFractions,
-                                                                             final double overlapProbability) {
+                                                                             final double overlapProbability,
+                                                                             final int pcrErrorRate) {
 
         final List<TheoreticalSensitivityMetrics> metricsOverVariousAlleleFractions = new ArrayList<>();
         final double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
@@ -428,7 +429,7 @@ public class TheoreticalSensitivity {
             final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
             theoreticalSensitivityMetrics.ALLELE_FRACTION = alleleFraction;
             theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY = TheoreticalSensitivity.theoreticalSensitivity(
-                    depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction, overlapProbability);
+                    depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction, overlapProbability, pcrErrorRate);
             theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY));
             theoreticalSensitivityMetrics.SAMPLE_SIZE = simulationSize;
             theoreticalSensitivityMetrics.LOG_ODDS_THRESHOLD = logOddsThreshold;

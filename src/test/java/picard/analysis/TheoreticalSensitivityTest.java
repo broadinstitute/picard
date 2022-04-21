@@ -258,7 +258,7 @@ public class TheoreticalSensitivityTest {
         // We ensure that even using different random seeds we converge to roughly the same value.
         for (int i = 0; i < 3; i++) {
             double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityHistogram, 3,
-                    sampleSize, alleleFraction, i, 0.0);
+                    sampleSize, alleleFraction, i, 0.0, 45);
             Assert.assertEquals(result, expected, tolerance);
         }
     }
@@ -305,7 +305,7 @@ public class TheoreticalSensitivityTest {
         final double overlapProbability = ((WgsMetrics) metrics.getMetrics().toArray()[0]).PCT_EXC_OVERLAP;
         final double result;
         if (useOverlapProbability) {
-            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, overlapProbability);
+            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, overlapProbability, 45);
         }
         else {
             result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction);
