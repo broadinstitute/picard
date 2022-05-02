@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
  * A Subclass of {@link HtsPath} with conversion to {@link Path} making use of {@link IOUtil}
  */
 public class PicardHtsPath extends HtsPath {
+    public final static String FILE_SCHEME = "file";
+
     /**
      * Create a PicardHtsPath from a raw input path string.
      * <p>

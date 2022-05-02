@@ -24,23 +24,40 @@
 
 package picard.cmdline.argumentcollections;
 
+import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Argument collection for references that are required (and not common).
  */
 public class RequiredReferenceArgumentCollection implements ReferenceArgumentCollection {
+    private final static Log log = Log.getInstance(RequiredReferenceArgumentCollection.class);
 
     @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.", common = false)
-    public File REFERENCE_SEQUENCE;
+    public PicardHtsPath REFERENCE_SEQUENCE;
 
     /**
-     * @return The reference provided by the user.
+     * @return The reference provided by the user as a File. May be null.
      */
     public File getReferenceFile() {
-        return REFERENCE_SEQUENCE;
-    };
+        return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
+    }
+
+    /**
+     * @return The reference provided by the user as an nio Path. May be null.
+     */
+    @Override
+    public Path getReferencePath() { return REFERENCE_SEQUENCE == null ? null: REFERENCE_SEQUENCE.toPath(); }
+
+    /**
+     * @return The reference provided by the user as a PicardHtsPath. May be null.
+     */
+    @Override
+    public PicardHtsPath getHtsPath() { return REFERENCE_SEQUENCE; }
+
 }
