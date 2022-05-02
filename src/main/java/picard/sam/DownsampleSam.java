@@ -42,14 +42,20 @@ import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashSet;
@@ -171,10 +177,10 @@ public class DownsampleSam extends CommandLineProgram {
             "      P=0.00001 \\\n" +
             "      ACCURACY=0.0000001\n";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM, BAM or CRAM file to write.")
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
     public Strategy STRATEGY = Strategy.ConstantMemory;
@@ -194,7 +200,7 @@ public class DownsampleSam extends CommandLineProgram {
     public double ACCURACY = 0.0001;
 
     @Argument(shortName = "M", doc = "The metrics file (of type QualityYieldMetrics) which will contain information about the downsampled file.", optional=true)
-    public File METRICS_FILE;
+    public PicardHtsPath METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
 
@@ -210,8 +216,10 @@ public class DownsampleSam extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        if (OUTPUT.getScheme().equals(PicardBucketUtils.FILE_SCHEME)){
+            IOUtil.assertFileIsWritable(OUTPUT.toPath().toFile());
+        }
 
         // Warn the user if they are running with P=1 or P=0 (which are legal, but odd)
         if (PROBABILITY == 1) {
@@ -228,7 +236,7 @@ public class DownsampleSam extends CommandLineProgram {
                     "Drawing a random seed because RANDOM_SEED was not set. Set RANDOM_SEED to %s to reproduce these results in the future.", RANDOM_SEED));
         }
 
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).open(SamInputResource.of(INPUT.toPath()));
         final SAMFileHeader header = in.getFileHeader().clone();
 
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
@@ -266,7 +274,8 @@ public class DownsampleSam extends CommandLineProgram {
         final SAMProgramRecord pgRecord = getPGRecord(header);
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
-        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT, referenceSequence.getReferenceFile());
+
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getReferencePath());
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
@@ -288,7 +297,12 @@ public class DownsampleSam extends CommandLineProgram {
             final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
             metricsCollector.finish();
             metricsCollector.addMetricsToFile(metricsFile);
-            metricsFile.write(METRICS_FILE);
+            try (final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath())){
+                metricsFile.write(writer);
+            } catch (IOException e) {
+                throw new PicardException("Encountered an error while writing the metrics file: " + METRICS_FILE.getURIString(), e);
+            }
+
         }
 
         return 0;
@@ -298,11 +312,16 @@ public class DownsampleSam extends CommandLineProgram {
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         // Override to allow "R" to be hijacked for "RANDOM_SEED"
         return new ReferenceArgumentCollection() {
-            @Argument(doc = "The reference sequence file.", optional=true, common=false)
-            public File REFERENCE_SEQUENCE;
+            @Argument(doc = "The reference sequence file.", optional=true)
+            public PicardHtsPath REFERENCE_SEQUENCE;
 
             @Override
             public File getReferenceFile() {
+                return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
+            }
+
+            @Override
+            public PicardHtsPath getHtsPath() {
                 return REFERENCE_SEQUENCE;
             }
         };

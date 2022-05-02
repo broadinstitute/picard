@@ -24,6 +24,13 @@
 
 package picard.nio;
 
+import htsjdk.io.HtsPath;
+import htsjdk.io.IOPath;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.utils.ValidationUtils;
+import picard.PicardException;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,12 +39,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
-import htsjdk.io.HtsPath;
-import htsjdk.io.IOPath;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.RuntimeIOException;
 
 /**
  * A Subclass of {@link HtsPath} with conversion to {@link Path} making use of {@link IOUtil}
@@ -113,7 +116,7 @@ public class PicardHtsPath extends HtsPath {
 
     /**
      * Test if {@code ioPath} is something other than a regular file, directory, or symbolic link.
-     * 
+     *
      * @return {@code true} if it's a device, named pipe, htsget API URL, etc.
      * @throws RuntimeException if an I/O error occurs when creating the file system
      */
@@ -127,7 +130,7 @@ public class PicardHtsPath extends HtsPath {
         } else {
             return true;
         }
-    }    
+    }
 
     /**
      * Create a {@link List<Path>} from {@link PicardHtsPath}s
@@ -137,5 +140,49 @@ public class PicardHtsPath extends HtsPath {
     public static List<Path> toPaths(final Collection<PicardHtsPath> picardHtsPaths){
         Objects.requireNonNull(picardHtsPaths);
         return picardHtsPaths.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
+    }
+
+    /**
+     * Takes an IOPath and returns a new PicardHtsPath object that keeps the same basename as the original but has
+     * a new extension. If append is set to false, only the last component of an extension will be replaced.
+     * e.g. "my.fasta.gz" -> "my.fasta.tmp"
+     *
+     * If the input IOPath was created from a rawInputString that specifies a relative local path, the new path will
+     * have a rawInputString that specifies an absolute path. (This perhaps unwanted conversion occurs when we call PicardHtsPath.toPath().)
+     *
+     * Examples:
+     *     - (test_na12878.bam, .bai) -> test_na12878.bai (append = false)
+     *     - (test_na12878.bam, .md5) -> test_na12878.bam.md5 (append = true)
+     *
+     * @param path The original path
+     * @param append If set to true, append the new extension to the original basename. If false, replace the original extension
+     *               with the new extension. If append = false and the original name has no extension, an exception will be thrown.
+     * @param newExtension A new file extension. Must include the leading dot e.g. ".txt", ".bam"
+     * @return A new PicardHtsPath object with the new extension
+     */
+    public static PicardHtsPath replaceExtension(final IOPath path, final String newExtension, final boolean append){
+        ValidationUtils.validateArg(newExtension.startsWith("."), "newExtension must start with a dot '.'");
+
+        final String oldFileName = path.toPath().getFileName().toString();
+
+        String newFileName;
+        if (append){
+            newFileName = oldFileName + newExtension;
+        } else {
+            final Optional<String> oldExtension = path.getExtension();
+            if (oldExtension.isEmpty()){
+                throw new PicardException("The original path must have an extension when append = false: " + path.getURIString());
+            }
+            newFileName = oldFileName.replaceAll(oldExtension.get() + "$", newExtension);
+        }
+
+        return PicardHtsPath.fromPath(path.toPath().resolveSibling(newFileName));
+    }
+
+    /**
+     * Wrapper for Path.resolve()
+     */
+    public static PicardHtsPath resolve(final PicardHtsPath absPath, final String relativePath){
+        return PicardHtsPath.fromPath(absPath.toPath().resolve(relativePath));
     }
 }
