@@ -639,6 +639,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                                         if (coveredTargets.add(target)) { // sato: returns true first time adding to the set
                                             hqCoverage.incrementReadCount();
+                                            if (rec.getDuplicateReadFlag()){
+                                                hqCoverage.incrementDuplicateReadCount();
+                                            }
                                         }
                                     }
                                 }
@@ -855,7 +858,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 try {
                     if (perTargetOutput != null) {
                         out = new PrintWriter(perTargetOutput);
-                        out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage\tmin_normalized_coverage\tmax_normalized_coverage\tmin_coverage\tmax_coverage\tpct_0x\tread_count");
+                        out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage\tmin_normalized_coverage\tmax_normalized_coverage\tmin_coverage\tmax_coverage\tpct_0x\tread_count\tduplciate_read_count");
                     }
                     else {
                         out = null;
@@ -906,7 +909,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                 fmt.format(min) + "\t" +
                                 fmt.format(max) + "\t" +
                                 fmt.format(targetBasesAt0x / interval.length()) + "\t" +
-                                fmt.format(cov.readCount)
+                                fmt.format(cov.readCount)  + "\t" +
+                                fmt.format(cov.duplicateReadCount)
                         );
                     }
                 }
