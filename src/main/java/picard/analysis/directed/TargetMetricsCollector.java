@@ -552,7 +552,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             ///////////////////////////////////////////////////////////////////
             // Duplicate reads can be totally ignored beyond this point
             ///////////////////////////////////////////////////////////////////
-            if (record.getDuplicateReadFlag()) {
+            if (false && record.getDuplicateReadFlag()) { // sato: temporarily include duplicate reads too.
                 this.metrics.PCT_EXC_DUPE += basesAlignedInRecord;
                 return;
             }
@@ -637,7 +637,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                         final Coverage hqCoverage = highQualityCoverageByTarget.get(target);
                                         hqCoverage.addBase(targetOffset);
 
-                                        if (coveredTargets.add(target)) {
+                                        if (coveredTargets.add(target)) { // sato: returns true first time adding to the set
                                             hqCoverage.incrementReadCount();
                                         }
                                     }
@@ -693,7 +693,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             calculateTargetCoverageMetrics();
             calculateTheoreticalHetSensitivity();
-            calculateGcMetrics();
+            calculateGcMetrics(); // sato: also includes per_target metrics...
             emitPerBaseCoverageIfRequested();
         }
 
@@ -955,9 +955,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         private final Interval interval;
         private final int[] depths;
         public long readCount = 0;
+        public long duplicateReadCount = 0;
 
         /** Constructs a new coverage object for the provided mapping with the desired padding either side. */
-        public Coverage(final Interval i, final int padding) {
+        public Coverage(final Interval i, final int padding) { // sato: is padding used anywhere?
             this.interval = i;
             this.depths = new int[interval.length() + 2*padding];
         }
@@ -977,6 +978,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Increments the # of reads mapping to this target. */
         public void incrementReadCount() {
             this.readCount++;
+        }
+
+        public void incrementDuplicateReadCount() {
+            this.duplicateReadCount++;
         }
 
         /** Returns true if any base in the range has coverage of > 0 */
