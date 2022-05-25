@@ -40,7 +40,6 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;

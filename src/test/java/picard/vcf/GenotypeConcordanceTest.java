@@ -25,54 +25,62 @@
 package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.metrics.StringHeader;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 import picard.vcf.GenotypeConcordanceStates.CallState;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
 import picard.vcf.GenotypeConcordanceStates.TruthState;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 public class GenotypeConcordanceTest {
 
     private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("GenotypeConcordanceTest", null);
-    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
+    private static final Path TEST_DATA_PATH = new File("testdata/picard/vcf/").toPath();
+    private static final String TEST_DATA_PATH_STRING = TEST_DATA_PATH.toString();
 
     // Test VCFs
-    private static final File CEU_TRIOS_SNPS_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
-    private static final File CEU_TRIOS_INDELS_VCF = new File(TEST_DATA_PATH, "CEUTrio-indels.vcf");
+    private static final String CEU_TRIOS_SNPS_VCF = new File(TEST_DATA_PATH_STRING, "CEUTrio-snps.vcf").toURI().toString();
+    private static final String CEU_TRIOS_INDELS_VCF = new File(TEST_DATA_PATH_STRING, "CEUTrio-indels.vcf").toURI().toString();
 
     // Test that missing sites flag for new scheme works for NIST data sets
-    private static final File NIST_MISSING_SITES_TRUTH_VCF = new File(TEST_DATA_PATH, "NIST.selected.vcf");
+    private static final String NIST_MISSING_SITES_TRUTH_VCF = new File(TEST_DATA_PATH_STRING, "NIST.selected.vcf").toURI().toString();
 
     // Test that we notice a difference on the first line
-    private static final File CEU_TRIOS_SNPS_FIRST_LINE_DIFF_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps_first_line_diff.vcf");
+    private static final String CEU_TRIOS_SNPS_FIRST_LINE_DIFF_VCF = new File(TEST_DATA_PATH_STRING, "CEUTrio-snps_first_line_diff.vcf").toURI().toString();
 
     // Test that we notice a difference on the last line
-    private static final File CEU_TRIOS_SNPS_LAST_LINE_DIFF_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps_last_line_diff.vcf");
+    private static final String CEU_TRIOS_SNPS_LAST_LINE_DIFF_VCF = new File(TEST_DATA_PATH_STRING, "CEUTrio-snps_last_line_diff.vcf").toURI().toString();
 
     // Test that we notice a deleted line
-    private static final File CEU_TRIOS_SNPS_DEL_LINE_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps_del_line.vcf");
+    private static final String CEU_TRIOS_SNPS_DEL_LINE_VCF = new File(TEST_DATA_PATH_STRING, "CEUTrio-snps_del_line.vcf").toURI().toString();
 
     //Test vcf output with spanning deletion
-    private static final Path SPANNING_DELETION_TRUTH = TEST_DATA_PATH.toPath().resolve("spanningDeletionTruth.vcf");
-    private static final Path SPANNING_DELETION_CALLSET = TEST_DATA_PATH.toPath().resolve("spanningDeletionCallset.vcf");
+    private static final Path SPANNING_DELETION_TRUTH = TEST_DATA_PATH.resolve("spanningDeletionTruth.vcf");
+    private static final Path SPANNING_DELETION_CALLSET = TEST_DATA_PATH.resolve("spanningDeletionCallset.vcf");
 
     // Existing/expected base metrics file names
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff";
@@ -126,12 +134,12 @@ public class GenotypeConcordanceTest {
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", 40, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ},
                 {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", null, 40, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP},
                 {NIST_MISSING_SITES_TRUTH_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, true, NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC},
-                {SPANNING_DELETION_TRUTH.toFile(), "/dev/stdin", SPANNING_DELETION_CALLSET.toFile(), "CHMI_CHMI3_WGS2", null, null, false, false, SPANNING_DELETION_CALLSET_VS_SPANNING_DELETION_TRUTH}
+                {SPANNING_DELETION_TRUTH.toString(), "/dev/stdin", SPANNING_DELETION_CALLSET.toString(), "CHMI_CHMI3_WGS2", null, null, false, false, SPANNING_DELETION_CALLSET_VS_SPANNING_DELETION_TRUTH}
         };
     }
 
     @Test(dataProvider = "genotypeConcordanceTestFileData")
-    public void testGenotypeConcordance(final File vcf1, final String sample1, final File vcf2, final String sample2,
+    public void testGenotypeConcordance(final String vcf1, final String sample1, final String vcf2, final String sample2,
                                         final Integer minGq, final Integer minDp, final boolean outputAllRows, final boolean missingSitesFlag,
                                         final String expectedOutputFileBaseName) throws Exception {
         final List<Boolean> withVcfs = Arrays.asList(true, false);
@@ -147,9 +155,9 @@ public class GenotypeConcordanceTest {
             outputVcfFile.toFile().deleteOnExit();
 
             final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-            genotypeConcordance.TRUTH_VCF = vcf1;
+            genotypeConcordance.TRUTH_VCF = new PicardHtsPath(vcf1);
             genotypeConcordance.TRUTH_SAMPLE = sample1;
-            genotypeConcordance.CALL_VCF = vcf2;
+            genotypeConcordance.CALL_VCF = new PicardHtsPath(vcf2);
             genotypeConcordance.CALL_SAMPLE = sample2;
             if (minGq != null) genotypeConcordance.MIN_GQ = minGq;
             if (minDp != null) genotypeConcordance.MIN_DP = minDp;
@@ -157,18 +165,18 @@ public class GenotypeConcordanceTest {
             genotypeConcordance.OUTPUT = outputBaseFileName;
             genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
             if (missingSitesFlag) {
-                genotypeConcordance.INTERVALS = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
+                genotypeConcordance.INTERVALS = Collections.singletonList(new PicardHtsPath(new File(TEST_DATA_PATH_STRING, "IntervalList1PerChrom.interval_list")));
             }
             genotypeConcordance.OUTPUT_VCF = withVcf;
 
             Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
-            assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));
-            assertMetricsFileEqual(outputDetailsFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION));
-            assertMetricsFileEqual(outputContingencyFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION));
+            assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH_STRING, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));
+            assertMetricsFileEqual(outputDetailsFile, new File(TEST_DATA_PATH_STRING, expectedOutputFileBaseName + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION));
+            assertMetricsFileEqual(outputContingencyFile, new File(TEST_DATA_PATH_STRING, expectedOutputFileBaseName + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION));
 
             if (withVcf) {
                 // An ugly way to compare VCFs
-                final Path expectedVcf = Paths.get(TEST_DATA_PATH.getAbsolutePath(), expectedOutputFileBaseName + ".vcf");
+                final Path expectedVcf = Paths.get(TEST_DATA_PATH.toAbsolutePath().toString(), expectedOutputFileBaseName + ".vcf");
                 final BufferedLineReader reader = new BufferedLineReader(new GZIPInputStream(new FileInputStream(outputVcfFile.toFile())));
                 final Iterator<String> actualLines;
                 {
@@ -215,12 +223,13 @@ public class GenotypeConcordanceTest {
         outputDetailsFile.deleteOnExit();
 
         final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-        genotypeConcordance.TRUTH_VCF = truthVCF;
+        genotypeConcordance.TRUTH_VCF = new PicardHtsPath(truthVCF);
         genotypeConcordance.TRUTH_SAMPLE = "NA12878";
-        genotypeConcordance.CALL_VCF = callVCF;
+        genotypeConcordance.CALL_VCF = new PicardHtsPath(callVCF);
         genotypeConcordance.CALL_SAMPLE = callSample;
         genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
-        genotypeConcordance.INTERVALS = intervalFiles;
+        if(intervalFiles != null)
+            genotypeConcordance.INTERVALS = intervalFiles.stream().map(PicardHtsPath::new).collect(Collectors.toList());
         genotypeConcordance.OUTPUT = outputBaseFileName;
 
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
@@ -537,8 +546,8 @@ public class GenotypeConcordanceTest {
     @Test
     public void testNormalizeAllelesForIndels() {
 
-        final Path truthVcfPath = Paths.get(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_ALLELES_TRUTH);
-        final Path callVcfPath  = Paths.get(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_ALLELES_CALL);
+        final Path truthVcfPath = Paths.get(TEST_DATA_PATH.toAbsolutePath().toString(), NORMALIZE_ALLELES_TRUTH);
+        final Path callVcfPath  = Paths.get(TEST_DATA_PATH.toAbsolutePath().toString(), NORMALIZE_ALLELES_CALL);
 
         final VCFFileReader truthReader = new VCFFileReader(truthVcfPath.toFile(), false);
         final VCFFileReader callReader  = new VCFFileReader(callVcfPath.toFile(), false);
@@ -572,9 +581,9 @@ public class GenotypeConcordanceTest {
     @Test
     public void testNoCallVariants() {
         final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-        genotypeConcordance.TRUTH_VCF = new File(TEST_DATA_PATH, "mini.vcf");
+        genotypeConcordance.TRUTH_VCF = new PicardHtsPath(new File(TEST_DATA_PATH_STRING, "mini.vcf"));
         genotypeConcordance.TRUTH_SAMPLE = "NA20801";
-        genotypeConcordance.CALL_VCF = new File(TEST_DATA_PATH, "mini.vcf");
+        genotypeConcordance.CALL_VCF = new PicardHtsPath(new File(TEST_DATA_PATH_STRING, "mini.vcf"));
         genotypeConcordance.CALL_SAMPLE = "NA19920";
         genotypeConcordance.OUTPUT = new File(OUTPUT_DATA_PATH, "TwoNoCalls");
         genotypeConcordance.OUTPUT_VCF = true;
@@ -584,8 +593,8 @@ public class GenotypeConcordanceTest {
 
     @Test
     public void testNormalizeAllelesForWritingVCF() throws FileNotFoundException {
-        final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_NO_CALLS_TRUTH);
-        final File callVcfPath              = new File(TEST_DATA_PATH.getAbsolutePath(), NORMALIZE_NO_CALLS_CALL);
+        final PicardHtsPath truthVcfPath             = new PicardHtsPath( new File(TEST_DATA_PATH.toAbsolutePath().toString(), NORMALIZE_NO_CALLS_TRUTH));
+        final PicardHtsPath callVcfPath              = new PicardHtsPath( new File(TEST_DATA_PATH.toAbsolutePath().toString(), NORMALIZE_NO_CALLS_CALL));
         final File outputBaseFileName       = new File(OUTPUT_DATA_PATH, "MultipleRefAlleles");
         final File outputContingencyMetrics = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
         outputContingencyMetrics.deleteOnExit();
@@ -620,8 +629,8 @@ public class GenotypeConcordanceTest {
      */
     @Test
     public void testSpanningDeletion() throws FileNotFoundException {
-        final File truthVcfPath             = new File(TEST_DATA_PATH.getAbsolutePath(), "spanningDeletionTruth.vcf");
-        final File callVcfPath              = new File(TEST_DATA_PATH.getAbsolutePath(), "spanningDeletionCallset.vcf");
+        final PicardHtsPath truthVcfPath             = new PicardHtsPath(new File(TEST_DATA_PATH.toAbsolutePath().toString(), "spanningDeletionTruth.vcf"));
+        final PicardHtsPath callVcfPath              = new PicardHtsPath(new File(TEST_DATA_PATH.toAbsolutePath().toString(), "spanningDeletionCallset.vcf"));
         final File outputBaseFileName       = new File(OUTPUT_DATA_PATH, "spanningDeletion");
         final File outputContingencyMetrics = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
         outputContingencyMetrics.deleteOnExit();
@@ -652,8 +661,8 @@ public class GenotypeConcordanceTest {
 
     @Test
     public void testIgnoreFilterStatus() throws Exception {
-        final File truthVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "NIST_subset_3sites.vcf");
-        final File callVcfPath = new File(TEST_DATA_PATH.getAbsolutePath(), "vcf_with_filtered_calls.vcf");
+        final PicardHtsPath truthVcfPath = new PicardHtsPath(new File(TEST_DATA_PATH.toAbsolutePath().toString(), "NIST_subset_3sites.vcf"));
+        final PicardHtsPath callVcfPath = new PicardHtsPath(new File(TEST_DATA_PATH.toAbsolutePath().toString(), "vcf_with_filtered_calls.vcf"));
         final File ignoreFilterStatusOutputBaseFileName = new File(OUTPUT_DATA_PATH, "ignoreFilterStatus");
         final File doIgnoreMetrics = new File(ignoreFilterStatusOutputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
         doIgnoreMetrics.deleteOnExit();

@@ -24,13 +24,16 @@
 
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Holds summary statistics from RRBS processing QC
  *
  * @author jgentry
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public final class RrbsSummaryMetrics extends MultilevelMetrics {
 	/** Number of mapped reads processed */
 	public Integer READS_ALIGNED;

@@ -7,6 +7,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.util.Queue;
@@ -29,13 +30,13 @@ public class SplitVcfsTest extends CommandLineProgramTest {
     public void testSplit() {
         final File indelOutputFile = new File(OUTPUT_DATA_PATH, "split-vcfs-test-indels-delete-me.vcf");
         final File snpOutputFile = new File(OUTPUT_DATA_PATH, "split-vcfs-test-snps-delete-me.vcf");
-        final File input = new File(TEST_DATA_PATH, "CEUTrio-merged-indels-snps.vcf");
+        final PicardHtsPath input = new PicardHtsPath(new File(TEST_DATA_PATH, "CEUTrio-merged-indels-snps.vcf"));
 
         indelOutputFile.deleteOnExit();
         snpOutputFile.deleteOnExit();
 
         final String[] args = new String[]{
-                "INPUT=" + input.getAbsolutePath(),
+                "INPUT=" + input.toPath().toAbsolutePath(),
                 "SNP_OUTPUT=" + snpOutputFile.getAbsolutePath(),
                 "INDEL_OUTPUT=" + indelOutputFile.getAbsolutePath()
         };
@@ -44,7 +45,7 @@ public class SplitVcfsTest extends CommandLineProgramTest {
         final Queue<String> indelContigPositions = AbstractVcfMergingClpTester.loadContigPositions(indelOutputFile);
         final Queue<String> snpContigPositions = AbstractVcfMergingClpTester.loadContigPositions(snpOutputFile);
 
-        final VCFFileReader reader = new VCFFileReader(input);
+        final VCFFileReader reader = new VCFFileReader(input.toPath());
         for (final VariantContext inputContext : reader) {
             if (inputContext.isIndel())
                 Assert.assertEquals(AbstractVcfMergingClpTester.getContigPosition(inputContext), indelContigPositions.poll());

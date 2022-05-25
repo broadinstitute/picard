@@ -29,8 +29,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,20 +40,20 @@ import java.util.Set;
  */
 public class ThreadsafeTest {
     static final int TEN_MILLION = (int) 10e6;
-    static final File VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION = new File("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf");
+    static PicardHtsPath VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION = new PicardHtsPath("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf");
 
     @Test
     public void ensureUniqueVariantObservationsEspeciallyMultiAllelicOnesThatAppearAtChunkingBoundaries() {
         final VariantIteratorProducer.Threadsafe iteratorFactory =
                 new VariantIteratorProducer.Threadsafe(
-                        VcfFileSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
+                        VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
                         Arrays.asList(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION)
                 );
-        final Set<String> observed = new HashSet<String>();
+        final Set<String> observed = new HashSet<>();
         for (final CloseableIterator<VariantContext> i : iteratorFactory.iterators()) {
             while (i.hasNext()) {
                 final VariantContext next = i.next();
-                Assert.assertTrue(observed.add(next.toString()), "Second observation for " + next.toString());
+                Assert.assertTrue(observed.add(next.toString()), "Second observation for " + next);
             }
         }
     }
@@ -62,7 +62,7 @@ public class ThreadsafeTest {
     @Test
     public void ensureTestDataActuallyHasWideVariantAtTenMillion() {
         final Joiner joiner = Joiner.on(":"); // Cheat: do a string compare
-        final VCFFileReader r = new VCFFileReader(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION);
+        final VCFFileReader r = new VCFFileReader(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION.toPath());
         Assert.assertEquals(
                 joiner.join(r.query("1", TEN_MILLION, TEN_MILLION)),
                 joiner.join(r.query("1", TEN_MILLION + 5, TEN_MILLION + 5))
@@ -74,12 +74,12 @@ public class ThreadsafeTest {
     public void ensureSameVariantsReadAsSimpleVcfFileIterator() {
         final VariantIteratorProducer.Threadsafe iteratorFactory =
                 new VariantIteratorProducer.Threadsafe(
-                        VcfFileSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
+                        VcfPathSegmentGenerator.byWholeContigSubdividingWithWidth(TEN_MILLION),
                         Arrays.asList(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION)
                 );
-        final Set<String> observedVcs = new HashSet<String>();
-        final Set<String> actual = new HashSet<String>();
-        final VCFFileReader actualVcs = new VCFFileReader(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION);
+        final Set<String> observedVcs = new HashSet<>();
+        final Set<String> actual = new HashSet<>();
+        final VCFFileReader actualVcs = new VCFFileReader(VCF_WITH_MULTI_ALLELIC_VARIANT_AT_POSITION_10MILLION.toPath());
         for (final VariantContext actualVc : actualVcs) {
             actual.add(actualVc.toString());
         }

@@ -30,6 +30,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
@@ -40,6 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -47,7 +49,7 @@ import java.util.stream.Stream;
  */
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
-    private final File TEST_DATA_DIR = new File("testdata/picard/util/");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/util/");
     private final File scatterable = new File(TEST_DATA_DIR, "scatterable.interval_list");
     private final File scatterableStdin = new File(TEST_DATA_DIR, "scatterable_stdin");
     private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
@@ -55,6 +57,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private final File abutting = new File(TEST_DATA_DIR, "abutting.interval_list");
     private final File abutting_combined = new File(TEST_DATA_DIR, "abutting_combined.interval_list");
     private final File abutting_notcombined = new File(TEST_DATA_DIR, "abutting_notcombined.interval_list");
+    private static final List<File> LARGER_EXPECTED_WITH_REMAINDER_FILES = Arrays.asList(new File(TEST_DATA_DIR, "largeScattersWithRemainder").listFiles());
+    private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
+
 
     @Test
     public void testSecondInputValidation() {
@@ -293,10 +298,32 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         return reader.nextLong();
     }
 
+    /**
+     * These are split out separately and private because the treatment of remainders causes different behavior whether
+     * scatter count is specified (as similated here) versus whether scatter *content* is specified, as in in the IntervalListTools
+     * integration tests
+     * @return test cases with expected behavior for distributed remainder mode given a specified number of output lists
+     */
+    private static List<IntervalListScattererTest.Testcase> getRemainderTestcases() {
+        final List<IntervalListScattererTest.Testcase> testCases = new ArrayList<>();
+        testCases.add(new IntervalListScattererTest.Testcase(
+                IntervalListScattererTest.LARGER_INTERVAL_FILE, 67, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
+                LARGER_EXPECTED_WITH_REMAINDER_LISTS
+        ));
+
+        testCases.add(new IntervalListScattererTest.Testcase(
+                IntervalListScattererTest.LARGER_INTERVAL_FILE, 20, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
+                IntervalListScattererTest.LARGER_NO_REMAINDER_EXPECTED_LISTS
+        ));
+        return testCases;
+    }
+
     // test scatter with different kinds of balancing.
     @DataProvider
     public static Iterator<Object[]> testScatterTestcases() {
-        return IntervalListScattererTest.testScatterTestcases();
+        final List<IntervalListScattererTest.Testcase> testcases = new ArrayList<>(IntervalListScattererTest.getScatterTestcases());
+        testcases.addAll(getRemainderTestcases());
+        return testcases.stream().map(tc -> new Object[]{tc}).iterator();
     }
 
     private final List<File> dirsToDelete = new ArrayList<>();
@@ -381,7 +408,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             args.add("OUTPUT=" + ilOutDir);
         }
 
-        args.add("SCATTER_CONTENT=" + tc.mode.make().listWeight(tc.source) / tc.expectedScatter.size());
+        args.add("SCATTER_CONTENT=" + (int)Math.round((double)tc.mode.make().listWeight(tc.source) / tc.expectedScatter.size()));
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 

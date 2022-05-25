@@ -24,13 +24,19 @@
 
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * High level metrics about the alignment of reads within a SAM file, produced by
  * the CollectAlignmentSummaryMetrics program and usually stored in a file with
  * the extension ".alignment_summary_metrics".
  */
+@DocumentedFeature(
+        groupName = HelpConstants.DOC_CAT_METRICS,
+        groupSummary = HelpConstants.DOC_CAT_METRICS_SUMMARY,
+        summary = "Alignment metrics")
 public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public enum Category {UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR}
 

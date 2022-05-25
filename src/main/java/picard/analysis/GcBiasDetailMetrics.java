@@ -24,7 +24,9 @@
 
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Class that holds detailed metrics about reads that fall within windows of a certain
@@ -32,6 +34,7 @@ import picard.metrics.MultilevelMetrics;
  *
  * @author Tim Fennell
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class GcBiasDetailMetrics extends MultilevelMetrics {
     public String ACCUMULATION_LEVEL;
     /** This option is used to mark including or excluding duplicates. */

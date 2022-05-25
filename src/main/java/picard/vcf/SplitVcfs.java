@@ -20,8 +20,11 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Collections;
 
 /**
  * Splits the input VCF file into two, one for indels and one for SNPs. The headers of the two output
@@ -51,7 +54,7 @@ public class SplitVcfs extends CommandLineProgram {
             "</pre>" +
             "<hr />" ;
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(doc = "The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
     public File SNP_OUTPUT;
@@ -60,7 +63,7 @@ public class SplitVcfs extends CommandLineProgram {
     public File INDEL_OUTPUT;
 
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
-    public File SEQUENCE_DICTIONARY;
+    public PicardHtsPath SEQUENCE_DICTIONARY;
 
     @Argument(doc = "If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
@@ -73,16 +76,18 @@ public class SplitVcfs extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        final Path inputPath = INPUT.toPath();
+
+        IOUtil.assertPathsAreReadable(Collections.singletonList(inputPath));
         final ProgressLogger progress = new ProgressLogger(log, 10000);
 
-        final VCFFileReader fileReader = new VCFFileReader(INPUT, false);
+        final VCFFileReader fileReader = new VCFFileReader(inputPath, false);
         final VCFHeader fileHeader = fileReader.getFileHeader();
 
-        final SAMSequenceDictionary sequenceDictionary =
-                SEQUENCE_DICTIONARY != null
-                        ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY).getSequenceDictionary()
-                        : fileHeader.getSequenceDictionary();
+        final SAMSequenceDictionary sequenceDictionary;
+        sequenceDictionary = SEQUENCE_DICTIONARY != null
+                ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY.toPath()).getSequenceDictionary()
+                : fileHeader.getSequenceDictionary();
         if (CREATE_INDEX && sequenceDictionary == null) {
             throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
         }
