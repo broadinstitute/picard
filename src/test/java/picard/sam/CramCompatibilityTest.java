@@ -24,7 +24,7 @@ public class CramCompatibilityTest {
     public static final String CRAM_FILE_QUERY_SORTED = "testdata/picard/sam/test_cram_file_query_sorted.cram";
 
     public static final String REFERENCE_FILE = "testdata/picard/sam/test_cram_file.ref.fa";
-    public static final String FASTQ_FILE = "testdata/picard/sam/fastq2bam/fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq";
+    public static final String FASTQ_FILE = "testdata/picard/sam/fastq2bam/fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq.gz";
 
     public static final String CRAM_UNMAPPED = "testdata/picard/sam/SamFormatConverterTest/unmapped.cram";
     public static final String CRAM_UNMAPPED_WITH_OQ_TAG = "testdata/picard/sam/unmapped_with_oq_tag.cram";
