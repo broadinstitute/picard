@@ -398,7 +398,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * 1. primary alignment has fewer than minUnclippedBases unclipped bases
      * 2. primary alignment has both ends clipped
      */
-    protected boolean isContaminant(final HitsForInsert hits) {
+    protected boolean isContaminant(final HitsForInsert hits) { // sato: what are hits?
         boolean isContaminant = false;
         if (hits.numHits() > 0) {
             final int primaryIndex = hits.getIndexOfEarliestPrimary();
