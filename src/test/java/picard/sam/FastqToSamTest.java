@@ -56,7 +56,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
     @DataProvider(name = "okVersionFiles")
     public Object[][] okVersionFiles() {
         return new Object[][] {
-            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq",      FastqQualityFormat.Standard },
+            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq.gz",      FastqQualityFormat.Standard },
             {"fastq-sanger/5k-30BB2AAXX.3.aligned.sam.fastq",     FastqQualityFormat.Standard },
             {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", FastqQualityFormat.Standard }, // all sanger chars
 

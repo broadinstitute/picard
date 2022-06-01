@@ -435,11 +435,7 @@ public class FastqToSam extends CommandLineProgram {
     }
 
     private FastqReader fileToFastqReader(final Path path) throws PicardException {
-        try {
-            return new FastqReader(null, Files.newBufferedReader(path), ALLOW_AND_IGNORE_EMPTY_LINES);
-        } catch (IOException e){
-            throw new PicardException("cannot create a reader for " + path, e);
-        }
+        return new FastqReader(null, IOUtil.openFileForBufferedReading(path), ALLOW_AND_IGNORE_EMPTY_LINES);
     }
 
     private SAMRecord createSamRecord(final SAMFileHeader header, final String baseName, final FastqRecord frec, final boolean paired) {
