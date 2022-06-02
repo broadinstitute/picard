@@ -33,6 +33,7 @@ import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
 import picard.sam.testers.SamFileTester;
 
 import java.io.File;
@@ -60,7 +61,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder, boolean recordNeedSorting) {
         super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder, recordNeedSorting);
 
-        expectedMetrics = new DuplicationMetrics();
+        expectedMetrics = DuplicationMetricsFactory.createMetrics();
         expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = 0;
 
         metricsFile = new File(getOutputDir(), "metrics.txt");
