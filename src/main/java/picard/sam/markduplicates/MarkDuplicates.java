@@ -483,13 +483,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
         if (useBarcodes) {
-            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
-            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
-            diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(OPTICAL_DISTANCE_SCALING_FACTOR);
+            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(OPTICAL_DISTANCE_SCALING_FACTOR);
+            diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec(OPTICAL_DISTANCE_SCALING_FACTOR);
         } else {
-            fragCodec = new ReadEndsForMarkDuplicatesCodec();
-            pairCodec = new ReadEndsForMarkDuplicatesCodec();
-            diskCodec = new ReadEndsForMarkDuplicatesCodec();
+            fragCodec = new ReadEndsForMarkDuplicatesCodec(OPTICAL_DISTANCE_SCALING_FACTOR);
+            pairCodec = new ReadEndsForMarkDuplicatesCodec(OPTICAL_DISTANCE_SCALING_FACTOR);
+            diskCodec = new ReadEndsForMarkDuplicatesCodec(OPTICAL_DISTANCE_SCALING_FACTOR);
         }
 
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
