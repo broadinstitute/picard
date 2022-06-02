@@ -326,6 +326,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator);
 
+
                 // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
                 // if the query name has changed.
                 nextDuplicateIndex = nextIndexIfNeeded(sortOrder, recordInFileIndex, nextDuplicateIndex, duplicateQueryName, rec, this.duplicateIndexes);
@@ -336,7 +337,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 if (isDuplicate) {
                     rec.setDuplicateReadFlag(true);
-
                     AbstractMarkDuplicatesCommandLineProgram.addDuplicateReadToMetrics(rec, metrics);
                 } else {
                     rec.setDuplicateReadFlag(false);
@@ -551,7 +551,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, indexForRead, rec, useBarcodes);
                 this.fragSort.add(fragmentEnd);
 
-                if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
+                if (MarkDuplicatesUtil.pairedForMarkDuplicates(rec)) {
                     final StringBuilder key = new StringBuilder();
                     key.append(ReservedTagConstants.READ_GROUP_ID);
                     key.append(rec.getReadName());
@@ -649,7 +649,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         ends.score = DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
 
         // Doing this lets the ends object know that it's part of a pair
-        if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
+        if (MarkDuplicatesUtil.pairedForMarkDuplicates(rec)) {
             ends.read2ReferenceIndex = rec.getMateReferenceIndex();
         }
 

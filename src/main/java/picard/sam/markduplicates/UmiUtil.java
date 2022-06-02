@@ -27,6 +27,7 @@ import picard.PicardException;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 import org.apache.commons.lang3.StringUtils;
+import picard.sam.markduplicates.util.MarkDuplicatesUtil;
 
 import java.util.regex.Pattern;
 
@@ -102,7 +103,7 @@ class UmiUtil {
      * @return Top or bottom strand, unknown if it cannot be determined.
      */
     static ReadStrand getStrand(final SAMRecord rec) {
-        if (rec.getReadUnmappedFlag() || rec.getMateUnmappedFlag()) {
+        if (!MarkDuplicatesUtil.pairedForMarkDuplicates(rec)) {
             return ReadStrand.UNKNOWN;
         }
 
@@ -185,5 +186,4 @@ class UmiUtil {
         BOTTOM,
         UNKNOWN
     }
-
 }

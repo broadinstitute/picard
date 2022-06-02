@@ -5,23 +5,24 @@ package picard.sam.markduplicates;
  * molecular barcode tag, even if the code is trying to use the molecular barcode
  */
 
-abstract public class MarkDuplicateWithMissingBarcodeTest extends MarkDuplicatesTest {
+public abstract class MarkDuplicateWithMissingBarcodeTest extends MarkDuplicatesTest {
 
     protected AbstractMarkDuplicatesCommandLineProgramTester getTester() {
         return new MarkDuplicatesWithMissingBarcodesTester();
     }
 
-    abstract protected String getArgumentName();
+    protected abstract String getArgumentName();
 
-    abstract protected String getTagValue();
+    protected abstract String getTagValue();
 
     private class MarkDuplicatesWithMissingBarcodesTester extends MarkDuplicatesTester {
+
         @Override
         public void runTest() {
             boolean hasRX = false;
             boolean isDuplex = false;
             for (final String argument : this.getArgs()) {
-                if (argument.startsWith(getArgumentName())) {
+                if (argument.startsWith(getArgumentName())|| argument.startsWith("BARCODE_TAG")) {
                     hasRX = true;
                     break;
                 }

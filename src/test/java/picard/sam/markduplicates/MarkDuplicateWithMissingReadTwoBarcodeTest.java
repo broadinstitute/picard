@@ -11,7 +11,7 @@ public class MarkDuplicateWithMissingReadTwoBarcodeTest extends MarkDuplicateWit
 
     @Override
     protected String getArgumentName() {
-        return "READ_TWO_BARCODE_TAG";
+        return "READ_ONE_BARCODE_TAG";
     }
 
     @Override

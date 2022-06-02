@@ -41,6 +41,7 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
 import picard.sam.markduplicates.util.LibraryIdGenerator;
+import picard.sam.markduplicates.util.MarkDuplicatesUtil;
 import picard.sam.markduplicates.util.ReadEnds;
 
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ import java.util.Set;
  */
 @DocumentedFeature
 @ExperimentalFeature
+
 @CommandLineProgramProperties(
         summary = "Examines aligned records in the supplied SAM/BAM/CRAM file to locate duplicate molecules. " +
                 "All records are then written to the output file with the duplicate records flagged.",
@@ -74,12 +76,7 @@ import java.util.Set;
 public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
     private final Log log = Log.getInstance(MarkDuplicatesWithMateCigar.class);
 
-    private class ReadEndsForSimpleMarkDuplicatesWithMateCigar extends ReadEnds {}
-    
-    private static boolean isPairedAndBothMapped(final SAMRecord record) {
-        return record.getReadPairedFlag() &&
-                !record.getReadUnmappedFlag() &&
-                !record.getMateUnmappedFlag();
+    private class ReadEndsForSimpleMarkDuplicatesWithMateCigar extends ReadEnds {
     }
 
     /**
@@ -127,7 +124,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         for (final DuplicateSet duplicateSet : new IterableAdapter<>(iterator)) {
             final SAMRecord representative = duplicateSet.getRepresentative();
             final boolean doOpticalDuplicateTracking = (this.READ_NAME_REGEX != null) &&
-                    isPairedAndBothMapped(representative) &&
+                    MarkDuplicatesUtil.pairedForMarkDuplicates(representative) &&
                     representative.getFirstOfPairFlag();
             final Set<String> duplicateReadEndsSeen = new HashSet<>();
             
@@ -150,7 +147,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
                     // First bring the simple metrics up to date
                     if (record.getReadUnmappedFlag()) {
                         ++metrics.UNMAPPED_READS;
-                    } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                    } else if (!MarkDuplicatesUtil.pairedForMarkDuplicates(record)) {
                         ++metrics.UNPAIRED_READS_EXAMINED;
                     } else {
                         ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
@@ -158,7 +155,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
 
                     if (record.getDuplicateReadFlag()) {
                         // Update the duplication metrics
-                        if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                        if (!MarkDuplicatesUtil.pairedForMarkDuplicates(record)) {
                             ++metrics.UNPAIRED_READ_DUPLICATES;
                         } else {
                             ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
@@ -169,7 +166,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
                     // To track optical duplicates, store a set of locations for mapped pairs, first end only.  We care about orientation relative
                     // to the first end of the pair for optical duplicate tracking, which is more stringent than PCR duplicate tracking.
                     if (doOpticalDuplicateTracking &&
-                            isPairedAndBothMapped(record) &&
+                            MarkDuplicatesUtil.pairedForMarkDuplicates(record) &&
                             !duplicateReadEndsSeen.contains(record.getReadName())) {
                         
                         final ReadEndsForSimpleMarkDuplicatesWithMateCigar readEnd = new ReadEndsForSimpleMarkDuplicatesWithMateCigar();

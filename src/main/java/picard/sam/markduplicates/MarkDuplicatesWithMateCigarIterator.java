@@ -24,20 +24,18 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.util.SamRecordWithOrdinal;
-import htsjdk.samtools.util.SamRecordTrackingBuffer;
-import picard.PicardException;
-import htsjdk.samtools.util.Histogram;
-import picard.sam.DuplicationMetrics;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.*;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
-import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.*;
+import picard.PicardException;
+import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.*;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * This will iterate through a coordinate sorted SAM file (iterator) and either mark or
@@ -77,7 +75,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
 
     /**
      * The queue that stores the records that currently are not marked as duplicates.  These need to be kept until
-     * they cannot proven not to be duplicates, with the latter records having greater coordinate.  The queue is stored in 5' unclipped
+     * they cannot proven not to be duplicates, with the later records having greater coordinate.  The queue is stored in 5' unclipped
      * ordering, along with keeping the record with the best score, defined by the scoring strategies.  If any record
      * is added to this queue and can be identified as a duplicate, the outputBuffer is notified of its
      * status and it can be emitted.  Therefore, we limit the amount of records in this queue to only those that will NOT
@@ -99,6 +97,8 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
 
     boolean isClosed = false;
 
+    private final short minInformativeMappingQuality;
+
     /**
      * Initializes the mark duplicates iterator.
      *
@@ -111,6 +111,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
      * @param skipPairsWithNoMateCigar   true to not return mapped pairs with no mate cigar, false otherwise
      * @param blockSize                  the size of the blocks in the underlying buffer/queue
      * @param tmpDirs                    the temporary directories to use if we spill records to disk
+     * @param minInformativeMappingQuality the minimal mapping quality that is considered informative for dup-marking
      * @throws PicardException if the inputs are not in coordinate sort order
      */
     public MarkDuplicatesWithMateCigarIterator(final SAMFileHeader header,
@@ -122,19 +123,20 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                                                final boolean skipPairsWithNoMateCigar,
                                                final int maxRecordsInRam,
                                                final int blockSize,
-                                               final List<File> tmpDirs) throws PicardException {
+                                               final List<File> tmpDirs, final short minInformativeMappingQuality) throws PicardException {
+        this.minInformativeMappingQuality = minInformativeMappingQuality;
         if (header.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             throw new PicardException(getClass().getName() + " expects the input to be in coordinate sort order.");
         }
 
         this.header = header;
-        backingIterator = new PeekableIterator<SAMRecord>(iterator);
-        outputBuffer = new SamRecordTrackingBuffer<SamRecordWithOrdinalAndSetDuplicateReadFlag>(maxRecordsInRam, blockSize, tmpDirs, header, SamRecordWithOrdinalAndSetDuplicateReadFlag.class);
+        backingIterator = new PeekableIterator<>(iterator);
+        outputBuffer = new SamRecordTrackingBuffer<>(maxRecordsInRam, blockSize, tmpDirs, header, SamRecordWithOrdinalAndSetDuplicateReadFlag.class);
 
         this.removeDuplicates = removeDuplicates;
         this.skipPairsWithNoMateCigar = skipPairsWithNoMateCigar;
         this.opticalDuplicateFinder = opticalDuplicateFinder;
-        toMarkQueue = new MarkQueue(duplicateScoringStrategy);
+        toMarkQueue = new MarkQueue(duplicateScoringStrategy, this.minInformativeMappingQuality);
         libraryIdGenerator = new LibraryIdGenerator(header);
 
         // Check for supported scoring strategies
@@ -237,9 +239,9 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
      */
     private boolean ignoreDueToMissingMateCigar(final SamRecordWithOrdinal samRecordWithOrdinal) {
         final SAMRecord record = samRecordWithOrdinal.getRecord();
-        // ignore/except-on paired records with mapped mate and no mate cigar
-        if (record.getReadPairedFlag() &&
-                !record.getMateUnmappedFlag() && null == SAMUtils.getMateCigar(record)) { // paired with one end unmapped and no mate cigar
+        // ignore/throw-on paired records with mapped mate and no mate cigar
+        if (MarkDuplicatesUtil.pairedForMarkDuplicates(record, minInformativeMappingQuality) &&
+                null == SAMUtils.getMateCigar(record)) { // paired with one end unmapped and no mate cigar
 
             // NB: we are not truly examining these records. Do we want to count them?
 
@@ -250,7 +252,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 // update metrics
                 if (record.getReadUnmappedFlag()) {
                     ++metrics.UNMAPPED_READS;
-                } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                } else if (!MarkDuplicatesUtil.pairedForMarkDuplicates(record, minInformativeMappingQuality)) {
                     ++metrics.UNPAIRED_READS_EXAMINED;
                 } else {
                     ++metrics.READ_PAIRS_EXAMINED;
@@ -395,6 +397,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 continue;
             }
 
+
             // check for an unmapped read
             if (record.getReadUnmappedFlag()) {
                 // unmapped reads at the end of the file!
@@ -415,7 +418,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 }
 
                 // build a read end for use in the toMarkQueue
-                readEnds = new ReadEndsForMateCigar(header, samRecordWithOrdinal, opticalDuplicateFinder, libraryIdGenerator.getLibraryId(samRecordWithOrdinal.getRecord()));
+                readEnds = new ReadEndsForMateCigar(header, samRecordWithOrdinal, opticalDuplicateFinder, libraryIdGenerator.getLibraryId(samRecordWithOrdinal.getRecord()), minInformativeMappingQuality);
 
                 // check that the minimumDistance was not too small
                 checkForMinimumDistanceFailure(readEnds);
@@ -444,7 +447,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 }
             } else {
                 // Bring the simple metrics up to date
-                if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                if (!MarkDuplicatesUtil.pairedForMarkDuplicates(record, minInformativeMappingQuality)) {
                     ++metrics.UNPAIRED_READS_EXAMINED;
                 } else {
                     ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
@@ -596,7 +599,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 final Set<ReadEnds> locations = toMarkQueue.getLocations(next);
 
                 if (!locations.isEmpty()) {
-                    AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(new ArrayList<ReadEnds>(locations), null,
+                    AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(new ArrayList<>(locations), null,
                             opticalDuplicateFinder, libraryIdGenerator);
                 }
             }

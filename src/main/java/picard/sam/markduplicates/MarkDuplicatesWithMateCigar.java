@@ -155,13 +155,14 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
                 this.SKIP_PAIRS_WITH_NO_MATE_CIGAR,
                 this.MAX_RECORDS_IN_RAM,
                 this.BLOCK_SIZE,
-                this.TMP_DIR);
+                this.TMP_DIR,
+                MIN_INFORMATIVE_MAPPING_Q);
 
         // progress logger!
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
 
         // Go through the records
-        for (final SAMRecord record : new IterableAdapter<SAMRecord>(iterator)) {
+        for (final SAMRecord record : new IterableAdapter<>(iterator)) {
             if (progress.record(record)) {
                 iterator.logMemoryStats(log);
             }
@@ -191,6 +192,15 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         finalizeAndWriteMetrics(iterator.getLibraryIdGenerator(), getMetricsFile(), METRICS_FILE);
 
         return 0;
+    }
+
+    protected String[] customCommandLineValidation() {
+
+        if (0 <= MIN_INFORMATIVE_MAPPING_Q) {
+            LOG.warn("non-zero value for MIN_INFORMATIVE_MAPPING_Q is not supported in " + MarkDuplicatesWithMateCigar.class.getSimpleName());
+        }
+
+        return super.customCommandLineValidation();
     }
 
     /**
