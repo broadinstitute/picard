@@ -46,7 +46,6 @@ public class TheoreticalSensitivity {
     private static final Log log = Log.getInstance(TheoreticalSensitivity.class);
     private static final int SAMPLING_MAX = 600; //prevent 'infinite' loops
     private static final int MAX_CONSIDERED_DEPTH_HET_SENS = 1000; // No point in looking any deeper than this, otherwise GC overhead is too high.  Only used for HET sensitivity.
-    private static final int LARGE_NUMBER_OF_DRAWS = 10; // The number of draws at which we believe a Gaussian approximation to sum random variables.
     private static final double DEPTH_BIN_WIDTH = 0.01; // Minimal fraction of depth histogram to use when integrating theoretical sensitivity.  This ensures we don't calculate theoretical sensitivity at every depth, which would be computationally expensive.
     private static final int RANDOM_SEED = 51;
 
@@ -241,12 +240,14 @@ public class TheoreticalSensitivity {
      * @param sampleSize sampleSize is the total number of simulations to run
      * @param alleleFraction the allele fraction to evaluate sensitivity at
      * @param randomSeed random number seed to use for random number generator
+     * @param overlapProbability Probability a position on a read overlaps with its mate
+     * @param maxOverlapBaseQuality Maximum base quality that can result from summing overlapping base qualities, often capped by PCR error rate
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
     public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram,
                                                     final double logOddsThreshold, final int sampleSize,
                                                     final double alleleFraction, final long randomSeed,
-                                                    final double overlapProbability, final int pcrErrorRate) {
+                                                    final double overlapProbability, final int maxOverlapBaseQuality) {
         // If the depth is 0 at a particular locus, the sensitivity is trivially 0.0.
         if (depth == 0) {
             return 0.0;
@@ -268,44 +269,25 @@ public class TheoreticalSensitivity {
             final int altDepth = bd.sample();
 
             int sumOfQualities;
-            if (altDepth < LARGE_NUMBER_OF_DRAWS) {
-                // If the number of alt reads is "small" we draw from the actual base quality distribution.
-                sumOfQualities = 0;
-                for(int i = 0;i < altDepth;i++) {
-                    if(rg.nextDouble() > overlapProbability) {
-                        sumOfQualities += Math.min(qualityRW.draw(), pcrErrorRate);
-                    } else {
-                        // Simulate overlapping reads by sampling from the quality distribution twice.
-                        // Since PCR errors affect overlapping reads, the total contribution to the sum
-                        // of qualities cannot exceed the PCR error rate.
-                        sumOfQualities += Math.min(qualityRW.draw() + qualityRW.draw(), pcrErrorRate);
-                    }
+            // If the number of alt reads is "small" we draw from the actual base quality distribution.
+            sumOfQualities = 0;
+            for(int i = 0;i < altDepth;i++) {
+                if(rg.nextDouble() > overlapProbability) {
+                    sumOfQualities += Math.min(qualityRW.draw(), maxOverlapBaseQuality);
+                } else {
+                    // Simulate overlapping reads by sampling from the quality distribution twice.
+                    // Since PCR errors affect overlapping reads, the total contribution to the sum
+                    // of qualities cannot exceed the PCR error rate.
+                    sumOfQualities += Math.min(qualityRW.draw() + qualityRW.draw(), maxOverlapBaseQuality);
                 }
-            } else {
-                // If the number of alt reads is "large" we draw from a Gaussian approximation of the base
-                // quality distribution to speed up the code.
-                sumOfQualities = drawSumOfQScores(altDepth, averageQuality, standardDeviationQuality, randomNumberGenerator.nextGaussian());
             }
+
 
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {
                 calledVariants++;
             }
         }
         return (double) calledVariants / sampleSize;
-    }
-
-    /**
-     * Simulates the sum of base qualities taken from reads that support the alternate allele by
-     * taking advantage of the fact that the sum of draws from a distribution tends towards a
-     * Gaussian per the Central Limit Theorem.
-     * @param altDepth Number of draws to take from base quality distribution
-     * @param averageQuality Average quality of alt bases
-     * @param standardDeviationQuality Sample standard deviation of base quality scores
-     * @param z number of standard deviation from the mean to take sum over
-     * @return Simulated sum of base qualities the support the alternate allele
-     */
-    static int drawSumOfQScores(final int altDepth, final double averageQuality, final double standardDeviationQuality, final double z) {
-        return (int) (altDepth * averageQuality + z * Math.sqrt(altDepth) * standardDeviationQuality);
     }
 
     /**

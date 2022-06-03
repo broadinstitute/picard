@@ -18,7 +18,6 @@ import org.broadinstitute.barclay.argparser.Argument;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.TheoreticalSensitivity;
 import picard.analysis.TheoreticalSensitivityMetrics;
-import picard.analysis.WgsMetrics;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.MultilevelMetrics;

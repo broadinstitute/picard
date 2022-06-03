@@ -34,7 +34,6 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Created by davidben on 5/18/15.
@@ -249,12 +248,9 @@ public class TheoreticalSensitivityTest {
             metrics.read(metricsFileReader);
         }
 
-        Object hi[] = metrics.getMetrics().toArray();
-
         final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
         final Histogram<Integer> qualityHistogram = histograms.get(1);
 
-        List<?> l = metrics.getMetrics();
         // We ensure that even using different random seeds we converge to roughly the same value.
         for (int i = 0; i < 3; i++) {
             double result = TheoreticalSensitivity.sensitivityAtConstantDepth(depth, qualityHistogram, 3,
@@ -266,25 +262,31 @@ public class TheoreticalSensitivityTest {
     @DataProvider(name = "TheoreticalSensitivityDataProvider")
     public Object[][] arbFracSensDataProvider() {
         final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
+        final File wgsMetricsHighDepthFile = new File(TEST_DIR, "ultra_high_depth.wgs_metrics");
 
         // This test acts primarily as an integration test.  The sample sizes
         // are not quite large enough to converge properly, but is used for the purpose of
         // keeping the compute time of the tests short.
         return new Object[][]{
-                {0.90, wgsMetricsFile, 0.5, 400, false},
-                {0.78, wgsMetricsFile, 0.3, 400, false},
-                {0.29, wgsMetricsFile, 0.1, 500, false},
-                {0.08, wgsMetricsFile, 0.05, 500, false},
+                {0.90, wgsMetricsFile, 0.5, 400, false, 45},
+                {0.78, wgsMetricsFile, 0.3, 400, false, 45},
+                {0.29, wgsMetricsFile, 0.1, 500, false, 45},
+                {0.08, wgsMetricsFile, 0.05, 500, false, 45},
 
-                {0.90, wgsMetricsFile, 0.5, 400, true},
-                {0.80, wgsMetricsFile, 0.3, 400, true},
-                {0.35, wgsMetricsFile, 0.1, 500, true},
-                {0.12, wgsMetricsFile, 0.05, 500, true}
+                {0.90, wgsMetricsFile, 0.5, 400, true, 45},
+                {0.80, wgsMetricsFile, 0.3, 400, true, 45},
+                {0.35, wgsMetricsFile, 0.1, 500, true, 45},
+                {0.12, wgsMetricsFile, 0.05, 500, true, 45},
+
+                {0.90, wgsMetricsHighDepthFile, 0.001, 400, true, 45},
+                {0.80, wgsMetricsHighDepthFile, 0.001, 400, true, 90}
         };
     }
 
     @Test(dataProvider = "TheoreticalSensitivityDataProvider")
-    public void testSensitivity(final double expected, final File metricsFile, final double alleleFraction, final int sampleSize, final boolean useOverlapProbability) throws Exception {
+    public void testSensitivity(final double expected, final File metricsFile, final double alleleFraction,
+                                final int sampleSize, final boolean useOverlapProbability,
+                                final int pcrErrorRate) throws Exception {
         // This tests Theoretical Sensitivity using distributions on both base quality scores
         // and the depth histogram.
 
@@ -305,10 +307,10 @@ public class TheoreticalSensitivityTest {
         final double overlapProbability = ((WgsMetrics) metrics.getMetrics().toArray()[0]).PCT_EXC_OVERLAP;
         final double result;
         if (useOverlapProbability) {
-            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, overlapProbability, 45);
+            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, overlapProbability, pcrErrorRate);
         }
         else {
-            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, 0, 45);
+            result = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, 3, alleleFraction, 0, pcrErrorRate);
         }
 
         Assert.assertEquals(result, expected, tolerance);
@@ -372,50 +374,6 @@ public class TheoreticalSensitivityTest {
     @Test(dataProvider = "callingThresholdDataProvider")
     public void testCallingThreshold(final int totalDepth, final int altDepth, final double sumOfAltQualities, final double alleleFraction, final double logOddsThreshold, final boolean expectedCall) {
         Assert.assertEquals(TheoreticalSensitivity.isCalled(totalDepth, altDepth, sumOfAltQualities, alleleFraction, logOddsThreshold), expectedCall);
-    }
-
-    @DataProvider(name = "sumOfGaussiansDataProvider")
-    public Object[][] sumOfGaussians() {
-        final File wgsMetricsFile = new File(TEST_DIR, "test_Solexa-332667.wgs_metrics");
-        final File targetedMetricsFile = new File(TEST_DIR, "test_25103070136.targeted_pcr_metrics");
-
-        // When we sum more base qualities from a particular distribution, it should look increasingly Gaussian.
-        return new Object[][]{
-                {wgsMetricsFile, 500, 0.03},
-                {wgsMetricsFile, 20, 0.05},
-                {wgsMetricsFile, 10, 0.10},
-                {targetedMetricsFile, 500, 0.03},
-                {targetedMetricsFile, 20, 0.05},
-                {targetedMetricsFile, 10, 0.10}
-        };
-    }
-
-    @Test(dataProvider = "sumOfGaussiansDataProvider")
-    public void testDrawSumOfQScores(final File metricsFile, final int altDepth, final double tolerance) throws Exception {
-        final MetricsFile<TheoreticalSensitivityMetrics, Integer> metrics = new MetricsFile<>();
-        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
-            metrics.read(metricsFileReader);
-        }
-
-        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
-
-        final Histogram<Integer> qualityHistogram = histograms.get(1);
-        final TheoreticalSensitivity.RouletteWheel qualityRW = new TheoreticalSensitivity.RouletteWheel(
-                TheoreticalSensitivity.trimDistribution(TheoreticalSensitivity.normalizeHistogram(qualityHistogram)));
-
-        final Random randomNumberGenerator = new Random(51);
-
-        // Calculate mean and deviation of quality score distribution to enable Gaussian sampling below
-        final double averageQuality = qualityHistogram.getMean();
-        final double standardDeviationQuality = qualityHistogram.getStandardDeviation();
-
-        for (int k = 0; k < 1; k++) {
-            int sumOfQualitiesFull = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
-            int sumOfQualities = TheoreticalSensitivity.drawSumOfQScores(altDepth, averageQuality,
-                    standardDeviationQuality, randomNumberGenerator.nextGaussian());
-
-            Assert.assertEquals(sumOfQualitiesFull, sumOfQualities, sumOfQualitiesFull * tolerance);
-        }
     }
 
     @DataProvider(name = "trimDistributionDataProvider")

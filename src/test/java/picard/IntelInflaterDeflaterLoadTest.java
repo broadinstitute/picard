@@ -26,8 +26,7 @@ public class IntelInflaterDeflaterLoadTest {
     }
 
     private void checkIntelSupported(final String componentName) {
-        // Check if on Linux Mac or Apple Silicon (e.g. Apple M1)
-        if ((!SystemUtils.IS_OS_LINUX && !SystemUtils.IS_OS_MAC) || SystemUtils.OS_ARCH.equals("aarch64")) {
+        if ((!SystemUtils.IS_OS_LINUX && !SystemUtils.IS_OS_MAC)) {
             throw new SkipException(componentName + " is not available on this platform");
         }
 
