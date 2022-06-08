@@ -71,6 +71,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -534,7 +535,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             final List<Allele> callAlleles  = alleles.callAlleles();
 
             // Get the alleles present at this site for both samples to use for the output variant context, but remove no calls.
-            final Set<Allele> siteAlleles = new HashSet<>();
+            final Set<Allele> siteAlleles = new LinkedHashSet<>();
             siteAlleles.addAll(allAlleles);
             siteAlleles.remove(Allele.NO_CALL);
 
