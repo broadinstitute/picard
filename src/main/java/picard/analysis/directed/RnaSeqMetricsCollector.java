@@ -67,8 +67,13 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.endBiasBases        = endBiasBases;
         setup(accumulationLevels, samRgRecords);
 
-        File intergenicOutputFile = new File("intergenic.bam");
+        final File intergenicOutputFile = new File("intergenic.bam");
+        final File intronicOutputFile = new File("intergenic.bam");
+        final File utrOutputFile = new File("intergenic.bam");
         this.intergenicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intergenicOutputFile, referenceFile);
+        this.intronicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intronicOutputFile, referenceFile);
+        this.utrBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, utrOutputFile, referenceFile);
+
     }
 
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
@@ -243,8 +248,10 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                                 intergenicBAMWriter.addAlignment(rec); // What about the mate?
                                 break;
                             case INTRONIC:
+                                intronicBAMWriter.addAlignment(rec);
                                 break;
                             case UTR:
+                                utrBAMWriter.addAlignment(rec);
                                 break;
                             default:
                                 break;
