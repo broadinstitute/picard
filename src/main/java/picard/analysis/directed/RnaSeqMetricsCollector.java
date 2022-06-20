@@ -68,8 +68,8 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         setup(accumulationLevels, samRgRecords);
 
         final File intergenicOutputFile = new File("intergenic.bam");
-        final File intronicOutputFile = new File("intergenic.bam");
-        final File utrOutputFile = new File("intergenic.bam");
+        final File intronicOutputFile = new File("intronic.bam");
+        final File utrOutputFile = new File("utr.bam");
         this.intergenicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intergenicOutputFile, referenceFile);
         this.intronicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intronicOutputFile, referenceFile);
         this.utrBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, utrOutputFile, referenceFile);
@@ -378,7 +378,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 metrics.PCT_R2_TRANSCRIPT_STRAND_READS = metrics.NUM_R2_TRANSCRIPT_STRAND_READS / (double) readsExamined;
             }
 
-            intronicBAMWriter.close();  
+            intronicBAMWriter.close();
             intergenicBAMWriter.close();
             utrBAMWriter.close();
 
