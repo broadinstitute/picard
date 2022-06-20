@@ -377,6 +377,11 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 metrics.PCT_R1_TRANSCRIPT_STRAND_READS = metrics.NUM_R1_TRANSCRIPT_STRAND_READS / (double) readsExamined;
                 metrics.PCT_R2_TRANSCRIPT_STRAND_READS = metrics.NUM_R2_TRANSCRIPT_STRAND_READS / (double) readsExamined;
             }
+
+            intronicBAMWriter.close();  
+            intergenicBAMWriter.close();
+            utrBAMWriter.close();
+
         }
 
         @Override
