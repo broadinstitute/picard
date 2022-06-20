@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqMetrics, Integer> {
     public enum StrandSpecificity {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND}
@@ -43,10 +45,17 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
     private final boolean collectCoverageStatistics;
 
+
+    private SAMFileWriter intergenicBAMWriter;
+    private SAMFileWriter intronicBAMWriter;
+    private SAMFileWriter utrBAMWriter;
+
+
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
-                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics, final int endBiasBases) {
+                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics, final int endBiasBases,
+                                  final SAMFileHeader header, final File referenceFile) {
         this.ribosomalInitialValue  = ribosomalBasesInitialValue;
         this.ignoredSequenceIndices = ignoredSequenceIndices;
         this.geneOverlapDetector    = geneOverlapDetector;
@@ -57,13 +66,16 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.collectCoverageStatistics = collectCoverageStatistics;
         this.endBiasBases        = endBiasBases;
         setup(accumulationLevels, samRgRecords);
+
+        File intergenicOutputFile = new File("intergenic.bam");
+        this.intergenicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intergenicOutputFile, referenceFile);
     }
 
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
                                   final double rrnaFragmentPercentage, boolean collectCoverageStatistics) {
-        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases);
+        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases, null, null); // sato: fix these nulls
     }
 
     @Override
@@ -187,6 +199,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             final List<AlignmentBlock> alignmentBlocks               = rec.getAlignmentBlocks();
             boolean overlapsExon = false;
 
+
             for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
                 // Get functional class for each position in the alignment block.
                 final LocusFunction[] locusFunctions = new LocusFunction[alignmentBlock.getLength()];
@@ -213,6 +226,32 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
                     }
                 }
+
+                final Map<LocusFunction, Long> countByType = Arrays.stream(locusFunctions).collect(Collectors.groupingBy(
+                        Function.identity(),
+                        Collectors.counting()));
+                double threshold = 0.3;
+                double alignmentLength = locusFunctions.length;
+                for (final LocusFunction lf : LocusFunction.values()){
+                    if (! countByType.containsKey(lf)){
+                        continue;
+                    }
+                    double fraction = countByType.get(lf) / alignmentLength;
+                    if (fraction > threshold){
+                        switch (lf) {
+                            case INTERGENIC:
+                                intergenicBAMWriter.addAlignment(rec); // What about the mate?
+                                break;
+                            case INTRONIC:
+                                break;
+                            case UTR:
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+
 
                 // Tally the function of each base in the alignment block.
                 for (final LocusFunction locusFunction : locusFunctions) {

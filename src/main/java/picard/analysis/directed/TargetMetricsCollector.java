@@ -463,7 +463,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                Do this counting *prior* to applying filters to ensure we match other metrics' computation for these values, such as AlignmentSummaryMetrics. */
 
             // READ Based Metrics
-            if (!record.getSupplementaryAlignmentFlag()) { // only consider the primary
+            if (!record.getSupplementaryAlignmentFlag()) { // only consider the primary (secondary excluded above)
                 this.metrics.TOTAL_READS++;
                 if (!record.getReadFailsVendorQualityCheckFlag()) { // only reads that pass vendor's filters
                     this.metrics.PF_READS++;

@@ -171,7 +171,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE,
-                true, END_BIAS_BASES);
+                true, END_BIAS_BASES,
+                header, referenceSequence.getReferenceFile());
 
         // If we're working with a single library, assign that library's name as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
