@@ -129,6 +129,9 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
     public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
 
+    @Argument(shortName="writer", fullName = "writer", doc="writer prefix")
+    public String WRITER_PREFIX = "";
+
     @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
@@ -172,7 +175,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE,
                 true, END_BIAS_BASES,
-                header, referenceSequence.getReferenceFile());
+                header, referenceSequence.getReferenceFile(), WRITER_PREFIX);
 
         // If we're working with a single library, assign that library's name as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();

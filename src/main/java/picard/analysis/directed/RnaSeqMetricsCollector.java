@@ -49,13 +49,14 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private SAMFileWriter intergenicBAMWriter;
     private SAMFileWriter intronicBAMWriter;
     private SAMFileWriter utrBAMWriter;
+    private SAMFileWriter incorrectStrandWriter;
 
 
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
                                   final double rrnaFragmentPercentage, boolean collectCoverageStatistics, final int endBiasBases,
-                                  final SAMFileHeader header, final File referenceFile) {
+                                  final SAMFileHeader header, final File referenceFile, final String writerPrefix) {
         this.ribosomalInitialValue  = ribosomalBasesInitialValue;
         this.ignoredSequenceIndices = ignoredSequenceIndices;
         this.geneOverlapDetector    = geneOverlapDetector;
@@ -67,12 +68,14 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.endBiasBases        = endBiasBases;
         setup(accumulationLevels, samRgRecords);
 
-        final File intergenicOutputFile = new File("intergenic.bam");
-        final File intronicOutputFile = new File("intronic.bam");
-        final File utrOutputFile = new File("utr.bam");
+        final File intergenicOutputFile = new File(writerPrefix + "_intergenic.bam");
+        final File intronicOutputFile = new File(writerPrefix + "_intronic.bam");
+        final File utrOutputFile = new File(writerPrefix + "_utr.bam");
+        final File incorrectStrandOutputFile = new File(writerPrefix + "_incorrect_strand.bam");
         this.intergenicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intergenicOutputFile, referenceFile);
         this.intronicBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, intronicOutputFile, referenceFile);
         this.utrBAMWriter = new SAMFileWriterFactory().makeWriter(header, true, utrOutputFile, referenceFile);
+        this.incorrectStrandWriter = new SAMFileWriterFactory().makeWriter(header, true, incorrectStrandOutputFile, referenceFile);
 
     }
 
@@ -80,7 +83,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
                                   final double rrnaFragmentPercentage, boolean collectCoverageStatistics) {
-        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases, null, null); // sato: fix these nulls
+        this(accumulationLevels, samRgRecords, ribosomalBasesInitialValue, geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, minimumLength, strandSpecificity, rrnaFragmentPercentage, collectCoverageStatistics, defaultEndBiasBases, null, null, ""); // sato: fix these nulls
     }
 
     @Override
@@ -294,6 +297,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 final boolean negativeReadStrand          = rec.getReadNegativeStrandFlag();
                 if (strandSpecificity != StrandSpecificity.NONE) {
                     final boolean readAndTranscriptStrandsAgree = negativeReadStrand == negativeTranscriptionStrand;
+                    // sato: firstReadExpectedToAgree = false always for read2 strand specific protocol
                     final boolean firstReadExpectedToAgree      = strandSpecificity == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND;
                     final boolean thisReadExpectedToAgree       = readOneOrUnpaired == firstReadExpectedToAgree;
                     // If the read strand is the same as the strand of the transcript, and the end is the one that is supposed to agree,
@@ -304,6 +308,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                     if (readAndTranscriptStrandsAgree == thisReadExpectedToAgree) {
                         ++metrics.CORRECT_STRAND_READS;
                     } else {
+                        incorrectStrandWriter.addAlignment(rec);
                         ++metrics.INCORRECT_STRAND_READS;
                     }
                 }
