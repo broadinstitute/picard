@@ -386,6 +386,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             intronicBAMWriter.close();
             intergenicBAMWriter.close();
             utrBAMWriter.close();
+            incorrectStrandWriter.close();
 
         }
 
