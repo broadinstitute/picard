@@ -29,7 +29,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.IOUtil;
-import org.apache.commons.lang.ArrayUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -107,11 +106,7 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        if (FLOW_MODE) {
-            this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS, true);
-        } else {
-            this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
-        }
+        this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS, FLOW_MODE);
     }
 
     @Override
@@ -138,7 +133,7 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
 
         // If true, include bases from supplemental alignments in metrics. Setting to true may cause double-counting
         // of bases if there are supplemental alignments in the input file.
-        private final boolean includeSupplementalAlignments;
+        public final boolean includeSupplementalAlignments;
 
         // If true collects RLQ25/RLQ30
         private final boolean flowMode;
@@ -256,8 +251,8 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         @Override
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
-            this.READ_LENGTH_AVG_Q_ABOVE_25 = histogramGenerator.calculateLQ(25, 1,5);
-            this.READ_LENGTH_AVG_Q_ABOVE_30 = histogramGenerator.calculateLQ(30, 1,5);
+            this.READ_LENGTH_AVG_Q_ABOVE_25 = histogramGenerator.calculateLQ(25, 1, 5);
+            this.READ_LENGTH_AVG_Q_ABOVE_30 = histogramGenerator.calculateLQ(30, 1, 5);
         }
 
         @Override
@@ -284,7 +279,6 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         public QualityYieldMetrics() {
             this(false);
         }
-
 
         public QualityYieldMetrics(final boolean useOriginalQualities) {
             super();

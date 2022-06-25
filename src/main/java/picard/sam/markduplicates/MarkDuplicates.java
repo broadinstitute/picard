@@ -645,12 +645,18 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
     }
 
     /**
-     * update score for pairedEnds
+     * Calculates score for the duplicate read
+     * @param rec - read
+     * @param pairedEnds - location of the read ends
+     * @return - read score calculated according to the DUPLICATE_SCORING_STRATEGY:
+     *         SUM_OF_BASE_QUALITIES, (default)
+     *         TOTAL_MAPPED_REFERENCE_LENGTH,
+     *         RANDOM
+     *
      */
     public short getReadDuplicateScore(final SAMRecord rec, final ReadEndsForMarkDuplicates pairedEnds) {
         return DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
     }
-
 
     /**
      * Builds a read ends object that represents a single read.

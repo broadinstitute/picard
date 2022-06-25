@@ -242,6 +242,9 @@ public class DuplicationMetrics extends MergeableMetricBase {
         }
     }
 
+    /**
+     * Adds duplicated read to the metrics
+     */
     public void addDuplicateReadToMetrics(final SAMRecord rec) {
         // only update duplicate counts for "decider" reads, not tag-a-long reads
         if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
@@ -255,8 +258,10 @@ public class DuplicationMetrics extends MergeableMetricBase {
         }
     }
 
+    /**
+     * Adds a read to the metrics
+     */
     public void addReadToLibraryMetrics(final SAMRecord rec) {
-
         // First bring the simple metrics up to date
         if (rec.getReadUnmappedFlag()) {
             ++UNMAPPED_READS;

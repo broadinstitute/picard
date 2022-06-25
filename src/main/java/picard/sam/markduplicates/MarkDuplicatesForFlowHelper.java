@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2009-2022 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.sam.markduplicates;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -51,9 +75,8 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
     }
 
     private void validateFlowParameteres() {
-
         if ( md.flowBasedArguments.UNPAIRED_END_UNCERTAINTY != 0 && !md.flowBasedArguments.USE_END_IN_UNPAIRED_READS ) {
-            throw new IllegalArgumentException("invalid parameter combination. UNPAIRED_END_UNCERTAINTY can not be specified when USE_END_IN_UNPAIRED_READS not specified");
+            throw new IllegalArgumentException("Invalid parameter combination. UNPAIRED_END_UNCERTAINTY can not be specified when USE_END_IN_UNPAIRED_READS not specified");
         }
     }
 
@@ -91,7 +114,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
 
         // this code does support pairs at this time
         if ( md.pairSort.iterator().hasNext() ) {
-            throw new IllegalArgumentException("flow based code does not support paired reads");
+            throw new IllegalArgumentException("Flow based code does not support paired reads");
         }
         md.pairSort.cleanup();
         md.pairSort = null;
@@ -334,7 +357,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
                         : coor;
             }
 
-            // "know end" case
+            // "known end" case
             if (flowBasedArguments.FLOW_Q_IS_KNOWN_END ? isAdapterClipped(rec) : isAdapterClippedWithQ(rec)) {
                 return unclippedCoor;
             }
