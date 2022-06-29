@@ -30,7 +30,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;

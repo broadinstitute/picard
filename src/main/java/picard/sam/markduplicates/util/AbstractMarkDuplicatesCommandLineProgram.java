@@ -42,6 +42,8 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
+import picard.sam.markduplicates.MarkDuplicatesForFlowHelper;
 import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
@@ -202,38 +204,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         metricsFile.write(outputFile);
     }
 
-    public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator) {
+    public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator, final boolean flowMetrics) {
         final String library = LibraryIdGenerator.getLibraryName(header, rec);
         DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
         if (metrics == null) {
-            metrics = new DuplicationMetrics();
+            metrics = DuplicationMetricsFactory.createMetrics(flowMetrics);
             metrics.LIBRARY = library;
             libraryIdGenerator.addMetricsByLibrary(library, metrics);
         }
 
-        // First bring the simple metrics up to date
-        if (rec.getReadUnmappedFlag()) {
-            ++metrics.UNMAPPED_READS;
-        } else if (rec.isSecondaryOrSupplementary()) {
-            ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-        } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-            ++metrics.UNPAIRED_READS_EXAMINED;
-        } else {
-            ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-        }
+        metrics.addReadToLibraryMetrics(rec);
         return metrics;
-    }
-
-    public static void addDuplicateReadToMetrics(final SAMRecord rec, final DuplicationMetrics metrics) {
-        // only update duplicate counts for "decider" reads, not tag-a-long reads
-        if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-            // Update the duplication metrics
-            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                ++metrics.UNPAIRED_READ_DUPLICATES;
-            } else {
-                ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
-            }
-        }
     }
 
     /**

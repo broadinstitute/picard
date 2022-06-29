@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2022 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,25 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
-package picard.sam.markduplicates;
-
-import htsjdk.samtools.DuplicateScoringStrategy;
-import picard.cmdline.CommandLineProgram;
+package picard.sam;
 
 /**
- * This class is an extension of AbstractMarkDuplicatesCommandLineProgramTester used to test MarkDuplicates with SAM files generated on the fly.
- * This performs the underlying tests defined by classes such as see AbstractMarkDuplicatesCommandLineProgramTest and MarkDuplicatesTest.
+ * Factory class that creates either regular or flow-based duplication metrics.
+ * Supports MarkDuplicates with --flowMode
  */
-public class MarkDuplicatesTester extends AbstractMarkDuplicatesCommandLineProgramTester {
+public class DuplicationMetricsFactory {
 
-    public MarkDuplicatesTester(DuplicateScoringStrategy.ScoringStrategy strategy) {
-        super(strategy);
-    }
-    public MarkDuplicatesTester() {
-        this(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH);
+    /**
+     * Create empty regular of flow duplication metrics
+     * @param flowMetrics
+     * @return DuplicationMetrics
+     */
+    public static DuplicationMetrics createMetrics(final boolean flowMetrics) {
+
+        // create based on the presence of flow order
+        if ( !flowMetrics ) {
+            return new DuplicationMetrics();
+        } else {
+            return new FlowBasedDuplicationMetrics();
+        }
     }
 
-    @Override
-    protected CommandLineProgram getProgram() { return new MarkDuplicates(); }
+    /**
+     * Create non-flow duplication metrics
+     * @return
+     */
+    public static DuplicationMetrics createMetrics() {
+        return new DuplicationMetrics();
+    }
 }

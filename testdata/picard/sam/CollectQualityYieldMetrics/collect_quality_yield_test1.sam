@@ -1,0 +1,6 @@
+@HD	VN:1.0	SO:coordinate
+@SQ	SN:chr1	LN:101	UR:file:testdata/net/sf/picard/sam/merger.fasta	M5:bd01f7e11515bb6beda8f7257902aa67
+@RG	ID:0	SM:Hi,Momma!	LB:whatever	PU:me	PL:ILLUMINA
+READ_1	0	chr1	1	255	10M	*	0	0	TTTTTTTTTT	::::::::::	RG:Z:0	XN:i:1
+READ_2	512	chr1	1	255	10M	*	0	0	TTTTTTTTTT	::::::::::	RG:Z:0	XN:i:1
+READ_3	0	chr1	1	255	10M	*	0	0	TTTTTTTTTT	<<<<<BBBBB	RG:Z:0	XN:i:1

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2009-2022 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,13 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.DuplicateScoringStrategy;
-import picard.cmdline.CommandLineProgram;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import picard.sam.markduplicates.util.ReadEndsForMarkDuplicates;
 
-/**
- * This class is an extension of AbstractMarkDuplicatesCommandLineProgramTester used to test MarkDuplicates with SAM files generated on the fly.
- * This performs the underlying tests defined by classes such as see AbstractMarkDuplicatesCommandLineProgramTest and MarkDuplicatesTest.
- */
-public class MarkDuplicatesTester extends AbstractMarkDuplicatesCommandLineProgramTester {
+public interface MarkDuplicatesHelper {
 
-    public MarkDuplicatesTester(DuplicateScoringStrategy.ScoringStrategy strategy) {
-        super(strategy);
-    }
-    public MarkDuplicatesTester() {
-        this(DuplicateScoringStrategy.ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH);
-    }
-
-    @Override
-    protected CommandLineProgram getProgram() { return new MarkDuplicates(); }
+    void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates);
+    ReadEndsForMarkDuplicates buildReadEnds(final SAMFileHeader header, final long index, final SAMRecord rec, final boolean useBarcodes);
+    short getReadDuplicateScore(final SAMRecord rec, final ReadEndsForMarkDuplicates pairedEnds);
 }
