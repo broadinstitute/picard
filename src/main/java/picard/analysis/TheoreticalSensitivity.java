@@ -201,13 +201,20 @@ public class TheoreticalSensitivity {
         if (histogram == null) throw new PicardException("Histogram is null and cannot be normalized");
 
         final double histogramSumOfValues = histogram.getSumOfValues();
-        final double[] normalizedHistogram = new double[histogram.size()];
+        final double[] normalizedHistogram = new double[(int) histogram.getMax() + 1];
 
-        for (int i = 0; i < histogram.size(); i++) {
-            if (histogram.get(i) != null) {
-                normalizedHistogram[i] = histogram.get(i).getValue() / histogramSumOfValues;
-            }
+        final Iterator<Integer> keySet = histogram.keySet().iterator();
+
+        for (Iterator<Integer> it = keySet; it.hasNext(); ) {
+            Integer key = it.next();
+            normalizedHistogram[key] = histogram.get(key).getValue() / histogramSumOfValues;
         }
+
+        double s = 0;
+        for(int i = 0;i < (int) histogram.getMax() + 1;i++) {
+            s += normalizedHistogram[i];
+        }
+
         return normalizedHistogram;
     }
 
@@ -286,6 +293,7 @@ public class TheoreticalSensitivity {
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {
                 calledVariants++;
             }
+            //System.out.println("AF = " + alleleFraction + " altDepth = " + altDepth + " " + sumOfQualities + " " + isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold));
         }
         return (double) calledVariants / sampleSize;
     }
@@ -324,6 +332,15 @@ public class TheoreticalSensitivity {
                                                 final Histogram<Integer> qualityHistogram, final int sampleSize,
                                                 final double logOddsThreshold, final double alleleFraction,
                                                 final double overlapProbability, final int pcrErrorRate) {
+        return theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, logOddsThreshold,
+           alleleFraction, overlapProbability, pcrErrorRate, false);
+    }
+
+    public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram,
+                                                final Histogram<Integer> qualityHistogram, final int sampleSize,
+                                                final double logOddsThreshold, final double alleleFraction,
+                                                final double overlapProbability, final int pcrErrorRate,
+                                                final boolean useTrapezoidRule) {
         if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new IllegalArgumentException("Allele fractions must be between 0 and 1.");
         }
@@ -333,25 +350,42 @@ public class TheoreticalSensitivity {
         // Integrate sensitivity over depth distribution
         double sensitivity = 0.0;
         int currentDepth = 0;
-        double right = 0;
-        while (currentDepth < depthDistribution.length) {
-            double deltaDepthProbability = 0.0;
-            // Accumulate a portion of the depth distribution to compute theoretical sensitivity over.
-            // This helps prevent us from spending lots of compute over coverages
-            // that occur with low probability and don't contribute much to sensitivity anyway, but
-            // it complicates things a bit by having a variable deltaDepthProbability which
-            // amount of the depth distribution to use with the trapezoid rule integration step.
-            while (deltaDepthProbability == 0 && currentDepth < depthDistribution.length ||
-                    deltaDepthProbability < DEPTH_BIN_WIDTH && currentDepth < depthDistribution.length &&
-                    depthDistribution[currentDepth] < DEPTH_BIN_WIDTH / 2.0) {
-                deltaDepthProbability += depthDistribution[currentDepth];
-                currentDepth++;
+
+        if(useTrapezoidRule) {
+            double right = 0;
+            while (currentDepth < depthDistribution.length) {
+                double deltaDepthProbability = 0.0;
+                // Accumulate a portion of the depth distribution to compute theoretical sensitivity over.
+                // This helps prevent us from spending lots of compute over coverages
+                // that occur with low probability and don't contribute much to sensitivity anyway, but
+                // it complicates things a bit by having a variable deltaDepthProbability which
+                // amount of the depth distribution to use with the trapezoid rule integration step.
+                while (deltaDepthProbability == 0 && currentDepth < depthDistribution.length ||
+                        deltaDepthProbability < DEPTH_BIN_WIDTH && currentDepth < depthDistribution.length &&
+                                depthDistribution[currentDepth] < DEPTH_BIN_WIDTH / 2.0) {
+                    deltaDepthProbability += depthDistribution[currentDepth];
+                    currentDepth++;
+                }
+                // I think we overshoot by 1
+
+
+                // Calculate sensitivity for a particular depth, and use trapezoid rule to integrate sensitivity.
+                final double left = right;
+
+                System.out.println("Current Depth = " + currentDepth);
+                right = sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize,
+                        alleleFraction, overlapProbability, pcrErrorRate);
+                sensitivity += deltaDepthProbability * (left + right) / 2.0;
             }
-            // Calculate sensitivity for a particular depth, and use trapezoid rule to integrate sensitivity.
-            final double left = right;
-            right = sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize,
-                    alleleFraction, overlapProbability, pcrErrorRate);
-            sensitivity += deltaDepthProbability * (left + right) / 2.0;
+        }
+        else {
+            for(currentDepth = 0;currentDepth < depthDistribution.length;currentDepth++) {
+                if(depthDistribution[currentDepth] != 0) {
+                    System.out.println("Depth = " + currentDepth);
+                    sensitivity += sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize,
+                            alleleFraction, overlapProbability, pcrErrorRate) * depthDistribution[currentDepth];
+                }
+            }
         }
         return sensitivity;
     }
