@@ -725,8 +725,6 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
             for (int i = 0; i < length; i++) {
                 // j is not redundant, due to "effective final" requirement in lambda...
                 final int j = i;
-                System.out.println("Here's what's printing for " + i);
-                System.out.println(outputs.stream().map(l -> l.get(j)).collect(Collectors.joining("\t")));
                 writer.println(outputs.stream().map(l -> l.get(j)).collect(Collectors.joining("\t")));
             }
         }
