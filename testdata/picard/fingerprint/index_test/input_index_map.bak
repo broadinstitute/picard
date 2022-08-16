@@ -1,8 +1,0 @@
-index_test/files/NA12891.vcf	index_test/indices/NA12891.vcf.tbi
-index_test/files/NA12891.fp.vcf	index_test/indices/NA12891.fp.vcf.tbi
-index_test/files/NA12891.g.vcf	index_test/indices/NA12891.g.vcf.tbi
-index_test/files/NA12892.g.vcf	index_test/indices/NA12892.g.vcf.tbi
-index_test/files/NA12891.over.fingerprints.r1.bam	index_test/indices/NA12891.over.fingerprints.r1.bam.bai
-index_test/files/NA12891.over.fingerprints.r2.bam	index_test/indices/NA12891.over.fingerprints.r2.bam.bai
-index_test/files/NA12892.over.fingerprints.r1.bam	index_test/indices/NA12892.over.fingerprints.r1.bam.bai
-index_test/files/NA12892.over.fingerprints.r2.bam	index_test/indices/NA12892.over.fingerprints.r2.bam.bai
