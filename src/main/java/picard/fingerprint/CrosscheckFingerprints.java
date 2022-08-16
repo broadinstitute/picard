@@ -173,31 +173,41 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         "In this format the output will include the LOD score and also tumor-aware LOD score which can " +
                         "help assess identity even in the presence of a severe loss of heterozygosity with high purity (which could cause it to " +
                         "otherwise fail to notice that samples are from the same individual.) " +
-                        "A matrix output is also available to facilitate visual inspection of crosscheck results.\n " +
-                        "\n" +
+                        "A matrix output is also available to facilitate visual inspection of crosscheck results." +
+                        "<br /><br /> " +
+
                         "Since there can be many rows of output in the metric file, we recommend the use of ClusterCrosscheckMetrics " +
                         "as a follow-up step to running CrosscheckFingerprints.\n " +
-                        "\n" +
+                        "<br /><br />" +
+
                         "There are cases where one would like to identify a few groups out of a collection of many possible groups (say " +
                         "to link a SAM to its correct sample in a multi-sample VCF. In this case one would not case for the cross-checking " +
                         "of the various samples in the VCF against each other, but only in checking the identity of the SAM against the various " +
                         "samples in the VCF. The SECOND_INPUT is provided for this use-case. With SECOND_INPUT provided, CrosscheckFingerprints " +
-                        "does the following:\n" +
-                        " - aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. \n" +
-                        " - aggregation of data happens at the SAMPLE level \n" +
-                        " - each samples from INPUT will only be compared to that same sample in SECOND_INPUT. \n" +
-                        " - MATRIX_OUTPUT is disabled. " +
-                        "\n" +
+                        "does the following:" +
+                        "<br /><br />" +
+
+                        "<ul>" +
+                        "<li> aggregation of data happens independently for the input files in INPUT and SECOND_INPUT. </li>" +
+                        "<li> aggregation of data happens at the SAMPLE level </li>" +
+                        "<li> each samples from INPUT will only be compared to that same sample in SECOND_INPUT. </li>" +
+                        "<li> MATRIX_OUTPUT is disabled. </li>" +
+                        "</ul>" +
+
+                        "<br /><br />" +
                         "In some cases, the groups collected may not have any observations (calls for a VCF, reads for a SAM) at fingerprinting sites, or " +
-                        "a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode " +
-                        "with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the other, or contains a sample with " +
-                        "no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. In all other " +
-                        "running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is " +
+                        "a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:" +
+                        "<ul>" +
+                        "<li> If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT " +
+                        "includes a sample not found in the other, or contains a sample with " +
+                        "no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. </li>" +
+                        "<li> In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is " +
                         "logged.  As long as there is at least one comparison where both sides have observations at fingerprinting sites, the tool will " +
                         "return zero.  However, if all comparisons have at least one side with no observations at fingerprinting sites, an error will be " +
-                        "logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS." +
-                        "\n" +
+                        "logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS. </li>" +
+                        "<br /><br />" +
                         "<hr/>" +
+
                         "<h3>Examples</h3>" +
                         "<h4>Check that all the readgroups from a sample match each other:</h4>" +
                         "<pre>" +
@@ -218,8 +228,7 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         "           EXPECT_ALL_GROUPS_TO_MATCH=true \\\n" +
                         "           OUTPUT=sample.crosscheck_metrics" +
                         " </pre>" +
-                        "\n" +
-                        "\n" +
+                        "<br /><br />" +
                         "<h4>Detailed Explanation</h4>" +
                         "\n" +
                         "This tool calculates the LOD score for identity check between \"groups\" of data in the INPUT files as defined by " +
@@ -227,19 +236,20 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
                         "or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates " +
                         "that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates " +
                         "that the data do not match. A score that is near zero is inconclusive and can result from low coverage " +
-                        "or non-informative genotypes. Each group is assigned a sample identifier (for SAM this is taken from the SM tag in " +
+                        "or non-informative genotypes. " +
+                        "<br /><br />" +
+                        "Each group is assigned a sample identifier (for SAM this is taken from the SM tag in " +
                         "the appropriate readgroup header line, for VCF this is taken from the column label in the file-header. " +
                         "After combining all the data from the same group together, an all-against-all comparison is performed. Results are " +
                         "categorized as one of EXPECTED_MATCH, EXPECTED_MISMATCH, UNEXPECTED_MATCH, UNEXPECTED_MISMATCH, or AMBIGUOUS depending " +
                         "on the LOD score and on whether the sample identifiers of the groups agree: LOD scores that are less than LOD_THRESHOLD " +
                         "are considered mismatches, and those greater than -LOD_THRESHOLD are matches (between is ambiguous). " +
                         "If the sample identifiers are equal, the groups are expected to match. They are expected to mismatch otherwise. " +
-                        "\n" +
-                        "\n" +
+                        "<br /><br />" +
                         "The identity check makes use of haplotype blocks defined in the HAPLOTYPE_MAP file to enable it to have higher " +
                         "statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This " +
-                        "enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).\n " +
-                        "\n" +
+                        "enables an identity check of samples with very low coverage (e.g. ~1x mean coverage)." +
+                        "<br /><br />" +
                         "When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that " +
                         "it finds. ",
         oneLineSummary = "Checks that all data in the input files appear to have come from the same individual",
