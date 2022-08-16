@@ -253,6 +253,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) with which to compare fingerprints.", minElements = 1)
     public List<String> INPUT;
 
+    @Argument(doc = "A tsv with two columns which maps the input files to corresponding indices; to be used when index " +
+            "files are not located next to input files. First column must match the list of inputs. ", optional = true)
+    public File INPUT_INDEX_MAP;
+
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and " +
             "the sample as it should be used for comparisons to SECOND_INPUT (in the second column). " +
             "Need only include the samples that change. " +
@@ -279,6 +283,10 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     "If this is violated, the tool will proceed to check the matching samples, but report the missing samples " +
                     "and return a non-zero error-code.")
     public List<String> SECOND_INPUT;
+
+    @Argument(doc = "A tsv with two columns which maps the second input files to corresponding indices; to be used when index " +
+            "files are not located next to second input files. First column must match the list of second inputs. ", optional = true)
+    public File SECOND_INPUT_INDEX_MAP;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and " +
             "the sample as it should be used for comparisons to INPUT (in the second column). " +
@@ -434,11 +442,17 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         if (MATRIX_OUTPUT != null) {
             IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
         }
+        if (INPUT_INDEX_MAP != null) {
+            IOUtil.assertFileIsReadable(INPUT_INDEX_MAP);
+        }
         if (INPUT_SAMPLE_MAP != null) {
             IOUtil.assertFileIsReadable(INPUT_SAMPLE_MAP);
         }
         if (INPUT_SAMPLE_FILE_MAP != null) {
             IOUtil.assertFileIsReadable(INPUT_SAMPLE_FILE_MAP);
+        }
+        if (SECOND_INPUT_INDEX_MAP != null) {
+            IOUtil.assertFileIsReadable(SECOND_INPUT_INDEX_MAP);
         }
         if (SECOND_INPUT_SAMPLE_MAP != null) {
             IOUtil.assertFileIsReadable(SECOND_INPUT_SAMPLE_MAP);
@@ -468,7 +482,13 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             IOUtil.assertPathsAreReadable(unrolledFiles);
         }
 
+        // Parse the input index map if given
+        final Map<Path, Path> indexPathMap = INPUT_INDEX_MAP != null ? getPathPathMap(INPUT_INDEX_MAP, "INPUT_INDEX_MAP") : null;
+
         final List<Path> secondInputsPaths = IOUtil.getPaths(SECOND_INPUT);
+
+        // Parse the second input index map if given
+        final Map<Path, Path> indexPathMap2 = SECOND_INPUT_INDEX_MAP != null ? getPathPathMap(SECOND_INPUT_INDEX_MAP, "SECOND_INPUT_INDEX_MAP") : null;
 
         // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then discover a problem
         // in a file in SECOND_INPUT
@@ -479,8 +499,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
 
-        final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
-        final Map<FingerprintIdDetails, Fingerprint> fpMap = capFingerprints(uncappedFpMap);
+        // Decide how to parse inputs based on whether index paths provided
+        Map<FingerprintIdDetails, Fingerprint> fpMap = null;
+        if (INPUT_INDEX_MAP != null) {
+            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, indexPathMap, NUM_THREADS, 1, TimeUnit.DAYS);
+            fpMap = capFingerprints(uncappedFpMap);
+        } else {
+            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
+            fpMap = capFingerprints(uncappedFpMap);
+        }
 
         if (INPUT_SAMPLE_MAP != null) {
             remapFingerprints(fpMap, INPUT_SAMPLE_MAP, "INPUT_SAMPLE_MAP");
@@ -499,9 +526,16 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             numUnexpected = crossCheckGrouped(fpMap, fpMap, metrics, Fingerprint.getFingerprintIdDetailsStringFunction(CROSSCHECK_BY), CROSSCHECK_BY);
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
-            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
-            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = capFingerprints(uncappedFpMap2);
 
+            // Decide how to parse second inputs based on whether index paths provided
+            Map<FingerprintIdDetails, Fingerprint> fpMap2 = null;
+            if (SECOND_INPUT_INDEX_MAP != null) {
+                final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, indexPathMap2, NUM_THREADS, 1, TimeUnit.DAYS);
+                fpMap2 = capFingerprints(uncappedFpMap2);
+            } else {
+                final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
+                fpMap2 = capFingerprints(uncappedFpMap2);
+            }
 
             if (SECOND_INPUT_SAMPLE_MAP != null) {
                 remapFingerprints(fpMap2, SECOND_INPUT_SAMPLE_MAP, "SECOND_INPUT_SAMPLE_MAP");
@@ -711,6 +745,33 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             sampleMap.put(strings[0], strings[1]);
         }
         return sampleMap;
+    }
+
+    private Map<Path, Path> getPathPathMap(final File indexMapFile, final String inputFieldName) {
+        final Map<String, String> indexStringMap = getStringStringMap(indexMapFile, inputFieldName);
+        final HashMap<Path, Path> indexPathMap = new HashMap<Path, Path>();
+        for (Map.Entry<String, String> entry: indexStringMap.entrySet()) {
+            Path inputPath = null;
+            Path indexPath = null;
+
+            // Attempt to read input path
+            try {
+                inputPath = IOUtil.getPath(entry.getKey());
+            }
+            catch(IOException e) {
+                throw new PicardException("Trouble reading file: " + entry.getKey(), e);
+            }
+
+            // Attempt to read index path
+            try {
+                indexPath = IOUtil.getPath(entry.getValue());
+            }
+            catch(IOException e) {
+                throw new PicardException("Trouble reading file: " + entry.getValue(), e);
+            }
+            indexPathMap.put(inputPath, indexPath);
+        }
+        return indexPathMap;
     }
 
     private void writeMatrix() {

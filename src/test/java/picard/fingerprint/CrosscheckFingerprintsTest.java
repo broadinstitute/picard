@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -210,7 +211,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "cramsWithNoReference")
     public void testCramsWithNoReference(final File file1, final File file2) throws IOException {
-        File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
+        File metrics = File.createTempFile("Fingerprinting", "NA12891.RG.crosscheck_metrics");
         metrics.deleteOnExit();
 
         final String[] args = {"INPUT=" + file1.getAbsolutePath(),
@@ -724,6 +725,8 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
             for (int i = 0; i < length; i++) {
                 // j is not redundant, due to "effective final" requirement in lambda...
                 final int j = i;
+                System.out.println("Here's what's printing for " + i);
+                System.out.println(outputs.stream().map(l -> l.get(j)).collect(Collectors.joining("\t")));
                 writer.println(outputs.stream().map(l -> l.get(j)).collect(Collectors.joining("\t")));
             }
         }
@@ -783,6 +786,99 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         final List<String> args = new ArrayList<>();
         files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
 
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("LOD_THRESHOLD=" + -1.0);
+        args.add("CROSSCHECK_BY=FILE");
+
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
+    }
+
+    // Test mostly same as last test, but with explicit index paths given
+    @DataProvider(name = "explicitIndexPathsInputs")
+    public Iterator<Object[]> explicitIndexPathsInputs() {
+        List<Object[]> tests = new ArrayList<>();
+
+        // VCF test
+        final File NA12891_1_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.vcf");
+        final File NA12891_1_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891.vcf.idx");
+        final File NA12891_2_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.fp.vcf");
+        final File NA12891_2_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891.fp.vcf.idx");
+        final File NA12891_g_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.g.vcf");
+        final File NA12891_g_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891.g.vcf.idx");
+        final File NA12892_1_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12892.vcf.gz");
+        final File NA12892_1_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12892.vcf.gz.tbi");
+        final File NA12892_g_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12892.g.vcf");
+        final File NA12892_g_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12892.g.vcf.idx");
+        final File NA12892_and_NA123891_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891andNA12892.vcf");
+        final File NA12892_and_NA123891_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891andNA12892.vcf.idx");
+
+        final List<File> vcf_files1 = Arrays.asList(NA12891_1_vcf_noidx, NA12892_1_vcf_noidx, NA12891_g_vcf_noidx, NA12892_g_vcf_noidx);
+        final List<File> vcf_idx_files1 = Arrays.asList(NA12891_1_vcf_idx, NA12892_1_vcf_idx, NA12891_g_vcf_idx, NA12892_g_vcf_idx);
+        final List<File> vcf_files2 = Arrays.asList(NA12892_and_NA123891_vcf_noidx, NA12891_2_vcf_noidx, NA12892_1_vcf_noidx);
+        final List<File> vcf_idx_files2 = Arrays.asList(NA12892_and_NA123891_vcf_idx, NA12891_2_vcf_idx, NA12892_1_vcf_idx);
+
+        tests.add(new Object[]{vcf_files1, vcf_idx_files1, 0, 4 * 4, false});
+        tests.add(new Object[]{vcf_files2, vcf_idx_files2, 0, 4 * 4, false});
+
+        // SAM vs VCF
+        final File NA12891_r1_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.over.fingerprints.r1.bam");
+        final File NA12891_r1_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891.over.fingerprints.r1.bam.bai");
+        final File NA12891_r2_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.over.fingerprints.r2.bam");
+        final File NA12891_r2_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891.over.fingerprints.r2.bam.bai");
+        final File NA12892_r1_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12892.over.fingerprints.r1.bam");
+        final File NA12892_r1_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12892.over.fingerprints.r1.bam.bai");
+        final File NA12892_r2_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12892.over.fingerprints.r2.bam");
+        final File NA12892_r2_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12892.over.fingerprints.r2.bam.bai");
+
+        final List<File> sam_vcf_files = Arrays.asList(NA12891_r1_noidx, NA12892_r1_noidx, NA12891_r2_noidx, NA12892_r2_noidx, NA12891_g_vcf_noidx, NA12892_g_vcf_noidx);
+        final List<File> sam_vcf_idx_files = Arrays.asList(NA12891_r1_idx, NA12892_r1_idx, NA12891_r2_idx, NA12892_r2_idx, NA12891_g_vcf_idx, NA12892_g_vcf_idx);
+
+        tests.add(new Object[]{sam_vcf_files, sam_vcf_idx_files, 0, 6 * 6, false});
+
+        // SAM test
+        final List<File> sam_files = Arrays.asList(NA12891_r1_noidx, NA12892_r1_noidx, NA12891_r2_noidx, NA12892_r2_noidx);
+        final List<File> sam_idx_files = Arrays.asList(NA12891_r1_idx, NA12892_r1_idx, NA12891_r2_idx, NA12892_r2_idx);
+        tests.add(new Object[]{sam_files, sam_idx_files, 0, 4*4, true});
+
+        return tests.iterator();
+    }
+
+    /**
+     * Test using an INPUT_INDEX_MAP with explicit indices specified for some/all relevant input files. Tests both VCF and SAM files.
+     */
+    @Test(dataProvider = "explicitIndexPathsInputs")
+    public void testExplicitIndexPaths(final List<File> files, final List<File> indices, final int expectedRetVal,
+                                        final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        // Make temp file for INPUT_INDEX_MAP
+        final Path inputIndexMap = File.createTempFile("input_index_map", ".tsv").toPath();
+        IOUtil.deleteOnExit(inputIndexMap);
+
+        // Zip files & indices together
+        List<List<String>> zipped_files = IntStream.range(0, Math.min(files.size(), indices.size()))
+                .mapToObj(i -> Arrays.asList(
+                        files.get(i) != null ? files.get(i).getAbsolutePath() : "",
+                        indices.get(i) != null ? indices.get(i).getAbsolutePath() : ""))
+                .collect(Collectors.toList());
+
+        // Based on tabbedWrite method above
+        // Write input files & indices to tsv for input below
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(inputIndexMap))) {
+            for (final List<String> pair : zipped_files) {
+                writer.println(pair.stream().collect(Collectors.joining("\t")));
+            }
+        }
+
+        // Set INPUT_INDEX_MAP to temp file created above
+        File INPUT_INDEX_MAP = new File(inputIndexMap.toString());
+
+        final List<String> args = new ArrayList<>();
+        files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
+
+        args.add("INPUT_INDEX_MAP=" + INPUT_INDEX_MAP);
         args.add("OUTPUT=" + metrics.getAbsolutePath());
         args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
         args.add("LOD_THRESHOLD=" + -1.0);

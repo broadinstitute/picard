@@ -25,13 +25,7 @@
 package picard.fingerprint;
 
 import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.*;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.Interval;
@@ -187,6 +181,21 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample) {
         final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
+        return finishLoadFingerprints(reader, fingerprintFile, specificSample);
+    }
+
+    /**
+     * Same as previous method, but with manual index path input
+     */
+    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final Path indexPath, final String specificSample) {
+        final VCFFileReader reader = new VCFFileReader(fingerprintFile, indexPath);
+        return finishLoadFingerprints(reader, fingerprintFile, specificSample);
+    }
+
+    /**
+     * A companion method to loadFingerprints which handles repetitive work regardless of whether index provided
+     */
+    private Map<String, Fingerprint> finishLoadFingerprints(final VCFFileReader reader, final Path fingerprintFile, final String specificSample) {
         checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
         final Map<String, Fingerprint> fingerprints;
@@ -445,6 +454,22 @@ public class FingerprintChecker {
         return fpIdMap;
     }
 
+    // Same as previous method, but allowed explicit indexPath input
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final Path vcfFile, final Path indexPath) {
+        final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
+
+        final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, indexPath, null);
+
+        sampleFpMap.forEach((key, value) -> {
+            final FingerprintIdDetails fpId = new FingerprintIdDetails();
+            fpId.sample = key;
+            fpId.file = vcfFile.toUri().toString();
+
+            fpIdMap.put(fpId, value);
+        });
+        return fpIdMap;
+    }
+
     private static final Function<SeekableByteChannel, SeekableByteChannel> seekableChannelFunction = (chan) -> {
         try {
             return SeekableByteChannelPrefetcher.addPrefetcher(1, chan);
@@ -477,6 +502,31 @@ public class FingerprintChecker {
                 .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
                 .referenceSequence(referenceFasta)
                 .open(samFile, null, seekableChannelFunction);
+
+        return finishFingerprintSamFile(in, samFile, blockToProbMapper);
+    }
+
+    /**
+     * Same as previous method, but with manual index path input
+     */
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Path indexPath,
+                                                                     final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
+
+        final SamInputResource samResource = SamInputResource.of(samFile);
+        samResource.index(indexPath);
+        final SamReader in = SamReaderFactory.makeDefault()
+                .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
+                .referenceSequence(referenceFasta)
+                .open(samResource);
+
+        return finishFingerprintSamFile(in, samFile, blockToProbMapper);
+    }
+
+    /**
+     * A companion method to fingerprintSamFile which handles repetitive work regardless of whether index provided
+     */
+    public Map<FingerprintIdDetails, Fingerprint> finishFingerprintSamFile(final SamReader in, final Path samFile,
+                                                                           final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
 
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
@@ -626,8 +676,7 @@ public class FingerprintChecker {
      * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
      * to speed up the processing.
      */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final int threads,
-                                                                   final int waitTime, final TimeUnit waitTimeUnit) {
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final int threads, final int waitTime, final TimeUnit waitTimeUnit) {
 
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
@@ -678,6 +727,76 @@ public class FingerprintChecker {
 
         return retval;
     }
+
+    /**
+     * Same as previous method, but allows a Path -> Path map as input, to manually point input files to corresponding index.
+     */
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final Map<Path, Path> indexPathMap,
+                                                                   final int threads, final int waitTime, final TimeUnit waitTimeUnit) {
+
+        // Generate fingerprints from each file
+        final AtomicInteger filesRead = new AtomicInteger(0);
+
+        final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
+        final ExecutorCompletionService<Path> executorCompletionService = new ExecutorCompletionService<>(executor);
+        final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>(files.size());
+
+        for (final Path p : files) {
+            executorCompletionService.submit(() -> {
+
+                final Map<FingerprintIdDetails, Fingerprint> oneFileFingerprints;
+                log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
+
+                if (CheckFingerprint.fileContainsReads(p)) {
+                    if (indexPathMap.containsKey(p)) {
+                        log.info("Using explicit index provided for " + p);
+                        oneFileFingerprints = fingerprintSamFile(p, indexPathMap.get(p), HaplotypeProbabilitiesFromSequence::new);
+                    } else {
+                        log.warn("Index map file provided, but no explicit index provided for " + p);
+                        oneFileFingerprints = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
+                    }
+                } else {
+                    // Check whether index corresponding to p in indexPathMap; otherwise use default implicit index method
+                    if (indexPathMap.containsKey(p)) {
+                        log.info("Using explicit index provided for " + p);
+                        oneFileFingerprints = fingerprintVcf(p, indexPathMap.get(p));
+                    } else {
+                        log.warn("Index map file provided, but no explicit index provided for " + p);
+                        oneFileFingerprints = fingerprintVcf(p);
+                    }
+                }
+
+                if (oneFileFingerprints.isEmpty()) {
+                    log.warn("No fingerprint data was found in file:" + p);
+                }
+                retval.putAll(oneFileFingerprints);
+
+                if (filesRead.incrementAndGet() % 100 == 0) {
+                    log.info("Processed " + filesRead.get() + " out of " + files.size());
+                }
+            }, p);
+        }
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(waitTime, waitTimeUnit);
+        } catch (final InterruptedException ie) {
+            throw new PicardException("Interrupted while waiting for executor to terminate.", ie);
+        }
+
+        for (int i = 0; i < files.size(); i++) {
+            try {
+                executorCompletionService.take().get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new PicardException("Failed to fingerprint", e);
+            }
+        }
+
+        log.info("Processed files. " + retval.size() + " fingerprints found in map.");
+
+        return retval;
+    }
+
 
     /**
      * Top level method to take a set of one or more SAM files and one or more Genotype files and compare
