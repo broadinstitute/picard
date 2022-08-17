@@ -263,9 +263,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             doc = "One or more input files (or lists of files) with which to compare fingerprints.", minElements = 1)
     public List<String> INPUT;
 
-    @Argument(doc = "A tsv with two columns which maps the input files to corresponding indices; to be used when index " +
+    @Argument(doc = "A tsv with two columns and no header which maps the input files to corresponding indices; to be used when index " +
             "files are not located next to input files. First column must match the list of inputs. ", optional = true)
     public File INPUT_INDEX_MAP;
+
+    @Argument(doc = "A boolean value to determine whether input files should only be parsed if index files are available.")
+    public Boolean INPUT_FORCE_INDEX = false;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and " +
             "the sample as it should be used for comparisons to SECOND_INPUT (in the second column). " +
@@ -294,9 +297,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     "and return a non-zero error-code.")
     public List<String> SECOND_INPUT;
 
-    @Argument(doc = "A tsv with two columns which maps the second input files to corresponding indices; to be used when index " +
+    @Argument(doc = "A tsv with two columns and no header which maps the second input files to corresponding indices; to be used when index " +
             "files are not located next to second input files. First column must match the list of second inputs. ", optional = true)
     public File SECOND_INPUT_INDEX_MAP;
+
+    @Argument(doc = "A boolean value to determine whether second input files should only be parsed if index files are available.")
+    public Boolean SECOND_INPUT_FORCE_INDEX = false;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and " +
             "the sample as it should be used for comparisons to INPUT (in the second column). " +
@@ -509,15 +515,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
 
-        // Decide how to parse inputs based on whether index paths provided
-        Map<FingerprintIdDetails, Fingerprint> fpMap = null;
-        if (INPUT_INDEX_MAP != null) {
-            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, indexPathMap, NUM_THREADS, 1, TimeUnit.DAYS);
-            fpMap = capFingerprints(uncappedFpMap);
-        } else {
-            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, NUM_THREADS, 1, TimeUnit.DAYS);
-            fpMap = capFingerprints(uncappedFpMap);
+        if (INPUT_FORCE_INDEX) {
+            log.info("Forcing index files to be present for fingerprinting input files.");
         }
+
+        final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, indexPathMap, INPUT_FORCE_INDEX, NUM_THREADS, 1, TimeUnit.DAYS);
+        final Map<FingerprintIdDetails, Fingerprint> fpMap = capFingerprints(uncappedFpMap);
 
         if (INPUT_SAMPLE_MAP != null) {
             remapFingerprints(fpMap, INPUT_SAMPLE_MAP, "INPUT_SAMPLE_MAP");
@@ -537,15 +540,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
 
-            // Decide how to parse second inputs based on whether index paths provided
-            Map<FingerprintIdDetails, Fingerprint> fpMap2 = null;
-            if (SECOND_INPUT_INDEX_MAP != null) {
-                final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, indexPathMap2, NUM_THREADS, 1, TimeUnit.DAYS);
-                fpMap2 = capFingerprints(uncappedFpMap2);
-            } else {
-                final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, NUM_THREADS, 1, TimeUnit.DAYS);
-                fpMap2 = capFingerprints(uncappedFpMap2);
+            if (SECOND_INPUT_FORCE_INDEX) {
+                log.info("Forcing index files to be present for fingerprinting second input files.");
             }
+
+            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, indexPathMap2, SECOND_INPUT_FORCE_INDEX, NUM_THREADS, 1, TimeUnit.DAYS);
+            final Map<FingerprintIdDetails, Fingerprint> fpMap2 = capFingerprints(uncappedFpMap2);
 
             if (SECOND_INPUT_SAMPLE_MAP != null) {
                 remapFingerprints(fpMap2, SECOND_INPUT_SAMPLE_MAP, "SECOND_INPUT_SAMPLE_MAP");
@@ -769,7 +769,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 inputPath = IOUtil.getPath(entry.getKey());
             }
             catch(IOException e) {
-                throw new PicardException("Trouble reading file: " + entry.getKey(), e);
+                throw new PicardException("Trouble reading file: " + entry.getKey() + " for field " + inputFieldName, e);
             }
 
             // Attempt to read index path
@@ -777,7 +777,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 indexPath = IOUtil.getPath(entry.getValue());
             }
             catch(IOException e) {
-                throw new PicardException("Trouble reading file: " + entry.getValue(), e);
+                throw new PicardException("Trouble reading index file: " + entry.getValue() + " for field " + inputFieldName, e);
             }
             indexPathMap.put(inputPath, indexPath);
         }

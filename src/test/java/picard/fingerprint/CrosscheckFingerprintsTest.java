@@ -653,7 +653,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "checkSampleMapFailuresData", expectedExceptions = IllegalArgumentException.class)
-    public void checkSampleMapFailuresData( final File inputSampleMap, final File secondInputSampleMap) throws IOException {
+    public void checkSampleMapFailuresData(final File inputSampleMap, final File secondInputSampleMap) throws IOException {
         File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
         metrics.deleteOnExit();
 
@@ -877,6 +877,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
 
         args.add("INPUT_INDEX_MAP=" + INPUT_INDEX_MAP);
+        args.add("INPUT_FORCE_INDEX=true");
         args.add("OUTPUT=" + metrics.getAbsolutePath());
         args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
         args.add("LOD_THRESHOLD=" + -1.0);

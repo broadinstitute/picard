@@ -171,6 +171,19 @@ public class FingerprintChecker {
     }
 
     /**
+     * Loads VCF reader from path, and checks if index available when forced.
+     */
+    private VCFFileReader getVCFReader(final Path vcfPath, final Path indexPath, final boolean forceIndex) {
+        VCFFileReader reader = indexPath != null ? new VCFFileReader(vcfPath, indexPath) : new VCFFileReader(vcfPath, forceIndex);
+
+        if (forceIndex && !reader.isQueryable()) {
+            throw new PicardException("Input VCF file " + vcfPath + " has no index while user required index to proceed.");
+        } else {
+            return reader;
+        }
+    }
+
+    /**
      * Loads genotypes from the supplied file into one or more Fingerprint objects and returns them in a
      * Map of Sample->Fingerprint.
      *
@@ -179,23 +192,8 @@ public class FingerprintChecker {
      *                        of an individual sample to load (and exclude all others).
      * @return a Map of Sample name to Fingerprint
      */
-    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final String specificSample) {
-        final VCFFileReader reader = new VCFFileReader(fingerprintFile, false);
-        return finishLoadFingerprints(reader, fingerprintFile, specificSample);
-    }
-
-    /**
-     * Same as previous method, but with manual index path input
-     */
-    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final Path indexPath, final String specificSample) {
-        final VCFFileReader reader = new VCFFileReader(fingerprintFile, indexPath);
-        return finishLoadFingerprints(reader, fingerprintFile, specificSample);
-    }
-
-    /**
-     * A companion method to loadFingerprints which handles repetitive work regardless of whether index provided
-     */
-    private Map<String, Fingerprint> finishLoadFingerprints(final VCFFileReader reader, final Path fingerprintFile, final String specificSample) {
+    public Map<String, Fingerprint> loadFingerprints(final Path fingerprintFile, final Path indexPath, final boolean forceIndex, final String specificSample) {
+        final VCFFileReader reader = getVCFReader(fingerprintFile, indexPath, forceIndex);
         checkDictionaryGoodForFingerprinting(reader.getFileHeader().getSequenceDictionary());
 
         final Map<String, Fingerprint> fingerprints;
@@ -439,10 +437,15 @@ public class FingerprintChecker {
         return intervals.uniqued();
     }
 
+    // For backwards compatibility with previous interface
     public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final Path vcfFile) {
+        return fingerprintVcf(vcfFile, null, false);
+    }
+
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final Path vcfFile, final Path indexPath, final boolean forceIndex) {
         final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
 
-        final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, null);
+        final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, indexPath, forceIndex, null);
 
         sampleFpMap.forEach((key, value) -> {
             final FingerprintIdDetails fpId = new FingerprintIdDetails();
@@ -454,21 +457,7 @@ public class FingerprintChecker {
         return fpIdMap;
     }
 
-    // Same as previous method, but allowed explicit indexPath input
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final Path vcfFile, final Path indexPath) {
-        final Map<FingerprintIdDetails, Fingerprint> fpIdMap = new HashMap<>();
 
-        final Map<String, Fingerprint> sampleFpMap = loadFingerprints(vcfFile, indexPath, null);
-
-        sampleFpMap.forEach((key, value) -> {
-            final FingerprintIdDetails fpId = new FingerprintIdDetails();
-            fpId.sample = key;
-            fpId.file = vcfFile.toUri().toString();
-
-            fpIdMap.put(fpId, value);
-        });
-        return fpIdMap;
-    }
 
     private static final Function<SeekableByteChannel, SeekableByteChannel> seekableChannelFunction = (chan) -> {
         try {
@@ -479,55 +468,40 @@ public class FingerprintChecker {
     };
 
     /**
-     * Does same thing as {@link #fingerprintSamFile(Path, Function)} but in the old way that required that you pass in the loci of interest.
+     * Does same thing as {@link #fingerprintSamFile(Path, Path, boolean, Function)} but in the old way that required that you pass in the loci of interest.
      * Since the loci are always the same as in {@link #haplotypes} there's no need for this method signature anymore
      *
-     * @deprecated use {@link #fingerprintSamFile(Path, Function)} instead.
+     * @deprecated use {@link #fingerprintSamFile(Path, Path, boolean, Function)} instead.
      */
     @Deprecated
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final IntervalList loci) {
-        return fingerprintSamFile(samFile, HaplotypeProbabilitiesFromSequence::new);
+        return fingerprintSamFile(samFile, null, false, HaplotypeProbabilitiesFromSequence::new);
+    }
+
+    private SamReader getSamReader(final Path samFile, final Path indexPath, final boolean forceIndex) {
+        final SamInputResource samResource = SamInputResource.of(samFile);
+        if (indexPath != null) {
+            samResource.index(indexPath);
+        }
+
+        final SamReader reader = SamReaderFactory.makeDefault()
+                .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
+                .referenceSequence(referenceFasta)
+                .open(samResource);
+        if (forceIndex && !reader.isQueryable()) {
+            throw new PicardException("Input SAM file " + samFile + " has no index while user required index to proceed.");
+        } else {
+            return reader;
+        }
     }
 
     /**
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
-
-        // the seekableChannelFunction adds a buffered stream wrapper around the index reading which
-        // makes reading the index over NIO not hang indefinitely.
-        // See github issue https://github.com/broadinstitute/picard/issues/1175
-        final SamReader in = SamReaderFactory.makeDefault()
-                .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
-                .referenceSequence(referenceFasta)
-                .open(samFile, null, seekableChannelFunction);
-
-        return finishFingerprintSamFile(in, samFile, blockToProbMapper);
-    }
-
-    /**
-     * Same as previous method, but with manual index path input
-     */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Path indexPath,
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Path indexPath, final boolean forceIndex,
                                                                      final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
-
-        final SamInputResource samResource = SamInputResource.of(samFile);
-        samResource.index(indexPath);
-        final SamReader in = SamReaderFactory.makeDefault()
-                .enable(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES)
-                .referenceSequence(referenceFasta)
-                .open(samResource);
-
-        return finishFingerprintSamFile(in, samFile, blockToProbMapper);
-    }
-
-    /**
-     * A companion method to fingerprintSamFile which handles repetitive work regardless of whether index provided
-     */
-    public Map<FingerprintIdDetails, Fingerprint> finishFingerprintSamFile(final SamReader in, final Path samFile,
-                                                                           final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
-
+        SamReader in = getSamReader(samFile, indexPath, forceIndex);
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
         if (!in.hasIndex()) {
@@ -663,7 +637,8 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination) {
 
-        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, null,
+                false, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
 
         final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
                 Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
@@ -676,64 +651,14 @@ public class FingerprintChecker {
      * Fingerprints one or more SAM/BAM/VCF files at all available loci within the haplotype map, using multiple threads
      * to speed up the processing.
      */
+
+    // If no indexPathMap provided, set to null & forceIndex to false; for backwards compatibility with other methods using this
     public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final int threads, final int waitTime, final TimeUnit waitTimeUnit) {
-
-        // Generate fingerprints from each file
-        final AtomicInteger filesRead = new AtomicInteger(0);
-
-        final ExecutorService executor = new ThreadPoolExecutorWithExceptions(threads);
-        final ExecutorCompletionService<Path> executorCompletionService = new ExecutorCompletionService<>(executor);
-        final Map<FingerprintIdDetails, Fingerprint> retval = new ConcurrentHashMap<>(files.size());
-
-        for (final Path p : files) {
-            executorCompletionService.submit(() -> {
-
-                final Map<FingerprintIdDetails, Fingerprint> oneFileFingerprints;
-                log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
-
-                if (CheckFingerprint.fileContainsReads(p)) {
-                    oneFileFingerprints = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
-                } else {
-                    oneFileFingerprints = fingerprintVcf(p);
-                }
-
-                if (oneFileFingerprints.isEmpty()) {
-                    log.warn("No fingerprint data was found in file:" + p);
-                }
-                retval.putAll(oneFileFingerprints);
-
-                if (filesRead.incrementAndGet() % 100 == 0) {
-                    log.info("Processed " + filesRead.get() + " out of " + files.size());
-                }
-            }, p);
-        }
-
-        executor.shutdown();
-        try {
-            executor.awaitTermination(waitTime, waitTimeUnit);
-        } catch (final InterruptedException ie) {
-            throw new PicardException("Interrupted while waiting for executor to terminate.", ie);
-        }
-
-        for (int i = 0; i < files.size(); i++) {
-            try {
-                executorCompletionService.take().get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new PicardException("Failed to fingerprint", e);
-            }
-        }
-
-        log.info("Processed files. " + retval.size() + " fingerprints found in map.");
-
-        return retval;
+        return fingerprintFiles(files, null, false, threads, waitTime, waitTimeUnit);
     }
 
-    /**
-     * Same as previous method, but allows a Path -> Path map as input, to manually point input files to corresponding index.
-     */
-    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final Map<Path, Path> indexPathMap,
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final Map<Path, Path> indexPathMap, final Boolean forceIndex,
                                                                    final int threads, final int waitTime, final TimeUnit waitTimeUnit) {
-
         // Generate fingerprints from each file
         final AtomicInteger filesRead = new AtomicInteger(0);
 
@@ -748,21 +673,25 @@ public class FingerprintChecker {
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
 
                 if (CheckFingerprint.fileContainsReads(p)) {
-                    if (indexPathMap.containsKey(p)) {
+                    if (indexPathMap != null && indexPathMap.containsKey(p)) {
                         log.info("Using explicit index provided for " + p);
-                        oneFileFingerprints = fingerprintSamFile(p, indexPathMap.get(p), HaplotypeProbabilitiesFromSequence::new);
+                        oneFileFingerprints = fingerprintSamFile(p, indexPathMap.get(p), forceIndex, HaplotypeProbabilitiesFromSequence::new);
                     } else {
-                        log.warn("Index map file provided, but no explicit index provided for " + p);
-                        oneFileFingerprints = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
+                        if (indexPathMap != null) {
+                            log.warn("Index map file provided, but no explicit index provided for " + p);
+                        }
+                        oneFileFingerprints = fingerprintSamFile(p, null, forceIndex, HaplotypeProbabilitiesFromSequence::new);
                     }
                 } else {
                     // Check whether index corresponding to p in indexPathMap; otherwise use default implicit index method
-                    if (indexPathMap.containsKey(p)) {
+                    if (indexPathMap != null && indexPathMap.containsKey(p)) {
                         log.info("Using explicit index provided for " + p);
-                        oneFileFingerprints = fingerprintVcf(p, indexPathMap.get(p));
+                        oneFileFingerprints = fingerprintVcf(p, indexPathMap.get(p), forceIndex);
                     } else {
-                        log.warn("Index map file provided, but no explicit index provided for " + p);
-                        oneFileFingerprints = fingerprintVcf(p);
+                        if (indexPathMap != null) {
+                            log.warn("Index map file provided, but no explicit index provided for " + p);
+                        }
+                        oneFileFingerprints = fingerprintVcf(p, null, forceIndex);
                     }
                 }
 
@@ -814,7 +743,7 @@ public class FingerprintChecker {
         // Load the fingerprint genotypes
         final List<Fingerprint> expectedFingerprints = new LinkedList<>();
         for (final Path p : genotypeFiles) {
-            expectedFingerprints.addAll(loadFingerprints(p, specificSample).values());
+            expectedFingerprints.addAll(loadFingerprints(p, null, false, specificSample).values());
         }
 
         if (expectedFingerprints.isEmpty()) {
@@ -825,7 +754,7 @@ public class FingerprintChecker {
 
         // Fingerprint the SAM files and calculate the results
         for (final Path p : samFiles) {
-            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(p, HaplotypeProbabilitiesFromSequence::new);
+            final Map<FingerprintIdDetails, Fingerprint> fingerprintsByReadGroup = fingerprintSamFile(p, null, false, HaplotypeProbabilitiesFromSequence::new);
 
             if (ignoreReadGroups) {
                 final Fingerprint combinedFp = new Fingerprint(specificSample, p, null);
@@ -872,7 +801,7 @@ public class FingerprintChecker {
         // Load the expected fingerprint genotypes
         final List<Fingerprint> expectedFingerprints = new ArrayList<>();
         for (final Path p : expectedGenotypeFiles) {
-            expectedFingerprints.addAll(loadFingerprints(p, expectedSample).values());
+            expectedFingerprints.addAll(loadFingerprints(p, null, false, expectedSample).values());
         }
 
         if (expectedFingerprints.isEmpty()) {
@@ -882,7 +811,7 @@ public class FingerprintChecker {
         final List<FingerprintResults> resultsList = new ArrayList<>();
 
         for (final Path p : observedGenotypeFiles) {
-            final Map<String, Fingerprint> observedFingerprintsBySample = loadFingerprints(p, observedSample);
+            final Map<String, Fingerprint> observedFingerprintsBySample = loadFingerprints(p, null, false, observedSample);
             if (observedFingerprintsBySample.isEmpty()) {
                 throw new IllegalStateException("Found no fingerprints in observed genotypes file: " + observedGenotypeFiles);
             }
