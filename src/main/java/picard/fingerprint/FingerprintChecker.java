@@ -25,7 +25,15 @@
 package picard.fingerprint;
 
 import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
-import htsjdk.samtools.*;
+
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.util.Interval;
@@ -457,8 +465,6 @@ public class FingerprintChecker {
         return fpIdMap;
     }
 
-
-
     private static final Function<SeekableByteChannel, SeekableByteChannel> seekableChannelFunction = (chan) -> {
         try {
             return SeekableByteChannelPrefetcher.addPrefetcher(1, chan);
@@ -499,9 +505,15 @@ public class FingerprintChecker {
      * Generates a Fingerprint per read group in the supplied SAM file using the loci provided in
      * the interval list.
      */
+
+    // Keeping old method for backwards compatibility
+    public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
+        return fingerprintSamFile(samFile, null, false, blockToProbMapper);
+    }
+
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Path indexPath, final boolean forceIndex,
                                                                      final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
-        SamReader in = getSamReader(samFile, indexPath, forceIndex);
+        final SamReader in = getSamReader(samFile, indexPath, forceIndex);
         checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
         if (!in.hasIndex()) {
@@ -637,8 +649,7 @@ public class FingerprintChecker {
      */
     public Map<String, Fingerprint> identifyContaminant(final Path samFile, final double contamination) {
 
-        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, null,
-                false, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
+        final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsMap = this.fingerprintSamFile(samFile, h -> new HaplotypeProbabilitiesFromContaminatorSequence(h, contamination));
 
         final Map<FingerprintIdDetails, Fingerprint> fpIdDetailsBySample = Fingerprint.mergeFingerprintsBy(fpIdDetailsMap,
                 Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
@@ -672,27 +683,19 @@ public class FingerprintChecker {
                 final Map<FingerprintIdDetails, Fingerprint> oneFileFingerprints;
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
 
+                // Determine whether valid index path given for this file
+                final Path indexPath = (indexPathMap != null && indexPathMap.containsKey(p)) ? indexPathMap.get(p) : null;
+                if (indexPathMap != null && indexPath == null) {
+                    log.warn("Index map file provided, but no explicit index provided for " + p);
+                } else if (indexPath != null) {
+                    log.info("Using explicit index provided for " + p);
+                }
+
+                // Perform fingerprinting on SAM or VCF file
                 if (CheckFingerprint.fileContainsReads(p)) {
-                    if (indexPathMap != null && indexPathMap.containsKey(p)) {
-                        log.info("Using explicit index provided for " + p);
-                        oneFileFingerprints = fingerprintSamFile(p, indexPathMap.get(p), forceIndex, HaplotypeProbabilitiesFromSequence::new);
-                    } else {
-                        if (indexPathMap != null) {
-                            log.warn("Index map file provided, but no explicit index provided for " + p);
-                        }
-                        oneFileFingerprints = fingerprintSamFile(p, null, forceIndex, HaplotypeProbabilitiesFromSequence::new);
-                    }
+                    oneFileFingerprints = fingerprintSamFile(p, indexPath, forceIndex, HaplotypeProbabilitiesFromSequence::new);
                 } else {
-                    // Check whether index corresponding to p in indexPathMap; otherwise use default implicit index method
-                    if (indexPathMap != null && indexPathMap.containsKey(p)) {
-                        log.info("Using explicit index provided for " + p);
-                        oneFileFingerprints = fingerprintVcf(p, indexPathMap.get(p), forceIndex);
-                    } else {
-                        if (indexPathMap != null) {
-                            log.warn("Index map file provided, but no explicit index provided for " + p);
-                        }
-                        oneFileFingerprints = fingerprintVcf(p, null, forceIndex);
-                    }
+                    oneFileFingerprints = fingerprintVcf(p, indexPath, forceIndex);
                 }
 
                 if (oneFileFingerprints.isEmpty()) {
@@ -725,7 +728,6 @@ public class FingerprintChecker {
 
         return retval;
     }
-
 
     /**
      * Top level method to take a set of one or more SAM files and one or more Genotype files and compare

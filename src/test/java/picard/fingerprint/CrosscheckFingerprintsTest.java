@@ -7,6 +7,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.TabbedTextFileWithHeaderParser;
 import picard.vcf.SamTestUtils;
@@ -884,6 +885,68 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         args.add("CROSSCHECK_BY=FILE");
 
         doTest(args.toArray(new String[0]), metrics, expectedRetVal, numberOfSamples , CrosscheckMetric.DataType.FILE, ExpectAllMatch);
+    }
+
+    @DataProvider(name = "missingIndexForced")
+    public Iterator<Object[]> missingIndexForced() {
+        List<Object[]> tests = new ArrayList<>();
+
+        // VCF Files
+        final File NA12891_1_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.vcf");
+        final File NA12891_1_vcf_idx = new File(TEST_DATA_DIR, "index_test/indices/NA12891.vcf.idx");
+        final File NA12891_2_vcf_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.fp.vcf");
+
+        // Tests case with two VCF inputs, but only one index given by map
+        tests.add(new Object[]{Arrays.asList(NA12891_1_vcf_noidx, NA12891_2_vcf_noidx), Arrays.asList(NA12891_1_vcf_idx)});
+
+        // SAM file
+        final File NA12891_r1_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.over.fingerprints.r1.bam");
+        final File NA12891_r2_noidx = new File(TEST_DATA_DIR, "index_test/files/NA12891.over.fingerprints.r2.bam");
+
+        // Tests case with two SAM inputs, with no indices given
+        tests.add(new Object[]{Arrays.asList(NA12891_r1_noidx, NA12891_r2_noidx), new ArrayList<File>()});
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "missingIndexForced", expectedExceptions = PicardException.class)
+    public void testMissingIndexForced(final List<File> files, final List<File> indices) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        // Make temp file for INPUT_INDEX_MAP
+        final Path inputIndexMap = File.createTempFile("input_index_map", ".tsv").toPath();
+        IOUtil.deleteOnExit(inputIndexMap);
+
+        // Zip files & indices together
+        List<List<String>> zipped_files = IntStream.range(0, Math.min(files.size(), indices.size()))
+                .mapToObj(i -> Arrays.asList(
+                        files.get(i) != null ? files.get(i).getAbsolutePath() : "",
+                        indices.get(i) != null ? indices.get(i).getAbsolutePath() : ""))
+                .collect(Collectors.toList());
+
+        // Based on tabbedWrite method above
+        // Write input files & indices to tsv for input below
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(inputIndexMap))) {
+            for (final List<String> pair : zipped_files) {
+                writer.println(pair.stream().collect(Collectors.joining("\t")));
+            }
+        }
+
+        // Set INPUT_INDEX_MAP to temp file created above
+        File INPUT_INDEX_MAP = new File(inputIndexMap.toString());
+
+        final List<String> args = new ArrayList<>();
+        files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
+
+        args.add("INPUT_INDEX_MAP=" + INPUT_INDEX_MAP);
+        args.add("INPUT_FORCE_INDEX=true");
+        args.add("OUTPUT=" + metrics.getAbsolutePath());
+        args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+        args.add("LOD_THRESHOLD=" + -1.0);
+        args.add("CROSSCHECK_BY=FILE");
+
+        doTest(args.toArray(new String[0]), metrics, 0, 3 , CrosscheckMetric.DataType.FILE, false);
     }
 
     @DataProvider(name = "checkPathsData")
