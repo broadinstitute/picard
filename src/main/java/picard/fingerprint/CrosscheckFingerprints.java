@@ -761,8 +761,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final Map<String, String> indexStringMap = getStringStringMap(indexMapFile, inputFieldName);
         final HashMap<Path, Path> indexPathMap = new HashMap<Path, Path>();
         for (Map.Entry<String, String> entry: indexStringMap.entrySet()) {
-            Path inputPath = null;
-            Path indexPath = null;
+            final Path inputPath;
+            final Path indexPath;
 
             // Attempt to read input path
             try {
