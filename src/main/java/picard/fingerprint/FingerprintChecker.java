@@ -186,9 +186,9 @@ public class FingerprintChecker {
 
         if (forceIndex && !reader.isQueryable()) {
             throw new PicardException("Input VCF file " + vcfPath + " has no index while user required index to proceed.");
-        } else {
-            return reader;
         }
+
+        return reader;
     }
 
     /**
@@ -496,9 +496,9 @@ public class FingerprintChecker {
                 .open(samResource);
         if (forceIndex && !reader.isQueryable()) {
             throw new PicardException("Input SAM file " + samFile + " has no index while user required index to proceed.");
-        } else {
-            return reader;
         }
+
+        return reader;
     }
 
     /**
