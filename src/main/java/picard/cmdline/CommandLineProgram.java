@@ -134,6 +134,9 @@ public abstract class CommandLineProgram {
     @Argument(doc="Google Genomics API client_secrets.json file path.", common = true)
     public String GA4GH_CLIENT_SECRETS="client_secrets.json";
 
+    @Argument(doc="Google project for access to 'requester pays' buckets and objects.", common = true)
+    public String REQUESTER_PAYS_PROJECT = null;
+
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
                 "It is unlikely these will ever need to be accessed by the command line program")
     public Object specialArgumentsCollection = useLegacyParser() ?
@@ -238,6 +241,13 @@ public abstract class CommandLineProgram {
         if (System.getProperty("ga4gh.client_secrets") == null) {
           System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
         }
+
+        if (System.getProperty("google_project_requester_pays") == null && REQUESTER_PAYS_PROJECT != null) {
+            System.setProperty("google_project_requester_pays", REQUESTER_PAYS_PROJECT);
+            Log.getInstance(this.getClass()).info(
+                    String.format("Will use google project %s for gcs requests.", REQUESTER_PAYS_PROJECT));
+        }
+
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
 
         // Set the compression level everywhere we can think of
