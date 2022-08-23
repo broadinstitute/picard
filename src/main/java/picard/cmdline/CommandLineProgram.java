@@ -134,7 +134,7 @@ public abstract class CommandLineProgram {
     @Argument(doc="Google Genomics API client_secrets.json file path.", common = true)
     public String GA4GH_CLIENT_SECRETS="client_secrets.json";
 
-    @Argument(doc="Google project for access to 'requester pays' buckets and objects.", common = true)
+    @Argument(doc="Google project for access to 'requester pays' buckets and objects.", common = true, optional = true)
     public String REQUESTER_PAYS_PROJECT = null;
 
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
