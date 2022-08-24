@@ -487,6 +487,7 @@ public class FingerprintChecker {
     private SamReader getSamReader(final Path samFile, final Path indexPath, final boolean forceIndex) {
         final SamInputResource samResource = SamInputResource.of(samFile);
         if (indexPath != null) {
+            // Use of seekableChannelFunction here avoids issue: https://github.com/broadinstitute/picard/issues/1175
             samResource.index(indexPath, seekableChannelFunction);
         }
 
