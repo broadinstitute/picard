@@ -487,7 +487,7 @@ public class FingerprintChecker {
     private SamReader getSamReader(final Path samFile, final Path indexPath, final boolean forceIndex) {
         final SamInputResource samResource = SamInputResource.of(samFile);
         if (indexPath != null) {
-            samResource.index(indexPath);
+            samResource.index(indexPath, seekableChannelFunction);
         }
 
         final SamReader reader = SamReaderFactory.makeDefault()
