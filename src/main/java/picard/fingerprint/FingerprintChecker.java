@@ -25,7 +25,6 @@
 package picard.fingerprint;
 
 import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
-
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
@@ -685,7 +684,7 @@ public class FingerprintChecker {
                 log.debug("Processed file: " + p.toUri().toString() + " (" + filesRead.get() + ")");
 
                 // Determine whether valid index path given for this file
-                final Path indexPath = (indexPathMap != null && indexPathMap.containsKey(p)) ? indexPathMap.get(p) : null;
+                final Path indexPath = (indexPathMap != null) ? indexPathMap.get(p) : null;
                 if (indexPathMap != null && indexPath == null) {
                     log.warn("Index map file provided, but no explicit index provided for " + p);
                 } else if (indexPath != null) {

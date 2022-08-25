@@ -267,9 +267,9 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "files are not located next to input files. First column must match the list of inputs. ", optional = true)
     public File INPUT_INDEX_MAP;
 
-    @Argument(doc = "A boolean value to determine whether input files should only be parsed if index files are available. Without turning" +
+    @Argument(doc = "A boolean value to determine whether input files should only be parsed if index files are available. Without turning " +
             "this option on, the tool will need to read through the entirety of input files without index files either provided via the INPUT_INDEX_MAP" +
-            " or locally accessible relative to the input, which significantly increases runtime. If set to true and no index is found for a file, an" +
+            " or locally accessible relative to the input, which significantly increases runtime. If set to true and no index is found for a file, an " +
             "exception will be thrown.")
     public Boolean INPUT_FORCE_INDEX = false;
 
@@ -304,7 +304,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "files are not located next to second input files. First column must match the list of second inputs. ", optional = true)
     public File SECOND_INPUT_INDEX_MAP;
 
-    @Argument(doc = "A boolean value to determine whether second input files should only be parsed if index files are available. Without turning" +
+    @Argument(doc = "A boolean value to determine whether second input files should only be parsed if index files are available. Without turning " +
             "this option on, the tool will need to read through the entirety of second input files without index files either provided via the SECOND_INPUT_INDEX_MAP" +
             " or locally accessible relative to the input, which significantly increases runtime. If set to true and no index is found for a file, an " +
             "exception will be thrown.")

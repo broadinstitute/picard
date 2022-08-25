@@ -844,20 +844,15 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     }
 
     /**
-     * Test using an INPUT_INDEX_MAP with explicit indices specified for some/all relevant input files. Tests both VCF and SAM files.
+     * Utility method for creating index map temp file
      */
-    @Test(dataProvider = "explicitIndexPathsInputs")
-    public void testExplicitIndexPaths(final List<File> files, final List<File> indices, final int expectedRetVal,
-                                        final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
-        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
-        metrics.deleteOnExit();
-
+    private File makeIndexMap(final List<File> files, final List<File> indices) throws IOException {
         // Make temp file for INPUT_INDEX_MAP
         final Path inputIndexMap = File.createTempFile("input_index_map", ".tsv").toPath();
         IOUtil.deleteOnExit(inputIndexMap);
 
         // Zip files & indices together
-        List<List<String>> zipped_files = IntStream.range(0, Math.min(files.size(), indices.size()))
+        final List<List<String>> zipped_files = IntStream.range(0, Math.min(files.size(), indices.size()))
                 .mapToObj(i -> Arrays.asList(
                         files.get(i) != null ? files.get(i).getAbsolutePath() : "",
                         indices.get(i) != null ? indices.get(i).getAbsolutePath() : ""))
@@ -871,8 +866,20 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
             }
         }
 
-        // Set INPUT_INDEX_MAP to temp file created above
-        File INPUT_INDEX_MAP = new File(inputIndexMap.toString());
+        // Return temp file created above
+        return new File(inputIndexMap.toString());
+    }
+
+    /**
+     * Test using an INPUT_INDEX_MAP with explicit indices specified for some/all relevant input files. Tests both VCF and SAM files.
+     */
+    @Test(dataProvider = "explicitIndexPathsInputs")
+    public void testExplicitIndexPaths(final List<File> files, final List<File> indices, final int expectedRetVal,
+                                        final int numberOfSamples, boolean ExpectAllMatch) throws IOException {
+        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final File INPUT_INDEX_MAP = makeIndexMap(files, indices);
 
         final List<String> args = new ArrayList<>();
         files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
@@ -911,30 +918,10 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "missingIndexForced", expectedExceptions = PicardException.class)
     public void testMissingIndexForced(final List<File> files, final List<File> indices) throws IOException {
-        File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
+        final File metrics = File.createTempFile("Fingerprinting", "test.crosscheck_metrics");
         metrics.deleteOnExit();
 
-        // Make temp file for INPUT_INDEX_MAP
-        final Path inputIndexMap = File.createTempFile("input_index_map", ".tsv").toPath();
-        IOUtil.deleteOnExit(inputIndexMap);
-
-        // Zip files & indices together
-        List<List<String>> zipped_files = IntStream.range(0, Math.min(files.size(), indices.size()))
-                .mapToObj(i -> Arrays.asList(
-                        files.get(i) != null ? files.get(i).getAbsolutePath() : "",
-                        indices.get(i) != null ? indices.get(i).getAbsolutePath() : ""))
-                .collect(Collectors.toList());
-
-        // Based on tabbedWrite method above
-        // Write input files & indices to tsv for input below
-        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(inputIndexMap))) {
-            for (final List<String> pair : zipped_files) {
-                writer.println(pair.stream().collect(Collectors.joining("\t")));
-            }
-        }
-
-        // Set INPUT_INDEX_MAP to temp file created above
-        File INPUT_INDEX_MAP = new File(inputIndexMap.toString());
+        final File INPUT_INDEX_MAP = makeIndexMap(files, indices);
 
         final List<String> args = new ArrayList<>();
         files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
