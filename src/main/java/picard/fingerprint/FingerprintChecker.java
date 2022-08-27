@@ -25,10 +25,12 @@
 package picard.fingerprint;
 
 import com.google.cloud.storage.contrib.nio.SeekableByteChannelPrefetcher;
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamFiles;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -180,7 +182,8 @@ public class FingerprintChecker {
     /**
      * Loads VCF reader from path, and checks if index available when forced.
      */
-    private VCFFileReader getVCFReader(final Path vcfPath, final Path indexPath, final boolean forceIndex) {
+    @VisibleForTesting
+    VCFFileReader getVCFReader(final Path vcfPath, final Path indexPath, final boolean forceIndex) {
         VCFFileReader reader = indexPath != null ? new VCFFileReader(vcfPath, indexPath) : new VCFFileReader(vcfPath, forceIndex);
 
         if (forceIndex && !reader.isQueryable()) {
@@ -483,11 +486,15 @@ public class FingerprintChecker {
         return fingerprintSamFile(samFile, null, false, HaplotypeProbabilitiesFromSequence::new);
     }
 
-    private SamReader getSamReader(final Path samFile, final Path indexPath, final boolean forceIndex) {
+    @VisibleForTesting
+    SamReader getSamReader(final Path samFile, final Path indexPath, final boolean forceIndex) {
         final SamInputResource samResource = SamInputResource.of(samFile);
         if (indexPath != null) {
             // Use of seekableChannelFunction here avoids issue: https://github.com/broadinstitute/picard/issues/1175
             samResource.index(indexPath, seekableChannelFunction);
+        } else {
+            final Path indexMaybe = SamFiles.findIndex(samFile);
+            if (indexMaybe != null) samResource.index(indexMaybe, seekableChannelFunction);
         }
 
         final SamReader reader = SamReaderFactory.makeDefault()
