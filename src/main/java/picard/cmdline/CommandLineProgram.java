@@ -242,10 +242,13 @@ public abstract class CommandLineProgram {
           System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
         }
 
-        if (System.getProperty("google_project_requester_pays") == null && REQUESTER_PAYS_PROJECT != null) {
-            System.setProperty("google_project_requester_pays", REQUESTER_PAYS_PROJECT);
+        if (PathProvider.GCS.isAvailable){
+            if (System.getProperty("google_project_requester_pays") == null &&
+                REQUESTER_PAYS_PROJECT != null) {
+                System.setProperty("google_project_requester_pays", REQUESTER_PAYS_PROJECT);
+            }
             Log.getInstance(this.getClass()).info(
-                    String.format("Will use google project %s for gcs requests.", REQUESTER_PAYS_PROJECT));
+                    String.format("Will use google project %s for gcs requests.", System.getProperty("google_project_requester_pays")));
         }
 
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);

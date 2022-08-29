@@ -49,7 +49,6 @@ import org.threeten.bp.Duration;
 class GoogleStorageUtils {
 
     public static void initialize() {
-        // requester pays support is currently not configured
         final String google_project = System.getProperty("google_project_requester_pays");
 
         CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(20, google_project));
