@@ -152,11 +152,13 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                         entry -> {
                             // merge the keys (unequal values are eliminated by merge).
                             List<Map.Entry<FingerprintIdDetails, Fingerprint>> entryList = entry.getValue();
-                            if (entryList.size()==1) {
-                                return entryList.get(0).getKey();
+                            final FingerprintIdDetails finalId;
+                            if (entryList.size() == 1) {
+                                finalId = entryList.get(0).getKey();
+                            } else {
+                                finalId = new FingerprintIdDetails();
+                                entryList.forEach(id -> finalId.merge(id.getKey()));
                             }
-                            final FingerprintIdDetails finalId = new FingerprintIdDetails();
-                            entryList.forEach(id -> finalId.merge(id.getKey()));
                             finalId.group = entry.getKey();
                             return finalId;
 
