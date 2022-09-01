@@ -40,6 +40,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.fingerprint.CrosscheckMetric.FingerprintResult;
+import picard.nio.PicardHtsPath;
 import picard.util.TabbedInputParser;
 
 import java.io.BufferedWriter;
@@ -54,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -270,8 +272,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "A boolean value to determine whether input files should only be parsed if index files are available. Without turning " +
             "this option on, the tool will need to read through the entirety of input files without index files either provided via the INPUT_INDEX_MAP" +
             " or locally accessible relative to the input, which significantly increases runtime. If set to true and no index is found for a file, an " +
-            "exception will be thrown.")
-    public Boolean INPUT_FORCE_INDEX = false;
+            "exception will be thrown. This applies for both the INPUT and SECOND_INPUT files.")
+    public boolean REQUIRE_INDEX_FILES = false;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the INPUT data (in column 1) and " +
             "the sample as it should be used for comparisons to SECOND_INPUT (in the second column). " +
@@ -303,12 +305,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "A tsv with two columns and no header which maps the second input files to corresponding indices; to be used when index " +
             "files are not located next to second input files. First column must match the list of second inputs. ", optional = true)
     public File SECOND_INPUT_INDEX_MAP;
-
-    @Argument(doc = "A boolean value to determine whether second input files should only be parsed if index files are available. Without turning " +
-            "this option on, the tool will need to read through the entirety of second input files without index files either provided via the SECOND_INPUT_INDEX_MAP" +
-            " or locally accessible relative to the input, which significantly increases runtime. If set to true and no index is found for a file, an " +
-            "exception will be thrown.")
-    public Boolean SECOND_INPUT_FORCE_INDEX = false;
 
     @Argument(doc = "A tsv with two columns representing the sample as it appears in the SECOND_INPUT data (in column 1) and " +
             "the sample as it should be used for comparisons to INPUT (in the second column). " +
@@ -505,12 +501,12 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         // Parse the input index map if given
-        final Map<Path, Path> indexPathMap = INPUT_INDEX_MAP != null ? getPathPathMap(INPUT_INDEX_MAP, "INPUT_INDEX_MAP") : null;
+        final Map<Path, Path> indexPathMap = INPUT_INDEX_MAP != null ? getSamplePathToIndexMap(INPUT_INDEX_MAP, "INPUT_INDEX_MAP") : null;
 
         final List<Path> secondInputsPaths = IOUtil.getPaths(SECOND_INPUT);
 
         // Parse the second input index map if given
-        final Map<Path, Path> indexPathMap2 = SECOND_INPUT_INDEX_MAP != null ? getPathPathMap(SECOND_INPUT_INDEX_MAP, "SECOND_INPUT_INDEX_MAP") : null;
+        final Map<Path, Path> indexPathMap2 = SECOND_INPUT_INDEX_MAP != null ? getSamplePathToIndexMap(SECOND_INPUT_INDEX_MAP, "SECOND_INPUT_INDEX_MAP") : null;
 
         // unroll and check readable here, as it can be annoying to fingerprint INPUT files and only then discover a problem
         // in a file in SECOND_INPUT
@@ -521,11 +517,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         log.info("Fingerprinting " + unrolledFiles.size() + " INPUT files.");
 
-        if (INPUT_FORCE_INDEX) {
+        if (REQUIRE_INDEX_FILES) {
             log.info("Forcing index files to be present for fingerprinting input files.");
         }
 
-        final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, indexPathMap, INPUT_FORCE_INDEX, NUM_THREADS, 1, TimeUnit.DAYS);
+        final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap = checker.fingerprintFiles(unrolledFiles, indexPathMap, REQUIRE_INDEX_FILES, NUM_THREADS, 1, TimeUnit.DAYS);
         final Map<FingerprintIdDetails, Fingerprint> fpMap = capFingerprints(uncappedFpMap);
 
         if (INPUT_SAMPLE_MAP != null) {
@@ -546,11 +542,11 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         } else {
             log.info("Fingerprinting " + unrolledFiles2.size() + " SECOND_INPUT files.");
 
-            if (SECOND_INPUT_FORCE_INDEX) {
+            if (REQUIRE_INDEX_FILES) {
                 log.info("Forcing index files to be present for fingerprinting second input files.");
             }
 
-            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, indexPathMap2, SECOND_INPUT_FORCE_INDEX, NUM_THREADS, 1, TimeUnit.DAYS);
+            final Map<FingerprintIdDetails, Fingerprint> uncappedFpMap2 = checker.fingerprintFiles(unrolledFiles2, indexPathMap2, REQUIRE_INDEX_FILES, NUM_THREADS, 1, TimeUnit.DAYS);
             final Map<FingerprintIdDetails, Fingerprint> fpMap2 = capFingerprints(uncappedFpMap2);
 
             if (SECOND_INPUT_SAMPLE_MAP != null) {
@@ -743,7 +739,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     }
 
     private Map<String, String> getStringStringMap(final File sampleMapFile, final String inputFieldName) {
-        final Map<String, String> sampleMap = new HashMap<>();
+        final Map<String, String> sampleMap = new LinkedHashMap<>();
 
         final TabbedInputParser parser = new TabbedInputParser(false, sampleMapFile);
 
@@ -763,26 +759,24 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         return sampleMap;
     }
 
-    private Map<Path, Path> getPathPathMap(final File indexMapFile, final String inputFieldName) {
+    private Map<Path, Path> getSamplePathToIndexMap(final File indexMapFile, final String inputFieldName) {
         final Map<String, String> indexStringMap = getStringStringMap(indexMapFile, inputFieldName);
-        final HashMap<Path, Path> indexPathMap = new HashMap<Path, Path>();
+        final HashMap<Path, Path> indexPathMap = new LinkedHashMap<Path, Path>();
         for (Map.Entry<String, String> entry: indexStringMap.entrySet()) {
             final Path inputPath;
             final Path indexPath;
 
-            // Attempt to read input path
+            // Attempt to process input path
             try {
                 inputPath = IOUtil.getPath(entry.getKey());
-            }
-            catch(IOException e) {
+            } catch(IOException e) {
                 throw new PicardException("Trouble reading file: " + entry.getKey() + " for field " + inputFieldName, e);
             }
 
-            // Attempt to read index path
+            // Attempt to process index path
             try {
                 indexPath = IOUtil.getPath(entry.getValue());
-            }
-            catch(IOException e) {
+            } catch(IOException e) {
                 throw new PicardException("Trouble reading index file: " + entry.getValue() + " for field " + inputFieldName, e);
             }
             indexPathMap.put(inputPath, indexPath);

@@ -183,7 +183,7 @@ public class FingerprintChecker {
      * Loads VCF reader from path, and checks if index available when forced.
      */
     @VisibleForTesting
-    VCFFileReader getVCFReader(final Path vcfPath, final Path indexPath, final boolean forceIndex) {
+    static VCFFileReader getVCFReader(final Path vcfPath, final Path indexPath, final boolean forceIndex) {
         VCFFileReader reader = indexPath != null ? new VCFFileReader(vcfPath, indexPath) : new VCFFileReader(vcfPath, forceIndex);
 
         if (forceIndex && !reader.isQueryable()) {
@@ -448,6 +448,7 @@ public class FingerprintChecker {
     }
 
     // For backwards compatibility with previous interface
+    @Deprecated
     public Map<FingerprintIdDetails, Fingerprint> fingerprintVcf(final Path vcfFile) {
         return fingerprintVcf(vcfFile, null, false);
     }
@@ -514,6 +515,7 @@ public class FingerprintChecker {
      */
 
     // Keeping old method for backwards compatibility
+    @Deprecated
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
         return fingerprintSamFile(samFile, null, false, blockToProbMapper);
     }
@@ -671,6 +673,7 @@ public class FingerprintChecker {
      */
 
     // If no indexPathMap provided, set to null & forceIndex to false; for backwards compatibility with other methods using this
+    @Deprecated
     public Map<FingerprintIdDetails, Fingerprint> fingerprintFiles(final Collection<Path> files, final int threads, final int waitTime, final TimeUnit waitTimeUnit) {
         return fingerprintFiles(files, null, false, threads, waitTime, waitTimeUnit);
     }

@@ -48,6 +48,7 @@ import org.broadinstitute.barclay.argparser.CommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
@@ -71,7 +72,7 @@ import java.util.stream.Collectors;
  *
  * To use:
  *
- * 1. Extend this class with a concrete class that is annotated with @CommandLineProgramProperties, and has data members
+ * 1. Extend this class with a concrete class that is annotated with {@link CommandLineProgramProperties}, and has data members
  * annotated with @Argument, @PositionalArguments, and/or @ArgumentCollection annotations.
  *
  * 2. If there is any custom command-line validation, override customCommandLineValidation().  When this method is

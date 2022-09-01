@@ -851,23 +851,18 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         final Path inputIndexMap = File.createTempFile("input_index_map", ".tsv").toPath();
         IOUtil.deleteOnExit(inputIndexMap);
 
-        // Zip files & indices together
-        final List<List<String>> zipped_files = IntStream.range(0, Math.min(files.size(), indices.size()))
-                .mapToObj(i -> Arrays.asList(
-                        files.get(i) != null ? files.get(i).getAbsolutePath() : "",
-                        indices.get(i) != null ? indices.get(i).getAbsolutePath() : ""))
-                .collect(Collectors.toList());
-
-        // Based on tabbedWrite method above
-        // Write input files & indices to tsv for input below
+        // Create table of sample paths -> index paths
         try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(inputIndexMap))) {
-            for (final List<String> pair : zipped_files) {
-                writer.println(pair.stream().collect(Collectors.joining("\t")));
+            int bound = Math.min(files.size(), indices.size());
+            for (int i = 0; i < bound; i++) {
+                String file = files.get(i) != null ? files.get(i).getAbsolutePath() : "";
+                String index = indices.get(i) != null ? indices.get(i).getAbsolutePath() : "";
+                writer.println(file + "\t" + index);
             }
         }
 
         // Return temp file created above
-        return new File(inputIndexMap.toString());
+        return inputIndexMap.toFile();
     }
 
     /**
@@ -885,7 +880,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
 
         args.add("INPUT_INDEX_MAP=" + INPUT_INDEX_MAP);
-        args.add("INPUT_FORCE_INDEX=true");
+        args.add("REQUIRE_INDEX_FILES=true");
         args.add("OUTPUT=" + metrics.getAbsolutePath());
         args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
         args.add("LOD_THRESHOLD=" + -1.0);
@@ -927,7 +922,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         files.forEach(f -> args.add("INPUT=" + f.getAbsolutePath()));
 
         args.add("INPUT_INDEX_MAP=" + INPUT_INDEX_MAP);
-        args.add("INPUT_FORCE_INDEX=true");
+        args.add("REQUIRE_INDEX_FILES=true");
         args.add("OUTPUT=" + metrics.getAbsolutePath());
         args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
         args.add("LOD_THRESHOLD=" + -1.0);
