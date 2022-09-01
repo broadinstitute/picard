@@ -160,12 +160,16 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                         }, entry -> {
                             // merge the values by merging the fingerprints.
 
-                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
                             //use the "by" function to determine the "info" part of the fingerprint
-                            final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
-                            entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet()).forEach(sampleFp::merge);
-                            return sampleFp;
+                            Set<Fingerprint> fingerprintsSet = entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet());
+                            if (fingerprintsSet.size() == 1) {
+                                return fingerprintsSet.iterator().next();
+                            }
+                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
+                            final Fingerprint mergedFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
 
+                            fingerprintsSet.forEach(mergedFp::merge);
+                            return mergedFp;
                         }));
     }
 
