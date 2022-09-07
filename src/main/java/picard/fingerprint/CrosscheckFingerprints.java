@@ -759,8 +759,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         return sampleMap;
     }
 
-    private Map<Path, Path> getSamplePathToIndexMap(final File indexMapFile, final String inputFieldName) {
-        final Map<String, String> indexStringMap = getStringStringMap(indexMapFile, inputFieldName);
+    private Map<Path, Path> getSamplePathToIndexMap(final File indexMapFile, final String inputArgumentName) {
+        final Map<String, String> indexStringMap = getStringStringMap(indexMapFile, inputArgumentName);
         final HashMap<Path, Path> indexPathMap = new LinkedHashMap<Path, Path>();
         for (Map.Entry<String, String> entry: indexStringMap.entrySet()) {
             final Path inputPath;
@@ -770,14 +770,14 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             try {
                 inputPath = IOUtil.getPath(entry.getKey());
             } catch(IOException e) {
-                throw new PicardException("Trouble reading file: " + entry.getKey() + " for field " + inputFieldName, e);
+                throw new PicardException("Trouble reading file: " + entry.getKey() + " for argument " + inputArgumentName, e);
             }
 
             // Attempt to process index path
             try {
                 indexPath = IOUtil.getPath(entry.getValue());
             } catch(IOException e) {
-                throw new PicardException("Trouble reading index file: " + entry.getValue() + " for field " + inputFieldName, e);
+                throw new PicardException("Trouble reading index file: " + entry.getValue() + " for argument " + inputArgumentName, e);
             }
             indexPathMap.put(inputPath, indexPath);
         }
