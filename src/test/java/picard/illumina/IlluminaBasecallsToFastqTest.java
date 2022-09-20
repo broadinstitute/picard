@@ -186,7 +186,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     @Test
     public void testMultiplexWithIlluminaReadNameHeaders() throws Exception {
-        final File outputDir = Files.createTempDirectory("testMultiplexRH." + ".dir").toFile();
+        final File outputDir = Files.createTempDirectory("testMultiplexRH.dir").toFile();
         try {
             outputDir.deleteOnExit();
 

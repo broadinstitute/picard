@@ -51,9 +51,7 @@ public class CollectRrbsMetricsTest extends CommandLineProgramTest {
 
     @BeforeTest
     private void setUp() throws Exception {
-        rootTestDir = Files.createTempDirectory("crmt." + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        rootTestDir = Files.createTempDirectory("crmt.tmp").toFile();
     }
 
     @AfterTest

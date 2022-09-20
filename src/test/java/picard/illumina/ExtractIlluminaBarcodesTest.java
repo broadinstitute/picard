@@ -80,29 +80,19 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
 
     @BeforeTest
     private void setUp() throws Exception {
-        basecallsDir = Files.createTempDirectory("eib." + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        basecallsDir = Files.createTempDirectory("eib.tmp").toFile();
         IOUtil.copyDirectoryTree(SINGLE_DATA_DIR, basecallsDir);
 
-        dual = Files.createTempDirectory("eib_dual" + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        dual = Files.createTempDirectory("eib_dual.tmp").toFile();
         IOUtil.copyDirectoryTree(DUAL_DATA_DIR, dual);
 
-        qual = Files.createTempDirectory("eib_qual" + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        qual = Files.createTempDirectory("eib_qual.tmp").toFile();
         IOUtil.copyDirectoryTree(DUAL_DATA_DIR, qual);
 
-        noSymlink = Files.createTempDirectory("eib_nosymlink" + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        noSymlink = Files.createTempDirectory("eib_nosymlink.tmp").toFile();
         IOUtil.copyDirectoryTree(HISEQX_DATA_DIR, noSymlink);
 
-        cbcl = Files.createTempDirectory("eib_cbcl" + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        cbcl = Files.createTempDirectory("eib_cbcl.tmp").toFile();
         IOUtil.copyDirectoryTree(CBCL_DATA_DIR, cbcl);
         // For the cbcl test, we are deleting the '*barcode.txt.gz' files that exist in the test Basecalls directory
         // This is to prevent the error conditon that was briefly introduced which expected to find such files in that

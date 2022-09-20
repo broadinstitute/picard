@@ -20,9 +20,7 @@ public class CollectIlluminaBasecallingMetricsTest {
 
     @BeforeTest
     private void setUp() throws Exception {
-        rootTestDir = Files.createTempDirectory("cibm." + ".tmp").toFile();
-        Assert.assertTrue(true);
-        Assert.assertTrue(true);
+        rootTestDir = Files.createTempDirectory("cibm.tmp").toFile();
         for (final File source : TEST_DATA_DIR.listFiles()) {
             if (source.isDirectory() && !source.isHidden()) {
                 IOUtil.copyDirectoryTree(source, new File(rootTestDir.getPath(),source.getName()));
