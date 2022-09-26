@@ -38,7 +38,7 @@ public class CramCompatibilityTest {
     public static final String MBA_UNMAPPED_CRAM = "testdata/picard/sam/MergeBamAlignment/cliptest.unmapped.cram";
     public static final String MBA_REFERENCE = "testdata/picard/sam/MergeBamAlignment/cliptest.fasta";
 
-    private static final File outputDir = IOUtil.createTempDir("testdata/picard/sam/CramCompatibilityTest", ".tmp");
+    private static final File outputDir = IOUtil.createTempDir("CramCompatibilityTest.tmp").toFile();
 
     @AfterTest
     public void tearDown() {
@@ -112,7 +112,7 @@ public class CramCompatibilityTest {
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, reference);
             assertCRAM(outputFile);
         } else {
-            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath(), program);
+            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath() + "," + program).toFile();
             launchProgram(program, cramFile, tmpDir.getAbsolutePath(), parameters, reference);
             assertCRAMs(tmpDir);
         }
@@ -164,7 +164,7 @@ public class CramCompatibilityTest {
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, null);
             assertCRAM(outputFile);
         } else {
-            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath(), program);
+            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath() +"," + program).toFile();
             launchProgram(program, cramFile, tmpDir.getAbsolutePath(), parameters, null);
             assertCRAMs(tmpDir);
         }

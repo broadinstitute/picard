@@ -38,7 +38,7 @@ public class IlluminaFileUtilTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        intensityDir = IOUtil.createTempDir("ift_test", "Intensities");
+        intensityDir = IOUtil.createTempDir("ift_test.Intensities").toFile();
         basecallDir = new File(intensityDir, "BaseCalls");
         if (!basecallDir.mkdir()) {
             throw new RuntimeException("Couldn't make basecalls dir " + basecallDir.getAbsolutePath());
@@ -517,7 +517,7 @@ public class IlluminaFileUtilTest {
                              final boolean createCbcl,
                              final boolean expectedResult) throws IOException {
 
-        final File basecallsDir = IOUtil.createTempDir("basecalls", "");
+        final File basecallsDir = IOUtil.createTempDir("basecalls").toFile();
         basecallsDir.deleteOnExit();
 
         if (0 < lane) {

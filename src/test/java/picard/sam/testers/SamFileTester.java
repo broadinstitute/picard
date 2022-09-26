@@ -95,7 +95,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     }
 
     private void setOutputDir() {
-        this.outputDir = IOUtil.createTempDir(this.getClass().getSimpleName() + ".", ".tmp");
+        this.outputDir = IOUtil.createTempDir(this.getClass().getSimpleName() + ".tmp").toFile();
         if (deleteOnExit) {
             outputDir.deleteOnExit();
         }
@@ -387,7 +387,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         if (extension.equals(".cram")) {
             final Path fasta = fastaFiles.computeIfAbsent(samRecordSetBuilder.getHeader(), h -> {
 
-                final Path fastaDir = IOUtil.createTempDir("SamFileTester", "").toPath();
+                final Path fastaDir = IOUtil.createTempDir("SamFileTester");
                 IOUtil.deleteOnExit(fastaDir);
                 final Path newFasta = fastaDir.resolve("input.fasta");
                 IOUtil.deleteOnExit(newFasta);

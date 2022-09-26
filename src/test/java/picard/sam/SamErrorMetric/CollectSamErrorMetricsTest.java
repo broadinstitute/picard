@@ -57,7 +57,7 @@ public class CollectSamErrorMetricsTest {
             throw new PicardException("This should only be called once!");
         }
 
-        OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest", null);
+        OUTPUT_DATA_PATH = IOUtil.createTempDir("CollectSamErrorMetricsTest.tmp").toFile();
 
         for (final File file : files) {
             final File vcf = new File(TEST_DIR, "NIST.selected.vcf");

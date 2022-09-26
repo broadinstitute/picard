@@ -32,7 +32,7 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
 
     @BeforeTest
     public void setUp() throws IOException {
-        globalTempOutputDir = IOUtil.createTempDir("artifactMetrics.", ".tmp");
+        globalTempOutputDir = IOUtil.createTempDir("artifactMetrics.tmp").toFile();
     }
 
     @AfterTest

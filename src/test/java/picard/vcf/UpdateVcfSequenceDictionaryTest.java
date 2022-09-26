@@ -41,7 +41,7 @@ public class UpdateVcfSequenceDictionaryTest {
     // vcfFormatTest.bad_dict.vcf is a vcf with two (2) ##contig lines deleted
     private final File SAM_SEQUENCE_DICTIONARY_VCF = new File(TEST_DATA_PATH, "vcfFormatTest.bad_dict.vcf");
 
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("UpdateVcfSequenceDictionaryTest", null);
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("UpdateVcfSequenceDictionaryTest.tmp").toFile();
     private static final File STD_OUT_FILE = new File(OUTPUT_DATA_PATH, "stdout.vcf");
     private static final String STD_OUT_NAME = "/dev/stdout";
 

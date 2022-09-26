@@ -189,7 +189,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         }
 
         // Write things out to file
-        final File dir = IOUtil.createTempDir("hsmetrics.", ".test");
+        final File dir = IOUtil.createTempDir("hsmetrics.test").toFile();
         final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
         final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
         baits.write(bs);
@@ -235,7 +235,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         }
 
         // Write things out to file
-        final File dir = IOUtil.createTempDir("hsmetrics.", ".test");
+        final File dir = IOUtil.createTempDir("hsmetrics.test").toFile();
         final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
         final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
         baits.write(bs);

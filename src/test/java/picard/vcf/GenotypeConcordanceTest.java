@@ -58,7 +58,7 @@ import java.util.zip.GZIPInputStream;
 
 public class GenotypeConcordanceTest {
 
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("GenotypeConcordanceTest", null);
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("GenotypeConcordanceTest.tmp").toFile();
     private static final Path TEST_DATA_PATH = new File("testdata/picard/vcf/").toPath();
     private static final String TEST_DATA_PATH_STRING = TEST_DATA_PATH.toString();
 
