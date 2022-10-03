@@ -92,7 +92,7 @@ dependencies {
     compileOnly(googleNio)
 
     testImplementation 'org.testng:testng:6.14.3'
-    testImplementation 'org.apache.commons:commons-lang3:3.6'
+    implementation 'org.apache.commons:commons-lang3:3.6'
 }
 
 configurations.all {

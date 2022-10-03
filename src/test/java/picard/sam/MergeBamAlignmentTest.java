@@ -69,6 +69,7 @@ import java.util.Map;
  *
  * @author ktibbett@broadinstitute.org
  */
+@SuppressWarnings("removal")
 public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
     private static final File DATA_DIR = new File("testdata/picard/sam");

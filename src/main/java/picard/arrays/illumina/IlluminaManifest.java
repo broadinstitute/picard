@@ -200,6 +200,7 @@ public class IlluminaManifest  {
         };
     }
 
+    @SuppressWarnings("removal")
     private void readHeader() throws IOException {
         final FileInputStream fileInputStream = new FileInputStream(getManifestFile());
 
