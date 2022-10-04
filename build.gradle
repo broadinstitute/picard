@@ -85,6 +85,8 @@ dependencies {
     // replacement for jdk nashorn engine GPL-2.0 license
     implementation 'org.openjdk.nashorn:nashorn-core:15.4'
 
+    //NOTE: this dependency spec causes doc gen to fail on FingerPrintChecker since doc gen is not
+    // a compile time task
     compileOnly(googleNio)
 
     testImplementation 'org.testng:testng:6.14.3'
@@ -352,9 +354,6 @@ publishing {
                 }
             }
         }
-//        doFirst {
-//            System.out.println("Uploading version $version")
-//        }
     }
     repositories {
         maven {
@@ -364,13 +363,21 @@ publishing {
                 password = project.findProperty("sonatypePassword")
             }
         }
-//        snapshotRepository {
-//            url = "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/"
-//            credentials {
-//                username = System.env.ARTIFACTORY_USERNAME
-//                password = System.env.ARTIFACTORY_PASSWORD
-//            }
-//        }
+        maven {
+            //TODO: is the correct way to specify this second repo ?
+            //snapshotRepository
+            url = "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/"
+            credentials {
+                username = System.env.ARTIFACTORY_USERNAME
+                password = System.env.ARTIFACTORY_PASSWORD
+            }
+        }
+    }
+}
+
+publish {
+    doFirst {
+        System.out.println("Uploading version $version")
     }
 }
 
