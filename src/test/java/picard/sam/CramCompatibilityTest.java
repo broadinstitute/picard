@@ -10,6 +10,8 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgram;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,11 +40,11 @@ public class CramCompatibilityTest {
     public static final String MBA_UNMAPPED_CRAM = "testdata/picard/sam/MergeBamAlignment/cliptest.unmapped.cram";
     public static final String MBA_REFERENCE = "testdata/picard/sam/MergeBamAlignment/cliptest.fasta";
 
-    private static final File outputDir = IOUtil.createTempDir("CramCompatibilityTest.tmp").toFile();
+    private static final Path outputDir = IOUtil.createTempDir("CramCompatibilityTest.tmp");
 
     @AfterTest
     public void tearDown() {
-        IOUtil.recursiveDelete(outputDir.toPath());
+        IOUtil.recursiveDelete(outputDir);
     }
 
     @DataProvider(name = "programArgsForCRAMWithReference")
@@ -112,7 +114,7 @@ public class CramCompatibilityTest {
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, reference);
             assertCRAM(outputFile);
         } else {
-            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath() + "," + program).toFile();
+            final File tmpDir = Files.createTempDirectory(outputDir, program).toFile();
             launchProgram(program, cramFile, tmpDir.getAbsolutePath(), parameters, reference);
             assertCRAMs(tmpDir);
         }
@@ -164,7 +166,7 @@ public class CramCompatibilityTest {
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, null);
             assertCRAM(outputFile);
         } else {
-            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath() +"," + program).toFile();
+            final File tmpDir = Files.createTempDirectory(outputDir, program).toFile();
             launchProgram(program, cramFile, tmpDir.getAbsolutePath(), parameters, null);
             assertCRAMs(tmpDir);
         }
@@ -214,7 +216,7 @@ public class CramCompatibilityTest {
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, null);
             assertCRAM(outputFile);
         } else {
-            final File tmpDir = IOUtil.createTempDir(outputDir.getAbsolutePath(), program);
+            final File tmpDir = Files.createTempDirectory(outputDir, program).toFile();
             launchProgram(program, cramFile, tmpDir.getAbsolutePath(), parameters, null);
             assertCRAMs(tmpDir);
         }
@@ -227,7 +229,7 @@ public class CramCompatibilityTest {
     private static File createTempFile(String name, String extension) {
         File file = null;
         try {
-            file = File.createTempFile(name, extension, outputDir);
+            file = File.createTempFile(name, extension, outputDir.toFile());
             file.deleteOnExit();
         } catch (IOException e) {
             e.printStackTrace();
