@@ -14,7 +14,7 @@ import java.util.Queue;
 
 public class SplitVcfsTest extends CommandLineProgramTest {
 
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("SplitVcfsTest", null);
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("SplitVcfsTest.tmp").toFile();
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
 
     public String getCommandLineProgramName() {

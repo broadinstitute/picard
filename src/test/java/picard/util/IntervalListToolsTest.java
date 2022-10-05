@@ -356,7 +356,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         args.add("SUBDIVISION_MODE=" + tc.mode);
 
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools_lists").toFile();
         dirsToDelete.add(ilOutDir);
 
         if (tc.scatterWidth == 1) {
@@ -397,7 +397,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         args.add("SUBDIVISION_MODE=" + tc.mode);
 
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools_lists").toFile();
         dirsToDelete.add(ilOutDir);
 
         if (tc.scatterWidth == 1) {
@@ -432,7 +432,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     @Test(timeOut = 40_000)
     public void testLargeScatters() throws IOException {
         final int scatterCount=1_000;
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools_lists").toFile();
         dirsToDelete.add(ilOutDir);
 
         //scatter

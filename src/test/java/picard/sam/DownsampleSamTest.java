@@ -72,7 +72,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
             setBuilder.addPair(readName, 1, 1, 100);
         }
 
-        tempDir = IOUtil.createTempDir("ds_test", "Downsampling");
+        tempDir = IOUtil.createTempDir("ds_test_Downsampling").toFile();
         tempSamFile = File.createTempFile("DownsampleSam", ".bam", tempDir);
 
         BufferedLineReader bufferedLineReader = null;

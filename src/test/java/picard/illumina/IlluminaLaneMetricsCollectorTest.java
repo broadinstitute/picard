@@ -25,7 +25,7 @@ public class IlluminaLaneMetricsCollectorTest {
     public void testWriteLaneMetrics(final String testRun) {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest").toFile();
             clp.RUN_DIRECTORY = new File(TEST_DIRECTORY, testRun);
             clp.OUTPUT_PREFIX = "test";
             if (useReadStructure) clp.READ_STRUCTURE = new ReadStructure("101T8B101T");
@@ -54,7 +54,7 @@ public class IlluminaLaneMetricsCollectorTest {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final File runDirectory = new File(TILE_RUN_DIRECTORY, testRun);
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest").toFile();
             clp.RUN_DIRECTORY = runDirectory;
             clp.OUTPUT_PREFIX = "test";
             if (useReadStructure) clp.READ_STRUCTURE = readStructure;
@@ -90,7 +90,7 @@ public class IlluminaLaneMetricsCollectorTest {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final File runDirectory = TEST_MISSING_PHASING_DIRECTORY;
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest").toFile();
             clp.RUN_DIRECTORY = runDirectory;
             clp.OUTPUT_PREFIX = "test";
             clp.VALIDATION_STRINGENCY = ValidationStringency.STRICT;
@@ -115,7 +115,7 @@ public class IlluminaLaneMetricsCollectorTest {
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final File runDirectory = TEST_MISSING_PHASING_DIRECTORY;
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest").toFile();
             clp.RUN_DIRECTORY = runDirectory;
             clp.OUTPUT_PREFIX = "test";
             clp.VALIDATION_STRINGENCY = ValidationStringency.SILENT;
@@ -141,7 +141,7 @@ public class IlluminaLaneMetricsCollectorTest {
         final ReadStructure readStructure = new ReadStructure("151T8B8B151T");
         for (final boolean useReadStructure : Arrays.asList(true, false)) {
             final CollectIlluminaLaneMetrics clp = new CollectIlluminaLaneMetrics();
-            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest", null);
+            clp.OUTPUT_DIRECTORY = IOUtil.createTempDir("illuminaLaneMetricsCollectorTest").toFile();
             clp.RUN_DIRECTORY = TEST_MISMATCHED_VERSIONS;
             clp.OUTPUT_PREFIX = "test";
             if (useReadStructure) clp.READ_STRUCTURE = readStructure;
