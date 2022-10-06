@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Bait bias artifacts broken down by context.",
+  "name": "BaitBiasDetailMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

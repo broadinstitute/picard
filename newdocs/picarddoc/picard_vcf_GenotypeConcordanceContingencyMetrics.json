@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Class that holds metrics about the Genotype Concordance contingency tables.",
+  "name": "GenotypeConcordanceContingencyMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

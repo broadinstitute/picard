@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "TargetMetrics, are metrics to measure how well we hit specific targets (or baits) when using a targeted sequencing process like hybrid selection\n or Targeted PCR Techniques (TSCA).  TargetMetrics at the moment are the metrics that are shared by both HybridSelection and TargetedPcrMetrics.",
+  "name": "TargetMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

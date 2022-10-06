@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "TheoreticalSensitivityMetrics, are metrics calculated from TheoreticalSensitivity and parameters used in\n the calculation.\n\n These metrics are intended to estimate the achievable sensitivity (for a particular log odds threshold) of\n somatic calls for a particular depth and base quality score distribution.",
+  "name": "TheoreticalSensitivityMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

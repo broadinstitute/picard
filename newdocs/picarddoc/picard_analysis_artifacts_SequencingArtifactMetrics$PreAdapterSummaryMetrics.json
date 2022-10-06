@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Summary analysis of a single pre-adapter artifact.\n\n These artifacts occur on the original template strand, before the addition of adapters,\n so they correlate with read number / orientation in a specific way.\n\n For example, the well-known \"Oxo-G\" artifact occurs when a G on the template\n strand is oxidized, giving it an affinity for binding to A rather than the usual C.\n Thus PCR will introduce apparent G\u003eT substitutions in read 1 and C\u003eA in read 2.\n In the resulting alignments, a given G\u003eT or C\u003eA observation could either be:\n\n 1. a true mutation\n 2. an OxoG artifact\n 3. some other kind of artifact\n\n On average, we assume that 1 and 3 will not display this read number / orientation bias, so\n their contributions will cancel out in the calculation.",
+  "name": "PreAdapterSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

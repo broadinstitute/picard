@@ -95,7 +95,7 @@
       "summary": "Paths (except for the file extensions) of Variant Calling Metrics files to read and merge.",
       "name": "--INPUT",
       "synonyms": "-I",
-      "type": "List[File]",
+      "type": "List[PicardHtsPath]",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "[]",

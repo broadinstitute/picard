@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Class for holding metrics on a single fingerprint.\n Note: this is distinct from FingerprintingDetailMetrics and\n FingerprintingSummaryMetrics in that it is calculated on a single fingerprint,\n and attempts to describe how likely that fingerprint is to have arisen from an actual sample\n as opposed to having artifacts such as contamination, or strong bias towards homozygous genotypes.\n\n Several tests use \"expected\" genotype distribution based on the allele frequency stored in the haplotype-database\n file that is used, and assuming Hardy-Weinberg equilibrium.\n\n Please see the FingerprintMetrics definitions\n http://broadinstitute.github.io/picard/picard-metric-definitions.html#FingerprintMetrics \" +\n for a complete description of the metrics produced by this tool.",
+  "name": "FingerprintMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

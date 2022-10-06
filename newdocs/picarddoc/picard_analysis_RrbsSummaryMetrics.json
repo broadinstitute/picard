@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Holds summary statistics from RRBS processing QC",
+  "name": "RrbsSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

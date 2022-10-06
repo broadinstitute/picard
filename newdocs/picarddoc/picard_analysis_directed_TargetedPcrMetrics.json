@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics class for the analysis of reads obtained from targeted pcr experiments e.g. the TruSeq Custom Amplicon\n (TSCA) kit (Illumina).",
+  "name": "TargetedPcrMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

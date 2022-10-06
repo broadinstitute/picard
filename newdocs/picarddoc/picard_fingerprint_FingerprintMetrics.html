@@ -1,0 +1,745 @@
+<?php
+
+    include '../../../common/include/common.php';
+    include_once '../../config.php';
+    $module = modules::GATK;
+    printHeader($module, "Picard | Tool Documentation Index", "Guide");
+?>
+
+<link type='text/css' rel='stylesheet' href='picardDoc.css'>
+
+<div class='row-fluid' id="top">
+
+	
+	<?php $group = 'Metrics'; ?>
+
+	<section class="span4">
+		<aside class="well">
+			<a href="index.html"><h4><i class='fa fa-chevron-left'></i> Back to Tool Docs Index</h4></a>
+		</aside>
+		<aside class="well">
+			<h2>Categories</h2>
+        <style>
+            #sidenav .accordion-body a {
+                color : gray;
+            }
+
+            .accordion-body li {
+                list-style : none;
+            }
+        </style>
+        <ul class="nav nav-pills nav-stacked" id="sidenav">
+        		<hr>
+        		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#BaseCalling">Base Calling</a>
+							<div id="BaseCalling"
+								<?php echo ($group == 'Base Calling')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_illumina_CheckIlluminaDirectory.html">CheckIlluminaDirectory</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaBasecallingMetrics.html">CollectIlluminaBasecallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_CollectIlluminaLaneMetrics.html">CollectIlluminaLaneMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_ExtractIlluminaBarcodes.html">ExtractIlluminaBarcodes</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToFastq.html">IlluminaBasecallsToFastq</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallsToSam.html">IlluminaBasecallsToSam</a>
+											</li>
+											<li>
+												<a href="picard_illumina_MarkIlluminaAdapters.html">MarkIlluminaAdapters</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#DiagnosticsandQualityControl">Diagnostics and Quality Control</a>
+							<div id="DiagnosticsandQualityControl"
+								<?php echo ($group == 'Diagnostics and Quality Control')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_AccumulateQualityYieldMetrics.html">AccumulateQualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_AccumulateVariantCallingMetrics.html">AccumulateVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_BamIndexStats.html">BamIndexStats</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CalculateFingerprintMetrics.html">CalculateFingerprintMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_CalculateReadGroupChecksum.html">CalculateReadGroupChecksum</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CheckFingerprint.html">CheckFingerprint</a>
+											</li>
+											<li>
+												<a href="picard_sam_CheckTerminatorBlock.html">CheckTerminatorBlock</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusterCrosscheckMetrics.html">ClusterCrosscheckMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectAlignmentSummaryMetrics.html">CollectAlignmentSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CollectArraysVariantCallingMetrics.html">CollectArraysVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectBaseDistributionByCycle.html">CollectBaseDistributionByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectGcBiasMetrics.html">CollectGcBiasMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics.html">CollectHiSeqXPfFailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectHsMetrics.html">CollectHsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_CollectIndependentReplicateMetrics.html">CollectIndependentReplicateMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectInsertSizeMetrics.html">CollectInsertSizeMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectJumpingLibraryMetrics.html">CollectJumpingLibraryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectMultipleMetrics.html">CollectMultipleMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectOxoGMetrics.html">CollectOxoGMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectQualityYieldMetrics.html">CollectQualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRawWgsMetrics.html">CollectRawWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRnaSeqMetrics.html">CollectRnaSeqMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRrbsMetrics.html">CollectRrbsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamErrorMetric_CollectSamErrorMetrics.html">CollectSamErrorMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_CollectSequencingArtifactMetrics.html">CollectSequencingArtifactMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_CollectTargetedPcrMetrics.html">CollectTargetedPcrMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics.html">CollectVariantCallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetrics.html">CollectWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage.html">CollectWgsMetricsWithNonZeroCoverage</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CompareMetrics.html">CompareMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_CompareSAMs.html">CompareSAMs</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_ConvertSequencingArtifactToOxoG.html">ConvertSequencingArtifactToOxoG</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_CrosscheckFingerprints.html">CrosscheckFingerprints</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_EstimateLibraryComplexity.html">EstimateLibraryComplexity</a>
+											</li>
+											<li>
+												<a href="picard_analysis_MeanQualityByCycle.html">MeanQualityByCycle</a>
+											</li>
+											<li>
+												<a href="picard_analysis_QualityScoreDistribution.html">QualityScoreDistribution</a>
+											</li>
+											<li>
+												<a href="picard_sam_ValidateSamFile.html">ValidateSamFile</a>
+											</li>
+											<li>
+												<a href="picard_sam_ViewSam.html">ViewSam</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#GenotypingArraysManipulation">Genotyping Arrays Manipulation</a>
+							<div id="GenotypingArraysManipulation"
+								<?php echo ($group == 'Genotyping Arrays Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_arrays_illumina_BpmToNormalizationManifestCsv.html">BpmToNormalizationManifestCsv</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CombineGenotypingArrayVcfs.html">CombineGenotypingArrayVcfs</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CreateBafRegressMetricsFile.html">CreateBafRegressMetricsFile</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CreateVerifyIDIntensityContaminationMetricsFile.html">CreateVerifyIDIntensityContaminationMetricsFile</a>
+											</li>
+											<li>
+												<a href="picard_arrays_GtcToVcf.html">GtcToVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_MergePedIntoVcf.html">MergePedIntoVcf</a>
+											</li>
+											<li>
+												<a href="picard_arrays_VcfToAdpc.html">VcfToAdpc</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#IntervalsManipulation">Intervals Manipulation</a>
+							<div id="IntervalsManipulation"
+								<?php echo ($group == 'Intervals Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BedToIntervalList.html">BedToIntervalList</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListToBed.html">IntervalListToBed</a>
+											</li>
+											<li>
+												<a href="picard_util_IntervalListTools.html">IntervalListTools</a>
+											</li>
+											<li>
+												<a href="picard_util_LiftOverIntervalList.html">LiftOverIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Other">Other</a>
+							<div id="Other"
+								<?php echo ($group == 'Other')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_FifoBuffer.html">FifoBuffer</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#ReadDataManipulation">Read Data Manipulation</a>
+							<div id="ReadDataManipulation"
+								<?php echo ($group == 'Read Data Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_sam_AddCommentsToBam.html">AddCommentsToBam</a>
+											</li>
+											<li>
+												<a href="picard_sam_AddOATag.html">AddOATag</a>
+											</li>
+											<li>
+												<a href="picard_sam_AddOrReplaceReadGroups.html">AddOrReplaceReadGroups</a>
+											</li>
+											<li>
+												<a href="picard_fastq_BamToBfq.html">BamToBfq</a>
+											</li>
+											<li>
+												<a href="picard_sam_BuildBamIndex.html">BuildBamIndex</a>
+											</li>
+											<li>
+												<a href="picard_sam_CleanSam.html">CleanSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_CollectDuplicateMetrics.html">CollectDuplicateMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_DownsampleSam.html">DownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FastqToSam.html">FastqToSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_FilterSamReads.html">FilterSamReads</a>
+											</li>
+											<li>
+												<a href="picard_sam_FixMateInformation.html">FixMateInformation</a>
+											</li>
+											<li>
+												<a href="picard_sam_GatherBamFiles.html">GatherBamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicates.html">MarkDuplicates</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_MarkDuplicatesWithMateCigar.html">MarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeBamAlignment.html">MergeBamAlignment</a>
+											</li>
+											<li>
+												<a href="picard_sam_MergeSamFiles.html">MergeSamFiles</a>
+											</li>
+											<li>
+												<a href="picard_sam_PositionBasedDownsampleSam.html">PositionBasedDownsampleSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReorderSam.html">ReorderSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_ReplaceSamHeader.html">ReplaceSamHeader</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertOriginalBaseQualitiesAndAddMateCigar.html">RevertOriginalBaseQualitiesAndAddMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_RevertSam.html">RevertSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamFormatConverter.html">SamFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamToFastq.html">SamToFastq</a>
+											</li>
+											<li>
+												<a href="picard_sam_SetNmAndUqTags.html">SetNmAndUqTags</a>
+											</li>
+											<li>
+												<a href="picard_sam_SetNmMdAndUqTags.html">SetNmMdAndUqTags</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_SimpleMarkDuplicatesWithMateCigar.html">SimpleMarkDuplicatesWithMateCigar</a>
+											</li>
+											<li>
+												<a href="picard_sam_SortSam.html">SortSam</a>
+											</li>
+											<li>
+												<a href="picard_sam_SplitSamByLibrary.html">SplitSamByLibrary</a>
+											</li>
+											<li>
+												<a href="picard_sam_SplitSamByNumberOfReads.html">SplitSamByNumberOfReads</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_UmiAwareMarkDuplicatesWithMateCigar.html">UmiAwareMarkDuplicatesWithMateCigar</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Reference">Reference</a>
+							<div id="Reference"
+								<?php echo ($group == 'Reference')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_util_BaitDesigner.html">BaitDesigner</a>
+											</li>
+											<li>
+												<a href="picard_sam_CreateSequenceDictionary.html">CreateSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_reference_ExtractSequences.html">ExtractSequences</a>
+											</li>
+											<li>
+												<a href="picard_reference_NonNFastaSize.html">NonNFastaSize</a>
+											</li>
+											<li>
+												<a href="picard_reference_NormalizeFasta.html">NormalizeFasta</a>
+											</li>
+											<li>
+												<a href="picard_util_ScatterIntervalsByNs.html">ScatterIntervalsByNs</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantEvaluationandRefinement">Variant Evaluation and Refinement</a>
+							<div id="VariantEvaluationandRefinement"
+								<?php echo ($group == 'Variant Evaluation and Refinement')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_MendelianViolations_FindMendelianViolations.html">FindMendelianViolations</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordance.html">GenotypeConcordance</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantFiltering">Variant Filtering</a>
+							<div id="VariantFiltering"
+								<?php echo ($group == 'Variant Filtering')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_filter_FilterVcf.html">FilterVcf</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#VariantManipulation">Variant Manipulation</a>
+							<div id="VariantManipulation"
+								<?php echo ($group == 'Variant Manipulation')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_vcf_FixVcfHeader.html">FixVcfHeader</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GatherVcfs.html">GatherVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_LiftoverVcf.html">LiftoverVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MakeSitesOnlyVcf.html">MakeSitesOnlyVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MergeVcfs.html">MergeVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_RenameSampleInVcf.html">RenameSampleInVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SortVcf.html">SortVcf</a>
+											</li>
+											<li>
+												<a href="picard_vcf_SplitVcfs.html">SplitVcfs</a>
+											</li>
+											<li>
+												<a href="picard_vcf_UpdateVcfSequenceDictionary.html">UpdateVcfSequenceDictionary</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfFormatConverter.html">VcfFormatConverter</a>
+											</li>
+											<li>
+												<a href="picard_vcf_VcfToIntervalList.html">VcfToIntervalList</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+        		<hr>
+						<li><a data-toggle="collapse" data-parent="#sidenav" href="#Metrics">Metrics</a>
+							<div id="Metrics"
+								<?php echo ($group == 'Metrics')? 'class="accordion-body collapse in"'.chr(62) : 'class="accordion-body collapse"'.chr(62);?>
+								<ul>
+											<li>
+												<a href="picard_analysis_AlignmentSummaryMetrics.html">AlignmentSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CollectArraysVariantCallingMetrics$ArraysControlCodesSummaryMetrics.html">ArraysControlCodesSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CollectArraysVariantCallingMetrics$ArraysVariantCallingDetailMetrics.html">ArraysVariantCallingDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_arrays_CollectArraysVariantCallingMetrics$ArraysVariantCallingSummaryMetrics.html">ArraysVariantCallingSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_arrays_BafRegressMetrics.html">BafRegressMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_SequencingArtifactMetrics$BaitBiasDetailMetrics.html">BaitBiasDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_SequencingArtifactMetrics$BaitBiasSummaryMetrics.html">BaitBiasSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_BarcodeMetric.html">BarcodeMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_BaseDistributionByCycleMetrics.html">BaseDistributionByCycleMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamErrorMetric_BaseErrorMetric.html">BaseErrorMetric</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_ClusteredCrosscheckMetric.html">ClusteredCrosscheckMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectOxoGMetrics$CpcgMetrics.html">CpcgMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_DuplicationMetrics.html">DuplicationMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamErrorMetric_ErrorMetric.html">ErrorMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_ErrorSummaryMetrics.html">ErrorSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_fingerprint_FingerprintMetrics.html">FingerprintMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_FingerprintingDetailMetrics.html">FingerprintingDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_FingerprintingSummaryMetrics.html">FingerprintingSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_GcBiasDetailMetrics.html">GcBiasDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_metrics_GcBiasMetrics.html">GcBiasMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_GcBiasSummaryMetrics.html">GcBiasSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordanceContingencyMetrics.html">GenotypeConcordanceContingencyMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordanceDetailMetrics.html">GenotypeConcordanceDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_GenotypeConcordanceSummaryMetrics.html">GenotypeConcordanceSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_HsMetrics.html">HsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaBasecallingMetrics.html">IlluminaBasecallingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaLaneMetrics.html">IlluminaLaneMetrics</a>
+											</li>
+											<li>
+												<a href="picard_illumina_IlluminaPhasingMetrics.html">IlluminaPhasingMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamErrorMetric_IndelErrorMetric.html">IndelErrorMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_replicates_IndependentReplicateMetric.html">IndependentReplicateMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_InsertSizeMetrics.html">InsertSizeMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_JumpingLibraryMetrics.html">JumpingLibraryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_MendelianViolations_MendelianViolationMetrics.html">MendelianViolationMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamErrorMetric_OverlappingErrorMetric.html">OverlappingErrorMetric</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics$PFFailDetailedMetric.html">PFFailDetailedMetric</a>
+											</li>
+											<li>
+												<a href="picard_illumina_quality_CollectHiSeqXPfFailMetrics$PFFailSummaryMetric.html">PFFailSummaryMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_SequencingArtifactMetrics$PreAdapterDetailMetrics.html">PreAdapterDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_artifacts_SequencingArtifactMetrics$PreAdapterSummaryMetrics.html">PreAdapterSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectQualityYieldMetrics$QualityYieldMetrics.html">QualityYieldMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectRawWgsMetrics$RawWgsMetrics.html">RawWgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_RnaSeqMetrics.html">RnaSeqMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_RrbsCpgDetailMetrics.html">RrbsCpgDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_RrbsSummaryMetrics.html">RrbsSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_SamComparisonMetric.html">SamComparisonMetric</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_TargetMetrics.html">TargetMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_directed_TargetedPcrMetrics.html">TargetedPcrMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_TheoreticalSensitivityMetrics.html">TheoreticalSensitivityMetrics</a>
+											</li>
+											<li>
+												<a href="picard_sam_markduplicates_UmiMetrics.html">UmiMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics$VariantCallingDetailMetrics.html">VariantCallingDetailMetrics</a>
+											</li>
+											<li>
+												<a href="picard_vcf_CollectVariantCallingMetrics$VariantCallingSummaryMetrics.html">VariantCallingSummaryMetrics</a>
+											</li>
+											<li>
+												<a href="picard_arrays_VerifyIDIntensityContaminationMetrics.html">VerifyIDIntensityContaminationMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_WgsMetrics.html">WgsMetrics</a>
+											</li>
+											<li>
+												<a href="picard_analysis_CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage.html">WgsMetricsWithNonZeroCoverage</a>
+											</li>
+								</ul>
+							</div>
+						</li>
+        		<hr>
+        </ul>
+		</aside>
+		<?php getForumPosts( 'FingerprintMetrics' ) ?>
+
+	</section>
+
+	<div class="span8">
+
+		<h1>FingerprintMetrics</h1>
+
+		<p class="lead">Metrics</p>
+
+			<h3>Category
+				<small> Metrics</small>
+			</h3>
+		<hr>
+		<h2>Overview</h2>
+		Class for holding metrics on a single fingerprint.
+ Note: this is distinct from FingerprintingDetailMetrics and
+ FingerprintingSummaryMetrics in that it is calculated on a single fingerprint,
+ and attempts to describe how likely that fingerprint is to have arisen from an actual sample
+ as opposed to having artifacts such as contamination, or strong bias towards homozygous genotypes.
+
+ Several tests use "expected" genotype distribution based on the allele frequency stored in the haplotype-database
+ file that is used, and assuming Hardy-Weinberg equilibrium.
+
+ Please see the FingerprintMetrics definitions
+ http://broadinstitute.github.io/picard/picard-metric-definitions.html#FingerprintMetrics " +
+ for a complete description of the metrics produced by this tool.
+
+				<p>This table summarizes the values that are specific to this metric.</p>
+				<table class="table table-striped table-bordered table-condensed">
+					<thead>
+					<tr>
+						<th>Metric</th>
+						<th>Summary</th>
+					</tr>
+					</thead>
+					<tr>
+						<td>SAMPLE_ALIAS<br />
+						<td>The Sample alias taken from RG header or #CHROME line </td>
+					</tr>
+					<tr>
+						<td>SOURCE<br />
+						<td>The originating file (if available) for this fingerprint </td>
+					</tr>
+					<tr>
+						<td>INFO<br />
+						<td>Additional information about the fingerprint </td>
+					</tr>
+					<tr>
+						<td>HAPLOTYPES<br />
+						<td>Number of haplotypes examined </td>
+					</tr>
+					<tr>
+						<td>HAPLOTYPES_WITH_EVIDENCE<br />
+						<td>Number of haplotypes that had evidence in the source file </td>
+					</tr>
+					<tr>
+						<td>DEFINITE_GENOTYPES<br />
+						<td>Number of haplotypes that had enough evidence to make a definite genotype call (genotype LOD > Threshold</td>
+					</tr>
+					<tr>
+						<td>NUM_HOM_ALLELE1<br />
+						<td>Number of major allele homozygous calls</td>
+					</tr>
+					<tr>
+						<td>NUM_HOM_ALLELE2<br />
+						<td>Number of  minor allele homozygous calls</td>
+					</tr>
+					<tr>
+						<td>NUM_HOM_ANY<br />
+						<td>Number of homozygous calls of either allele (might not be the sum of {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE1} due to rounding</td>
+					</tr>
+					<tr>
+						<td>NUM_HET<br />
+						<td>Number of heterozygous calls</td>
+					</tr>
+					<tr>
+						<td>EXPECTED_HOM_ALLELE1<br />
+						<td>Expected number of  major allele homozygous calls </td>
+					</tr>
+					<tr>
+						<td>EXPECTED_HOM_ALLELE2<br />
+						<td>Expected number of major allele homozygous calls </td>
+					</tr>
+					<tr>
+						<td>EXPECTED_HET<br />
+						<td>Expected number of heterozygous calls</td>
+					</tr>
+					<tr>
+						<td>CHI_SQUARED_PVALUE<br />
+						<td>The Chi-squared pvalue of the observed counts vector relative to the expected counts, (3x2 table) </td>
+					</tr>
+					<tr>
+						<td>LOG10_CHI_SQUARED_PVALUE<br />
+						<td>The log10 of the Chi-squared pvalue</td>
+					</tr>
+					<tr>
+						<td>CROSS_ENTROPY_LOD<br />
+						<td>The categorical cross entropy of the counts of genotypes relative to expected (big is bad)</td>
+					</tr>
+					<tr>
+						<td>HET_CHI_SQUARED_PVALUE<br />
+						<td>The Chi-squared pvalue for the number of HETs and HOMs relative to the expected counts (2x2 table) </td>
+					</tr>
+					<tr>
+						<td>LOG10_HET_CHI_SQUARED_PVALUE<br />
+						<td>The log10 of the Chi-squared pvalue for the number of HETs and HOMs </td>
+					</tr>
+					<tr>
+						<td>HET_CROSS_ENTROPY_LOD<br />
+						<td>The categorical cross entropy of the counts of HETs and HOMs relative to the expected counts (big is bad) </td>
+					</tr>
+					<tr>
+						<td>HOM_CHI_SQUARED_PVALUE<br />
+						<td>The Chi-squared pvalue for {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} relative to the expected counts (2x2 table) </td>
+					</tr>
+					<tr>
+						<td>LOG10_HOM_CHI_SQUARED_PVALUE<br />
+						<td>The log10 of the Chi-squared pvalue for {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} </td>
+					</tr>
+					<tr>
+						<td>HOM_CROSS_ENTROPY_LOD<br />
+						<td>The categorical cross entropy of {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} relative to the expected counts (big is bad) </td>
+					</tr>
+					<tr>
+						<td>LOD_SELF_CHECK<br />
+						<td>The fingerprinting LOD score this sample gets when compared to itself (big is good) </td>
+					</tr>
+					<tr>
+						<td>DISCRIMINATORY_POWER<br />
+						<td>The difference in fingerprinting LOD between LOD_SELF_CHECK and the LOD score found when
+    fingerprinting it against a random permutation of the probablity vectors (PLs) in each of the haplotypes. (big is good.)</td>
+					</tr>
+					</tbody>
+				</table>
+
+        <hr>
+        <p><a href='#top'><i class='fa fa-chevron-up'></i> Return to top</a></p>
+        <hr>
+        <p class="see-also">See also 
+        	<a href="https://www.broadinstitute.org/picard/guide/">Picard Documentation Index</a> |
+        	<a href="index.html">Tool Docs Index</a> |
+        	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
+        </p>
+
+        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        </p>
+
+	</div>
+
+	<?php printFooter($module); ?>

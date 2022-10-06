@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "",
+  "name": "ArraysControlCodesSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

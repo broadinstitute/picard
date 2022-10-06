@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics for evaluating the performance of whole genome sequencing experiments.",
+  "name": "WgsMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

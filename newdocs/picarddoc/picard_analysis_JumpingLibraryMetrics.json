@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "High level metrics about the presence of  outward- and inward-facing pairs\n within a SAM file generated with a jumping library, produced by\n the CollectJumpingLibraryMetrics program and usually stored in a file with\n the extension \".jump_metrics\".",
+  "name": "JumpingLibraryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

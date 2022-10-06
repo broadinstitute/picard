@@ -372,6 +372,10 @@
         {
           "summary": "",
           "name": "REF_SEQ_TOO_LONG_FOR_BAI"
+        },
+        {
+          "summary": "",
+          "name": "HEADER_TAG_INVALID_KEY"
         }
       ]
     },

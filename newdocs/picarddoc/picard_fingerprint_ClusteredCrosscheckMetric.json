@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "A metric class to hold the result of ClusterCrosscheckMetrics fingerprints.",
+  "name": "ClusteredCrosscheckMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

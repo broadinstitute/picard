@@ -95,7 +95,7 @@
       "summary": "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.",
       "name": "--INPUT",
       "synonyms": "-I",
-      "type": "String",
+      "type": "PicardHtsPath",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "null",

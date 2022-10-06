@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "A collection of metrics relating to snps and indels within a variant-calling file (VCF).",
+  "name": "VariantCallingSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

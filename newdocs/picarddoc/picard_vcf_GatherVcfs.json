@@ -110,7 +110,7 @@
       "summary": "Input VCF file(s).",
       "name": "--INPUT",
       "synonyms": "-I",
-      "type": "List[File]",
+      "type": "List[HtsPath]",
       "required": "yes",
       "fulltext": "",
       "defaultValue": "[]",

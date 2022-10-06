@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "",
+  "name": "GcBiasMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.  Averages\n and means are taken over all tiles.",
+  "name": "IlluminaBasecallingMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

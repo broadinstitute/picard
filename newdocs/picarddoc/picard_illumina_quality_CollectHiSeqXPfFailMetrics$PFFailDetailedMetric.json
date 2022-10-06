@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "a metric class for describing FP failing reads from an Illumina HiSeqX lane *",
+  "name": "PFFailDetailedMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

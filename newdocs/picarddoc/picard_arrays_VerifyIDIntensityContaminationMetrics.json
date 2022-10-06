@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "",
+  "name": "VerifyIDIntensityContaminationMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

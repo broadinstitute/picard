@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Describes the type and number of mendelian violations found within a Trio.",
+  "name": "MendelianViolationMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

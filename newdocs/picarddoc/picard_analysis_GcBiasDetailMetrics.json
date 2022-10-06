@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Class that holds detailed metrics about reads that fall within windows of a certain\n GC bin on the reference genome.",
+  "name": "GcBiasDetailMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

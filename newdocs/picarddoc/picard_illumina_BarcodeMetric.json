@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in\n the basecalls directory and determine to which barcode each read should be assigned.",
+  "name": "BarcodeMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

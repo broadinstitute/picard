@@ -441,8 +441,12 @@
           "name": "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
         },
         {
-          "summary": "Scatter the interval list into similarly sized interval lists (by interval count, not by base count). Resulting interval lists will contain similar number of intervals.",
+          "summary": "Scatter the interval list into similarly sized interval lists (by interval count, not by base count). Resulting interval lists will contain the same number of intervals except for the last, which contains the remainder.",
           "name": "INTERVAL_COUNT"
+        },
+        {
+          "summary": "Scatter the interval list into similarly sized interval lists (by interval count, not by base count). Resulting interval lists will contain similar number of intervals.",
+          "name": "INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER"
         }
       ]
     },

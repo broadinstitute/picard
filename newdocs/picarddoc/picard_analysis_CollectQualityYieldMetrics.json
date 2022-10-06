@@ -77,6 +77,21 @@
       "options": []
     },
     {
+      "summary": "If true, calculates flow-specific READ_LENGTH_AVG_Q metrics.",
+      "name": "--FLOW_MODE",
+      "synonyms": "NA",
+      "type": "boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "options": []
+    },
+    {
       "summary": "Google Genomics API client_secrets.json file path.",
       "name": "--GA4GH_CLIENT_SECRETS",
       "synonyms": "NA",

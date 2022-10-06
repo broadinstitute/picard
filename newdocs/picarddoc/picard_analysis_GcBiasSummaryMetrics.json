@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "High level metrics that capture how biased the coverage in a certain lane is.",
+  "name": "GcBiasSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

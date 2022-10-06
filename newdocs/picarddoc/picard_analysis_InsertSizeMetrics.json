@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics about the insert size distribution of a paired-end library, created by the\n CollectInsertSizeMetrics program and usually written to a file with the extension\n \".insert_size_metrics\".  In addition the insert size distribution is plotted to\n a file with the extension \".insert_size_Histogram.pdf\".",
+  "name": "InsertSizeMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

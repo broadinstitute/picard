@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "An error metric for the errors invovling bases in the overlapping region of a read-pair.\n The resulting metric includes error rate information which can be assigned to the reading\n of the molecular insert #DISAGREES_WITH_REF_AND_MATE_ONLY_Q, error rate which can be\n assigned to events that occured to to the molecular insert before it was loaded onto the\n flowcell/sequencer #DISAGREES_WITH_REFERENCE_ONLY_Q, and an error rate which\n cannot be explained nicely #THREE_WAYS_DISAGREEMENT_ONLY_Q.",
+  "name": "OverlappingErrorMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.\n Phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.\n For each lane/template read # (i.e. FIRST, SECOND) combination we will store the median values of both the phasing and prephasing\n values for every tile in that lane/template read pair.",
+  "name": "IlluminaPhasingMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

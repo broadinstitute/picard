@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "An error metric for the errors in bases.",
+  "name": "BaseErrorMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

@@ -1,0 +1,9 @@
+{
+  "summary": "Alignment metrics",
+  "arguments": [],
+  "description": "High level metrics about the alignment of reads within a SAM file, produced by\n the CollectAlignmentSummaryMetrics program and usually stored in a file with\n the extension \".alignment_summary_metrics\".",
+  "name": "AlignmentSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

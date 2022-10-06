@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics that are calculated during the process of marking duplicates\n within a stream of SAMRecords.",
+  "name": "DuplicationMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

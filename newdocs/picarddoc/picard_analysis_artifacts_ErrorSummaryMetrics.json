@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Summary metrics produced by CollectSequencingArtifactMetrics as a roll up of the\n context-specific error rates, to provide global error rates per type of base substitution.\n\n Errors are normalized to the lexically lower reference base and summarized together. E.g.\n G\u003eT is converted to C\u003eA and merged with data from C\u003eA for reporting.",
+  "name": "ErrorSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

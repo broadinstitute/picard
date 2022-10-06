@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics\n program and usually stored in a file with the extension \".rna_metrics\".",
+  "name": "RnaSeqMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

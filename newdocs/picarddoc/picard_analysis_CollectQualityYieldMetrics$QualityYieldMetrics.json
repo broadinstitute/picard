@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "A set of metrics used to describe the general quality of a BAM file",
+  "name": "QualityYieldMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

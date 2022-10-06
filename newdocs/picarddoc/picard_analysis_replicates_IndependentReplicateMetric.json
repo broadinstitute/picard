@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "A class to store information relevant for biological rate estimation",
+  "name": "IndependentReplicateMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

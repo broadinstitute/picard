@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Summary analysis of a single bait bias artifact, also known as a reference bias artifact.\n\n These artifacts occur during or after the target selection step, and correlate with substitution\n rates that are \"biased\", or higher for sites having one base on the reference/positive strand\n relative to sites having the complementary base on that strand.\n\n For example, a G\u003eT artifact during the target selection step might result in a higher\n G\u003eT / C\u003eA substitution rate at sites with a G on the positive strand (and C on the negative),\n relative to sites with the flip (C positive / G negative). This is known as the \"G-Ref\" artifact.",
+  "name": "BaitBiasSummaryMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Detailed metrics about an individual SNP/Haplotype comparison within a fingerprint comparison.",
+  "name": "FingerprintingDetailMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

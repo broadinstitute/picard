@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics that are calculated during the process of marking duplicates\n within a stream of SAMRecords using the UmiAwareDuplicateSetIterator.",
+  "name": "UmiMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

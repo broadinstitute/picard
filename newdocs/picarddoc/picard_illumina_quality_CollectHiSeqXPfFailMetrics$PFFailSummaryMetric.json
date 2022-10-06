@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metrics produced by the GetHiSeqXPFFailMetrics program. Used to diagnose lanes from HiSeqX\n Sequencing, providing the number and fraction of each of the reasons that reads could have not passed PF.\n Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand\n cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn\u0027t pass PF but couldn\u0027t be diagnosed)",
+  "name": "PFFailSummaryMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

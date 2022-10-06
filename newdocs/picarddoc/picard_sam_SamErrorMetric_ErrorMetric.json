@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Created by farjoun on 6/26/18.",
+  "name": "ErrorMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

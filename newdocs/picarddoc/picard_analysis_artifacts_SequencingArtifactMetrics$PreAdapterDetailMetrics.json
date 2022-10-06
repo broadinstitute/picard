@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Pre-adapter artifacts broken down by context.",
+  "name": "PreAdapterDetailMetrics",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}

@@ -1,0 +1,9 @@
+{
+  "summary": "Metrics",
+  "arguments": [],
+  "description": "Metric for results of SamComparison.  Used to store results in CompareSAMs.",
+  "name": "SamComparisonMetric",
+  "group": "Metrics",
+  "beta": false,
+  "experimental": false
+}
