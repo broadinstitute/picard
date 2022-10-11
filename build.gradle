@@ -103,8 +103,9 @@ configurations.all {
 sourceCompatibility = 1.17
 targetCompatibility = 1.17
 
-run {
+test {
     jvmArgs = [
+            // required for MergeBamAlignmentTest
             '--add-opens', 'java.base/java.io=ALL-UNNAMED'
     ]
 }
