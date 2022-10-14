@@ -20,6 +20,7 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
     private static final File OUTPUT_SORTED_FILE = new File(TEST_DATA_DIR, "index_test_sorted.bam");
     private static final File OUTPUT_UNSORTED_FILE = new File(TEST_DATA_DIR, "/index_test_unsorted.bam");
     private static final File OUTPUT_INDEX_FILE = new File(TEST_DATA_DIR, "/index_test.bam.bai");
+    private static final File DEFAULT_OUTPUT_INDEX_FILE = new File(TEST_DATA_DIR, "index_test_sorted.bai");
     private static final File EXPECTED_BAI_FILE = new File(TEST_DATA_DIR, "index_test_b.bam.bai");
 
     public String getCommandLineProgramName() { return BuildBamIndex.class.getSimpleName(); }
@@ -39,6 +40,20 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
         args.add("OUTPUT=" + OUTPUT_INDEX_FILE);
         runPicardCommandLine(args);
         Assert.assertEquals(FileUtils.readFileToByteArray(OUTPUT_INDEX_FILE),  FileUtils.readFileToByteArray(EXPECTED_BAI_FILE));
+    }
+
+    @Test
+    public void testBuildBamIndexNoOutputSpecified() throws IOException {
+        final List<String> args = new ArrayList<>();
+        /* First sort, before indexing */
+        new SortSam().instanceMain(new String[]{
+                "I=" + INPUT_FILE,
+                "O=" + OUTPUT_SORTED_FILE,
+                "SORT_ORDER=coordinate"});
+
+        args.add("INPUT=" + OUTPUT_SORTED_FILE);
+        runPicardCommandLine(args);
+        Assert.assertEquals(FileUtils.readFileToByteArray(DEFAULT_OUTPUT_INDEX_FILE),  FileUtils.readFileToByteArray(EXPECTED_BAI_FILE));
     }
 
     // Test that the index creation fails when presented with a SAM file

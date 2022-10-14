@@ -88,7 +88,7 @@ public class BuildBamIndex extends CommandLineProgram {
         // set default output file - input-file.bai
         if (OUTPUT == null) {
 
-            final String baseFileName = inputPath.getFileName().toString();
+            final String baseFileName = INPUT.hasFileSystemProvider() ? inputPath.toAbsolutePath().toString() : inputPath.getFileName().toString();
 
             // only BAI indices can be created for now, although CSI indices can be read as well
             if (baseFileName.endsWith(FileExtensions.BAM)) {
