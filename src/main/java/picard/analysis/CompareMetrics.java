@@ -28,6 +28,7 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -88,9 +89,18 @@ public class CompareMetrics extends CommandLineProgram {
     public File OUTPUT;
 
     @Argument(shortName = "MI",
-            doc = "Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.",
+            doc = "Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.  " +
+                    "Note that while the values of these metrics are not compared, if they are missing from either file that will be considered a difference.  " +
+                    "Use METRICS_NOT_REQUIRED to specify metrics which can be missing from either file without being considered a difference.",
             optional = true)
     public List<String> METRICS_TO_IGNORE;
+
+    @Argument(shortName = "MNR",
+            doc = "Metrics which are not required.  Any metrics specified here may be missing from either of the files in the comparison, and this will not affect " +
+                    "the result of the comparison.  If metrics specified here are included in both files, their results will not be compared (they will be treated as " +
+                    "METRICS_TO_IGNORE.",
+            optional = true)
+    public List<String> METRICS_NOT_REQUIRED;
 
     @Argument(shortName = "MARC",
             doc = "Metric Allowable Relative Change. A colon separate pair of metric name and an absolute relative change.  For any metric specified here, " +
@@ -131,7 +141,7 @@ public class CompareMetrics extends CommandLineProgram {
             }
             return retVal;
         } catch (final Exception e) {
-            throw new PicardException(e.getMessage());
+            throw new PicardException(e.getMessage(), e);
         }
     }
 
@@ -203,11 +213,23 @@ public class CompareMetrics extends CommandLineProgram {
             differences.add("Number of metric rows differ between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath());
             return 1;
         }
-        else if (!mf1.getMetrics().get(0).getClass().equals(mf2.getMetrics().get(0).getClass())) {
+        if (!mf1.getMetrics().get(0).getClass().equals(mf2.getMetrics().get(0).getClass())) {
             throw new PicardException("Metrics are of differing class between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath());
         }
-        else if (!mf1.getMetricsColumnLabels().equals(mf2.getMetricsColumnLabels())) {
-            differences.add("Metric columns differ between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath());
+
+        final Set<String> columns1 = new HashSet<>(mf1.getMetricsColumnLabels());
+        final Set<String> columns2 = new HashSet<>(mf2.getMetricsColumnLabels());
+        columns1.removeAll(METRICS_NOT_REQUIRED);
+        columns2.removeAll(METRICS_NOT_REQUIRED);
+        if (!columns1.equals(columns2)) {
+            final Set<String> missingColumns = new HashSet<>(columns1);
+            missingColumns.removeAll(columns2);
+            final Set<String> inColumns2NotColumns1 = new HashSet<>(columns2);
+            inColumns2NotColumns1.removeAll(columns1);
+            missingColumns.addAll(inColumns2NotColumns1);
+            differences.add("Metric columns differ between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath() + " (" +
+                    StringUtil.join(",", missingColumns) + ")");
+
             return 1;
         }
 
@@ -215,6 +237,7 @@ public class CompareMetrics extends CommandLineProgram {
         validateMetricNames(mf1, metricFile1, MetricToAllowableRelativeChange.keySet());
 
         Set<String> metricsToIgnore = new HashSet<>(METRICS_TO_IGNORE);
+        metricsToIgnore.addAll(METRICS_NOT_REQUIRED);
 
         final Class<? extends MetricBase> metricClass = mf1.getMetrics().get(0).getClass();
 
