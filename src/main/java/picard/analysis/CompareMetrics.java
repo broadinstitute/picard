@@ -89,7 +89,10 @@ public class CompareMetrics extends CommandLineProgram {
             doc = "Output file to write comparison results to.", optional = true)
     public File OUTPUT;
 
-    @Argument
+    @Argument(
+            doc = "Output file to write table of differences to.",
+            optional = true
+    )
     public File OUTPUT_TABLE;
 
     @Argument(shortName = "MI",
