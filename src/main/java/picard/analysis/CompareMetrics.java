@@ -28,6 +28,7 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -47,6 +48,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,10 +89,25 @@ public class CompareMetrics extends CommandLineProgram {
             doc = "Output file to write comparison results to.", optional = true)
     public File OUTPUT;
 
+    @Argument(
+            doc = "Output file to write table of differences to.",
+            optional = true
+    )
+    public File OUTPUT_TABLE;
+
     @Argument(shortName = "MI",
-            doc = "Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.",
+            doc = "Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.  " +
+                    "Note that while the values of these metrics are not compared, if they are missing from either file that will be considered a difference.  " +
+                    "Use METRICS_NOT_REQUIRED to specify metrics which can be missing from either file without being considered a difference.",
             optional = true)
     public List<String> METRICS_TO_IGNORE;
+
+    @Argument(shortName = "MNR",
+            doc = "Metrics which are not required.  Any metrics specified here may be missing from either of the files in the comparison, and this will not affect " +
+                    "the result of the comparison.  If metrics specified here are included in both files, their results will not be compared (they will be treated as " +
+                    "METRICS_TO_IGNORE.",
+            optional = true)
+    public List<String> METRICS_NOT_REQUIRED;
 
     @Argument(shortName = "MARC",
             doc = "Metric Allowable Relative Change. A colon separate pair of metric name and an absolute relative change.  For any metric specified here, " +
@@ -104,7 +121,14 @@ public class CompareMetrics extends CommandLineProgram {
             optional = true)
     public boolean IGNORE_HISTOGRAM_DIFFERENCES = false;
 
+    @Argument(
+            doc = "Columns to use as keys for matching metrics rows that should agree.  If not specified, it is assumed that rows should be in the same order.",
+            optional = true
+    )
+    public List<String> KEY;
+
     private final List<String> differences = new ArrayList<>();
+    private final List<MetricComparisonDifferences> valueDifferences = new ArrayList<>();
 
     private String metricClassName = "Unknown";
 
@@ -129,9 +153,14 @@ public class CompareMetrics extends CommandLineProgram {
                         + INPUT.get(0).getAbsolutePath() + " and " + INPUT.get(1).getAbsolutePath() + "\n\nMetrics are " + status;
                 writeTextToFile(OUTPUT, header, differences);
             }
+            if (OUTPUT_TABLE != null) {
+                final MetricsFile<MetricComparisonDifferences, ?> metricDifferencesFile = getMetricsFile();
+                metricDifferencesFile.addAllMetrics(valueDifferences);
+                metricDifferencesFile.write(OUTPUT_TABLE);
+            }
             return retVal;
         } catch (final Exception e) {
-            throw new PicardException(e.getMessage());
+            throw new PicardException(e.getMessage(), e);
         }
     }
 
@@ -170,7 +199,7 @@ public class CompareMetrics extends CommandLineProgram {
         return errs.toArray(new String[0]);
     }
 
-    private int compareMetricsFiles(final File metricFile1, final File metricFile2) throws IOException, IllegalAccessException {
+    private int compareMetricsFiles(final File metricFile1, final File metricFile2) throws IOException, IllegalAccessException, NoSuchFieldException {
         final MetricsFile<?, ?> mf1 = new MetricsFile<>();
         final MetricsFile<?, ?> mf2 = new MetricsFile<>();
         mf1.read(new FileReader(metricFile1));
@@ -203,11 +232,23 @@ public class CompareMetrics extends CommandLineProgram {
             differences.add("Number of metric rows differ between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath());
             return 1;
         }
-        else if (!mf1.getMetrics().get(0).getClass().equals(mf2.getMetrics().get(0).getClass())) {
+        if (!mf1.getMetrics().get(0).getClass().equals(mf2.getMetrics().get(0).getClass())) {
             throw new PicardException("Metrics are of differing class between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath());
         }
-        else if (!mf1.getMetricsColumnLabels().equals(mf2.getMetricsColumnLabels())) {
-            differences.add("Metric columns differ between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath());
+
+        final Set<String> columns1 = new HashSet<>(mf1.getMetricsColumnLabels());
+        final Set<String> columns2 = new HashSet<>(mf2.getMetricsColumnLabels());
+        columns1.removeAll(METRICS_NOT_REQUIRED);
+        columns2.removeAll(METRICS_NOT_REQUIRED);
+        if (!columns1.equals(columns2)) {
+            final Set<String> missingColumns = new HashSet<>(columns1);
+            missingColumns.removeAll(columns2);
+            final Set<String> inColumns2NotColumns1 = new HashSet<>(columns2);
+            inColumns2NotColumns1.removeAll(columns1);
+            missingColumns.addAll(inColumns2NotColumns1);
+            differences.add("Metric columns differ between " + metricFile1.getAbsolutePath() + " and " + metricFile2.getAbsolutePath() + " (" +
+                    StringUtil.join(",", missingColumns) + ")");
+
             return 1;
         }
 
@@ -215,30 +256,49 @@ public class CompareMetrics extends CommandLineProgram {
         validateMetricNames(mf1, metricFile1, MetricToAllowableRelativeChange.keySet());
 
         Set<String> metricsToIgnore = new HashSet<>(METRICS_TO_IGNORE);
+        metricsToIgnore.addAll(METRICS_NOT_REQUIRED);
 
         final Class<? extends MetricBase> metricClass = mf1.getMetrics().get(0).getClass();
 
-        int retVal = 0;
-        int rowNumber = -1;
         final Field[] fields = metricClass.getFields();
-        Iterator<?> mf1Iterator = mf1.getMetrics().iterator();
-        Iterator<?> mf2Iterator = mf2.getMetrics().iterator();
-        while (mf1Iterator.hasNext()) {
-            rowNumber++;
-            MetricBase metric1 = (MetricBase) mf1Iterator.next();
-            MetricBase metric2 = (MetricBase) mf2Iterator.next();
-            for (Field field : fields) {
-                if (!metricsToIgnore.contains(field.getName())) {
-                    final Object value1 = field.get(metric1);
-                    final Object value2 = field.get(metric2);
-                    SimpleResult result = compareMetricValues(value1, value2, field.getName());
-                    if (!result.equal) {
-                        retVal = 1;
-                        final String diffString = "Row: " + rowNumber + " Metric: " + field.getName() +
-                                " values differ. Value1: " + value1 + " Value2: " + value2 + " " + result.description;
-                        differences.add(diffString);
-                    }
+
+        int retVal = 0;
+        if (KEY.size() == 0) {
+            //key by row number
+            int rowNumber = -1;
+            Iterator<?> mf1Iterator = mf1.getMetrics().iterator();
+            Iterator<?> mf2Iterator = mf2.getMetrics().iterator();
+            while (mf1Iterator.hasNext()) {
+                rowNumber++;
+                MetricBase metric1 = (MetricBase) mf1Iterator.next();
+                MetricBase metric2 = (MetricBase) mf2Iterator.next();
+                if (compareMetricsForEntry(metric1, metric2, fields, metricsToIgnore, String.valueOf(rowNumber)) == 1) {
+                    retVal = 1;
                 }
+            }
+        } else {
+            //build each map of metrics
+            final Map<List<Object>, ? extends MetricBase> metricMap1 = buildMetricsMap(mf1.getMetrics());
+            final Map<List<Object>, ? extends MetricBase> metricMap2 = buildMetricsMap(mf2.getMetrics());
+
+            for (final Map.Entry<List<Object>, ? extends MetricBase> entry1 : metricMap1.entrySet()) {
+                final List<Object> key = entry1.getKey();
+                final MetricBase metric1 = entry1.getValue();
+
+                final MetricBase metric2 = metricMap2.remove(key);
+                if (metric2 != null) {
+                    if (compareMetricsForEntry(metric1, metric2, fields, metricsToIgnore, StringUtil.join(",", key)) == 1) {
+                        retVal = 1;
+                    }
+                } else {
+                    differences.add("KEY " + StringUtil.join(",", key) + " found in " + metricFile1 + " but not in " + metricFile2);
+                    retVal = 1;
+                }
+            }
+            //check that all entries in metricMap2 have been matched
+            for (final Map.Entry<List<Object>, ? extends MetricBase> entry : metricMap2.entrySet()) {
+                differences.add("KEY " + StringUtil.join(",", entry.getKey()) + " found in " + metricFile2 + " but not in " + metricFile1);
+                retVal = 1;
             }
         }
 
@@ -252,6 +312,50 @@ public class CompareMetrics extends CommandLineProgram {
             }
         }
 
+        return retVal;
+    }
+
+    protected Map<List<Object>, MetricBase> buildMetricsMap(final List<? extends MetricBase> metrics) throws NoSuchFieldException, IllegalAccessException {
+        final HashMap<List<Object>, MetricBase> retMap = new LinkedHashMap<>();
+        final Class<? extends MetricBase> clazz = metrics.get(0).getClass();
+        final List<Field> keyFields = new ArrayList<>();
+        for (final String key : KEY) {
+            final Field keyField = clazz.getField(key);
+            keyFields.add(keyField);
+        }
+
+        for (final MetricBase metric : metrics) {
+            final List<Object> mapKey = new ArrayList<>();
+            for (final Field keyField : keyFields) {
+                mapKey.add(keyField.get(metric));
+            }
+            retMap.put(mapKey, metric);
+        }
+
+        return retMap;
+    }
+
+    protected int compareMetricsForEntry(final MetricBase metric1, final MetricBase metric2, final Field[] fields, final Set<String> metricsToIgnore, final String key) throws IllegalAccessException {
+        int retVal = 0;
+        for (Field field : fields) {
+            if (!metricsToIgnore.contains(field.getName())) {
+                final Object value1 = field.get(metric1);
+                final Object value2 = field.get(metric2);
+                SimpleResult result = compareMetricValues(value1, value2, field.getName());
+                if (!result.equal) {
+                    retVal = 1;
+                    final String diffString = "Key: " + key + " Metric: " + field.getName() +
+                            " values differ. Value1: " + value1 + " Value2: " + value2 + " " + result.description;
+                    differences.add(diffString);
+                    final MetricComparisonDifferences metricDifferences = new MetricComparisonDifferences();
+                    metricDifferences.KEY = key;
+                    metricDifferences.METRIC = field.getName();
+                    metricDifferences.VALUE1 = value1;
+                    metricDifferences.VALUE2 = value2;
+                    valueDifferences.add(metricDifferences);
+                }
+            }
+        }
         return retVal;
     }
 
@@ -322,5 +426,12 @@ public class CompareMetrics extends CommandLineProgram {
             this.equal = equal;
             this.description = description;
         }
+    }
+
+    static public class MetricComparisonDifferences extends MetricBase {
+        public String KEY;
+        public String METRIC;
+        public Object VALUE1;
+        public Object VALUE2;
     }
 }
