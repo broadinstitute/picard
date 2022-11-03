@@ -65,33 +65,33 @@ import java.util.stream.Collectors;
 import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
 
 /**
- * Checks that all data in the set of input files appear to come from the same
- * individual. Can be used to compare according to readgroups, libraries, samples, or files.
- * Operates on bams/sams and vcfs (including gvcfs).
+ * Checks that all data in the set of input files appear to come from the same 
+ * individual. Can be used to compare according to readgroups, libraries, samples, or files. 
+ * Operates on bams/sams and vcfs (including gvcfs). 
  *
  * <h3>Summary</h3>
- * Checks if all the genetic data within a set of files appear to come from the same individual.
- * It quickly determines whether a "group's" genotype matches that of an input SAM/BAM/VCF by selective sampling,
- * and has been designed to work well even for low-depth SAM/BAMs.
+ * Checks if all the genetic data within a set of files appear to come from the same individual. 
+ * It quickly determines whether a "group's" genotype matches that of an input SAM/BAM/VCF by selective sampling, 
+ * and has been designed to work well even for low-depth SAM/BAMs. 
  * <br/>
- * The tool collects "fingerprints" (essentially genotype information from different parts of the genome)
- * at the finest level available in the data (readgroup for SAM files
- * and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide
- * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results will
- * be emitted into a metric file for the class {@link CrosscheckMetric}.
- * In this format, the output will include both the LOD score and the tumor-aware LOD score; the latter can
- * help assess identity even in the presence of a severe loss of heterozygosity with high purity (the tool could
- * otherwise fail to notice that samples are from the same individual.)
- * A matrix output is also available to facilitate visual inspection of crosscheck results.
+ * The tool collects "fingerprints" (essentially genotype information from different parts of the genome) 
+ * at the finest level available in the data (readgroup for SAM files 
+ * and sample for VCF files) and then optionally aggregates it by library, sample or file, to increase power and provide 
+ * results at the desired resolution. Output is in a "Moltenized" format, one row per comparison. The results will 
+ * be emitted into a metric file for the class {@link CrosscheckMetric}. 
+ * In this format, the output will include both the LOD score and the tumor-aware LOD score; the latter can 
+ * help assess identity even in the presence of a severe loss of heterozygosity with high purity (the tool could 
+ * otherwise fail to notice that samples are from the same individual.) 
+ * A matrix output is also available to facilitate visual inspection of crosscheck results. 
  * <br/>
- * Since there can be many rows of output in the metric file, we recommend the use of {@link ClusterCrosscheckMetrics}
- * as a follow-up step to running CrosscheckFingerprints.
+ * Since there can be many rows of output in the metric file, we recommend the use of {@link ClusterCrosscheckMetrics} 
+ * as a follow-up step to running CrosscheckFingerprints. 
  * <br/>
- * There are cases where one would like to identify a few groups out of a collection of many possible groups (say
- * to link a bam to its correct sample in a multi-sample vcf. In this case, one would not care for the cross-checking
- * of the various samples in the VCF against each other, but only in checking the identity of the bam against the various
- * samples in the vcf. The {@link #SECOND_INPUT} is provided for this use-case. With {@link #SECOND_INPUT} provided, CrosscheckFingerprints
- * does the following:
+ * There are cases where one would like to identify a few groups out of a collection of many possible groups (say 
+ * to link a bam to its correct sample in a multi-sample vcf. In this case, one would not care for the cross-checking 
+ * of the various samples in the VCF against each other, but only in checking the identity of the bam against the various 
+ * samples in the vcf. The {@link #SECOND_INPUT} is provided for this use-case. With {@link #SECOND_INPUT} provided, 
+ * CrosscheckFingerprints does the following: 
  * <il>
  * <li>aggregation of data happens independently for the input files in {@link #INPUT} and {@link #SECOND_INPUT}.</li>
  * <li>aggregation of data happens at the SAMPLE level.</li>
@@ -99,11 +99,14 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
  * <li>{@link #MATRIX_OUTPUT} is disabled.</li>
  * </il>
  * <br/>
- * In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting sites, or a sample in INPUT may be missing from the SECOND_INPUT.
- * These cases are handled as follows:  If running in CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample
- * not found in the other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH.
- * In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting sites, a warning is logged.  As long as there is at least
- * one comparison where both sides have observations at fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations
+ * In some cases, the groups collected may not have any observations (calls for a vcf, reads for a bam) at fingerprinting 
+ * sites, or a sample in INPUT may be missing from the SECOND_INPUT. These cases are handled as follows:  If running in 
+ * CHECK_SAME_SAMPLES mode with INPUT and SECOND_INPUT, and either INPUT or SECOND_INPUT includes a sample not found in the 
+ * other, or contains a sample with no observations at any fingerprinting sites, an error will be logged and the tool will 
+ * return EXIT_CODE_WHEN_MISMATCH.
+ * In all other running modes, when any group which is being crosschecked does not have any observations at fingerprinting 
+ * sites, a warning is logged.  As long as there is at least one comparison where both sides have observations at 
+ * fingerprinting sites, the tool will return zero.  However, if all comparisons have at least one side with no observations
  * at fingerprinting sites, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS.
  * <h3>Examples</h3>
  * <h4>Check that all the readgroups from a sample match each other:</h4>
@@ -157,23 +160,48 @@ import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
 
 @CommandLineProgramProperties(
         summary =
-                "Checks the odds that all data in the set of input files come from the same individual. Can be used to cross-check readgroups, libraries, samples, or files. Acceptable inputs include BAM/SAM/CRAM and VCF/GVCF files. Output delivers LOD scores in the form of a CrosscheckMetric file. \n" +
+                "Checks the odds that all data in the set of input files come from the same " +
+                        "individual. Can be used to cross-check readgroups, libraries, samples, or files. " +
+                        "Acceptable inputs include BAM/SAM/CRAM and VCF/GVCF files. Output delivers LOD " +
+                        "scores in the form of a CrosscheckMetric file. \n" +
                         "\n" +
                         "<h3>Summary</h3>\n" +
-                        "CrosscheckFingerprints rapidly checks the odds that all of the genetic data within a set of files come from the same individual. This is accomplished by selectively sampling from the input files, and determining whether the genotypes of the specified readgroups match to each other. \n " +
-                        "Output is generated in the form of a “molten” (one row per comparison) CrosscheckMetric file that includes the Logarithm of the Odds (LOD) score, as well as the tumor-aware LOD score. Tumor-aware LOD scores can be used to assess genotypic identity in the presence of a severe Loss of Heterozygosity (LOH) with high purity—this could otherwise lead to a failure of the tool to identify samples are from the same individual. Output is also available as a matrix, to facilitate visual inspection of crosscheck results. \n" +
-                        "Metric files can contain many rows of output. We therefore recommend following up CrosscheckFingerprints with a step using [ClusterCrosscheckMetrics (Picard)](https://gatk.broadinstitute.org/hc/en-us/articles/360045798972--Tool-Documentation-Index); this tool will cluster groups together that pass a designated LOD threshold, ensuring that groups within the cluster are related to each other. \n" +
-                        "There may be cases where several groups out of a collection of possible groups must be identified—for example, to link a BAM to its correct sample in a multi-sample VCF. In this case, it would not be necessary to cross-check the various samples in the VCF against each other, but only to check the identity of the BAM against the various samples in the VCF. For this application, the SECOND_INPUT argument is provided. With SECOND_INPUT, CrosscheckFingerprints does the following: \n" +
-                        " - Independently aggregates data for the input files in INPUT and SECOND_INPUT. \n" +
-                        " - Aggregates data at the SAMPLE level. \n" +
-                        " - Compares samples from INPUT to the same sample in SECOND_INPUT. \n" +
+                        "CrosscheckFingerprints rapidly checks the odds that all of the genetic data within " +
+                        "a set of files come from the same individual. This is accomplished by selectively " +
+                        "sampling from the input files, and determining whether the genotypes of the " +
+                        "specified Groups match to each other. (Groups are defined by the input and the argument " +
+                        "CROSSCHECK_BY; they can be READ_GROUP, LIBRARY, SAMPLE, or FILE.) \n " +
+                        "Output is generated in the form of a “molten” (one row per comparison) CrosscheckMetric " +
+                        "file that includes the Logarithm of the Odds (LOD) score, as well as the tumor-aware LOD " +
+                        "score. Tumor-aware LOD scores can be used to assess genotypic identity in the presence of " +
+                        "a severe Loss of Heterozygosity (LOH) with high purity—this could otherwise lead to a " +
+                        "failure of the tool to identify samples are from the same individual. Output is also available " +
+                        "as a matrix, to facilitate visual inspection of crosscheck results. \n" +
+                        "Metric files can contain many rows of output. We therefore recommend following up CrosscheckFingerprints " +
+                        "with a step using [ClusterCrosscheckMetrics (Picard)](https://gatk.broadinstitute.org/hc/en-us/articles/360045798972--Tool-Documentation-Index); this tool will cluster groups together that pass a designated LOD threshold, " +
+                        "ensuring that groups within the cluster are related to each other. \n" +
+                        "There may be cases where several groups out of a collection of possible groups must be identified---for example, " +
+                        "to link a BAM to its correct sample in a multi-sample VCF. In this case, it would not be necessary to cross-check " +
+                        "the various samples in the VCF against each other, but only to check the identity of the BAM against the various " +
+                        "samples in the VCF. For this application, the SECOND_INPUT argument is provided. With SECOND_INPUT, " +
+                        "CrosscheckFingerprints can do the following: \n" +
+                        " - Independently aggregate data for the input files in INPUT and SECOND_INPUT. \n" +
+                        " - Aggregate data at the SAMPLE level. \n" +
+                        " - Compare samples from INPUT to the same sample in SECOND_INPUT. \n" +
                         " - Disables MATRIX_OUTPUT. \n" +
                         "\n" +
-                        "In other cases, the groups collected may not have any observations (‘reads’ for BAM files, or ‘calls’ for VCF files) at fingerprinting sites. Alternatively, a sample in INPUT may be missing from SECOND_INPUT. These cases are handled as follows: \n" +
-                        " - If running in CHECK_SAME_SAMPLES mode with the INPUT and SECOND_INPUT sets of input files: when either set of inputs (1) includes a sample not found in the other, or (2) contains a sample with no observations at any fingerprinting sites, then an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. \n" +
-                        " - If running in any other running mode: when a group which is being crosschecked does not have any observations at fingerprinting sites, a warning will be logged. \n" +
+                        "In other cases, the groups collected may not have any observations (‘reads’ for BAM files, or ‘calls’ for VCF files) " +
+                        "at fingerprinting sites. Alternatively, a sample in INPUT may be missing from SECOND_INPUT. These cases are handled " +
+                        "as follows: \n" +
+                        " - If running in CHECK_SAME_SAMPLES mode with the INPUT and SECOND_INPUT sets of input files: when either set of inputs " +
+                        "(1) includes a sample not found in the other, or (2) contains a sample with no observations at any fingerprinting sites, " +
+                        "then an error will be logged and the tool will return EXIT_CODE_WHEN_MISMATCH. \n" +
+                        " - If running in any other running mode: when a group which is being crosschecked does not have any observations at " +
+                        "fingerprinting sites, a warning will be logged. \n" +
                         "\n" +
-                        "Note that, as long as there is at least one comparison in which both files have observations at fingerprinting sites, the tool will return a ‘zero’. However, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS if all comparisons have at least one side without observations at a fingerprinting site (ie. all LOD scores are zero). \n" +
+                        "Note that, as long as there is at least one comparison in which both files have observations at fingerprinting sites, " +
+                        "the tool will return a ‘zero’. However, an error will be logged and the tool will return EXIT_CODE_WHEN_NO_VALID_CHECKS " +
+                        "if all comparisons have at least one side without observations at a fingerprinting site (ie. all LOD scores are zero). \n" +
                         "\n" +
                         "<hr/>" +
                         "<h3>Examples</h3>" +
@@ -267,14 +295,16 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "Should only be used with SECOND_INPUT. ", optional = true)
     public File SECOND_INPUT_SAMPLE_MAP;
 
-    @Argument(doc = "A tsv with two columns representing the individual with which each sample is associated.  The first column is the sample id, and the second " +
-            "column is the associated individual id.  Values in the first column must be unique.  If INPUT_SAMPLE_MAP or SECOND_INPUT_SAMPLE_MAP is also specified, " +
-            "then the values in the first column of this file should be the sample aliases specified in the second columns of INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP, " +
-            "respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of the individual ids associated with two " +
-            "samples, as opposed to the sample ids themselves.  Samples which are not listed in this file will have their sample id used as their individual id, for the " +
-            "purposes of match expectations.  This means that one sample id could be used as the individual id for another sample, but not included in the map itself, and " +
-            "these two samples would be considered to have come from the same individual.  Note that use of this parameter only affects labelling of matches and mismatches as " +
-            "EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.", optional = true)
+    @Argument(doc = "A tsv with two columns representing the individual with which each sample is associated.  The first column " +
+            "is the sample id, and the second column is the associated individual id.  Values in the first column must be unique. " +
+            "If INPUT_SAMPLE_MAP or SECOND_INPUT_SAMPLE_MAP is also specified, then the values in the first column of this file " +
+            "should be the sample aliases specified in the second columns of INPUT_SAMPLE_MAP and SECOND_INPUT_SAMPLE_MAP, " +
+            "respectively.  When this input is specified, expectations for matches will be based on the equality or inequality of " +
+            "the individual ids associated with two samples, as opposed to the sample ids themselves.  Samples which are not listed " +
+            "in this file will have their sample id used as their individual id, for the purposes of match expectations.  This means " +
+            "that one sample id could be used as the individual id for another sample, but not included in the map itself, and these " +
+            "two samples would be considered to have come from the same individual.  Note that use of this parameter only affects " +
+            "labelling of matches and mismatches as EXPECTED or UNEXPECTED.  It has no affect on how data is grouped for crosschecking.", optional = true)
     public File SAMPLE_INDIVIDUAL_MAP;
 
     @Argument(doc = "An argument that controls how crosschecking with both INPUT and SECOND_INPUT should occur. ")
@@ -344,7 +374,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     @Argument(doc = "When all LOD scores are zero, exit with this value.")
     public int EXIT_CODE_WHEN_NO_VALID_CHECKS = 1;
 
-    @Argument(doc = "Maximal effect of any single haplotype block on outcome (-log10 of maximal likelihood difference between the different values for the three possible genotypes).", minValue = 0)
+    @Argument(doc = "Maximal effect of any single haplotype block on outcome (-log10 of maximal likelihood difference between the different " +
+              "values for the three possible genotypes).", minValue = 0)
     public double MAX_EFFECT_OF_EACH_HAPLOTYPE_BLOCK = 3.0;
 
     @Hidden
