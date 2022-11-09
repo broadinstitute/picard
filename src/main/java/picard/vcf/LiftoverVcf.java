@@ -228,7 +228,7 @@ public class LiftoverVcf extends CommandLineProgram {
      * Filter name to use when an indel cannot be lifted over since it straddles two intervals in a chain which means
      * that it is unclear what are the right alleles to be used.
      */
-    public static final String FILTER_INDEL_STRADDLES_TWO_INTERVALS = "IndelStraddlesMultipleIntevals";
+    public static final String FILTER_INDEL_STRADDLES_TWO_INTERVALS = "IndelStraddlesMultipleIntervals";
 
     /**
      * Filters to be added to the REJECT file.
