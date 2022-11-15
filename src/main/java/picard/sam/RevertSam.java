@@ -113,7 +113,7 @@ import java.util.*;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class RevertSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Reverts SAM or BAM files to a previous state.  ";
+    static final String USAGE_SUMMARY = "Reverts SAM/BAM/CRAM files to a previous state.  ";
     static final String USAGE_DETAILS = "This tool removes or restores certain properties of the SAM records, including alignment " +
             "information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of " +
             "restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if the" +
@@ -137,16 +137,16 @@ public class RevertSam extends CommandLineProgram {
             "     OUTPUT_BY_READGROUP=true \\\n" +
             "     O=/write/reverted/read/group/bams/in/this/dir\n" +
             "\n" +
-            "Will output a BAM file per read group." +
+            "Will output one file per read group." +
             " Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.\n" +
-            "Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to " +
+            "Note: If the program fails due to a validation error, consider setting the VALIDATION_STRINGENCY option to " +
             "LENIENT or SILENT if the failures are expected to be obviated by the reversion process " +
             "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n" +
             "";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to revert the state of.")
     public File INPUT;
 
-    @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
+    @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT;
 
     @Argument(mutex = {"OUTPUT"}, shortName = "OM", doc = "Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.")
@@ -210,7 +210,7 @@ public class RevertSam extends CommandLineProgram {
             "only be enabled if the output sort order is queryname and will always cause sorting to occur.")
     public boolean SANITIZE = false;
 
-    @Argument(doc = "If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then" +
+    @Argument(doc = "If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then " +
             "the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.")
     public double MAX_DISCARD_FRACTION = 0.01;
 

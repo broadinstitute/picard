@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2015-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,7 @@ import java.util.Set;
 @DocumentedFeature
 @ExperimentalFeature
 @CommandLineProgramProperties(
-        summary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
+        summary = "Examines aligned records in the supplied SAM/BAM/CRAM file to locate duplicate molecules. " +
                 "All records are then written to the output file with the duplicate records flagged.",
         oneLineSummary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
         programGroup = ReadDataManipulationProgramGroup.class
@@ -107,9 +107,10 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
 
         // Open the output
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader,
                 false,
-                OUTPUT);
+                OUTPUT,
+                REFERENCE_SEQUENCE);
 
         final SAMRecordDuplicateComparator comparator = new SAMRecordDuplicateComparator(Collections.singletonList(headerAndIterator.header));
         comparator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
