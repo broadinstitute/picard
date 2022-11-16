@@ -342,9 +342,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
 
                 // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
                 // if the query name has changed.
-                if (rec.getReadName().equals("SL-NSD:HLGFTDRXY211105:HLGFTDRXY:1:2101:10022:22451")) {
-                    System.out.println("found read");
-                }
                 nextDuplicateIndex = nextIndexIfNeeded(sortOrder, recordInFileIndex, nextDuplicateIndex, duplicateQueryName, rec, this.duplicateIndexes);
 
                 final boolean isDuplicate = recordInFileIndex == nextDuplicateIndex ||
