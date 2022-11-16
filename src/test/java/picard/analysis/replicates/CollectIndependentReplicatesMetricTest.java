@@ -30,7 +30,7 @@ import static org.testng.Assert.assertEquals;
  */
 public class CollectIndependentReplicatesMetricTest {
     private final static File testdir = new File("testdata/picard/independent_replicates");
-    private final static File bamOutDir = IOUtil.createTempDir("convertSamToBam", "dir");
+    private final static File bamOutDir = IOUtil.createTempDir("convertSamToBamDir").toFile();
 
     private final static Map<String, String> sams = new ImmutableMap.Builder<String, String>()
             .put("twoPairs", "twopairs.sam")

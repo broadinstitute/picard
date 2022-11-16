@@ -53,7 +53,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        illuminaDir = IOUtil.createTempDir("ift_test", "IlluminaDir");
+        illuminaDir = IOUtil.createTempDir("ift_test.IlluminaDir").toFile();
 
         interopDir = new File(illuminaDir, "InterOp");
         if (!interopDir.exists() && !interopDir.mkdir()) {

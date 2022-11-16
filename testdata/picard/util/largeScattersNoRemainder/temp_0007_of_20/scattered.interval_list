@@ -1,0 +1,13 @@
+@HD	VN:1.6	SO:coordinate
+@SQ	SN:chr1	LN:248956422	M5:6aef897c3d6ff0c78aff06ac189178dd	AS:38	UR:/seq/references/Homo_sapiens_assembly38/v0/Homo_sapiens_assembly38.fasta	SP:Homo sapiens
+@PG	ID:1	CL:IntervalListTools --INPUT testdata/picard/util/test.hg38.200.interval_list --OUTPUT testdata/picard/util/largeScattersNoRemainder --SCATTER_COUNT 20 --SUBDIVISION_MODE INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER --PADDING 0 --UNIQUE false --DONT_MERGE_ABUTTING false --SORT true --ACTION CONCAT --INCLUDE_FILTERED false --BREAK_BANDS_AT_MULTIPLES_OF 0 --INVERT false --OUTPUT_VALUE NONE --VERBOSITY INFO --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 5 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX false --CREATE_MD5_FILE false --GA4GH_CLIENT_SECRETS client_secrets.json --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false	PN:IntervalListTools
+chr1	7819793	7955554	+	target_61
+chr1	7955555	8091315	+	target_62
+chr1	8091316	8192379	+	target_63
+chr1	8192380	8293442	+	target_64
+chr1	8293443	8451663	+	target_65
+chr1	8451664	8609883	+	target_66
+chr1	8609884	8776005	+	target_67
+chr1	8776006	8942125	+	target_68
+chr1	8942126	9066968	+	target_69
+chr1	9066969	9191810	+	target_70

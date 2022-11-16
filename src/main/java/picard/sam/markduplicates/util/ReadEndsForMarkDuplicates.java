@@ -24,6 +24,9 @@
 
 package picard.sam.markduplicates.util;
 
+import htsjdk.samtools.SAMRecord;
+import picard.sam.markduplicates.MarkDuplicatesForFlowHelper;
+
 /**
  * Little struct-like class to hold read pair (and fragment) end data for MarkDuplicatesWithMateCigar
  *
@@ -74,8 +77,33 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     }
 
     @Override
+    public String toString() {
+        return String.format("%d %d %d", read1IndexInFile, read1Coordinate, score);
+    }
+
+    @Override
     public ReadEndsForMarkDuplicates clone() {
         return new ReadEndsForMarkDuplicates(this);
+    }
+
+    /**
+     * This method is used to generate the following two metrics:
+     * UNPAIRED_DUPS_WITH_TLEN
+     * UNPAIRED_DUPS_WITHOUT_TLEN
+     *
+     * It will return true if and only if the read is single ended and the exact fragment length is
+     *  known (i.e. it was not quality trimmed)
+     */
+    public static boolean isSingleEndReadKnownFragment(final SAMRecord rec) {
+        if ( rec.getReadUnmappedFlag() || rec.getReadPairedFlag() ) {
+            return false;
+        } else if ( MarkDuplicatesForFlowHelper.isAdapterClipped(rec) ) {
+            return true;
+        } else if ( !rec.getReadNegativeStrandFlag() ) {
+            return rec.getEnd() != rec.getUnclippedEnd();
+        } else {
+            return rec.getStart() != rec.getUnclippedStart();
+        }
     }
 
 }

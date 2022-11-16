@@ -62,7 +62,8 @@ public class AccumulateQualityYieldMetrics extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         // set up the output metric
-        CollectQualityYieldMetrics.QualityYieldMetrics finalMetric = new CollectQualityYieldMetrics.QualityYieldMetrics();
+        // note that useOriginalQualities does not matter here
+        CollectQualityYieldMetrics.QualityYieldMetrics finalMetric = new CollectQualityYieldMetrics.QualityYieldMetrics(false);
 
         INPUT.forEach(file -> finalMetric.merge(MetricsFile.<CollectQualityYieldMetrics.QualityYieldMetrics>readBeans(file).get(0)));
 

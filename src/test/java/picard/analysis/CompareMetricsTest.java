@@ -17,31 +17,35 @@ public class CompareMetricsTest {
     @DataProvider(name = "testCompareMetricsDataProvider")
     public Object[][] testCompareMetricsDataProvider() {
         return new Object[][]{
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, null, null, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00002"), true, 0 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00002"), false, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00002"), null, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00001"), null, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00002"), true, 0 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00002"), false, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00002"), null, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00001"), null, 1 },
-                { "wgs_test1.wgs_metrics", "wgs_test1.wgs_metrics", null, null, null, 0 },
-                { "wgs_test1.raw_wgs_metrics", "wgs_test2.raw_wgs_metrics", null, null, null, 1 },
-                { "wgs_test1.2rows.raw_wgs_metrics", "wgs_test1.2rows.raw_wgs_metrics", null, null, null, 0 },
-                { "wgs_test1.2rows.raw_wgs_metrics", "wgs_test2.2rows.raw_wgs_metrics", null, null, null, 1 },
-                { "wgs_test1.raw_wgs_metrics", "wgs_test2.2rows.raw_wgs_metrics", null, null, null, 1 },
-                { "wgs_test1.fingerprinting_summary_metrics", "wgs_test2.fingerprinting_summary_metrics", null, null, null, 1 },
-                { "test1.arrays_variant_calling_detail_metrics", "test2.arrays_variant_calling_detail_metrics", null, null, null, 1 },
-                { "test1.arrays_variant_calling_detail_metrics", "test2.arrays_variant_calling_detail_metrics", "AUTOCALL_DATE", null, null, 0 },
-                { "test1.arrays_variant_calling_summary_metrics", "test2.arrays_variant_calling_summary_metrics", null, null, null, 0 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, null, null, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00002"), true, null, null, 0 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00002"), false, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00002"), null, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", "GENOME_TERRITORY", Collections.singletonList("SD_COVERAGE:0.00001"), null, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00002"), true, null, null, 0 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00002"), false, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00002"), null, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test2.wgs_metrics", null, asList("GENOME_TERRITORY:0.0001", "SD_COVERAGE:0.00001"), null, null, null, 1 },
+                { "wgs_test1.wgs_metrics", "wgs_test1.wgs_metrics", null, null, null, null, null, 0 },
+                { "wgs_test1.raw_wgs_metrics", "wgs_test2.raw_wgs_metrics", null, null, null, null, null, 1 },
+                { "wgs_test1.2rows.raw_wgs_metrics", "wgs_test1.2rows.raw_wgs_metrics", null, null, null, null, null, 0 },
+                { "wgs_test1.2rows.raw_wgs_metrics", "wgs_test2.2rows.raw_wgs_metrics", null, null, null, null, null, 1 },
+                { "wgs_test1.raw_wgs_metrics", "wgs_test2.2rows.raw_wgs_metrics", null, null, null, null, null, 1 },
+                { "wgs_test1.fingerprinting_summary_metrics", "wgs_test2.fingerprinting_summary_metrics", null, null, null, null, null, 1 },
+                { "test1.arrays_variant_calling_detail_metrics", "test2.arrays_variant_calling_detail_metrics", null, null, null, null, null, 1 },
+                { "test1.arrays_variant_calling_detail_metrics", "test2.arrays_variant_calling_detail_metrics", "AUTOCALL_DATE", null, null, null, null, 0 },
+                { "test1.arrays_variant_calling_summary_metrics", "test2.arrays_variant_calling_summary_metrics", null, null, null, null, null, 0 },
+                { "wgs_test1.2rows.fingerprinting_summary_metrics", "wgs_test2.2rows.fingerprinting_summary_metrics", null, null, false, null, null, 1},
+                { "wgs_test1.2rows.fingerprinting_summary_metrics", "wgs_test2.2rows.fingerprinting_summary_metrics", null, null, false, Collections.singletonList("SAMPLE"), null, 0},
+                { "wgs_test1.missing_metric.wgs_metrics", "wgs_test1.wgs_metrics", null, null, false, null, null, 1},
+                { "wgs_test1.missing_metric.wgs_metrics", "wgs_test1.wgs_metrics", null, null, false, null, Collections.singletonList("HET_SNP_SENSITIVITY"), 0}
         };
     }
 
     @Test(dataProvider = "testCompareMetricsDataProvider")
     public void testCompareMetrics(final String file1, final String file2,
                                    final String metricsToIgnore, final List<String> metricsToAllowableRelativeChange,
-                                   final Boolean ignoreHistogramDifferences, final int expectedReturnValue) {
+                                   final Boolean ignoreHistogramDifferences, final List<String> keys, final List<String> metricsNotRequired, final int expectedReturnValue) {
         final File input1 = new File(TEST_DATA_DIR, file1);
         final File input2 = new File(TEST_DATA_DIR, file2);
         final CompareMetrics compareMetrics = new CompareMetrics();
@@ -54,6 +58,12 @@ public class CompareMetricsTest {
         }
         if (ignoreHistogramDifferences != null) {
             compareMetrics.IGNORE_HISTOGRAM_DIFFERENCES = ignoreHistogramDifferences;
+        }
+        if (keys != null) {
+            compareMetrics.KEY = keys;
+        }
+        if (metricsNotRequired != null) {
+            compareMetrics.METRICS_NOT_REQUIRED = metricsNotRequired;
         }
         compareMetrics.customCommandLineValidation();
         Assert.assertEquals(compareMetrics.instanceMain(new String[0]), expectedReturnValue);

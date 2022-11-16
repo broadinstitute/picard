@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 public class CollectIlluminaBasecallingMetricsTest {
@@ -19,9 +20,7 @@ public class CollectIlluminaBasecallingMetricsTest {
 
     @BeforeTest
     private void setUp() throws Exception {
-        rootTestDir = File.createTempFile("cibm.", ".tmp");
-        Assert.assertTrue(rootTestDir.delete());
-        Assert.assertTrue(rootTestDir.mkdir());
+        rootTestDir = Files.createTempDirectory("cibm.tmp").toFile();
         for (final File source : TEST_DATA_DIR.listFiles()) {
             if (source.isDirectory() && !source.isHidden()) {
                 IOUtil.copyDirectoryTree(source, new File(rootTestDir.getPath(),source.getName()));

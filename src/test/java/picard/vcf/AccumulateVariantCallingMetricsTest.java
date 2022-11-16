@@ -28,10 +28,13 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,13 +44,13 @@ import java.util.List;
  * @author Eric Banks
  */
 public class AccumulateVariantCallingMetricsTest {
-    private static final File TEST_DATA_DIR = new File("testdata/picard/vcf");
+    private static final Path TEST_DATA_DIR = Paths.get("testdata/picard/vcf");
 
     @DataProvider(name = "shardDataProvider")
     public Object[][] shardDataProvider() {
-        final File filePrefix1 = new File(TEST_DATA_DIR, "mergeTest.shard1");
-        final File filePrefix2 = new File(TEST_DATA_DIR, "mergeTest.shard2");
-        final File filePrefix3 = new File(TEST_DATA_DIR, "mergeTest.emptyShard");
+        final String filePrefix1 = TEST_DATA_DIR.resolve("mergeTest.shard1").toString();
+        final String filePrefix2 =TEST_DATA_DIR.resolve("mergeTest.shard2").toString();
+        final String filePrefix3 = TEST_DATA_DIR.resolve("mergeTest.emptyShard").toString();
 
         return new Object[][] {
                 {Arrays.asList(filePrefix1, filePrefix2)},
@@ -57,7 +60,7 @@ public class AccumulateVariantCallingMetricsTest {
 
 
     @Test(dataProvider = "shardDataProvider")
-    public void testMerge(final List<File> inputs) throws IOException {
+    public void testMerge(final List<String> inputs) throws IOException {
         final File mergedFilePrefix = new File(TEST_DATA_DIR + "mergeTest");
         final File mergedSummaryFile = new File(mergedFilePrefix.getAbsolutePath() + ".variant_calling_summary_metrics");
         final File mergedDetailFile = new File(mergedFilePrefix.getAbsolutePath() + ".variant_calling_detail_metrics");
@@ -65,7 +68,7 @@ public class AccumulateVariantCallingMetricsTest {
         mergedDetailFile.deleteOnExit();
 
         final AccumulateVariantCallingMetrics program = new AccumulateVariantCallingMetrics();
-        program.INPUT = inputs;
+        program.INPUT = PicardHtsPath.fromPaths(inputs);
         program.OUTPUT = mergedFilePrefix;
 
         Assert.assertEquals(program.doWork(), 0);

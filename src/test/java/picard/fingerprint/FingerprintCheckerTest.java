@@ -1,5 +1,6 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
@@ -12,6 +13,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.util.MathUtil;
+import picard.vcf.SamTestUtils;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
@@ -320,6 +322,33 @@ public class FingerprintCheckerTest {
             Assert.assertEquals(reader.isQueryable(), expectedQueryable);
         }
     }
+
+    @Test(dataProvider = "queryableData")
+    public void testQueryableVcf(final File vcfFile, boolean expectedQueryable) throws IOException {
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final VCFFileReader reader = checker.getVCFReader(vcfFile.toPath(), null, false);
+        Assert.assertEquals(reader.isQueryable(), expectedQueryable);
+    }
+
+    @DataProvider(name = "queryableSam")
+    public Iterator<Object[]> queryableSam() throws IOException {
+        final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
+        final File NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
+
+        final List<Object[]> tests = new ArrayList<>();
+        tests.add(new Object[]{NA12891_r1_sam, false});
+        tests.add(new Object[]{NA12891_r1, true});
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "queryableSam")
+    public void testQueryableSam(final File samFile, boolean expectedQueryable) throws IOException {
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final SamReader reader = checker.getSamReader(samFile.toPath(), null, false);
+        Assert.assertEquals(reader.isQueryable(), expectedQueryable);
+    }
+
 
     Object[][] deepData() {
         return new Object[][]{{10}, {50}, {100}, {500}, {1000}, {5000}, {10000}, {50000}};

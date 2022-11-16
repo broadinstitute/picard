@@ -1,3 +1,7 @@
+## ***This issue tracker is for bug reports only. Before opening a new issue here, please make a post on our [support forum](https://gatk.broadinstitute.org/hc/en-us/community/topics) so that our support team can look at your issue and determine whether it needs to be escalated into a bug report.***
+
+----
+
 ### Instructions
 
 - Use a **concise** yet **descriptive** title;

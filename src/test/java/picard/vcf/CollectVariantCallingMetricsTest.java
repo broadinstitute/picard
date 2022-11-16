@@ -27,6 +27,7 @@ package picard.vcf;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.FileReader;
@@ -43,8 +44,8 @@ public class CollectVariantCallingMetricsTest {
 
     @Test
     public void testMetricsTiny() throws IOException {
-        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
-        final File vcfFile = new File(TEST_DATA_DIR, "mini.vcf");
+        final PicardHtsPath dbSnpFile = new PicardHtsPath(new File(TEST_DATA_DIR, "mini.dbsnp.vcf"));
+        final PicardHtsPath vcfFile = new PicardHtsPath(new File(TEST_DATA_DIR, "mini.vcf"));
 
         final File outFile = new File(TEST_DATA_DIR, "vcmetrics_tiny");
         final File summaryFile = new File(TEST_DATA_DIR, "vcmetrics_tiny.variant_calling_summary_metrics");
@@ -119,8 +120,8 @@ public class CollectVariantCallingMetricsTest {
 
     @Test
     public void testMetricsTinyGVCF() throws IOException {
-        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
-        final File vcfFile = new File(TEST_DATA_DIR, "mini_gvcf.vcf");
+        final PicardHtsPath dbSnpFile = new PicardHtsPath( new File(TEST_DATA_DIR, "mini.dbsnp.vcf"));
+        final PicardHtsPath vcfFile = new PicardHtsPath(new File(TEST_DATA_DIR, "mini_gvcf.vcf"));
 
         final File outFile = new File(TEST_DATA_DIR, "vcmetrics_tiny_gvcf");
         final File summaryFile = new File(outFile+".variant_calling_summary_metrics");
@@ -194,9 +195,9 @@ public class CollectVariantCallingMetricsTest {
 
     @Test
     public void testAllHomRefVCF() throws IOException {
-        final File dbSnpFile = new File(TEST_DATA_DIR, "mini.dbsnp.vcf");
+        final PicardHtsPath dbSnpFile = new PicardHtsPath(new File(TEST_DATA_DIR, "mini.dbsnp.vcf"));
         final File vcfFile = new File(TEST_DATA_DIR, "allHomRef.vcf");
-        final File indexedVcfFile = VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "allHomRef.tmp.");
+        final PicardHtsPath indexedVcfFile = new PicardHtsPath(VcfTestUtils.createTemporaryIndexedVcfFromInput(vcfFile, "allHomRef.tmp."));
         final File outFile = new File(TEST_DATA_DIR, "vcmetrics_allHomRef");
         final File summaryFile = new File(outFile + ".variant_calling_summary_metrics");
         final File detailFile = new File(outFile + ".variant_calling_detail_metrics");

@@ -40,7 +40,6 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -49,9 +48,9 @@ import org.broadinstitute.barclay.argparser.CommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
-import picard.PicardException;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
@@ -73,7 +72,7 @@ import java.util.stream.Collectors;
  *
  * To use:
  *
- * 1. Extend this class with a concrete class that is annotated with @COmmandLineProgramProperties, and has data members
+ * 1. Extend this class with a concrete class that is annotated with {@link CommandLineProgramProperties}, and has data members
  * annotated with @Argument, @PositionalArguments, and/or @ArgumentCollection annotations.
  *
  * 2. If there is any custom command-line validation, override customCommandLineValidation().  When this method is
@@ -88,6 +87,8 @@ public abstract class CommandLineProgram {
     private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
+    public static String SYNTAX_TRANSITION_URL =
+            "https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)";
 
     /**
      * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
@@ -207,7 +208,7 @@ public abstract class CommandLineProgram {
                 "********** NOTE: Picard's command line syntax is changing.",
                 "**********",
                 "********** For more information, please see:",
-                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "********** ", SYNTAX_TRANSITION_URL,
                 "**********",
                 "********** The command line looks like this in the new syntax:",
                 "**********",

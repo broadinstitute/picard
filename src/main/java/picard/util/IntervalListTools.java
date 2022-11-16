@@ -455,7 +455,7 @@ public class IntervalListTools extends CommandLineProgram {
 
         if (SCATTER_CONTENT != null) {
             final long listSize = SUBDIVISION_MODE.make().listWeight(output);
-            SCATTER_COUNT = (int) listSize / SCATTER_CONTENT;
+            SCATTER_COUNT = (int)Math.round((double) listSize / SCATTER_CONTENT);
             LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
         }
 

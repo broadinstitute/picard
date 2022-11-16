@@ -35,7 +35,7 @@ abstract public class ReadEnds extends PhysicalLocationShort {
     public int read1ReferenceIndex = -1;
     public int read1Coordinate = -1;
     public int read2ReferenceIndex = -1;
-    public int read2Coordinate = -1;
+    public int read2Coordinate = -1;    // This field is overloaded for flow based processing as the end coordinate of read 1. (paired reads not supported)
 
     // Additional information used to detect optical dupes
     public short readGroup = -1;

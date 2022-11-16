@@ -34,6 +34,7 @@ import picard.illumina.parser.ReadStructure;
 import picard.util.IlluminaUtil;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -185,10 +186,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     @Test
     public void testMultiplexWithIlluminaReadNameHeaders() throws Exception {
-        final File outputDir = File.createTempFile("testMultiplexRH.", ".dir");
+        final File outputDir = Files.createTempDirectory("testMultiplexRH.dir").toFile();
         try {
-            outputDir.delete();
-            outputDir.mkdir();
             outputDir.deleteOnExit();
 
             final String filePrefix = "testMultiplexRH";
@@ -290,10 +289,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private void runStandardTest(final int[] lanes, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructureString, final File baseCallsDir,
                                  final File testDataDir, final long expectedPfMatches, final Double expectedPctMatches) throws Exception {
-        final File outputDir = File.createTempFile(jobName, ".dir");
+        final File outputDir = Files.createTempDirectory(jobName + ".dir").toFile();
         try {
-            outputDir.delete();
-            outputDir.mkdir();
 
             outputDir.deleteOnExit();
             // Create barcode.params with output files in the temp directory

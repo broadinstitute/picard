@@ -15,9 +15,11 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -675,9 +677,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 //        builder.addFrag("frag3",1,500,false,false,"20S20M60S",null, 45);
 //        builder.addFrag("frag4",1,500,true,false,"20S20M60S",null, 45);
 
-        final File file = newTempSamFile("aligned");
+        final PicardHtsPath file = PicardHtsPath.fromPath(newTempSamFile("aligned").toPath());
 
-        try (SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(builder.getHeader(), true, file, null)) {
+        try (SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(builder.getHeader(), true, file.toPath(), (Path) null)) {
             builder.getRecords().forEach(writer::addAlignment);
         }
 
@@ -697,7 +699,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         MergeBamAlignment mergeBamAlignment = new MergeBamAlignment();
 
-        mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file);
+        mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file.toPath().toFile()); // TODO update to use Path when MergeBamAlignment is updated to use Path
         mergeBamAlignment.UNMAPPED_BAM = fileUnaligned;
         mergeBamAlignment.UNMAP_CONTAMINANT_READS = true;
 

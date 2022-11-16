@@ -45,6 +45,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.help.HelpConstants;
 
 import java.io.File;
 import java.util.*;
@@ -136,6 +137,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
     private static final String UNKNOWN_SAMPLE = "UnknownSample";
 
     /** Metrics class for outputs. */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static final class CpcgMetrics extends MetricBase {
         /** The name of the sample being assayed. */
         public String SAMPLE_ALIAS;

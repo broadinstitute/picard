@@ -24,9 +24,7 @@
 
 package picard.sam;
 
-import htsjdk.samtools.BAMIndex;
 import htsjdk.samtools.BAMIndexer;
-import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamInputResource;
@@ -37,14 +35,15 @@ import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.net.URL;
+import java.nio.file.Path;
 
 /**
  * Command line program to generate a BAM index (.bai) file from a BAM (.bam) file
@@ -71,10 +70,7 @@ public class BuildBamIndex extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.")
-    public String INPUT;
-
-    URL inputUrl = null;   // INPUT as URL
-    File inputFile = null; // INPUT as File, if it can't be interpreted as a valid URL
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
@@ -87,24 +83,12 @@ public class BuildBamIndex extends CommandLineProgram {
      * all the records generating a BAM Index, then writes the bai file.
      */
     protected int doWork() {
-
-        try {
-            inputUrl = new URL(INPUT);
-        } catch (java.net.MalformedURLException e) {
-            inputFile = new File(INPUT);
-        }
+        final Path inputPath = INPUT.toPath();
 
         // set default output file - input-file.bai
         if (OUTPUT == null) {
 
-            final String baseFileName;
-            if (inputUrl != null) {
-                final String path = inputUrl.getPath();
-                final int lastSlash = path.lastIndexOf('/');
-                baseFileName = path.substring(lastSlash + 1, path.length());
-            } else {
-                baseFileName = inputFile.getAbsolutePath();
-            }
+            final String baseFileName = inputPath.getFileName().toString();
 
             // only BAI indices can be created for now, although CSI indices can be read as well
             if (baseFileName.endsWith(FileExtensions.BAM)) {
@@ -120,19 +104,11 @@ public class BuildBamIndex extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader bam;
 
-        if (inputUrl != null) {
-            // remote input
-            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
-                    .disable(SamReaderFactory.Option.EAGERLY_DECODE)
-                    .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
-                    .open(SamInputResource.of(inputUrl));
-        } else {
-            // input from a normal file
-            IOUtil.assertFileIsReadable(inputFile);
-            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
-                    .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
-                    .open(inputFile);
-        }
+
+        bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
+                .disable(SamReaderFactory.Option.EAGERLY_DECODE)
+                .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
+                .open(SamInputResource.of(inputPath));
 
         if (bam.type() != SamReader.Type.BAM_TYPE && bam.type() != SamReader.Type.BAM_CSI_TYPE) {
             throw new SAMException("Input file must be bam file, not sam file.");

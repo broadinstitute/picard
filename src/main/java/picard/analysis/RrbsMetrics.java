@@ -25,6 +25,8 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 import java.util.List;
 
@@ -37,6 +39,7 @@ import java.util.List;
  *
  * @author jgentry@broadinstitute.org
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 class RrbsMetrics extends MetricBase {
 	private final RrbsSummaryMetrics summaryMetrics;
 	private final List<RrbsCpgDetailMetrics> detailMetrics;

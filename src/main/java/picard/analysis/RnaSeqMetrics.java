@@ -23,12 +23,15 @@
  */
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
  * program and usually stored in a file with the extension ".rna_metrics".
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class RnaSeqMetrics extends MultilevelMetrics {
     /** The total number of PF bases including non-aligned reads. */
     public long PF_BASES;

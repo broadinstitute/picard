@@ -2,12 +2,15 @@ package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.variant.variantcontext.VariantContext;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 /**
  * Class that holds detail metrics about Genotype Concordance
  *
  * @author George Grant
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class GenotypeConcordanceDetailMetrics extends MetricBase {
     /** The type of the event (i.e. either SNP or INDEL) */
     public VariantContext.Type VARIANT_TYPE;

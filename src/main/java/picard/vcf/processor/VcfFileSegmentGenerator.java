@@ -41,8 +41,10 @@ import java.util.stream.StreamSupport;
 /**
  * Describes a mechanism for producing {@link VcfFileSegment}s from a VCF file.
  *
+ * @deprecated from 2022-03-17, Use {@link VcfPathSegmentGenerator}
  * @author mccowan
  */
+@Deprecated
 public abstract class VcfFileSegmentGenerator {
     final static Log LOG = Log.getInstance(VcfFileSegmentGenerator.class);
 
