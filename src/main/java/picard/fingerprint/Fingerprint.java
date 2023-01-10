@@ -151,7 +151,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                 .collect(Collectors.toMap(
                         entry -> {
                             // merge the keys (unequal values are eliminated by merge).
-                            List<Map.Entry<FingerprintIdDetails, Fingerprint>> entryList = entry.getValue();
+                            final List<Map.Entry<FingerprintIdDetails, Fingerprint>> entryList = entry.getValue();
                             final FingerprintIdDetails finalId;
                             if (entryList.size() == 1) {
                                 finalId = entryList.get(0).getKey();
@@ -166,7 +166,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                             // merge the values by merging the fingerprints.
 
                             //use the "by" function to determine the "info" part of the fingerprint
-                            Set<Fingerprint> fingerprintsSet = entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet());
+                            final Set<Fingerprint> fingerprintsSet = entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet());
                             if (fingerprintsSet.size() == 1) {
                                 return fingerprintsSet.iterator().next();
                             }
