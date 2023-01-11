@@ -167,10 +167,12 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
                      " of the total aligned paired data.");
             final InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector allReadsCollector = (InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector) multiCollector.getAllReadsCollector();
             log.warn("Total mapped pairs in all categories: " + (allReadsCollector == null ? allReadsCollector : allReadsCollector.getTotalInserts()));
+            return;
         }
-        else  {
-            file.write(OUTPUT);
 
+        file.write(OUTPUT);
+
+        if (Histogram_FILE != null) {
             final List<String> plotArgs = new ArrayList<>();
             Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
 
