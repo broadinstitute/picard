@@ -319,12 +319,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             RepresentativeReadIndexer rri = null;
             int representativeReadIndexInFile = -1;
             int duplicateSetSize = -1;
-            int nextRepresentativeIndex = -1;
+            int nextReadInDuplicateSetIndex = -1;
             if (TAG_DUPLICATE_SET_MEMBERS) {
                 representativeReadIterator = this.representativeReadIndicesForDuplicates.iterator();
                 if (representativeReadIterator.hasNext()) {
                     rri = representativeReadIterator.next();
-                    nextRepresentativeIndex = rri.readIndexInFile;
+                    nextReadInDuplicateSetIndex = rri.readIndexInFile;
                     representativeReadIndexInFile = rri.representativeReadIndexInFile;
                     duplicateSetSize = rri.setSize;
                 }
@@ -376,17 +376,22 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
 
                 // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
                 if (TAG_DUPLICATE_SET_MEMBERS) {
-                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex &&
+                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextReadInDuplicateSetIndex &&
                             (sortOrder == SAMFileHeader.SortOrder.coordinate || !rec.getReadName().equals(representativeQueryName));
                     if (needNextRepresentativeIndex && representativeReadIterator.hasNext()) {
                         rri = representativeReadIterator.next();
-                        nextRepresentativeIndex = rri.readIndexInFile;
+                        nextReadInDuplicateSetIndex = rri.readIndexInFile;
                         representativeReadIndexInFile = rri.representativeReadIndexInFile;
                         duplicateSetSize = rri.setSize;
                     }
-                    final boolean isInDuplicateSet = recordInFileIndex == nextRepresentativeIndex ||
+
+                    /* If this record's index is readInDuplicateSetIndex, then it is in a duplicateset.
+                    For queryname sorted data, we only have one representativeReadIndex entry per read name, so we need
+                    to also look for additional reads with the same name.
+                     */
+                    final boolean isInDuplicateSet = recordInFileIndex == nextReadInDuplicateSetIndex ||
                             (sortOrder == SAMFileHeader.SortOrder.queryname &&
-                                    recordInFileIndex > nextRepresentativeIndex && rec.getReadName().equals(representativeQueryName));
+                                    recordInFileIndex > nextReadInDuplicateSetIndex && rec.getReadName().equals(representativeQueryName));
                     if (isInDuplicateSet) {
                         if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
                             rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
