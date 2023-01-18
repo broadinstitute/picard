@@ -60,6 +60,28 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final List<File> LARGER_EXPECTED_WITH_REMAINDER_FILES = Arrays.asList(new File(TEST_DATA_DIR, "largeScattersWithRemainder").listFiles());
     private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
 
+    @Test
+    public void tsatoTest() throws IOException {
+        String cloud = "gs://broad-dsde-methods-takuto/resources/wgs_calling_regions.hg38.chr22.interval_list";
+        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
+        ilOut.deleteOnExit();
+
+        final List<String> args = new ArrayList<>();
+
+        IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
+        args.add("ACTION=" + action);
+        args.add("INPUT=" + scatterable);
+
+        if (action.takesSecondInput) {
+            args.add("SECOND_INPUT=" + secondInput);
+        }
+
+        args.add("input2=" + cloud);
+        args.add("OUTPUT=" + ilOut);
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
 
     @Test
     public void testSecondInputValidation() {
@@ -221,6 +243,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         return tester(action, false, false, false, scatterable, secondInput);
     }
 
+    // tsato: these FILEs may need to be updated.
     private IntervalList tester(IntervalListTools.Action action, boolean invert, boolean unique, boolean dont_merge_abutting, File input1, File input2) throws IOException {
         final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();

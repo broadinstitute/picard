@@ -41,6 +41,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.IntervalList.IntervalListScatter;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
@@ -48,6 +49,7 @@ import picard.util.IntervalList.IntervalListScatterer;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -249,11 +251,14 @@ public class IntervalListTools extends CommandLineProgram {
                     "result of merging the inputs. Supported formats are interval_list and VCF." +
                     "If file extension is unrecognized, assumes file is interval_list" +
                     "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
-    public List<File> INPUT;
+    public List<File> INPUT; // tsato: FILE -> PicardHtsPath
+
+    @Argument(shortName = "input2", doc = "for testing only")
+    public PicardHtsPath input2;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
             "to write the scattered interval sub-directories (if SCATTER_COUNT > 1).", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
-    public File OUTPUT;
+    public File OUTPUT; // ts: change to PicardHtsPath
 
     @Argument(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
             "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the " +
@@ -389,6 +394,7 @@ public class IntervalListTools extends CommandLineProgram {
     @Override
     protected int doWork() {
         // Check inputs
+        Path test = input2.toPath();
         IOUtil.assertFilesAreReadable(INPUT);
         IOUtil.assertFilesAreReadable(SECOND_INPUT);
         if (COUNT_OUTPUT != null) {
