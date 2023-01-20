@@ -248,9 +248,6 @@ public class IntervalListTools extends CommandLineProgram {
                     "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
     public List<PicardHtsPath> INPUT; // tsato: FILE -> PicardHtsPath
 
-    @Argument(shortName = "input2", doc = "for testing only")
-    public PicardHtsPath input2;
-
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
             "to write the scattered interval sub-directories (if SCATTER_COUNT > 1).", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT; // ts: change to PicardHtsPath
@@ -389,7 +386,6 @@ public class IntervalListTools extends CommandLineProgram {
     @Override
     protected int doWork() {
         // Check inputs
-        Path test = input2.toPath();
         IOUtil.assertPathsAreReadable(INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList()));
         IOUtil.assertPathsAreReadable(SECOND_INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList()));
 
