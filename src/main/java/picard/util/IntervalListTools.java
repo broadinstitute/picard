@@ -24,14 +24,9 @@
 
 package picard.util;
 
-import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser.ClpEnum;
@@ -52,13 +47,13 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * Performs various {@link IntervalList} manipulations.
@@ -251,7 +246,7 @@ public class IntervalListTools extends CommandLineProgram {
                     "result of merging the inputs. Supported formats are interval_list and VCF." +
                     "If file extension is unrecognized, assumes file is interval_list" +
                     "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
-    public List<File> INPUT; // tsato: FILE -> PicardHtsPath
+    public List<PicardHtsPath> INPUT; // tsato: FILE -> PicardHtsPath
 
     @Argument(shortName = "input2", doc = "for testing only")
     public PicardHtsPath input2;
@@ -278,7 +273,7 @@ public class IntervalListTools extends CommandLineProgram {
     public Action ACTION = Action.CONCAT;
 
     @Argument(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
-    public List<File> SECOND_INPUT;
+    public List<PicardHtsPath> SECOND_INPUT;
 
     @Argument(doc = "One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).", optional = true)
     public List<String> COMMENT = null;
@@ -395,8 +390,9 @@ public class IntervalListTools extends CommandLineProgram {
     protected int doWork() {
         // Check inputs
         Path test = input2.toPath();
-        IOUtil.assertFilesAreReadable(INPUT);
-        IOUtil.assertFilesAreReadable(SECOND_INPUT);
+        IOUtil.assertPathsAreReadable(INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList()));
+        IOUtil.assertPathsAreReadable(SECOND_INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList()));
+
         if (COUNT_OUTPUT != null) {
             IOUtil.assertFileIsWritable(COUNT_OUTPUT);
         }
@@ -505,7 +501,7 @@ public class IntervalListTools extends CommandLineProgram {
         return 0;
     }
 
-    private IntervalList openIntervalLists(final List<File> files, BinaryOperator<IntervalList> accumulator ) {
+    private IntervalList openIntervalLists(final List<PicardHtsPath> files, BinaryOperator<IntervalList> accumulator ) {
         return files.stream()
                 .map(f->IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING))
                 .reduce(accumulator)
@@ -598,35 +594,32 @@ public class IntervalListTools extends CommandLineProgram {
     }
 
     enum IntervalListInputType {
-        VCF(IOUtil.VCF_EXTENSIONS) {
+        VCF(FileExtensions.VCF_LIST) {
             @Override
-            protected IntervalList getIntervalListInternal(final File vcf, final boolean includeFiltered) {
-                return VCFFileReader.fromVcf(vcf, includeFiltered);
+            protected IntervalList getIntervalListInternal(final Path vcf, final boolean includeFiltered) {
+                return VCFFileReader.toIntervalList(vcf, includeFiltered);
             }
         },
-        INTERVAL_LIST(IOUtil.INTERVAL_LIST_FILE_EXTENSION) {
+
+        INTERVAL_LIST(Collections.singleton(FileExtensions.INTERVAL_LIST)) {
             @Override
-            protected IntervalList getIntervalListInternal(final File intervalList, final boolean includeFiltered) {
-                return IntervalList.fromFile(intervalList);
+            protected IntervalList getIntervalListInternal(final Path intervalList, final boolean includeFiltered) {
+                return IntervalList.fromPath(intervalList); // tsato: code smell here --- includeFiltered not used
             }
         };
 
         protected final Collection<String> applicableExtensions;
 
-        IntervalListInputType(final String... s) {
-            applicableExtensions = CollectionUtil.makeSet(s);
-        }
-
         IntervalListInputType(final Collection<String> extensions) {
             applicableExtensions = extensions;
         }
-
-        protected abstract IntervalList getIntervalListInternal(final File file, final boolean includeFiltered);
-
-        static IntervalListInputType forFile(final File intervalListExtractable) {
+        // tsato: remove the "Internal" suffix
+        protected abstract IntervalList getIntervalListInternal(final Path path, final boolean includeFiltered);
+        // tsato: maybe rename it to: getType
+        static IntervalListInputType forFileRenameThis(final PicardHtsPath intervalListExtractable) {
             for (final IntervalListInputType intervalListInputType : IntervalListInputType.values()) {
                 for (final String s : intervalListInputType.applicableExtensions) {
-                    if (intervalListExtractable.getName().endsWith(s)) {
+                    if (intervalListExtractable.toPath().getFileName().endsWith(s)) { // tsato: did I do this right?
                         return intervalListInputType;
                     }
                 }
@@ -635,8 +628,8 @@ public class IntervalListTools extends CommandLineProgram {
             return INTERVAL_LIST;
         }
 
-        public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {
-            return forFile(file).getIntervalListInternal(file, includeFiltered);
+        public static IntervalList getIntervalList(final PicardHtsPath file, final boolean includeFiltered) {
+            return forFileRenameThis(file).getIntervalListInternal(file.toPath(), includeFiltered);
         }
 
         @Override

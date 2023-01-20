@@ -30,6 +30,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
@@ -61,7 +62,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
 
     @Test
-    public void tsatoTest() throws IOException {
+    public void tsatoTest2() throws IOException {
         String cloud = "gs://broad-dsde-methods-takuto/resources/wgs_calling_regions.hg38.chr22.interval_list";
         final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();
@@ -93,7 +94,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         errors = intervalListTools.customCommandLineValidation();
         Assert.assertNull(errors);
 
-        intervalListTools.SECOND_INPUT.add(new File("fakefile"));
+        intervalListTools.SECOND_INPUT.add(new PicardHtsPath("fakefile"));
         errors = intervalListTools.customCommandLineValidation();
         Assert.assertEquals(errors.length, 1);
     }
