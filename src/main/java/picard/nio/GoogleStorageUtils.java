@@ -24,7 +24,6 @@
 
 package picard.nio;
 
-
 import com.google.cloud.storage.StorageOptions;
 import com.google.cloud.storage.contrib.nio.CloudStorageConfiguration;
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
@@ -50,19 +49,20 @@ import org.threeten.bp.Duration;
 class GoogleStorageUtils {
 
     public static void initialize() {
-        // requester pays support is currently not configured
-        CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(20, null));
+        final String google_project = System.getProperty("google_project_requester_pays");
+
+        CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(20, google_project));
         CloudStorageFileSystemProvider.setStorageOptions(GoogleStorageUtils.setGenerousTimeouts(StorageOptions.newBuilder()).build());
     }
 
     /** The config we want to use. **/
-    private static CloudStorageConfiguration getCloudStorageConfiguration(int maxReopens, String requesterProject) {
-        CloudStorageConfiguration.Builder builder = CloudStorageConfiguration.builder()
+    private static CloudStorageConfiguration getCloudStorageConfiguration(final int maxReopens, final String requesterProject) {
+        final CloudStorageConfiguration.Builder builder = CloudStorageConfiguration.builder()
                 // if the channel errors out, re-open up to this many times
                 .maxChannelReopens(maxReopens);
         if (!Strings.isNullOrEmpty(requesterProject)) {
             // enable requester pays and indicate who pays
-            builder = builder.autoDetectRequesterPays(true).userProject(requesterProject);
+            builder.autoDetectRequesterPays(true).userProject(requesterProject);
         }
 
         // this causes the gcs filesystem to treat files that end in a / as a directory
