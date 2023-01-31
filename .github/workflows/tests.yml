@@ -20,7 +20,7 @@ jobs:
 #            experimental: true
       fail-fast: false
     continue-on-error: ${{ matrix.experimental }}
-    name: Java ${{ matrix.Java }} / Barclay=${{ matrix.run_barclay_tests}} tests
+    name: Java ${{ matrix.Java }}, Barclay=${{ matrix.run_barclay_tests}} tests
     steps:
       - uses: actions/checkout@v2
       - name: Set up java ${{ matrix.Java }}
