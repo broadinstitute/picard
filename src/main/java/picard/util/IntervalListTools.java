@@ -447,29 +447,33 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
 
-        final IntervalList output = new IntervalList(header);
-        finalIntervals.forEach(output::add);
+        final IntervalList outputInterval = new IntervalList(header);
+        finalIntervals.forEach(outputInterval::add);
 
         final ScatterSummary resultIntervals;
 
         if (SCATTER_CONTENT != null) {
-            final long listSize = SUBDIVISION_MODE.make().listWeight(output);
+            final long listSize = SUBDIVISION_MODE.make().listWeight(outputInterval);
             SCATTER_COUNT = (int)Math.round((double) listSize / SCATTER_CONTENT);
             LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
         }
 
         if (OUTPUT != null && SCATTER_COUNT > 1) {
             // tsato: create the main output directory here, since assertDirectoryIsWritable checks if it exists
+            Path yo;
             try {
-                Files.createDirectory(OUTPUT.toPath());
+                // tsato: fine for now, but maybe I should put the following code inside try.
+                // do I need to define a new variable here? Giving OUTPUT to assertDirectoryIsWritable leads to not found
+                yo = Files.createDirectory(OUTPUT.toPath());
+                IOUtil.assertDirectoryIsWritable(yo);
             } catch (IOException e){
                 // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
                 throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
             }
 
-            IOUtil.assertDirectoryIsWritable(OUTPUT.toPath());
 
-            final ScatterSummary scattered = writeScatterIntervals(output); // tsato: I forget how this all works with try catch vs throws IOException...
+
+            final ScatterSummary scattered = writeScatterIntervals(outputInterval); // tsato: I forget how this all works with try catch vs throws IOException...
             LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
             if (scattered.size != SCATTER_COUNT) {
                 LOG.warn(String.format(
@@ -483,14 +487,14 @@ public class IntervalListTools extends CommandLineProgram {
 
         } else {
             if (OUTPUT != null) {
-                output.write(OUTPUT.toPath());
+                outputInterval.write(OUTPUT.toPath());
             }
 
             // tsato: OUTPUT is null
             resultIntervals = new ScatterSummary();
             resultIntervals.size = 1;
-            resultIntervals.intervalCount = output.getIntervals().size();
-            resultIntervals.baseCount = output.getBaseCount();
+            resultIntervals.intervalCount = outputInterval.getIntervals().size();
+            resultIntervals.baseCount = outputInterval.getBaseCount();
         }
 
         LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
