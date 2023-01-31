@@ -562,7 +562,7 @@ public class IntervalListTools extends CommandLineProgram {
      * @param list The list of intervals to scatter
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
-    private ScatterSummary writeScatterIntervals(final IntervalList list) throws IOException {
+    private ScatterSummary writeScatterIntervals(final IntervalList list) {
         assert SCATTER_COUNT > 0; // tsato: we are making this assumption so might as well make it clear
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
         final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
@@ -575,7 +575,8 @@ public class IntervalListTools extends CommandLineProgram {
         try {
             Files.createDirectory(OUTPUT.toPath());
         } catch (IOException e){
-            throw new IOException("Failed to create the output directory " + OUTPUT.toString());
+            // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
+            throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
         }
 
         for (final IntervalList intervals : scatter) {
@@ -602,7 +603,8 @@ public class IntervalListTools extends CommandLineProgram {
             Files.createDirectory(result.getParent());
             return result;
         } catch (IOException e){
-            throw new IOException(""); // tsato: need a detailed message here.
+            // tsato: Why is throwing a PicardException not a static error, when throwing an IOException is?
+            throw new PicardException("", e); // tsato: need a detailed message here.
         }
     }
 
