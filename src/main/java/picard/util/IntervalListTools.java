@@ -44,7 +44,9 @@ import picard.util.IntervalList.IntervalListScatterer;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -250,7 +252,7 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
             "to write the scattered interval sub-directories (if SCATTER_COUNT > 1).", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
-    public File OUTPUT; // ts: change to PicardHtsPath
+    public PicardHtsPath OUTPUT;
 
     @Argument(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
             "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the " +
@@ -459,9 +461,9 @@ public class IntervalListTools extends CommandLineProgram {
 
         if (OUTPUT != null && SCATTER_COUNT > 1) {
 
-            IOUtil.assertDirectoryIsWritable(OUTPUT);
+            IOUtil.assertDirectoryIsWritable(OUTPUT.toPath());
 
-            final ScatterSummary scattered = writeScatterIntervals(output);
+            final ScatterSummary scattered = writeScatterIntervals(output); // tsato: I forget how this all works with try catch vs throws IOException...
             LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
             if (scattered.size != SCATTER_COUNT) {
                 LOG.warn(String.format(
@@ -475,8 +477,10 @@ public class IntervalListTools extends CommandLineProgram {
 
         } else {
             if (OUTPUT != null) {
-                output.write(OUTPUT);
+                output.write(OUTPUT.toPath());
             }
+
+            // tsato: OUTPUT is null
             resultIntervals = new ScatterSummary();
             resultIntervals.size = 1;
             resultIntervals.intervalCount = output.getIntervals().size();
@@ -550,17 +554,30 @@ public class IntervalListTools extends CommandLineProgram {
     }
     /**
      * Method to scatter an interval list by locus.
+     * The scattered interval_list is organized as follows: if SCATTER_COUNT = 3, we will have
+     * - OUTPUT/temp_0001_of_3/scatter.interval_list
+     * - OUTPUT/temp_0002_of_3/scatter.interval_list
+     * - OUTPUT/temp_0003_of_3/scatter.interval_list (need to check)
      *
      * @param list The list of intervals to scatter
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
-    private  ScatterSummary writeScatterIntervals(final IntervalList list) {
+    private ScatterSummary writeScatterIntervals(final IntervalList list) throws IOException {
+        assert SCATTER_COUNT > 0; // tsato: we are making this assumption so might as well make it clear
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
         final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
         final DecimalFormat fileNameFormatter = new DecimalFormat("0000");
         int fileIndex = 1;
         final ScatterSummary summary = new ScatterSummary();
+
+        // tsato: try-with-resources....
+        try {
+            Files.createDirectory(OUTPUT.toPath());
+        } catch (IOException e){
+            throw new IOException("Failed to create the output directory " + OUTPUT.toString());
+        }
+
         for (final IntervalList intervals : scatter) {
             summary.size++;
             summary.baseCount += intervals.getBaseCount();
@@ -571,21 +588,21 @@ public class IntervalListTools extends CommandLineProgram {
         return summary;
     }
 
-    private static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
-        return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
-                scatterTotal + "/scattered" + IntervalList.INTERVAL_LIST_FILE_EXTENSION);
+    private static Path getScatteredPath(final Path scatterHomeDirectory, final long scatterTotal, final String formattedIndex) {
+        return null;
+        // return new File(scatterHomeDirectory.get() + "/temp_" + formattedIndex + "_of_" +
+        //        scatterTotal + "/scattered" + FileExtensions.INTERVAL_LIST);
     }
 
-    private static File createDirectoryAndGetScatterFile(final File outputDirectory, final long scatterCount, final String formattedIndex) {
-        createDirectoryOrFail(outputDirectory);
-        final File result = getScatteredFileName(outputDirectory, scatterCount, formattedIndex);
-        createDirectoryOrFail(result.getParentFile());
-        return result;
-    }
-
-    private static void createDirectoryOrFail(final File directory) {
-        if (!directory.exists() && !directory.mkdir()) {
-            throw new PicardException("Unable to create directory: " + directory.getAbsolutePath());
+    private static Path createDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
+        // tsato: we shouldn't be calling files Files.exists first? https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
+        final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
+        try {
+            final Path result = outputDirectory.toPath().resolve(Paths.get(newFileName));
+            Files.createDirectory(result.getParent());
+            return result;
+        } catch (IOException e){
+            throw new IOException(""); // tsato: need a detailed message here.
         }
     }
 
