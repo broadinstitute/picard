@@ -32,8 +32,8 @@ jobs:
       - name: "set up R"
         run: |
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          apt-get -qq update
-          apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
+          sudo apt-get -qq update
+          sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Compile with Gradle
