@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -460,6 +459,13 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         if (OUTPUT != null && SCATTER_COUNT > 1) {
+            // tsato: create the main output directory here, since assertDirectoryIsWritable checks if it exists
+            try {
+                Files.createDirectory(OUTPUT.toPath());
+            } catch (IOException e){
+                // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
+                throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
+            }
 
             IOUtil.assertDirectoryIsWritable(OUTPUT.toPath());
 
@@ -571,19 +577,12 @@ public class IntervalListTools extends CommandLineProgram {
         int fileIndex = 1;
         final ScatterSummary summary = new ScatterSummary();
 
-        // tsato: try-with-resources....
-        try {
-            Files.createDirectory(OUTPUT.toPath());
-        } catch (IOException e){
-            // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
-            throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
-        }
-
         for (final IntervalList intervals : scatter) {
             summary.size++;
             summary.baseCount += intervals.getBaseCount();
             summary.intervalCount += intervals.getIntervals().size();
-            intervals.write(createDirectoryAndGetScatterFile(OUTPUT, SCATTER_COUNT, fileNameFormatter.format(fileIndex++)));
+            // tsato: renamed to *sub*directory, but the better approach is to get rid of the unnecessary middle layer of directories
+            intervals.write(createSubDirectoryAndGetScatterFile(OUTPUT, SCATTER_COUNT, fileNameFormatter.format(fileIndex++)));
         }
 
         return summary;
@@ -595,7 +594,7 @@ public class IntervalListTools extends CommandLineProgram {
         //        scatterTotal + "/scattered" + FileExtensions.INTERVAL_LIST);
     }
 
-    private static Path createDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
+    private static Path createSubDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
         final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
         try {
             final Path result = outputDirectory.toPath().resolve(newFileName);
