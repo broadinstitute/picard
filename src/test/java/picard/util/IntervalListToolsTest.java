@@ -61,26 +61,28 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final List<File> LARGER_EXPECTED_WITH_REMAINDER_FILES = Arrays.asList(new File(TEST_DATA_DIR, "largeScattersWithRemainder").listFiles());
     private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
 
-    @Test
+    @Test(groups = "cloud")
     public void tsatoTest2() throws IOException {
         String cloud = "gs://broad-dsde-methods-takuto/resources/wgs_calling_regions.hg38.chr22.interval_list";
-        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
-        ilOut.deleteOnExit();
+        // final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
+        final File ilOut = new File("/Users/tsato/workspace/picard/test.interval_list");
+        // ilOut.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
 
         IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
         args.add("ACTION=" + action);
-        args.add("INPUT=" + scatterable);
+        args.add("INPUT=" + cloud);
 
         if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
         }
 
-        args.add("input2=" + cloud);
+        // args.add("input2=" + cloud);
         args.add("OUTPUT=" + ilOut);
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
+        int d = 3;
     }
 
 
