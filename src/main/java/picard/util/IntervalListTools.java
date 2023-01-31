@@ -596,10 +596,10 @@ public class IntervalListTools extends CommandLineProgram {
     }
 
     private static Path createDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
-        // tsato: we shouldn't be calling files Files.exists first? https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
         final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
         try {
-            final Path result = outputDirectory.toPath().resolve(Paths.get(newFileName));
+            final Path result = outputDirectory.toPath().resolve(newFileName);
+            // tsato: shouldn't we call Files.exists first before creating a directory? https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
             Files.createDirectory(result.getParent());
             return result;
         } catch (IOException e){
