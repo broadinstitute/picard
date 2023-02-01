@@ -22,9 +22,9 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     name: Java ${{ matrix.Java }}, Barclay=${{ matrix.run_barclay_tests}} tests
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up java ${{ matrix.Java }}
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.Java }}
           distribution: 'adopt'
@@ -53,7 +53,7 @@ jobs:
           java -jar build/libs/picard.jar MarkDuplicates -I testdata/picard/sam/aligned_queryname_sorted.bam -O out.bam --METRICS_FILE out.metrics
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: test-results-${{ matrix.Java }}-barclay-${{matrix.run_barclay_test}}
           path: build/reports/tests
