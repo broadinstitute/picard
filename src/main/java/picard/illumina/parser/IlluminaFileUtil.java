@@ -25,7 +25,6 @@ package picard.illumina.parser;
 
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import org.apache.commons.lang.NotImplementedException;
 import picard.PicardException;
 import picard.illumina.parser.fakers.*;
 import picard.illumina.parser.readers.TileMetricsOutReader;
@@ -127,12 +126,12 @@ public class IlluminaFileUtil {
 
                         @Override
                         public List<String> verify(List<Integer> expectedTiles, int[] expectedCycles) {
-                            throw new NotImplementedException("`verify()` is not implemented for CBCLs");
+                            throw new UnsupportedOperationException("`verify()` is not implemented for CBCLs");
                         }
 
                         @Override
                         public List<String> fakeFiles(List<Integer> expectedTiles, int[] cycles, SupportedIlluminaFormat format) {
-                            throw new NotImplementedException("`fakeFiles()` is not implemented for CBCLs");
+                            throw new UnsupportedOperationException("`fakeFiles()` is not implemented for CBCLs");
                         }
 
                         @Override

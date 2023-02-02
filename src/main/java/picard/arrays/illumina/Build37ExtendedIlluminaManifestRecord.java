@@ -26,7 +26,7 @@ package picard.arrays.illumina;
 
 import htsjdk.tribble.annotation.Strand;
 import htsjdk.variant.variantcontext.Allele;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -240,6 +240,6 @@ public class Build37ExtendedIlluminaManifestRecord extends IlluminaManifestRecor
         extensions.add(rsId);
         extensions.add(flag.name());
 
-        return originalLine + "," + StringUtils.join(extensions, ",");
+        return originalLine + "," + String.join(",", extensions);
     }
 }
