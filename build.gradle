@@ -43,11 +43,11 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
     if (!JavaVersion.current().equals(JavaVersion.VERSION_17)) {
         println("Warning: using Java ${JavaVersion.current()} but only Java 17 has been tested.")
     }
-//    if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
-//        throw new GradleException(
-//                "A Java 17 compatible (Java 17 or later) version is required to build GATK, but ${JavaVersion.current()} was found. "
-//                        + "$buildPrerequisitesMessage")
-//    }
+    if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+        throw new GradleException(
+                "A Java 17 compatible (Java 17 or later) version is required to build GATK, but ${JavaVersion.current()} was found. "
+                        + "$buildPrerequisitesMessage")
+    }
     if (!looksLikeWereInAGitRepository()) {
         throw new GradleException("This doesn't appear to be a git folder. " +
                 "The Picard Github repository must be cloned using \"git clone\" to run the build. " +
