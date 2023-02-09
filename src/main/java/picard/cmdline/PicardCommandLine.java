@@ -3,6 +3,7 @@ package picard.cmdline;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.argparser.ClassFinder;
 import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
