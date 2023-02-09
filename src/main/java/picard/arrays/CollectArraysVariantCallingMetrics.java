@@ -1,6 +1,6 @@
 package picard.arrays;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
 import picard.arrays.illumina.ArraysControlInfo;
