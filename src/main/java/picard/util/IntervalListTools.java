@@ -247,7 +247,7 @@ public class IntervalListTools extends CommandLineProgram {
                     "result of merging the inputs. Supported formats are interval_list and VCF." +
                     "If file extension is unrecognized, assumes file is interval_list" +
                     "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
-    public List<PicardHtsPath> INPUT; // tsato: FILE -> PicardHtsPath
+    public List<PicardHtsPath> INPUT;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
             "to write the scattered interval sub-directories (if SCATTER_COUNT > 1).", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
@@ -447,34 +447,31 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
 
-        final IntervalList outputInterval = new IntervalList(header);
-        finalIntervals.forEach(outputInterval::add);
+        final IntervalList outputIntervals = new IntervalList(header);
+        finalIntervals.forEach(outputIntervals::add);
 
         final ScatterSummary resultIntervals;
 
         if (SCATTER_CONTENT != null) {
-            final long listSize = SUBDIVISION_MODE.make().listWeight(outputInterval);
+            final long listSize = SUBDIVISION_MODE.make().listWeight(outputIntervals);
             SCATTER_COUNT = (int)Math.round((double) listSize / SCATTER_CONTENT);
             LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
         }
 
         if (OUTPUT != null && SCATTER_COUNT > 1) {
             // tsato: create the main output directory here, since assertDirectoryIsWritable checks if it exists
-            Path yo;
             try {
                 // tsato: fine for now, but maybe I should put the following code inside try.
                 // do I need to define a new variable here? Giving OUTPUT to assertDirectoryIsWritable leads to not found
-                yo = Files.createDirectories(OUTPUT.toPath());
-                // tsato: temporarily turn this off, maybe the check is not working....
+                Files.createDirectories(OUTPUT.toPath());
+                // tsato: this line below always throws an error even if the directory is there and writable, so temporarily turn this off
                 // IOUtil.assertDirectoryIsWritable(yo);
             } catch (IOException e){
                 // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
                 throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
             }
 
-
-
-            final ScatterSummary scattered = writeScatterIntervals(outputInterval); // tsato: I forget how this all works with try catch vs throws IOException...
+            final ScatterSummary scattered = writeScatterIntervals(outputIntervals); // tsato: I forget how this all works with try catch vs throws IOException...
             LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
             if (scattered.size != SCATTER_COUNT) {
                 LOG.warn(String.format(
@@ -488,14 +485,13 @@ public class IntervalListTools extends CommandLineProgram {
 
         } else {
             if (OUTPUT != null) {
-                outputInterval.write(OUTPUT.toPath());
+                outputIntervals.write(OUTPUT.toPath());
             }
 
-            // tsato: OUTPUT is null
             resultIntervals = new ScatterSummary();
             resultIntervals.size = 1;
-            resultIntervals.intervalCount = outputInterval.getIntervals().size();
-            resultIntervals.baseCount = outputInterval.getBaseCount();
+            resultIntervals.intervalCount = outputIntervals.getIntervals().size();
+            resultIntervals.baseCount = outputIntervals.getBaseCount();
         }
 
         LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
@@ -574,7 +570,8 @@ public class IntervalListTools extends CommandLineProgram {
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
     private ScatterSummary writeScatterIntervals(final IntervalList list) {
-        assert SCATTER_COUNT > 0; // tsato: we are making this assumption so might as well make it clear
+        // tsato: In gatk I would use Utils.validate(); what's the equivalent in Picard? Although I could def live without this particular assert.
+        assert SCATTER_COUNT > 0;
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
         final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
@@ -593,22 +590,16 @@ public class IntervalListTools extends CommandLineProgram {
         return summary;
     }
 
-    private static Path getScatteredPath(final Path scatterHomeDirectory, final long scatterTotal, final String formattedIndex) {
-        return null;
-        // return new File(scatterHomeDirectory.get() + "/temp_" + formattedIndex + "_of_" +
-        //        scatterTotal + "/scattered" + FileExtensions.INTERVAL_LIST);
-    }
-
     private static Path createSubDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
         final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
         try {
             final Path result = outputDirectory.toPath().resolve(newFileName);
-            // tsato: shouldn't we call Files.exists first before creating a directory? https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
+            // tsato: https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
             Files.createDirectory(result.getParent());
             return result;
         } catch (IOException e){
             // tsato: Why is throwing a PicardException not a static error, when throwing an IOException is?
-            throw new PicardException("", e); // tsato: need a detailed message here.
+            throw new PicardException("Encountered an error while creating output directories that house scattered output", e);
         }
     }
 
@@ -634,11 +625,11 @@ public class IntervalListTools extends CommandLineProgram {
         }
         // tsato: remove the "Internal" suffix
         protected abstract IntervalList getIntervalListInternal(final Path path, final boolean includeFiltered);
-        // tsato: maybe rename it to: getType
-        static IntervalListInputType forFileRenameThis(final PicardHtsPath intervalListExtractable) {
+        // tsato: forFile is a bad name; maybe rename to "getType"
+        static IntervalListInputType forFile(final PicardHtsPath intervalListExtractable) {
             for (final IntervalListInputType intervalListInputType : IntervalListInputType.values()) {
                 for (final String s : intervalListInputType.applicableExtensions) {
-                    if (intervalListExtractable.toPath().getFileName().endsWith(s)) { // tsato: did I do this right?
+                    if (intervalListExtractable.toPath().getFileName().endsWith(s)) {
                         return intervalListInputType;
                     }
                 }
@@ -648,7 +639,7 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         public static IntervalList getIntervalList(final PicardHtsPath file, final boolean includeFiltered) {
-            return forFileRenameThis(file).getIntervalListInternal(file.toPath(), includeFiltered);
+            return forFile(file).getIntervalListInternal(file.toPath(), includeFiltered);
         }
 
         @Override

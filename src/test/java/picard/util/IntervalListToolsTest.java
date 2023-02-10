@@ -50,7 +50,7 @@ import java.util.stream.Stream;
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final String TEST_DATA_DIR = "testdata/picard/util/";
-    // tsato: update
+    // tsato: place these files in an appropriate cloud bucket
     private static final String CLOUD_DATA_DIR = "gs://broad-dsde-methods-takuto/gatk/test/";
     private final Path scatterable = Paths.get(TEST_DATA_DIR, "scatterable.interval_list");
     private final PicardHtsPath scatterableCloud = new PicardHtsPath(CLOUD_DATA_DIR + "scatterable.interval_list");
@@ -65,31 +65,21 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream()
             .sorted().flatMap(l -> Arrays.asList(l.listFiles())
                     .stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
-//    final PicardHtsPath cloudChr1And22 = new PicardHtsPath("gs://broad-dsde-methods-takuto/gatk/test/whole_exome_illumina_coding_v1.Homo_sapiens_assembly38.targets.chr1_and_chr22.interval_list");
-//    final PicardHtsPath cloudChr22 = new PicardHtsPath("gs://broad-dsde-methods-takuto/gatk/test/whole_exome_illumina_coding_v1.Homo_sapiens_assembly38.targets.chr22.interval_list");
-//    final PicardHtsPath localChr1And22 = new PicardHtsPath(TEST_DATA_DIR + "whole_exome_illumina_coding_v1.Homo_sapiens_assembly38.targets.chr1_and_chr22.interval_list");
-//    final PicardHtsPath localChr22 = new PicardHtsPath(TEST_DATA_DIR + "whole_exome_illumina_coding_v1.Homo_sapiens_assembly38.targets.chr22.interval_list");
-
 
     @Test(groups = "cloud")
     public void tsatoCloudInput() throws IOException {
-        // tsato: leaving this here; this is how Louis configured the cloud test, but we don't seem to need "groups = 'cloud'" stuff
+        // tsato: this is how Louis configured the cloud test, but we don't seem to need "groups = 'cloud'" stuff
+        // e.g. testCloud() below seems to work.
     }
 
     @Test
     public void testCloud() throws IOException {
-        // final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
-        final File ilOut = new File("/Users/tsato/workspace/picard/test.interval_list");
-        // ilOut.deleteOnExit();
         boolean invert = false;
         boolean unique = false;
         boolean dontMergeAbutting = false;
         IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
-        // tsato: place these files in an appropriate cloud bucket
-        // Yea start here---scattrable, hand code the expected number? or make an easier test set? Kind of want to do the latter
-        //         Idea: run the local local version, use this as truth, then run a bunch of cloud/local mixes and make sure
 
-        // Run the task with the local input files and get the "expected" output
+        // Run the tool with the local input files and get the "expected" output
         final IntervalList intervalListLocal = tester(action, invert, unique, dontMergeAbutting, scatterable, secondInput, true);
         final IntervalList intervalListCloudInput = tester(action, invert, unique, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), true);
         Assert.assertEquals(intervalListLocal.size(), intervalListCloudInput.size());
@@ -101,8 +91,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         }
 
         // Now the output is also cloud
-        // Duplicated code---but splititng into two tests, or using a data provider with two booleans { yes_cloud_output, no_cloud_output }
-        // also seems awkward.
+        // Duplicated code, but the alternatives---splitting into two tests, or using a data provider with two booleans { yes_cloud_output, no_cloud_output }
+        // are also awkward.
         final IntervalList intervalListCloudInputOutput = tester(action, invert, unique, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), true);
         Assert.assertEquals(intervalListLocal.size(), intervalListCloudInput.size());
 
@@ -110,6 +100,27 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             final Interval local = intervalListLocal.getIntervals().get(i);
             final Interval cloud = intervalListCloudInputOutput.getIntervals().get(i);
             Assert.assertEquals(local, cloud);
+        }
+    }
+
+    @Test
+    public void testScatterOutputInCloud2() {
+        boolean invert = false;
+        boolean unique = false;
+        boolean dontMergeAbutting = false;
+        IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
+        final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, scatterable, secondInput);
+        final int scatterCount = 3;
+        // tsato: vs Files.createTempFile()?
+        try {
+            final Path outputDir = Files.createTempDirectory(new PicardHtsPath(CLOUD_DATA_DIR).toPath(), "interval_list_scatter_test");
+            args.add("SCATTER_COUNT=" +scatterCount);
+            args.add("OUTPUT=" + outputDir.toUri());
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+            Assert.assertEquals(Files.list(outputDir).count(), scatterCount);
+            // tsato: optionally read the files into memory and check they are not empty
+        } catch (Exception e) {
+            // tsato: need to check the directory delete the temp directory but outputDir is out of scope;
         }
     }
 
@@ -294,6 +305,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 //            final File ilOut = File.createTempFile("IntervalListTools", ".interval_list"); // tsato: tester should support cloud output
 //            ilOut.deleteOnExit();
             } else {
+                // tsato: vs Files.createTempFile()?
                 output = new PicardHtsPath(CLOUD_DATA_DIR + "temp.interval_list").toPath();
             }
 
@@ -398,7 +410,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "testScatterTestcases")
-    public void testScatter(final IntervalListScattererTest.Testcase tc) throws IOException {
+    public void testScatter(final IntervalListScattererTest.Testcase tc) {
 
         final IntervalListScatterer scatterer = tc.mode.make();
         final List<IntervalList> scatter = scatterer.scatter(tc.source, tc.scatterWidth);
