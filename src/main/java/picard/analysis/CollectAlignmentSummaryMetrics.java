@@ -190,13 +190,20 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
         file.write(OUTPUT);
 
-        if (HISTOGRAM_FILE != null) {
-            final List<String> plotArgs = new ArrayList<>();
-            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), HISTOGRAM_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
 
-            final int rResult = RExecutor.executeFromClasspath(HISTOGRAM_R_SCRIPT, plotArgs.toArray(new String[0]));
-            if (rResult != 0) {
-                throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
+
+        if (HISTOGRAM_FILE != null) {
+            if(file.getNumHistograms() == 0) {
+                //can happen if user sets MINIMUM_PCT = 0.5, etc.
+                log.warn("No Read length histograms to plot.");
+            } else {
+                final List<String> plotArgs = new ArrayList<>();
+                Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), HISTOGRAM_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
+
+                final int rResult = RExecutor.executeFromClasspath(HISTOGRAM_R_SCRIPT, plotArgs.toArray(new String[0]));
+                if (rResult != 0) {
+                    throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
+                }
             }
         }
 

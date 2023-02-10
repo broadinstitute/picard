@@ -25,25 +25,25 @@ for (i in 1:length(startFinder))
         }
 }
 
-metrics <- read.table(metricsFile, header=T, nrows=1, sep="\t", skip=firstBlankLine)
-histogram <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
-
-
-
-# get maximal value in histogram 
-M=max(histogram$READ_LENGTH)
-
-#introduce rows for the missing ones
-histogram=merge(histogram,data.frame(y=seq(0,M)),by.x = "READ_LENGTH",by.y="y",all.y = T)
-
-#melt the histogram
-melted=reshape(histogram,idvar="READ_LENGTH", varying = list(2:ncol(histogram)),direction = "long", timevar = "variable", v.names="value",  times=names(histogram)[2:ncol(histogram)],new.row.names = NULL)
-rownames(melted) <- c()
-#complete the missing values to zero
-melted[!complete.cases(melted),"value"]=0
-
-#remove the trailing "_LENGTH_COUNT" from the name of the variable
-melted$variable=gsub("_LENGTH_COUNT","",melted$variable)
+melted <- tryCatch (
+        {
+        histogram <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
+        M=max(histogram$READ_LENGTH)
+        histogram=merge(histogram,data.frame(y=seq(0,M)),by.x = "READ_LENGTH",by.y="y",all.y = T)
+        melted=reshape(histogram,idvar="READ_LENGTH", varying = list(2:ncol(histogram)),direction = "long", timevar = "variable", v.names="value",  times=names(histogram)[2:ncol(histogram)],new.row.names = NULL)
+        rownames(melted) <- c()
+        melted[!complete.cases(melted),"value"]=0
+        melted$variable=gsub("_LENGTH_COUNT","",melted$variable)
+        melted
+        },
+  error = function(cond) {
+          if (grepl("no lines available in input", cond$message)) {
+                melted <- data.frame(READ_LENGTH=c(100,100), value=c(0,0), variable=c("PAIRD_TOTAL", "PAIRED_ALIGNED"))
+          } else {
+                stop(cond)
+          }
+        }
+  )
 
 # Then plot as a PDF
 pdf(outputFile)
