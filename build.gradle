@@ -311,8 +311,8 @@ artifacts {
  * Sign non-snapshot releases with our secret key.  This should never need to be invoked directly.
  */
 signing {
-    required { isRelease && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
+    required { isRelease && gradle.taskGraph.hasTask("publish") }
+    sign publishing.publications
 }
 
 /**
@@ -359,20 +359,13 @@ publishing {
     }
     repositories {
         maven {
-            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
             credentials {
-                username = project.findProperty("sonatypeUsername")
-                password = project.findProperty("sonatypePassword")
+                username = isRelease ? project.findProperty("sonatypeUsername") : System.env.ARTIFACTORY_USERNAME
+                password = isRelease ? project.findProperty("sonatypePassword") : System.env.ARTIFACTORY_PASSWORD
             }
-        }
-        maven {
-            //TODO: is the correct way to specify this second repo ?
-            //snapshotRepository
-            url = "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/"
-            credentials {
-                username = System.env.ARTIFACTORY_USERNAME
-                password = System.env.ARTIFACTORY_PASSWORD
-            }
+            def release = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshot = "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/"
+            url = isRelease ? release : snapshot
         }
     }
 }
