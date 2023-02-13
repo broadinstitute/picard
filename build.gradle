@@ -80,8 +80,6 @@ dependencies {
     implementation 'org.broadinstitute:barclay:5.0.0'
     implementation 'org.apache.logging.log4j:log4j-api:2.17.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
-
-    // replacement for jdk nashorn engine GPL-2.0 license
     implementation 'org.openjdk.nashorn:nashorn-core:15.4'
 
     //NOTE: this dependency spec causes doc gen to fail on FingerPrintChecker since doc gen is not

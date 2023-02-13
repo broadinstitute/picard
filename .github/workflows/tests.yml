@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.Java }}
-          distribution: 'adopt'
+          distribution: 'temurin'
           cache: gradle
       - name: "set up R"
         run: |

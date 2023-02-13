@@ -29,7 +29,6 @@ public class DocumentationGenerationIntegrationTest {
             "picard.metrics"
     };
 
-    // suppress deprecation warning on Java 11 since we're using deprecated javadoc APIs
     @Test
     public static void documentationSmokeTest() throws IOException {
         final Path docTestTarget =  Files.createTempDirectory("docgentest");
@@ -54,16 +53,8 @@ public class DocumentationGenerationIntegrationTest {
 
         // Run javadoc in the current JVM with the custom doclet, and make sure it succeeds (this is a smoke test;
         // we just want to make sure it doesn't blow up).
-        ToolProvider jdProvider = null;
-        for (final ToolProvider tp : ServiceLoader.load(ToolProvider.class)) {
-            if (tp.name().equals("javadoc")) {
-                jdProvider = tp;
-                break;
-            }
-        }
-        if (jdProvider == null) {
-            throw new IllegalStateException("Can't find javadoc tool");
-        }
+        final ToolProvider jdProvider = ToolProvider.findFirst("javadoc")
+                .orElseThrow(() -> new IllegalStateException("Can't find javadoc tool"));
 
         final String[] args = docArgList.toArray(new String[] {});
         final int retCode = jdProvider.run(System.out, System.err, args);
@@ -72,7 +63,7 @@ public class DocumentationGenerationIntegrationTest {
         Assert. assertEquals(retCode, 0);
 
         final File outputDir = docTestTarget.toFile();
-        final Set pathNames = new HashSet<>(Arrays.stream(outputDir.list()).toList());
+        final Set<String> pathNames = new HashSet<>(Arrays.stream(outputDir.list()).toList());
         Assert.assertTrue(pathNames.size() > 1);
         Assert.assertTrue(pathNames.contains("index.html"));
     }
