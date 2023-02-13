@@ -191,8 +191,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         file.write(OUTPUT);
 
         if (HISTOGRAM_FILE != null) {
-            if(file.getNumHistograms() == 0) {
-                //can happen if user sets MINIMUM_PCT = 0.5, etc.
+            if(file.getNumHistograms() == 0 || file.getAllHistograms().stream().allMatch(Histogram::isEmpty)) {
                 log.warn("No Read length histograms to plot.");
             } else {
                 final List<String> plotArgs = new ArrayList<>();
