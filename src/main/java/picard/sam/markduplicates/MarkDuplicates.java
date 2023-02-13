@@ -319,12 +319,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             RepresentativeReadIndexer rri = null;
             int representativeReadIndexInFile = -1;
             int duplicateSetSize = -1;
-            int nextRepresentativeIndex = -1;
+            int nextReadInDuplicateSetIndex = -1;
             if (TAG_DUPLICATE_SET_MEMBERS) {
                 representativeReadIterator = this.representativeReadIndicesForDuplicates.iterator();
                 if (representativeReadIterator.hasNext()) {
                     rri = representativeReadIterator.next();
-                    nextRepresentativeIndex = rri.readIndexInFile;
+                    nextReadInDuplicateSetIndex = rri.readIndexInFile;
                     representativeReadIndexInFile = rri.representativeReadIndexInFile;
                     duplicateSetSize = rri.setSize;
                 }
@@ -333,6 +333,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
             final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
             String duplicateQueryName = null;
+            String representativeQueryName = null;
 
             while (iterator.hasNext()) {
                 final SAMRecord rec = iterator.next();
@@ -375,22 +376,27 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
 
                 // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
                 if (TAG_DUPLICATE_SET_MEMBERS) {
-                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
+                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextReadInDuplicateSetIndex &&
+                            (sortOrder == SAMFileHeader.SortOrder.coordinate || !rec.getReadName().equals(representativeQueryName));
                     if (needNextRepresentativeIndex && representativeReadIterator.hasNext()) {
                         rri = representativeReadIterator.next();
-                        nextRepresentativeIndex = rri.readIndexInFile;
+                        nextReadInDuplicateSetIndex = rri.readIndexInFile;
                         representativeReadIndexInFile = rri.representativeReadIndexInFile;
                         duplicateSetSize = rri.setSize;
                     }
-                    final boolean isInDuplicateSet = recordInFileIndex == nextRepresentativeIndex ||
+
+                    /* If this record's index is readInDuplicateSetIndex, then it is in a duplicateset.
+                    For queryname sorted data, we only have one representativeReadIndex entry per read name, so we need
+                    to also look for additional reads with the same name.
+                     */
+                    final boolean isInDuplicateSet = recordInFileIndex == nextReadInDuplicateSetIndex ||
                             (sortOrder == SAMFileHeader.SortOrder.queryname &&
-                                    recordInFileIndex > nextDuplicateIndex);
+                                    recordInFileIndex > nextReadInDuplicateSetIndex && rec.getReadName().equals(representativeQueryName));
                     if (isInDuplicateSet) {
                         if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-                            if (TAG_DUPLICATE_SET_MEMBERS) {
-                                rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
-                                rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
-                            }
+                            rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
+                            rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
+                            representativeQueryName = rec.getReadName();
                         }
                     }
                 }
@@ -400,23 +406,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
                     UmiUtil.setMolecularIdentifier(rec, "", MOLECULAR_IDENTIFIER_TAG, DUPLEX_UMI);
                 }
 
-                // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
-                if (TAG_DUPLICATE_SET_MEMBERS) {
-                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
-                    if (needNextRepresentativeIndex && representativeReadIterator.hasNext()) {
-                        rri = representativeReadIterator.next();
-                        nextRepresentativeIndex = rri.readIndexInFile;
-                        representativeReadIndexInFile = rri.representativeReadIndexInFile;
-                        duplicateSetSize = rri.setSize;
-                    }
-                    final boolean isInDuplicateSet = recordInFileIndex == nextRepresentativeIndex ||
-                            (sortOrder == SAMFileHeader.SortOrder.queryname &&
-                                    recordInFileIndex > nextDuplicateIndex);
-                    if (isInDuplicateSet && !rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag() && TAG_DUPLICATE_SET_MEMBERS) {
-                        rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
-                        rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
-                    }
-                }
 
                 // Note, duplicateQueryName must be incremented after we have marked both optical and sequencing duplicates for queryname sorted files.
                 if (isDuplicate) {
@@ -874,7 +863,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         // for read name (for representative read name), add the last of the pair that was examined
         for (final ReadEndsForMarkDuplicates end : list) {
             addRepresentativeReadOfDuplicateSet(best.read1IndexInFile, list.size(), end.read1IndexInFile);
-            addRepresentativeReadOfDuplicateSet(best.read1IndexInFile, list.size(), end.read2IndexInFile);
+            if (end.read1IndexInFile != end.read2IndexInFile) {
+                addRepresentativeReadOfDuplicateSet(best.read1IndexInFile, list.size(), end.read2IndexInFile);
+            }
         }
     }
 

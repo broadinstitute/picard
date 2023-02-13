@@ -144,7 +144,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     }
 
     /**
-     * Represents an expected PN value and VN value for a PG record.  If one of thexe is null, any value is allowed
+     * Represents an expected PN value and VN value for a PG record.  If one of these is null, any value is allowed
      * in the PG record being tested.
      */
     private static class ExpectedPnAndVn {
