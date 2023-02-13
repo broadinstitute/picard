@@ -337,7 +337,7 @@ public class FastqToSam extends CommandLineProgram {
             if (ALLOW_EMPTY_FASTQ) {
                 LOG.warn("Input FASTQ is empty, will write out SAM/BAM file with no reads.");
             } else {
-                throw new PicardException("Input fastq is empty.  Set ALLOW_EMPTY_FASTQ if you still want to write out a file with no reads.");
+                throw new PicardException("Input fastq is empty. Set ALLOW_EMPTY_FASTQ if you still want to write out a file with no reads.");
             }
         }
 
