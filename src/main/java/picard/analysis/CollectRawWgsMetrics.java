@@ -29,6 +29,7 @@ import htsjdk.samtools.util.IntervalList;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.util.help.HelpConstants;
 
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
@@ -114,6 +115,7 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
     }
 
     // rename the class so that in the metric file it is annotated differently.
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class RawWgsMetrics extends WgsMetrics {
         public RawWgsMetrics() {
             super();

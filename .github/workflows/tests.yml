@@ -1,0 +1,59 @@
+# This is a github actions workflow which runs picard tests
+
+name: Build and Test
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 17 ]
+        experimental: [false]
+        run_barclay_tests: [true, false]
+      fail-fast: false
+    continue-on-error: ${{ matrix.experimental }}
+    name: Java ${{ matrix.Java }}, Barclay=${{ matrix.run_barclay_tests}} tests
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up java ${{ matrix.Java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.Java }}
+          distribution: 'temurin'
+          cache: gradle
+      - name: "set up R"
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo apt-get -qq update
+          sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Compile with Gradle
+        run: ./gradlew compileJava
+      - name: Run tests
+        run: |
+          if [[ ${{matrix.run_barclay_tests}} == true ]]; then
+            echo "Running tests using the Barclay command line parser."
+            ./gradlew barclayTest
+          else
+            echo "Running tests using the legacy Picard command line parser."
+            ./gradlew jacocoTestReport
+          fi
+      - name: "Build the jar and run a commandline test for sanity checking"
+        run: |
+          ./gradlew currentJar
+          java -jar build/libs/picard.jar MarkDuplicates -I testdata/picard/sam/aligned_queryname_sorted.bam -O out.bam --METRICS_FILE out.metrics
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.Java }}-barclay-${{ matrix.run_barclay_tests}}
+          path: build/reports/tests
+
+
+

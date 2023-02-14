@@ -25,13 +25,29 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.tribble.Tribble;
-import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.*;
+import htsjdk.variant.vcf.VCFConstants;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -39,6 +55,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.vcf.GenotypeConcordanceStates.CallState;
 import picard.vcf.GenotypeConcordanceStates.ContingencyState;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
@@ -46,11 +63,32 @@ import picard.vcf.GenotypeConcordanceStates.TruthState;
 import picard.vcf.PairedVariantSubContextIterator.VcfTuple;
 
 import java.io.File;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-import static htsjdk.variant.variantcontext.VariantContext.Type.*;
+import static htsjdk.variant.variantcontext.VariantContext.Type.INDEL;
+import static htsjdk.variant.variantcontext.VariantContext.Type.MIXED;
+import static htsjdk.variant.variantcontext.VariantContext.Type.NO_VARIATION;
+import static htsjdk.variant.variantcontext.VariantContext.Type.SNP;
 import static htsjdk.variant.vcf.VCFConstants.MISSING_VALUE_v4;
-import static picard.vcf.GenotypeConcordanceStateCodes.*;
+import static picard.vcf.GenotypeConcordanceStateCodes.GT_FILTERED_CODE;
+import static picard.vcf.GenotypeConcordanceStateCodes.IS_MIXED_CODE;
+import static picard.vcf.GenotypeConcordanceStateCodes.LOW_DP_CODE;
+import static picard.vcf.GenotypeConcordanceStateCodes.LOW_GQ_CODE;
+import static picard.vcf.GenotypeConcordanceStateCodes.MISSING_CODE;
+import static picard.vcf.GenotypeConcordanceStateCodes.NO_CALL_CODE;
+import static picard.vcf.GenotypeConcordanceStateCodes.VC_FILTERED_CODE;
 
 /**
  * <h3>Summary</h3>
@@ -174,10 +212,10 @@ public class GenotypeConcordance extends CommandLineProgram {
             "- The concordance state will be stored in the CONC_ST tag in the INFO field\n" +
             "- The truth sample name will be \"truth\" and call sample name will be \"call\"";
     @Argument(shortName = "TV", doc="The VCF containing the truth sample")
-    public File TRUTH_VCF;
+    public PicardHtsPath TRUTH_VCF;
 
     @Argument(shortName = "CV", doc="The VCF containing the call sample")
-    public File CALL_VCF;
+    public PicardHtsPath CALL_VCF;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for the three metrics files that are to be written." +
             " Resulting files will be <OUTPUT>" + SUMMARY_METRICS_FILE_EXTENSION + ", <OUTPUT>" + DETAILED_METRICS_FILE_EXTENSION + ", and <OUTPUT>" + CONTINGENCY_METRICS_FILE_EXTENSION + ".")
@@ -193,7 +231,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     public String CALL_SAMPLE = null;
 
     @Argument(doc="One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.", optional = true)
-    public List<File> INTERVALS;
+    public List<PicardHtsPath> INTERVALS;
 
     @Argument(doc="If true, multiple interval lists will be intersected. If false multiple lists will be unioned.")
     public boolean INTERSECT_INTERVALS = true;
@@ -224,7 +262,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     public static final String SUMMARY_METRICS_FILE_EXTENSION     = ".genotype_concordance_summary_metrics";
     public static final String DETAILED_METRICS_FILE_EXTENSION    = ".genotype_concordance_detail_metrics";
     public static final String CONTINGENCY_METRICS_FILE_EXTENSION = ".genotype_concordance_contingency_metrics";
-    public static final String OUTPUT_VCF_FILE_EXTENSION          = ".genotype_concordance" + IOUtil.COMPRESSED_VCF_FILE_EXTENSION;
+    public static final String OUTPUT_VCF_FILE_EXTENSION          = ".genotype_concordance" + FileExtensions.COMPRESSED_VCF;
 
     protected GenotypeConcordanceCounts snpCounter;
     public GenotypeConcordanceCounts getSnpCounter() { return snpCounter; }
@@ -240,19 +278,20 @@ public class GenotypeConcordance extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         // Note - If the user specifies to use INTERVALS, the code will fail if the vcfs are not indexed, so we set USE_VCF_INDEX to true and check that the vcfs are indexed.
-        IOUtil.assertFileIsReadable(TRUTH_VCF);
-        IOUtil.assertFileIsReadable(CALL_VCF);
+        IOUtil.assertFileIsReadable(TRUTH_VCF.toPath());
+        IOUtil.assertFileIsReadable(CALL_VCF.toPath());
+
         final boolean usingIntervals = this.INTERVALS != null && !this.INTERVALS.isEmpty();
-        final List<String> errors = new ArrayList<String>();
+        final List<String> errors = new ArrayList<>();
         if (usingIntervals) {
             USE_VCF_INDEX = true;
         }
         if (USE_VCF_INDEX) {
             // Index file is required either because we are using intervals, or because user-set parameter
-            if (!indexExists(TRUTH_VCF)) {
+            if (!indexExists(TRUTH_VCF.toPath())) {
                 errors.add("The index file was not found for the TRUTH VCF.  Note that if intervals are specified, the VCF files must be indexed.");
             }
-            if (!indexExists(CALL_VCF)) {
+            if (!indexExists(CALL_VCF.toPath())) {
                 errors.add("The index file was not found for the CALL VCF.  Note that if intervals are specified, the VCF files must be indexed.");
             }
         }
@@ -267,7 +306,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         if (errors.isEmpty()) {
             return null;
         } else {
-            return errors.toArray(new String[errors.size()]);
+            return errors.toArray(new String[0]);
         }
     }
 
@@ -277,8 +316,8 @@ public class GenotypeConcordance extends CommandLineProgram {
      * @param vcf  the vcf file to investigate
      * @return true if an index file exists, false otherwise
      */
-    private boolean indexExists(final File vcf) {
-        return Tribble.indexFile(vcf).exists() || Tribble.tabixIndexFile(vcf).exists();
+    private boolean indexExists(final Path vcf) {
+        return Files.exists(Tribble.indexPath(vcf)) || Files.exists(Tribble.tabixIndexPath(vcf));
     }
 
     @Override protected int doWork() {
@@ -298,9 +337,10 @@ public class GenotypeConcordance extends CommandLineProgram {
         if (usingIntervals) {
             log.info("Starting to load intervals list(s).");
             long genomeBaseCount = 0;
-            for (final File f : INTERVALS) {
-                IOUtil.assertFileIsReadable(f);
-                final IntervalList tmpIntervalList = IntervalList.fromFile(f);
+            for (final PicardHtsPath p : INTERVALS) {
+                final Path path = p.toPath();
+                IOUtil.assertFileIsReadable(path);
+                final IntervalList tmpIntervalList = IntervalList.fromPath(path);
                 if (genomeBaseCount == 0) {         // Don't count the reference length more than once.
                     intervalsSamSequenceDictionary = tmpIntervalList.getHeader().getSequenceDictionary();
                     genomeBaseCount = intervalsSamSequenceDictionary.getReferenceLength();
@@ -315,8 +355,8 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
             log.info("Finished loading up intervals list(s).");
         }
-        final VCFFileReader truthReader = new VCFFileReader(TRUTH_VCF, USE_VCF_INDEX);
-        final VCFFileReader callReader = new VCFFileReader(CALL_VCF, USE_VCF_INDEX);
+        final VCFFileReader truthReader = new VCFFileReader(TRUTH_VCF.toPath(), USE_VCF_INDEX);
+        final VCFFileReader callReader = new VCFFileReader(CALL_VCF.toPath(), USE_VCF_INDEX);
 
         if (TRUTH_SAMPLE == null) {
             if (truthReader.getFileHeader().getNGenotypeSamples() > 1) {
@@ -334,10 +374,10 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // Check that the samples actually exist in the files!
         if (!truthReader.getFileHeader().getGenotypeSamples().contains(TRUTH_SAMPLE)) {
-            throw new PicardException("File " + TRUTH_VCF.getAbsolutePath() + " does not contain genotypes for sample " + TRUTH_SAMPLE);
+            throw new PicardException("File " + TRUTH_VCF + " does not contain genotypes for sample " + TRUTH_SAMPLE);
         }
         if (!callReader.getFileHeader().getGenotypeSamples().contains(CALL_SAMPLE)) {
-            throw new PicardException("File " + CALL_VCF.getAbsolutePath() + " does not contain genotypes for sample " + CALL_SAMPLE);
+            throw new PicardException("File " + CALL_VCF + " does not contain genotypes for sample " + CALL_SAMPLE);
         }
 
         // Verify that both VCFs have the same Sequence Dictionary
@@ -367,7 +407,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         indelCounter = new GenotypeConcordanceCounts();
 
         // A map to keep track of the count of Truth/Call States which we could not successfully classify
-        final Map<String, Integer> unClassifiedStatesMap = new HashMap<String, Integer>();
+        final Map<String, Integer> unClassifiedStatesMap = new HashMap<>();
 
         log.info("Starting iteration over variants.");
         while (pairedIterator.hasNext()) {
@@ -495,7 +535,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             final List<Allele> callAlleles  = alleles.callAlleles();
 
             // Get the alleles present at this site for both samples to use for the output variant context, but remove no calls.
-            final Set<Allele> siteAlleles = new HashSet<>();
+            final Set<Allele> siteAlleles = new LinkedHashSet<>();
             siteAlleles.addAll(allAlleles);
             siteAlleles.remove(Allele.NO_CALL);
 
@@ -821,7 +861,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
         }
 
-        final OrderedSet<String> allAlleles = new OrderedSet<String>();
+        final OrderedSet<String> allAlleles = new OrderedSet<>();
 
         if (truthGenotype != null || callGenotype != null) {
             // Store the refAllele as the first (0th index) allele in allAlleles (only can do if at least one genotype is non-null)
@@ -833,7 +873,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             allAlleles.smartAdd(truthAllele2);
         }
 
-        /**
+        /*
          *  if either of the call alleles is in allAlleles, with index > 1, we need to make sure that allele has index 1.
          *  this is because of the following situations:
          *

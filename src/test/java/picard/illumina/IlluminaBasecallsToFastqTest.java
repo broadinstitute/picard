@@ -26,21 +26,19 @@ package picard.illumina;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.BufferedLineReader;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.LineReader;
-import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.ReadStructure;
+import picard.util.IlluminaUtil;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
@@ -86,6 +84,33 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     @Test
     public void testAdapterTrimming() throws Exception {
+        final String suffix = ".1.fastq";
+        final File outputFastq1 = File.createTempFile("adapterTrimmed.", suffix);
+        outputFastq1.deleteOnExit();
+        final String outputPrefix = outputFastq1.getAbsolutePath().substring(0, outputFastq1.getAbsolutePath().length() - suffix.length());
+        final File outputFastq2 = new File(outputPrefix + ".2.fastq");
+        outputFastq2.deleteOnExit();
+        final int lane = 1;
+        List<String> args = new ArrayList<>(CollectionUtil.makeList(
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25T8B25T",
+                "OUTPUT_PREFIX=" + outputPrefix,
+                "RUN_BARCODE=HiMom",
+                "MACHINE_NAME=machine1",
+                "FLOWCELL_BARCODE=abcdeACXX",
+                "MAX_RECORDS_IN_RAM=100" //force spill to disk to test encode/decode,
+        ));
+        for (final IlluminaUtil.IlluminaAdapterPair adapterPair : IlluminaUtil.IlluminaAdapterPair.values()) {
+            args.add("ADAPTERS_TO_CHECK=" + adapterPair);
+        }
+        runPicardCommandLine(args);
+        IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
+        IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
+    }
+
+    @Test
+    public void testCustomAdapterTrimming() throws Exception {
         final String suffix = ".1.fastq";
         final File outputFastq1 = File.createTempFile("adapterTrimmed.", suffix);
         outputFastq1.deleteOnExit();
@@ -161,10 +186,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     @Test
     public void testMultiplexWithIlluminaReadNameHeaders() throws Exception {
-        final File outputDir = File.createTempFile("testMultiplexRH.", ".dir");
+        final File outputDir = Files.createTempDirectory("testMultiplexRH.dir").toFile();
         try {
-            outputDir.delete();
-            outputDir.mkdir();
             outputDir.deleteOnExit();
 
             final String filePrefix = "testMultiplexRH";
@@ -266,10 +289,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private void runStandardTest(final int[] lanes, final String jobName, final String libraryParamsFile,
                                  final int concatNColumnFields, final String readStructureString, final File baseCallsDir,
                                  final File testDataDir, final long expectedPfMatches, final Double expectedPctMatches) throws Exception {
-        final File outputDir = File.createTempFile(jobName, ".dir");
+        final File outputDir = Files.createTempDirectory(jobName + ".dir").toFile();
         try {
-            outputDir.delete();
-            outputDir.mkdir();
 
             outputDir.deleteOnExit();
             // Create barcode.params with output files in the temp directory

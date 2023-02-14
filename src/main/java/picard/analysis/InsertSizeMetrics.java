@@ -25,7 +25,9 @@
 package picard.analysis;
 
 import htsjdk.samtools.SamPairUtil.PairOrientation;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Metrics about the insert size distribution of a paired-end library, created by the
@@ -35,6 +37,7 @@ import picard.metrics.MultilevelMetrics;
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class InsertSizeMetrics extends MultilevelMetrics {
 
     /** The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome. */

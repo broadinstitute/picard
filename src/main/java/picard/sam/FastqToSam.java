@@ -51,9 +51,15 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -150,10 +156,10 @@ public class FastqToSam extends CommandLineProgram {
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 
     @Argument(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
-    public File FASTQ;
+    public PicardHtsPath FASTQ;
 
     @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
-    public File FASTQ2;
+    public PicardHtsPath FASTQ2;
 
     @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz." +
             "The files should be named:\n" +
@@ -274,8 +280,8 @@ public class FastqToSam extends CommandLineProgram {
      *   RUNNAME_S8_L005_R1_004.fastq
      * where `baseFastq` is the first in that list.
      */
-    protected static List<File> getSequentialFileList(final File baseFastq) {
-        final List<File> files = new ArrayList<>();
+    protected static List<Path> getSequentialFileList(final Path baseFastq) {
+        final List<Path> files = new ArrayList<>();
         files.add(baseFastq);
 
         // Find the correct extension used in the base FASTQ
@@ -283,25 +289,25 @@ public class FastqToSam extends CommandLineProgram {
         String suffix = null; // store the suffix including the extension
         for (final FastqExtensions ext : FastqExtensions.values()) {
             suffix = "_001" + ext.getExtension();
-            if (baseFastq.getAbsolutePath().endsWith(suffix)) {
+            if (baseFastq.toString().endsWith(suffix)) {
                 fastqExtensions = ext;
                 break;
             }
         }
         if (null == fastqExtensions) {
-            throw new PicardException(String.format("Could not parse the FASTQ extension (expected '_001' + '%s'): %s", FastqExtensions.values().toString(), baseFastq));
+            throw new PicardException(String.format("Could not parse the FASTQ extension (expected '_001' + '%s'): %s", Arrays.toString(FastqExtensions.values()), baseFastq));
         }
 
         // Find all the files
         for (int idx = 2; true; idx++) {
-            String fastq = baseFastq.getAbsolutePath();
+            String fastq = baseFastq.toAbsolutePath().toString();
             fastq = String.format("%s_%03d%s", fastq.substring(0, fastq.length() - suffix.length()), idx, fastqExtensions.getExtension());
             try {
-                IOUtil.assertFileIsReadable(new File(fastq));
+                IOUtil.assertFileIsReadable(Paths.get(fastq));
             } catch (final SAMException e) { // the file is not readable, so do not continue
                 break;
             }
-            files.add(new File(fastq));
+            files.add(Paths.get(fastq));
         }
 
         return files;
@@ -309,9 +315,9 @@ public class FastqToSam extends CommandLineProgram {
 
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
-        IOUtil.assertFileIsReadable(FASTQ);
+        IOUtil.assertFileIsReadable(FASTQ.toPath());
         if (FASTQ2 != null) {
-            IOUtil.assertFileIsReadable(FASTQ2);
+            IOUtil.assertFileIsReadable(FASTQ2.toPath());
         }
         IOUtil.assertFileIsWritable(OUTPUT);
 
@@ -319,8 +325,8 @@ public class FastqToSam extends CommandLineProgram {
         final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, false, OUTPUT, REFERENCE_SEQUENCE);
 
         // Set the quality format
-        QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ),
-                (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2),
+        QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ.toPath()),
+                (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
                 QUALITY_FORMAT);
 
         // Lists for sequential files, but also used when not sequential
@@ -329,11 +335,11 @@ public class FastqToSam extends CommandLineProgram {
 
         if (USE_SEQUENTIAL_FASTQS) {
             // Get all the files
-            for (final File fastq : getSequentialFileList(FASTQ)) {
+            for (final Path fastq : getSequentialFileList(FASTQ.toPath())) {
                 readers1.add(fileToFastqReader(fastq));
             }
             if (null != FASTQ2) {
-                for (final File fastq : getSequentialFileList(FASTQ2)) {
+                for (final Path fastq : getSequentialFileList(FASTQ2.toPath())) {
                     readers2.add(fileToFastqReader(fastq));
                 }
                 if (readers1.size() != readers2.size()) {
@@ -342,9 +348,9 @@ public class FastqToSam extends CommandLineProgram {
             }
         }
         else {
-            readers1.add(fileToFastqReader(FASTQ));
+            readers1.add(fileToFastqReader(FASTQ.toPath()));
             if (FASTQ2 != null) {
-                readers2.add(fileToFastqReader(FASTQ2));
+                readers2.add(fileToFastqReader(FASTQ2.toPath()));
             }
         }
 
@@ -428,8 +434,8 @@ public class FastqToSam extends CommandLineProgram {
         return readCount;
     }
 
-    private FastqReader fileToFastqReader(final File file) {
-        return new FastqReader(file, ALLOW_AND_IGNORE_EMPTY_LINES);
+    private FastqReader fileToFastqReader(final Path path) throws PicardException {
+        return new FastqReader(null, IOUtil.openFileForBufferedReading(path), ALLOW_AND_IGNORE_EMPTY_LINES);
     }
 
     private SAMRecord createSamRecord(final SAMFileHeader header, final String baseName, final FastqRecord frec, final boolean paired) {

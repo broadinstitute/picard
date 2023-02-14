@@ -57,6 +57,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
@@ -144,7 +145,7 @@ public class RevertSam extends CommandLineProgram {
             "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n" +
             "";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to revert the state of.")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT;
@@ -204,6 +205,12 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.AS.name());
     }};
 
+    @Argument(shortName="RV", doc="Attributes on negative strand reads that need to be reversed.", optional = true)
+    public Set<String> ATTRIBUTE_TO_REVERSE = new LinkedHashSet<>(SAMRecord.TAGS_TO_REVERSE);
+
+    @Argument(shortName="RC", doc="Attributes on negative strand reads that need to be reverse complemented.", optional = true)
+    public Set<String> ATTRIBUTE_TO_REVERSE_COMPLEMENT = new LinkedHashSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
+
     @Argument(doc = "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
             "a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing " +
             "mates, duplicated records, records with mismatches in length of bases and qualities. This option can " +
@@ -249,11 +256,11 @@ public class RevertSam extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
         ValidationUtil.assertWritable(OUTPUT, OUTPUT_BY_READGROUP);
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT.toPath());
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
@@ -326,8 +333,14 @@ public class RevertSam extends CommandLineProgram {
             out.close();
         } else {
             final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
+            final Path referenceSequencePath;
             try {
-                readGroupToFormat = createReadGroupFormatMap(inHeader, REFERENCE_SEQUENCE, VALIDATION_STRINGENCY, INPUT, RESTORE_ORIGINAL_QUALITIES);
+                if (REFERENCE_SEQUENCE != null) {
+                    referenceSequencePath = REFERENCE_SEQUENCE.toPath();
+                } else {
+                    referenceSequencePath = null;
+                }
+                readGroupToFormat = createReadGroupFormatMap(inHeader, referenceSequencePath, VALIDATION_STRINGENCY, INPUT.toPath(), RESTORE_ORIGINAL_QUALITIES);
             } catch (final PicardException e) {
                 log.error(e.getMessage());
                 return -1;
@@ -383,7 +396,7 @@ public class RevertSam extends CommandLineProgram {
 
         if (REMOVE_ALIGNMENT_INFORMATION) {
             if (rec.getReadNegativeStrandFlag()) {
-                rec.reverseComplement(true);
+                rec.reverseComplement(ATTRIBUTE_TO_REVERSE_COMPLEMENT, ATTRIBUTE_TO_REVERSE, true);
                 rec.setReadNegativeStrandFlag(false);
             }
 
@@ -613,9 +626,9 @@ public class RevertSam extends CommandLineProgram {
 
     private Map<SAMReadGroupRecord, FastqQualityFormat> createReadGroupFormatMap(
             final SAMFileHeader inHeader,
-            final File referenceSequence,
+            final Path referenceSequence,
             final ValidationStringency validationStringency,
-            final File input,
+            final Path input,
             final boolean restoreOriginalQualities) {
 
         final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();

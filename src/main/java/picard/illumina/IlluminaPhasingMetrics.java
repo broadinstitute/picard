@@ -25,8 +25,10 @@
 package picard.illumina;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.illumina.parser.Tile;
 import picard.illumina.parser.TileTemplateRead;
+import picard.util.help.HelpConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,6 +42,7 @@ import java.util.Collection;
  *
  * @author jgentry
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class IlluminaPhasingMetrics extends MetricBase {
     /** Illumina flowcell lane number */
     public long LANE;

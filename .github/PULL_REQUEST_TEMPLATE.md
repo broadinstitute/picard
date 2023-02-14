@@ -15,7 +15,7 @@ Never delete this, it is our record that procedure was followed. If you find tha
 #### Content
 - [ ] Added or modified tests to cover changes and any new functionality
 - [ ] Edited the README / documentation (if applicable)
-- [ ] All tests passing on Travis
+- [ ] All tests passing on github actions
 
 #### Review
 - [ ] Final thumbs-up from reviewer

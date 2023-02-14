@@ -38,6 +38,7 @@ import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
     @DataProvider(name = "okVersionFiles")
     public Object[][] okVersionFiles() {
         return new Object[][] {
-            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq",      FastqQualityFormat.Standard },
+            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq.gz",      FastqQualityFormat.Standard },
             {"fastq-sanger/5k-30BB2AAXX.3.aligned.sam.fastq",     FastqQualityFormat.Standard },
             {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", FastqQualityFormat.Standard }, // all sanger chars
 
@@ -185,7 +186,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
         final File fastq2 = (fastqFilename2 != null) ? new File(TEST_DATA_DIR, fastqFilename2) : null;
         final File samFile = newTempSamFile(fastq1.getName());
 
-        final List<String> args =new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
 
         args.add("FASTQ=" + fastq1.getAbsolutePath());
         args.add("OUTPUT=" + samFile.getAbsolutePath());
@@ -296,9 +297,9 @@ public class FastqToSamTest extends CommandLineProgramTest {
         final String pairedEnd1 = "sequential-files/paired_end_R1_001.fastq";
         final String pairedEnd2 = "sequential-files/paired_end_R2_001.fastq";
         
-        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + singleEnd)).size(), 2);
-        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + pairedEnd1)).size(), 2);
-        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + pairedEnd2)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(Paths.get(TEST_DATA_DIR.getPath(), singleEnd)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(Paths.get(TEST_DATA_DIR.getPath(),  pairedEnd1)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(Paths.get(TEST_DATA_DIR.getPath(), pairedEnd2)).size(), 2);
 
         convertFileAndVerifyRecordCount(1, singleEnd, null, FastqQualityFormat.Illumina, true, false);
         convertFileAndVerifyRecordCount(2, singleEnd, null, FastqQualityFormat.Illumina, true, true);

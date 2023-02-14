@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 
+@SuppressWarnings("removal")
 public class IlluminaFileUtilTest {
     private static final int DEFAULT_LANE = 7;
     private static final List<Integer> DEFAULT_TILES = makeList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
@@ -38,7 +39,7 @@ public class IlluminaFileUtilTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        intensityDir = IOUtil.createTempDir("ift_test", "Intensities");
+        intensityDir = IOUtil.createTempDir("ift_test.Intensities").toFile();
         basecallDir = new File(intensityDir, "BaseCalls");
         if (!basecallDir.mkdir()) {
             throw new RuntimeException("Couldn't make basecalls dir " + basecallDir.getAbsolutePath());
@@ -517,7 +518,7 @@ public class IlluminaFileUtilTest {
                              final boolean createCbcl,
                              final boolean expectedResult) throws IOException {
 
-        final File basecallsDir = IOUtil.createTempDir("basecalls", "");
+        final File basecallsDir = IOUtil.createTempDir("basecalls").toFile();
         basecallsDir.deleteOnExit();
 
         if (0 < lane) {

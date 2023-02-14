@@ -39,6 +39,7 @@ import picard.util.IlluminaUtil;
 
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -79,29 +80,19 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
 
     @BeforeTest
     private void setUp() throws Exception {
-        basecallsDir = File.createTempFile("eib.", ".tmp");
-        Assert.assertTrue(basecallsDir.delete());
-        Assert.assertTrue(basecallsDir.mkdir());
+        basecallsDir = Files.createTempDirectory("eib.tmp").toFile();
         IOUtil.copyDirectoryTree(SINGLE_DATA_DIR, basecallsDir);
 
-        dual = File.createTempFile("eib_dual", ".tmp");
-        Assert.assertTrue(dual.delete());
-        Assert.assertTrue(dual.mkdir());
+        dual = Files.createTempDirectory("eib_dual.tmp").toFile();
         IOUtil.copyDirectoryTree(DUAL_DATA_DIR, dual);
 
-        qual = File.createTempFile("eib_qual", ".tmp");
-        Assert.assertTrue(qual.delete());
-        Assert.assertTrue(qual.mkdir());
+        qual = Files.createTempDirectory("eib_qual.tmp").toFile();
         IOUtil.copyDirectoryTree(DUAL_DATA_DIR, qual);
 
-        noSymlink = File.createTempFile("eib_nosymlink", ".tmp");
-        Assert.assertTrue(noSymlink.delete());
-        Assert.assertTrue(noSymlink.mkdir());
+        noSymlink = Files.createTempDirectory("eib_nosymlink.tmp").toFile();
         IOUtil.copyDirectoryTree(HISEQX_DATA_DIR, noSymlink);
 
-        cbcl = File.createTempFile("eib_cbcl", ".tmp");
-        Assert.assertTrue(cbcl.delete());
-        Assert.assertTrue(cbcl.mkdir());
+        cbcl = Files.createTempDirectory("eib_cbcl.tmp").toFile();
         IOUtil.copyDirectoryTree(CBCL_DATA_DIR, cbcl);
         // For the cbcl test, we are deleting the '*barcode.txt.gz' files that exist in the test Basecalls directory
         // This is to prevent the error conditon that was briefly introduced which expected to find such files in that

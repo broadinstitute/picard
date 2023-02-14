@@ -66,6 +66,7 @@ public class ClippingUtility {
     /**
      * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
+    @Deprecated
     public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter) {
         adapterTrimIlluminaSingleRead(read, MIN_MATCH_BASES, MAX_ERROR_RATE, adapter);
     }
@@ -73,6 +74,7 @@ public class ClippingUtility {
     /**
      * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
+    @Deprecated
     public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter,
                                                      final int minMatchBases, final double maxErrorRate) {
         adapterTrimIlluminaSingleRead(read, minMatchBases, maxErrorRate, adapter);
@@ -154,6 +156,7 @@ public class ClippingUtility {
     /**
      * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
+    @Deprecated
     public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2, final AdapterPair adapters) {
         adapterTrimIlluminaPairedReads(read1, read2, MIN_MATCH_PE_BASES, MAX_PE_ERROR_RATE, adapters);
         return null;
@@ -162,6 +165,7 @@ public class ClippingUtility {
     /**
      * @deprecated Use the varargs version.  This no longer returns a warning string..
      */
+    @Deprecated
     public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
                                                         final AdapterPair adapters, final int minMatchBases, final double maxErrorRate) {
 

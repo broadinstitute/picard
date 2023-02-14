@@ -63,9 +63,9 @@ import java.util.stream.Collectors;
 )
 @DocumentedFeature
 public class CollectIlluminaLaneMetrics extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Collects Illumina lane metrics for the given BaseCalling analysis directory.  ";
-    static final String USAGE_DETAILS = "This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell." +
-            "  This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics.  " +
+    static final String USAGE_SUMMARY = "Collects Illumina lane metrics for the given BaseCalling analysis directory.";
+    static final String USAGE_DETAILS = "This tool produces quality control metrics on cluster density for each lane of an Illumina flowcell. " +
+            "This tool takes Illumina TileMetrics data and places them into directories containing lane- and phasing-level metrics. " +
             "In this context, phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle." +
             "" +
             "<h4>Usage example:</h4>" +
@@ -93,12 +93,8 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
     @Argument(doc = ReadStructure.PARAMETER_DOC + "\nIf not given, will use the RunInfo.xml in the run directory.", shortName = "RS", optional = true)
     public ReadStructure READ_STRUCTURE;
 
-    @Argument(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.illumina_lane_metrics.EXT). None if null", optional=true)
+    @Argument(doc="Append the given file extension to all metric file names (ex. OUTPUT.illumina_lane_metrics.EXT). None if null", shortName = "EXT", optional = true)
     public String FILE_EXTENSION = null;
-
-    @Deprecated
-    @Argument(doc = "Boolean that determines if this run is a NovaSeq run or not. (NovaSeq tile metrics files are in cycle 25 directory). (Deprectated: no longer necessary)", optional = true)
-    public boolean IS_NOVASEQ = false;
 
     @Override
     protected int doWork() {
@@ -203,7 +199,7 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
             writeMetrics(phasingMetricsFile, outputDirectory, outputPrefix, IlluminaPhasingMetrics.getExtension() + fileExtension);
         }
 
-        public static File writeLaneMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
+        private static void writeLaneMetrics(final Map<Integer, ? extends Collection<Tile>> laneTiles, final File outputDirectory,
                                             final String outputPrefix, final MetricsFile<MetricBase, Comparable<?>> laneMetricsFile,
                                             final String fileExtension) {
             laneTiles.forEach((key, value) -> {
@@ -213,15 +209,14 @@ public class CollectIlluminaLaneMetrics extends CommandLineProgram {
                 laneMetricsFile.addMetric(laneMetric);
             });
 
-            return writeMetrics(laneMetricsFile, outputDirectory, outputPrefix, IlluminaLaneMetrics.getExtension() + fileExtension);
+            writeMetrics(laneMetricsFile, outputDirectory, outputPrefix, IlluminaLaneMetrics.getExtension() + fileExtension);
         }
 
-        private static File writeMetrics(final MetricsFile<MetricBase, Comparable<?>> metricsFile, final File outputDirectory,
+        private static void writeMetrics(final MetricsFile<MetricBase, Comparable<?>> metricsFile, final File outputDirectory,
                                          final String outputPrefix, final String outputExtension) {
             final File outputFile = new File(outputDirectory, String.format("%s.%s", outputPrefix, outputExtension));
             LOG.info(String.format("Writing %s lane metrics to %s ...", metricsFile.getMetrics().size(), outputFile));
             metricsFile.write(outputFile);
-            return outputFile;
         }
 
         private static double calculateLaneDensityFromTiles(final Collection<Tile> tiles) {

@@ -40,7 +40,6 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.zip.DeflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -49,9 +48,9 @@ import org.broadinstitute.barclay.argparser.CommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
-import picard.PicardException;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
@@ -73,7 +72,7 @@ import java.util.stream.Collectors;
  *
  * To use:
  *
- * 1. Extend this class with a concrete class that is annotated with @COmmandLineProgramProperties, and has data members
+ * 1. Extend this class with a concrete class that is annotated with {@link CommandLineProgramProperties}, and has data members
  * annotated with @Argument, @PositionalArguments, and/or @ArgumentCollection annotations.
  *
  * 2. If there is any custom command-line validation, override customCommandLineValidation().  When this method is
@@ -88,6 +87,8 @@ public abstract class CommandLineProgram {
     private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
+    public static String SYNTAX_TRANSITION_URL =
+            "https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)";
 
     /**
      * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
@@ -130,9 +131,6 @@ public abstract class CommandLineProgram {
     // after argument parsing using the value established by the user in the referenceSequence argument collection.
     protected File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
-    @Argument(doc="Google Genomics API client_secrets.json file path.", common = true)
-    public String GA4GH_CLIENT_SECRETS="client_secrets.json";
-
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
                 "It is unlikely these will ever need to be accessed by the command line program")
     public Object specialArgumentsCollection = useLegacyParser() ?
@@ -146,20 +144,6 @@ public abstract class CommandLineProgram {
     public Boolean USE_JDK_INFLATER = false;
 
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
-
-    static {
-      // Register custom reader factory for reading data from Google Genomics
-      // implementation of GA4GH API.
-      // With this it will be possible to pass these urls as INPUT params.
-      // E.g. java -jar dist/picard.jar ViewSam \
-      //    INPUT=https://www.googleapis.com/genomics/v1beta2/readgroupsets/CK256frpGBD44IWHwLP22R4/ \
-      //    GA4GH_CLIENT_SECRETS=../client_secrets.json
-      if (System.getProperty("samjdk.custom_reader") == null) {
-        System.setProperty("samjdk.custom_reader",
-            "https://www.googleapis.com/genomics," +
-            "com.google.cloud.genomics.gatk.htsjdk.GA4GHReaderFactory");
-      }
-    }
 
     /**
     * Initialized in parseArgs.  Subclasses may want to access this to do their
@@ -207,7 +191,7 @@ public abstract class CommandLineProgram {
                 "********** NOTE: Picard's command line syntax is changing.",
                 "**********",
                 "********** For more information, please see:",
-                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "********** ", SYNTAX_TRANSITION_URL,
                 "**********",
                 "********** The command line looks like this in the new syntax:",
                 "**********",
@@ -234,9 +218,6 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        if (System.getProperty("ga4gh.client_secrets") == null) {
-          System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
-        }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
 
         // Set the compression level everywhere we can think of

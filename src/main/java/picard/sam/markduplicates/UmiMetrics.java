@@ -28,13 +28,16 @@ import java.util.stream.Collectors;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.QualityUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.util.MathUtil;
+import picard.util.help.HelpConstants;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
  * within a stream of SAMRecords using the UmiAwareDuplicateSetIterator.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class UmiMetrics extends MetricBase {
     private final Histogram<String> observedUmis = new Histogram<>();
     private final Histogram<String> inferredUmis = new Histogram<>();

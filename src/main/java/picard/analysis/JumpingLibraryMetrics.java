@@ -24,6 +24,8 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 /**
  * High level metrics about the presence of  outward- and inward-facing pairs
@@ -31,6 +33,7 @@ import htsjdk.samtools.metrics.MetricBase;
  * the CollectJumpingLibraryMetrics program and usually stored in a file with
  * the extension ".jump_metrics".
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class JumpingLibraryMetrics extends MetricBase {
 
     /**

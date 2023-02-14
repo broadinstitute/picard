@@ -1,5 +1,7 @@
 package picard.cmdline;
 
+import htsjdk.samtools.util.Log;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
  * used for running tests written with Picard style syntax against the Barclay command line parser.
  */
 public class CommandLineSyntaxTranslater {
+    private final static Log log = Log.getInstance(CommandLineSyntaxTranslater.class);
 
     // Prefixes used by the Barclay parser for short/long prefixes
     private static final String BARCLAY_SHORT_OPTION_PREFIX = "-";
@@ -18,12 +21,23 @@ public class CommandLineSyntaxTranslater {
 
     // Return true when the command line arguments appear to use Picard's legacy syntax.
     public static boolean isLegacyPicardStyle(final String argv[]) {
-        return Arrays.stream(argv).anyMatch(
-                putativeLegacyArg ->
-                        !putativeLegacyArg.startsWith(BARCLAY_SHORT_OPTION_PREFIX) &&
-                           !putativeLegacyArg.startsWith(BARCLAY_LONG_OPTION_PREFIX) &&
-                                putativeLegacyArg.contains(LEGACY_VALUE_SEPARATOR)
+        final boolean anyLegacy = Arrays.stream(argv).anyMatch(
+                arg -> !arg.startsWith(BARCLAY_SHORT_OPTION_PREFIX) &&
+                        !arg.startsWith(BARCLAY_LONG_OPTION_PREFIX) &&
+                        arg.contains(LEGACY_VALUE_SEPARATOR)
         );
+        if (anyLegacy && Arrays.stream(argv).anyMatch(
+                arg -> arg.startsWith(BARCLAY_SHORT_OPTION_PREFIX) || arg.startsWith(BARCLAY_LONG_OPTION_PREFIX))) {
+            // There appear to be both legacy and posix style args. Prefer/choose posix in this case since there are
+            // legitimate cases where argument values might contain embedded "=" (i.e,
+            // "--INPUT path/to/some.bam --SOME_ARG date=01/01/2022"), which makes them appear to be
+            // legacy style args, even though they are not), whereas its very unlikely to encounter a legitimate
+            // legacy option that starts with a posix prefix ("--" or "-")
+            log.warn("!!!!!!Possible mixed (legacy and new style) arguments detected!!!!!!!\n"
+                    + "Assuming new-style arguments are intended. See: " + CommandLineProgram.SYNTAX_TRANSITION_URL);
+            return false;
+        }
+        return anyLegacy;
     }
 
     public static String[] convertPicardStyleToPosixStyle(final String argv[]) {

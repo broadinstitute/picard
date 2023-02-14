@@ -30,6 +30,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Histogram;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,13 +56,17 @@ public class LibraryIdGenerator {
     private final Histogram<Double> opticalDuplicateCountHist = new Histogram<>("set_size", "optical_sets");
 
     public LibraryIdGenerator(final SAMFileHeader header) {
+        this(header, false);
+    }
+
+    public LibraryIdGenerator(final SAMFileHeader header, final boolean flowMetrics) {
         this.header = header;
 
         for (final SAMReadGroupRecord readGroup : header.getReadGroups()) {
             final String library = LibraryIdGenerator.getReadGroupLibraryName(readGroup);
             DuplicationMetrics metrics = metricsByLibrary.get(library);
             if (metrics == null) {
-                metrics = new DuplicationMetrics();
+                metrics = DuplicationMetricsFactory.createMetrics(flowMetrics);
                 metrics.LIBRARY = library;
                 metricsByLibrary.put(library, metrics);
             }

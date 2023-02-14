@@ -50,7 +50,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     private static final File REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.reference.fasta");
     private static final File TWO_INTERVALS_REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.two.block.reference.fasta");
 
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("LiftoverVcfsTest", null);
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("LiftoverVcfsTest.tmp").toFile();
 
     private final int CHAIN_SIZE = 540; // the length of the single chain in CHAIN_FILE
 

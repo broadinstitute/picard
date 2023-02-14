@@ -24,7 +24,7 @@
 
 package picard.arrays.illumina;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
 import java.io.IOException;

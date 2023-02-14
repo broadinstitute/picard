@@ -179,7 +179,7 @@ public class SequenceDictionaryUtils {
     }
 
     public static SortingCollection<String> makeSortingCollection() {
-        final File tmpDir = IOUtil.createTempDir("SamDictionaryNames", null);
+        final File tmpDir = IOUtil.createTempDir("SamDictionaryNames").toFile();
         tmpDir.deleteOnExit();
         // 256 byte for one name, and 1/10 part of all memory for this, rough estimate
         long maxNamesInRam = Runtime.getRuntime().maxMemory() / 256 / 10;

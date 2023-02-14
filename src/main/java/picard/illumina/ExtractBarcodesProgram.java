@@ -85,7 +85,6 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
     );
 
 
-
     protected Map<String, BarcodeMetric> barcodeToMetrics = new LinkedHashMap<>();
     protected final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
     protected BarcodeMetric noMatchMetric;
@@ -262,6 +261,7 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
             });
 
             Matcher matcher = Pattern.compile("^(.*)_\\d").matcher(validBarcodeColumns.get(0));
+            Pattern onlyNsPattern = Pattern.compile("^[Nn]+$");
 
             final String sequenceColumn;
             boolean hasMultipleNumberedBarcodeColumns = matcher.matches();
@@ -297,8 +297,13 @@ public abstract class ExtractBarcodesProgram extends CommandLineProgram {
                     ++barcodeNum;
                 }
                 final String bcStr = IlluminaUtil.barcodeSeqsToString(bcStrings);
+
+                // Skip bcStr that looks like 'N', 'n', 'NN', 'N-N', 'NNN-NNN', etc.
+                final String bcStringWithoutSeparator = IlluminaUtil.stringSeqsToString(bcStrings, "");
+                Matcher nMatcher = onlyNsPattern.matcher(bcStringWithoutSeparator);
+
                 // if the barcode is all Ns don't add it to metrics (we add noCallMetric separately)
-                if (bcStr.contains("N") || bcStr.contains("n")) {
+                if (nMatcher.matches()) {
                     continue;
                 }
                 if (barcodes.contains(bcStr)) {

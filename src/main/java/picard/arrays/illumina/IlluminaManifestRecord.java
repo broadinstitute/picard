@@ -25,7 +25,7 @@
 package picard.arrays.illumina;
 
 import htsjdk.tribble.annotation.Strand;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import picard.PicardException;
 
 import java.util.Map;

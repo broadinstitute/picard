@@ -43,6 +43,7 @@ import java.util.TreeSet;
  * Manifest file in addition to the normalization ID which is needed for normalizating intensities in GtcToVcf
  *
  */
+@SuppressWarnings("removal")
 public class InfiniumNormalizationManifest {
     private long[] positions;
     private byte[] chromosomes;

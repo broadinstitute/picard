@@ -213,7 +213,7 @@ public class BclParserTest {
     }
 
     public void fullBclParserTestWDeletedSkipsImpl(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex, final String readStructure) {
-        final File basecallDir = IOUtil.createTempDir("bclParserTest", "BaseCalls");
+        final File basecallDir = IOUtil.createTempDir("bclParserTest.BaseCalls").toFile();
 
         Exception exc = null;
         try {

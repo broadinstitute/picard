@@ -1,10 +1,10 @@
 package picard.util;
 
+import org.broadinstitute.barclay.argparser.ClassFinder;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.collections.Sets;
-import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

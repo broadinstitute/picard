@@ -154,12 +154,8 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
             mutex = {"OUTPUT_PREFIX"})
     public File MULTIPLEX_PARAMS;
 
-    @Argument(doc = "Which adapters to look for in the read.")
-    public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<>(
-            Arrays.asList(IlluminaUtil.IlluminaAdapterPair.INDEXED,
-                    IlluminaUtil.IlluminaAdapterPair.DUAL_INDEXED,
-                    IlluminaUtil.IlluminaAdapterPair.NEXTERA_V2,
-                    IlluminaUtil.IlluminaAdapterPair.FLUIDIGM));
+    @Argument(doc = "Which adapters to look for in the reads. The default value is null, meaning that no adapters will be looked for in the reads.", optional = true)
+    public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = null;
 
     @Argument(doc = "For specifying adapters other than standard Illumina", optional = true)
     public String FIVE_PRIME_ADAPTER;
@@ -225,7 +221,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         CASAVA_1_8, ILLUMINA
     }
 
-    private final Map<String, Writer<ClusterData>> sampleBarcodeClusterWriterMap = new HashMap<String, Writer<ClusterData>>(1, 0.5f);
+    private final Map<String, Writer<ClusterData>> sampleBarcodeClusterWriterMap = new HashMap<>(1, 0.5f);
     final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
     private BasecallsConverter<?> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
@@ -233,7 +229,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
     private ReadNameEncoder readNameEncoder;
     boolean demultiplex;
     private AsyncWriterPool writerPool;
-    final List<AdapterPair> adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
+    private List<AdapterPair> adapters;
 
     @Override
     protected int doWork() {
@@ -276,7 +272,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         // Remove once deprecated parameter is deleted.
         if (MAX_READS_IN_RAM_PER_TILE != -1) {
             log.warn("Setting deprecated parameter `MAX_READS_IN_RAM_PER_TILE` use ` MAX_RECORDS_IN_RAM` instead");
-            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE;
+            MAX_RECORDS_IN_RAM = MAX_READS_IN_RAM_PER_TILE * NUM_PROCESSORS;
         }
 
         if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && MACHINE_NAME == null) {
@@ -302,6 +298,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         fastqWriterFactory.setCreateMd5(CREATE_MD5_FILE);
 
         // Combine any adapters and custom adapter pairs from the command line into an array for use in clipping
+        adapters = new ArrayList<>(ADAPTERS_TO_CHECK);
         if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
             adapters.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
         }
@@ -435,7 +432,7 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
      * @return AsyncClusterWriter that contains one or more ClusterWriters (amount depends on read structure), all using
      * outputPrefix to determine the filename(s).
      */
-    private Writer<ClusterData> buildWriter(final File outputPrefix, int numSamples) {
+    private Writer<ClusterData> buildWriter(final File outputPrefix, final int numSamples) {
         final File outputDir = outputPrefix.getAbsoluteFile().getParentFile();
         IOUtil.assertDirectoryIsWritable(outputDir);
         final String prefixString = outputPrefix.getName();

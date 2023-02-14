@@ -27,10 +27,13 @@ package picard.analysis;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.QualityUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.util.MathUtil;
+import picard.util.help.HelpConstants;
 
 /** Metrics for evaluating the performance of whole genome sequencing experiments. */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class WgsMetrics extends MergeableMetricBase {
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 

@@ -52,7 +52,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFRecordCodec;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -209,6 +209,8 @@ public class GtcToVcf extends CommandLineProgram {
             // The Call Rate in the Illumina GTC File does not take into account zeroed out SNPs.
             // So we recalculate it (and ignore zeroed out assays - which also includes intensity only probes)
             vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE, String.valueOf(callRate)));
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE_DETAIL,
+                    "The gtcCallRate is the Call Rate reported in the Illumina GTC file, corrected for the presence of Zeroed-Out SNPs"));
 
             writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
 
@@ -386,7 +388,8 @@ public class GtcToVcf extends CommandLineProgram {
         builder.attribute(InfiniumVcfFields.ILLUMINA_CHR, record.getChr());
         builder.attribute(InfiniumVcfFields.ILLUMINA_POS, record.getPosition());
         builder.attribute(InfiniumVcfFields.ILLUMINA_BUILD, record.getGenomeBuild());
-        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(' ', '_'));
+        // Source field from the Illumina manifest may contain semicolons as separator characters.  Replace with a ',' for VCF
+        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(';', ',').replace(' ', '_'));
         builder.attribute(InfiniumVcfFields.GC_SCORE, formatFloatForVcf(egtFile.totalScore[egtIndex]));
 
         for (InfiniumVcfFields.GENOTYPE_VALUES gtValue : InfiniumVcfFields.GENOTYPE_VALUES.values()) {
@@ -505,7 +508,7 @@ public class GtcToVcf extends CommandLineProgram {
     }
 
     public static String formatFloatForVcf(final float value) {
-        if (Float.isNaN(value)) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
             return DOT;
         }
         return df.format(value);

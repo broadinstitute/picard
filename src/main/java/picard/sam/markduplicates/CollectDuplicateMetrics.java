@@ -89,11 +89,11 @@ public class CollectDuplicateMetrics extends SinglePassSamProgram {
     @Override
     protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
 
-        final DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator);
+        final DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator, false);
         final boolean isDuplicate = rec.getDuplicateReadFlag();
 
         if (isDuplicate) {
-            AbstractMarkDuplicatesCommandLineProgram.addDuplicateReadToMetrics(rec, metrics);
+            metrics.addDuplicateReadToMetrics(rec);
         }
     }
 
