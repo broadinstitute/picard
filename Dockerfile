@@ -1,4 +1,4 @@
-FROM adoptopenjdk:8
+FROM eclipse-temurin:17-jdk
 MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
 
 ARG build_command=shadowJar

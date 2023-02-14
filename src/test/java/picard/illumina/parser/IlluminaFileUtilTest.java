@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 
+@SuppressWarnings("removal")
 public class IlluminaFileUtilTest {
     private static final int DEFAULT_LANE = 7;
     private static final List<Integer> DEFAULT_TILES = makeList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);

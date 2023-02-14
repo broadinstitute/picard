@@ -12,12 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 8, 11 ]
+        java: [ 17 ]
         experimental: [false]
         run_barclay_tests: [true, false]
-#        include:
-#          - java: 17
-#            experimental: true
       fail-fast: false
     continue-on-error: ${{ matrix.experimental }}
     name: Java ${{ matrix.Java }}, Barclay=${{ matrix.run_barclay_tests}} tests
@@ -27,7 +24,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.Java }}
-          distribution: 'adopt'
+          distribution: 'temurin'
           cache: gradle
       - name: "set up R"
         run: |

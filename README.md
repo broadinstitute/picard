@@ -16,8 +16,7 @@ Picard is implemented using the HTSJDK Java library [HTSJDK][1] to support
 accessing file formats that are commonly used for high-throughput
 sequencing data such as [SAM][2] and [VCF][3].  
 
-Picard now builds and passes tests under Java 11. This should be considered to be a *Beta* feature. 
-As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last version to support Java 1.7 was release 1.141.
+As of version 3.0, Picard requires Java 1.17.
 
 #### Building Picard
 

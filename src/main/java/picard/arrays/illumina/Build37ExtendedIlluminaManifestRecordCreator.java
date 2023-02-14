@@ -6,7 +6,6 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.tribble.annotation.Strand;
-import joptsimple.internal.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import picard.PicardException;
@@ -392,7 +391,7 @@ public class Build37ExtendedIlluminaManifestRecordCreator {
             modifiedThreePrimeSeq.insert(0, indelSeq);
         }
         // May have not fully shifted homopolymer
-        while (Strings.repeat(modifiedFivePrimeSeq.charAt(modifiedFivePrimeSeq.length() - 1), indelLength).equals(indelSeq)) {
+        while (StringUtils.repeat(modifiedFivePrimeSeq.charAt(modifiedFivePrimeSeq.length() - 1), indelLength).equals(indelSeq)) {
             modifiedThreePrimeSeq.insert(0, modifiedFivePrimeSeq.substring(modifiedFivePrimeSeq.length() - 1));
             modifiedFivePrimeSeq = modifiedFivePrimeSeq.substring(0, modifiedFivePrimeSeq.length() - 1);
         }
