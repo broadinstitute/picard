@@ -100,13 +100,6 @@ configurations.all {
 sourceCompatibility = 1.17
 targetCompatibility = 1.17
 
-test {
-    jvmArgs = [
-            // required for MergeBamAlignmentTest
-            '--add-opens', 'java.base/java.io=ALL-UNNAMED'
-    ]
-}
-
 final isRelease = Boolean.getBoolean("release")
 final gitVersion = gitVersion().replaceAll(".dirty", "")
 version = isRelease ? gitVersion : gitVersion + "-SNAPSHOT"
@@ -168,9 +161,8 @@ task picardDoc(type: Javadoc, dependsOn: ['cleanPicardDoc', classes]) {
     source = sourceSets.main.allJava
 
     // The picardDoc process instantiates any documented feature classes, so to run it we need the entire
-    // runtime classpath, as well as jdk javadoc files such as tools.jar, where com.sun.javadoc lives.
-    // The compileClasspath is required in order for the picarDoc doclet process to resolve the googleNio
-    // classes, which are compile-time only.
+    // runtime classpath. The compileClasspath is required in order for the picardDoc doclet process to
+    // resolve the googleNio classes, which are compile-time only.
     classpath = sourceSets.main.compileClasspath + sourceSets.main.runtimeClasspath
     options.docletpath = classpath.asType(List)
     options.doclet = "picard.util.help.PicardHelpDoclet"
@@ -224,6 +216,7 @@ tasks.withType(Test) {
     description = "Runs the unit tests"
 
     jvmArgs += [
+            // required for MergeBamAlignmentTest
             '--add-opens', 'java.base/java.io=ALL-UNNAMED'
     ]
 
