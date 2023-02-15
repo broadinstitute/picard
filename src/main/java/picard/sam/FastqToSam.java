@@ -234,6 +234,9 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(doc="Allow (and ignore) empty lines")
     public Boolean ALLOW_AND_IGNORE_EMPTY_LINES = false;
 
+    @Argument(doc="Allow empty input fastq")
+    public Boolean ALLOW_EMPTY_FASTQ = false;
+
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
     /**
@@ -324,10 +327,19 @@ public class FastqToSam extends CommandLineProgram {
         final SAMFileHeader header = createSamFileHeader();
         final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, false, OUTPUT, REFERENCE_SEQUENCE);
 
-        // Set the quality format
-        QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ.toPath()),
-                (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
-                QUALITY_FORMAT);
+        final FastqReader reader1 = fileToFastqReader(FASTQ.toPath());
+        if (reader1.hasNext()) {
+            // Set the quality format
+            QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader1,
+                    (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
+                    QUALITY_FORMAT);
+        } else {
+            if (ALLOW_EMPTY_FASTQ) {
+                LOG.warn("Input FASTQ is empty, will write out SAM/BAM file with no reads.");
+            } else {
+                throw new PicardException("Input fastq is empty. Set ALLOW_EMPTY_FASTQ if you still want to write out a file with no reads.");
+            }
+        }
 
         // Lists for sequential files, but also used when not sequential
         final List<FastqReader> readers1 = new ArrayList<>();

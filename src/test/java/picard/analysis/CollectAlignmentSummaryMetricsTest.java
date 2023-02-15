@@ -656,14 +656,15 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @DataProvider
     Object[][] fileForTestReadLengthHistogram(){
         return new Object[][]{
-                new Object[]{"summary_alignment_stats_test.sam"},
-                new Object[]{"summary_alignment_stats_test2.sam"},
-                new Object[]{"summary_alignment_stats_test3.sam"}
+                {"summary_alignment_stats_test.sam", true},
+                {"summary_alignment_stats_test2.sam", true},
+                {"summary_alignment_stats_test3.sam", true},
+                {"summary_alignment_stats_test_empty.sam", false}
         };
     }
 
     @Test(dataProvider = "fileForTestReadLengthHistogram")
-    public void testReadLengthHistogram(final String fileToUse) throws IOException {
+    public void testReadLengthHistogram(final String fileToUse, final Boolean expectHistogramOut) throws IOException {
         final File input = new File(TEST_DATA_DIR, fileToUse);
         final File outFile = getTempOutputFile("testReadLengthHistogram", ".txt");
 
@@ -676,7 +677,9 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(argsList.toArray(new String[0])),0);
 
-        Assert.assertTrue(outHist.exists());
+        if (expectHistogramOut) {
+            Assert.assertTrue(outHist.exists());
+        }
     }
 
 

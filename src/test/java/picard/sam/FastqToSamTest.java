@@ -165,6 +165,18 @@ public class FastqToSamTest extends CommandLineProgramTest {
         convertFile(filename1, filename2, version);
     }
 
+    @Test(expectedExceptionsMessageRegExp = "Input fastq is empty. Set ALLOW_EMPTY_FASTQ if you still want to write out a file with no reads.", expectedExceptions = PicardException.class)
+    public void testEmptyFastq() throws IOException {
+        final File emptyFastq = File.createTempFile("empty", ".fastq");
+        convertFile(emptyFastq, null, FastqQualityFormat.Illumina, false, false, false);
+    }
+
+    @Test
+    public void testEmptyFastqAllowed() throws IOException {
+        final File emptyFastq = File.createTempFile("empty", ".fastq");
+        convertFile(emptyFastq, null, FastqQualityFormat.Illumina, false, false, true);
+    }
+
     private File convertFile(final String filename, final FastqQualityFormat version) throws IOException {
         return convertFile(filename, null, version);
     }
@@ -173,17 +185,23 @@ public class FastqToSamTest extends CommandLineProgramTest {
         return convertFile(fastqFilename1, fastqFilename2, version,false);
     }
 
-    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version,final boolean permissiveFormat) throws IOException {
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version, final boolean permissiveFormat) throws IOException {
         return convertFile(fastqFilename1, fastqFilename2, version, permissiveFormat, false);
     }
 
-    private File convertFile(final String fastqFilename1,
-                             final String fastqFilename2, 
-                             final FastqQualityFormat version,
-                             final boolean permissiveFormat,
-                             final boolean useSequentialFastqs) throws IOException {
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version, final boolean permissiveFormat, final boolean useSequentialFastqs) throws IOException {
         final File fastq1 = new File(TEST_DATA_DIR, fastqFilename1);
         final File fastq2 = (fastqFilename2 != null) ? new File(TEST_DATA_DIR, fastqFilename2) : null;
+        return convertFile(fastq1, fastq2, version, permissiveFormat, useSequentialFastqs, false);
+    }
+
+    private File convertFile(final File fastq1,
+                             final File fastq2,
+                             final FastqQualityFormat version,
+                             final boolean permissiveFormat,
+                             final boolean useSequentialFastqs,
+                             final boolean allowEmptyFastq) throws IOException {
+
         final File samFile = newTempSamFile(fastq1.getName());
 
         final List<String> args = new ArrayList<>();
@@ -194,9 +212,10 @@ public class FastqToSamTest extends CommandLineProgramTest {
         args.add("READ_GROUP_NAME=rg");
         args.add("SAMPLE_NAME=s1");
 
-        if (fastqFilename2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
+        if (fastq2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
         if (permissiveFormat) args.add("ALLOW_AND_IGNORE_EMPTY_LINES=true");
         if (useSequentialFastqs) args.add("USE_SEQUENTIAL_FASTQS=true");
+        if (allowEmptyFastq) args.add("ALLOW_EMPTY_FASTQ=true");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
         return samFile ;
