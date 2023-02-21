@@ -65,6 +65,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream()
             .sorted().flatMap(l -> Arrays.asList(l.listFiles())
                     .stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
+    private boolean invert = false; // tsato: call these defaultInvert, defaultUnique, etc.
+    private boolean unique = false;
+    boolean dontMergeAbutting = false;
 
     @Test(groups = "cloud")
     public void tsatoCloudInput() throws IOException {
@@ -105,22 +108,28 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test
     public void testScatterOutputInCloud2() {
-        boolean invert = false;
-        boolean unique = false;
-        boolean dontMergeAbutting = false;
         IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, scatterable, secondInput);
         final int scatterCount = 3;
-        // tsato: vs Files.createTempFile()?
+        Path outputDir = null;
         try {
-            final Path outputDir = Files.createTempDirectory(new PicardHtsPath(CLOUD_DATA_DIR).toPath(), "interval_list_scatter_test");
-            args.add("SCATTER_COUNT=" +scatterCount);
+            // tsato: this actually does not create a temp directory
+            outputDir = Files.createTempDirectory(new PicardHtsPath(CLOUD_DATA_DIR).toPath(), "interval_list_scatter_test");
+            args.add("SCATTER_COUNT=" + scatterCount);
             args.add("OUTPUT=" + outputDir.toUri());
-            Assert.assertEquals(runPicardCommandLine(args), 0);
-            Assert.assertEquals(Files.list(outputDir).count(), scatterCount);
+            Assert.assertEquals(runPicardCommandLine(args), 0); // tsato: why does this trigger defaulting to .interval_list
+            final List<Path> outputPaths = Files.list(outputDir).collect(Collectors.toList());
+            Assert.assertEquals(outputPaths.size(), scatterCount);
+            int d = 3;
             // tsato: optionally read the files into memory and check they are not empty
         } catch (Exception e) {
-            // tsato: need to check the directory delete the temp directory but outputDir is out of scope;
+            // tsato: declare outputDir outside of try to force it to be in scope within catch...there has to be a cleaner solution.
+            if (outputDir != null && Files.exists(outputDir)){
+                // tsato: super ugly...
+                int d = 3;
+                // Files.delete(outputDir);
+            }
+            // tsato: need to delete the temp directory but outputDir is out of scope;
         }
     }
 

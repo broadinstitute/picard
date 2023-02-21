@@ -463,9 +463,9 @@ public class IntervalListTools extends CommandLineProgram {
             try {
                 // tsato: fine for now, but maybe I should put the following code inside try.
                 // do I need to define a new variable here? Giving OUTPUT to assertDirectoryIsWritable leads to not found
-                Files.createDirectories(OUTPUT.toPath());
+                Path outputDirectory = Files.createDirectories(OUTPUT.toPath());
                 // tsato: this line below always throws an error even if the directory is there and writable, so temporarily turn this off
-                // IOUtil.assertDirectoryIsWritable(yo);
+                // IOUtil.assertDirectoryIsWritable(outputDirectory);
             } catch (IOException e){
                 // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
                 throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
