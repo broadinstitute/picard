@@ -30,7 +30,10 @@ import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.GATKBucketUtils;
+import picard.nio.GATKIOUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
@@ -77,14 +80,11 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test
     public void testCloud() throws IOException {
-        boolean invert = false;
-        boolean unique = false;
-        boolean dontMergeAbutting = false;
         IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
 
         // Run the tool with the local input files and get the "expected" output
         final IntervalList intervalListLocal = tester(action, invert, unique, dontMergeAbutting, scatterable, secondInput, true);
-        final IntervalList intervalListCloudInput = tester(action, invert, unique, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), true);
+        final IntervalList intervalListCloudInput = tester(action, invert, unique, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), false);
         Assert.assertEquals(intervalListLocal.size(), intervalListCloudInput.size());
 
         for (int i = 0; i < intervalListLocal.size(); i++){
@@ -111,26 +111,24 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, scatterable, secondInput);
         final int scatterCount = 3;
-        Path outputDir = null;
+        
+        // We do not create the temp directory because in google cloud handle directories differently compared to other filesystems
+        // where directories are entities that behave like files.
+        // e.g. Files.createTempDirectory() does not create a "directory" in gcs, although it returns a Path object.
+        final Path outputDir = new PicardHtsPath(CLOUD_DATA_DIR).toPath();
+        GATKIOUtils.deleteOnExit(outputDir);
+        args.add("SCATTER_COUNT=" + scatterCount);
+        args.add("OUTPUT=" + outputDir.toUri());
+        Assert.assertEquals(runPicardCommandLine(args), 0); // tsato: why does this trigger defaulting to .interval_list
         try {
-            // tsato: this actually does not create a temp directory
-            outputDir = Files.createTempDirectory(new PicardHtsPath(CLOUD_DATA_DIR).toPath(), "interval_list_scatter_test");
-            args.add("SCATTER_COUNT=" + scatterCount);
-            args.add("OUTPUT=" + outputDir.toUri());
-            Assert.assertEquals(runPicardCommandLine(args), 0); // tsato: why does this trigger defaulting to .interval_list
             final List<Path> outputPaths = Files.list(outputDir).collect(Collectors.toList());
             Assert.assertEquals(outputPaths.size(), scatterCount);
-            int d = 3;
-            // tsato: optionally read the files into memory and check they are not empty
-        } catch (Exception e) {
-            // tsato: declare outputDir outside of try to force it to be in scope within catch...there has to be a cleaner solution.
-            if (outputDir != null && Files.exists(outputDir)){
-                // tsato: super ugly...
-                int d = 3;
-                // Files.delete(outputDir);
-            }
-            // tsato: need to delete the temp directory but outputDir is out of scope;
+        } catch (IOException e){
+            throw new PicardException("Encountered an IOException while listing files in " + outputDir.toUri());
         }
+        
+        int d = 3;
+        // tsato: optionally read the files into memory and check they are not empty
     }
 
     @DataProvider
@@ -303,30 +301,14 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     // tsato: these FILEs may need to be updated. Also: to Path, or PicardHTSPath?
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
-                                final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean localOutput) throws IOException {
-        // tsato: the Path class does not have .deleteOnExit() like File. The proper way to delete this is to implement
-        // deleteOnExit by hand using a shutdown hook (see https://stackoverflow.com/questions/28752006/alternative-to-file-deleteonexit-in-java-nio)
-        // but this should do for now.
-        Path output = null; // tsato: is this ok as a placeholder?
-        try {
-            if (localOutput){
-                output = Files.createTempFile("IntervalListTools", "interval_list");
-//            final File ilOut = File.createTempFile("IntervalListTools", ".interval_list"); // tsato: tester should support cloud output
-//            ilOut.deleteOnExit();
-            } else {
-                // tsato: vs Files.createTempFile()?
-                output = new PicardHtsPath(CLOUD_DATA_DIR + "temp.interval_list").toPath();
-            }
+                                final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) throws IOException {
+        final String outputDirFullName = cloudOutput ? CLOUD_DATA_DIR : "IntervalListTools";
+        final String output = GATKBucketUtils.getTempFilePath(outputDirFullName, "interval_list"); // tsato: use variable for extensi
+        final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2); // tsato: converting to Path a bit questionable
+        args.add("OUTPUT=" + output);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
-            final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2); // tsato: converting to Path a bit questionable
-            args.add("OUTPUT=" + output.toUri());
-
-            Assert.assertEquals(runPicardCommandLine(args), 0);
-        } catch (Exception e){
-            Files.delete(output);
-        }
-
-        return IntervalList.fromPath(output);
+        return IntervalList.fromPath(GATKIOUtils.getPath(output));
     }
 
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue) throws IOException {
