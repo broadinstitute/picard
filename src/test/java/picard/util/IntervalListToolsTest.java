@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,8 +69,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream()
             .sorted().flatMap(l -> Arrays.asList(l.listFiles())
                     .stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
-    private boolean invert = false; // tsato: call these defaultInvert, defaultUnique, etc.
-    private boolean unique = false;
+    private static final boolean DEFAULT_INVERT_ARG = false;
+    private static final boolean DEFAULT_UNIQUE_ARG = false;
+    private static final IntervalListTools.Action DEFAULT_ACTION = IntervalListTools.Action.INTERSECT;
     boolean dontMergeAbutting = false;
 
     @Test(groups = "cloud")
@@ -78,57 +80,84 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         // e.g. testCloud() below seems to work.
     }
 
-    @Test
-    public void testCloud() throws IOException {
-        IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
+    @DataProvider
+    public Object[][] cloudOutputLocation() {
+        final boolean cloud = true;
+        final boolean local = false;
+        return new Object[][]{
+                {cloud},
+                {local}
+        };
+    }
 
+
+    // The input file is in cloud, the output is local
+    @Test(dataProvider = "cloudOutputLocation")
+    public void testCloudInput(boolean outputInCloud) throws IOException {
         // Run the tool with the local input files and get the "expected" output
-        final IntervalList intervalListLocal = tester(action, invert, unique, dontMergeAbutting, scatterable, secondInput, true);
-        final IntervalList intervalListCloudInput = tester(action, invert, unique, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), false);
-        Assert.assertEquals(intervalListLocal.size(), intervalListCloudInput.size());
+        final IntervalList expectedIntervals = tester(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, dontMergeAbutting, scatterable, secondInput, false);
+        final IntervalList intervalListCloudInput = tester(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), outputInCloud);
 
-        for (int i = 0; i < intervalListLocal.size(); i++){
-            final Interval local = intervalListLocal.getIntervals().get(i);
+        Assert.assertEquals(expectedIntervals.size(), intervalListCloudInput.size());
+
+        for (int i = 0; i < expectedIntervals.size(); i++) {
+            final Interval local = expectedIntervals.getIntervals().get(i);
             final Interval cloud = intervalListCloudInput.getIntervals().get(i);
-            Assert.assertEquals(local, cloud);
-        }
-
-        // Now the output is also cloud
-        // Duplicated code, but the alternatives---splitting into two tests, or using a data provider with two booleans { yes_cloud_output, no_cloud_output }
-        // are also awkward.
-        final IntervalList intervalListCloudInputOutput = tester(action, invert, unique, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath(), true);
-        Assert.assertEquals(intervalListLocal.size(), intervalListCloudInput.size());
-
-        for (int i = 0; i < intervalListLocal.size(); i++){
-            final Interval local = intervalListLocal.getIntervals().get(i);
-            final Interval cloud = intervalListCloudInputOutput.getIntervals().get(i);
             Assert.assertEquals(local, cloud);
         }
     }
 
+
+    private String getExpectedScatteredIntervalList(final int scatterCount) {
+        final List<String> args = buildStandardTesterArguments(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath());
+        try {
+            final Path expectedOutput = Files.createTempDirectory("scatter_test");
+            args.add("SCATTER_COUNT=" + scatterCount);
+            args.add("OUTPUT=" + expectedOutput.toUri());
+            Assert.assertEquals(runPicardCommandLine(args), 0); // tsato: why does this trigger defaulting to .interval_list
+            return expectedOutput.toUri().getPath();
+        } catch (IOException e){
+            throw new PicardException("Encountered an IO Exception while running IntevalListTools", e);
+        }
+    }
+
     @Test
-    public void testScatterOutputInCloud2() {
-        IntervalListTools.Action action = IntervalListTools.Action.INTERSECT;
-        final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, scatterable, secondInput);
+    public void testScatterOutputInCloud3() { // tsato: added 3 because it was running all the picard tests, figured something got misconfigured
+        final List<String> args = buildStandardTesterArguments(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, dontMergeAbutting, scatterableCloud.toPath(), secondInputCloud.toPath());
         final int scatterCount = 3;
         
         // We do not create the temp directory because in google cloud handle directories differently compared to other filesystems
         // where directories are entities that behave like files.
         // e.g. Files.createTempDirectory() does not create a "directory" in gcs, although it returns a Path object.
-        final Path outputDir = new PicardHtsPath(CLOUD_DATA_DIR).toPath();
-        GATKIOUtils.deleteOnExit(outputDir);
+        // We create a "directory" this way just to add it files to be deleted at shutdown
+        final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_DATA_DIR + "scatter_test/"); // tsato: need to create temp dir...
+        GATKIOUtils.deleteOnExit(outputDir.toPath());
         args.add("SCATTER_COUNT=" + scatterCount);
-        args.add("OUTPUT=" + outputDir.toUri());
+        args.add("OUTPUT=" + outputDir.toPath().toUri());
         Assert.assertEquals(runPicardCommandLine(args), 0); // tsato: why does this trigger defaulting to .interval_list
+
+        final String expectedOutputDir = getExpectedScatteredIntervalList(scatterCount);
         try {
-            final List<Path> outputPaths = Files.list(outputDir).collect(Collectors.toList());
-            Assert.assertEquals(outputPaths.size(), scatterCount);
+            Assert.assertEquals(Files.list(outputDir.toPath()).count(), scatterCount);
+            // All this is clunky because we create intermediate output directories e.g. temp_0001_of_3 . We should get rid of them.
+            final List<Path> outputPaths = new ArrayList<>(scatterCount);
+            for (int i = 1; i <= scatterCount; i++){
+                outputPaths.add(IntervalListTools.createSubDirectoryAndGetScatterFile(outputDir, scatterCount, new DecimalFormat("0000").format(i)));
+            }
+
+            final List<Path> expectedOutput = new ArrayList<>(scatterCount);
+            for (int i = 1; i <= scatterCount; i++){
+                expectedOutput.add(IntervalListTools.createSubDirectoryAndGetScatterFile(new PicardHtsPath(expectedOutputDir), scatterCount, new DecimalFormat("0000").format(i)));
+            }
+
+            for (int j = 0; j < scatterCount; j++){
+                final IntervalList output = IntervalList.fromPath(outputPaths.get(j));
+                final IntervalList expected = IntervalList.fromPath(expectedOutput.get(j));
+                Assert.assertEquals(output, expected);
+            }
         } catch (IOException e){
-            throw new PicardException("Encountered an IOException while listing files in " + outputDir.toUri());
+            throw new PicardException("Encountered an IOException", e);
         }
-        
-        int d = 3;
-        // tsato: optionally read the files into memory and check they are not empty
     }
 
     @DataProvider
@@ -303,7 +332,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
                                 final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) throws IOException {
         final String outputDirFullName = cloudOutput ? CLOUD_DATA_DIR : "IntervalListTools";
-        final String output = GATKBucketUtils.getTempFilePath(outputDirFullName, "interval_list"); // tsato: use variable for extensi
+        final String output = GATKBucketUtils.getTempFilePath(outputDirFullName, ".interval_list"); // tsato: use variable for extensi
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2); // tsato: converting to Path a bit questionable
         args.add("OUTPUT=" + output);
         Assert.assertEquals(runPicardCommandLine(args), 0);

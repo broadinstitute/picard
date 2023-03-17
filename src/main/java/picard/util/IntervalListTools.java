@@ -590,12 +590,12 @@ public class IntervalListTools extends CommandLineProgram {
         return summary;
     }
 
-    private static Path createSubDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
+    public static Path createSubDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
         final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
         try {
             final Path result = outputDirectory.toPath().resolve(newFileName);
             // tsato: https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
-            Files.createDirectory(result.getParent());
+            Files.createDirectories(result.getParent()); // If the directory already exists, do not throw an error. (Compare to Files.createDirectory())
             return result;
         } catch (IOException e){
             // tsato: Why is throwing a PicardException not a static error, when throwing an IOException is?
