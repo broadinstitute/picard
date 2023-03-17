@@ -66,8 +66,8 @@ public class GATKIOUtils {
                 return Paths.get(uriString);
             }
             catch ( IOException io ) {
-                // tsato: UserException in GATK but Picard does not differentiate between e.g. PicardExcpetion vs UserException
-                // Make UserException class, as needed.
+                // UserException in GATK but Picard does not differentiate between e.g. PicardException vs UserException
+                // Might be useful to add the UserException class in the long term
                 throw new PicardException(uriString + " is not a supported path", io);
             }
         }

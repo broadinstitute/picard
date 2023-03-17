@@ -26,7 +26,13 @@ package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.FileExtensions;
+import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser.ClpEnum;
@@ -386,9 +392,9 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        // Check inputs
-        IOUtil.assertPathsAreReadable(INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList()));
-        IOUtil.assertPathsAreReadable(SECOND_INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList()));
+        // Check input
+        IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(INPUT));
+        IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(SECOND_INPUT));
 
         if (COUNT_OUTPUT != null) {
             IOUtil.assertFileIsWritable(COUNT_OUTPUT);
@@ -461,17 +467,14 @@ public class IntervalListTools extends CommandLineProgram {
         if (OUTPUT != null && SCATTER_COUNT > 1) {
             // tsato: create the main output directory here, since assertDirectoryIsWritable checks if it exists
             try {
-                // tsato: fine for now, but maybe I should put the following code inside try.
-                // do I need to define a new variable here? Giving OUTPUT to assertDirectoryIsWritable leads to not found
-                Path outputDirectory = Files.createDirectories(OUTPUT.toPath());
-                // tsato: this line below always throws an error even if the directory is there and writable, so temporarily turn this off
-                // IOUtil.assertDirectoryIsWritable(outputDirectory);
+                // Running something like IOUtil.assertDirectoryIsWritable on outputDirectory returns an exception due to how google cloud
+                // handles directories, so we skip this check.
+                final Path outputDirectory = Files.createDirectories(OUTPUT.toPath());
             } catch (IOException e){
-                // tsato: ditto here: PicardException (no need to add throws...) vs IOException (must add throws)
                 throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
             }
 
-            final ScatterSummary scattered = writeScatterIntervals(outputIntervals); // tsato: I forget how this all works with try catch vs throws IOException...
+            final ScatterSummary scattered = writeScatterIntervals(outputIntervals);
             LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
             if (scattered.size != SCATTER_COUNT) {
                 LOG.warn(String.format(
@@ -570,8 +573,7 @@ public class IntervalListTools extends CommandLineProgram {
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
     private ScatterSummary writeScatterIntervals(final IntervalList list) {
-        // tsato: In gatk I would use Utils.validate(); what's the equivalent in Picard? Although I could def live without this particular assert.
-        assert SCATTER_COUNT > 0;
+        ValidationUtils.validateArg(SCATTER_CONTENT > 0, "Scatter count should be a positive integer.");
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
         final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
@@ -583,7 +585,6 @@ public class IntervalListTools extends CommandLineProgram {
             summary.size++;
             summary.baseCount += intervals.getBaseCount();
             summary.intervalCount += intervals.getIntervals().size();
-            // tsato: renamed to *sub*directory, but the better approach is to get rid of the unnecessary middle layer of directories
             intervals.write(createSubDirectoryAndGetScatterFile(OUTPUT, SCATTER_COUNT, fileNameFormatter.format(fileIndex++)));
         }
 
@@ -594,11 +595,9 @@ public class IntervalListTools extends CommandLineProgram {
         final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
         try {
             final Path result = outputDirectory.toPath().resolve(newFileName);
-            // tsato: https://stackoverflow.com/questions/3634853/how-to-create-a-directory-in-java
             Files.createDirectories(result.getParent()); // If the directory already exists, do not throw an error. (Compare to Files.createDirectory())
             return result;
         } catch (IOException e){
-            // tsato: Why is throwing a PicardException not a static error, when throwing an IOException is?
             throw new PicardException("Encountered an error while creating output directories that house scattered output", e);
         }
     }
@@ -614,7 +613,7 @@ public class IntervalListTools extends CommandLineProgram {
         INTERVAL_LIST(Collections.singleton(FileExtensions.INTERVAL_LIST)) {
             @Override
             protected IntervalList getIntervalListInternal(final Path intervalList, final boolean includeFiltered) {
-                return IntervalList.fromPath(intervalList); // tsato: code smell here --- includeFiltered not used
+                return IntervalList.fromPath(intervalList);
             }
         };
 
@@ -623,9 +622,10 @@ public class IntervalListTools extends CommandLineProgram {
         IntervalListInputType(final Collection<String> extensions) {
             applicableExtensions = extensions;
         }
-        // tsato: remove the "Internal" suffix
+
         protected abstract IntervalList getIntervalListInternal(final Path path, final boolean includeFiltered);
-        // tsato: forFile is a bad name; maybe rename to "getType"
+
+        // "getType" is perhaps a better name for this function
         static IntervalListInputType forFile(final PicardHtsPath intervalListExtractable) {
             for (final IntervalListInputType intervalListInputType : IntervalListInputType.values()) {
                 for (final String s : intervalListInputType.applicableExtensions) {
