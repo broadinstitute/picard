@@ -90,25 +90,6 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
         return this;
     }
 
-    /**
-     * Attempts to filter out haplotypes that may have suspect genotyping by removing haplotypes that reach
-     * a minimum confidence score yet have a significant fraction of observations from a third or fourth allele.
-     */
-    public void filterSuspectSites() {
-        final Iterator<Map.Entry<HaplotypeBlock, HaplotypeProbabilities>> iterator = entrySet().iterator();
-        while (iterator.hasNext()) {
-            final Map.Entry<HaplotypeBlock, HaplotypeProbabilities> entry = iterator.next();
-            final HaplotypeProbabilities p = entry.getValue();
-            if (p instanceof HaplotypeProbabilitiesFromSequence) {
-                final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) p;
-
-                if (probs.getLodMostProbableGenotype() >= 3 && probs.getFractionUnexpectedAlleleObs() > 0.1) {
-                    iterator.remove();
-                }
-            }
-        }
-    }
-
     public static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
         final Function<FingerprintIdDetails, String> groupByTemp;
         switch (CROSSCHECK_BY) {
