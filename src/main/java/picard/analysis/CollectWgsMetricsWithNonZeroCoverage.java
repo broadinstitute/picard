@@ -242,12 +242,12 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             file.addHistogram(highQualityDepthHistogramNonZero);
 
             if (includeBQHistogram) {
-                addBaseQHistogram(file);
+                histogram.addBaseQHistogram(file);
             }
         }
 
         protected Histogram<Integer> getDepthHistogram() {
-            return getHistogram(highQualityDepthHistogramArray, "coverage", "count_WHOLE_GENOME");
+            return histogram.getHistogram(highQualityDepthHistogramArray, "coverage", "count_WHOLE_GENOME");
         }
 
         private Histogram<Integer> getDepthHistogramNonZero() {
