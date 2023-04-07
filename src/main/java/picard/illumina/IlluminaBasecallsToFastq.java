@@ -441,23 +441,30 @@ public class IlluminaBasecallsToFastq extends ExtractBarcodesProgram {
         final File[] templateFiles = new File[inputReadStructure.templates.length()];
         final File[] sampleBarcodeFiles = new File[inputReadStructure.sampleBarcodes.length()];
         final File[] molecularBarcodeFiles = new File[inputReadStructure.molecularBarcode.length()];
+        final String templateFormat = "%s.%d.%s";
+        final String sampleBarcodeFormat = "%s.barcode_%d.%s";
+        final String molecularBarcodeFormat = "%s.index_%d.%s";
 
-        for (int i = 0; i < templateFiles.length; ++i) {
-            templateFiles[i] = new File(outputDir, String.format("%s.%d.%s", prefixString, i + 1, suffixString));
-        }
+        // write templateFiles
+        writeFileWithFormat(outputDir, templateFormat, prefixString, suffixString, templateFiles);
 
-        for (int i = 0; i < sampleBarcodeFiles.length; ++i) {
-            sampleBarcodeFiles[i] = new File(outputDir, String.format("%s.barcode_%d.%s", prefixString, i + 1, suffixString));
-        }
+        // write sampleBarcodeFiles
+        writeFileWithFormat(outputDir, sampleBarcodeFormat, prefixString, suffixString, sampleBarcodeFiles);
 
-        for (int i = 0; i < molecularBarcodeFiles.length; ++i) {
-            molecularBarcodeFiles[i] = new File(outputDir, String.format("%s.index_%d.%s", prefixString, i + 1, suffixString));
-        }
+        // write molecularBarcodeFiles
+        writeFileWithFormat(outputDir, molecularBarcodeFormat, prefixString, suffixString, molecularBarcodeFiles);
 
         int queueSize = (MAX_RECORDS_IN_RAM / 2) / numSamples;
         return writerPool.pool(new ClusterToFastqWriter(templateFiles, sampleBarcodeFiles, molecularBarcodeFiles, TRIMMING_QUALITY, adapters), new LinkedBlockingQueue<>(queueSize), (int) (queueSize * 0.5));
     }
-
+    /**
+     *  A separate method to write the different types of files in desired format
+     */
+    private void writeFileWithFormat(File outputDir, String format,String prefixString, String suffixString, File[] files) {
+        for (int i = 0; i < files.length; ++i) {
+            files[i] = new File(outputDir, String.format(format, prefixString, i + 1, suffixString));
+        }
+    }
     /**
      * Trivial class to avoid converting ClusterData to another type when not sorting outputs.
      */
