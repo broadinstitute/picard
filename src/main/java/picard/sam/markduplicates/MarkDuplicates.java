@@ -709,7 +709,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
      * Goes through the accumulated ReadEndsForMarkDuplicates objects and determines which of them are
      * to be marked as duplicates.
      */
-    public void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
+    protected void sortIndicesForDuplicates(final boolean indexOpticalDuplicates){
         final int entryOverhead;
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
@@ -735,6 +735,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
                     maxInMemory,
                     TMP_DIR);
         }
+    }
+    public void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
+        sortIndicesForDuplicates(indexOpticalDuplicates);
 
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
         final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
