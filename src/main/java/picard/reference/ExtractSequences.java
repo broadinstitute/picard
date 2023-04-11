@@ -24,7 +24,6 @@
 
 package picard.reference;
 
-import com.sun.org.apache.regexp.internal.RE;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
