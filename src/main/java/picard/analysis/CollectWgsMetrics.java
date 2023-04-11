@@ -48,6 +48,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.IntervalArgumentCollection;
@@ -211,7 +212,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
         // Verify the sequence dictionaries match
         if (!this.header.getSequenceDictionary().isEmpty()) {
-            SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
+            try {
+                SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
+            } catch (final SequenceUtil.SequenceListsDifferException e) {
+                throw new PicardException("Dictionary in " + INPUT + " does not match dictionary in " + REFERENCE_SEQUENCE, e);
+            }
         }
 
         final List<SamRecordFilter> filters = new ArrayList<>();

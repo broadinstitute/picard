@@ -223,9 +223,13 @@ public class FingerprintChecker {
         final SAMSequenceDictionary activeDictionary = getActiveDictionary(haplotypes);
 
         if (sequenceDictionaryToCheck.getSequences().size() < activeDictionary.size()) {
-            throw new IllegalArgumentException("Dictionary on fingerprinted file smaller than that on Haplotype Database!");
+            throw new SequenceUtil.SequenceListsDifferException("Dictionary on fingerprinted file smaller than that on Haplotype Database!");
         }
-        SequenceUtil.assertSequenceDictionariesEqual(activeDictionary, sequenceDictionaryToCheck, true);
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(activeDictionary, sequenceDictionaryToCheck, true);
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary on fingerprinted file does not match dictionary in Haplotype Database.", e);
+        }
     }
 
     private static SAMSequenceDictionary getActiveDictionary(final HaplotypeMap haplotypes) {

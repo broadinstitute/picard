@@ -450,8 +450,12 @@ static final String USAGE_DETAILS = "<p>This tool is used to design custom bait 
         final ReferenceSequenceFileWalker referenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
         // Check that the reference and the target list have matching headers
-        SequenceUtil.assertSequenceDictionariesEqual(referenceWalker.getSequenceDictionary(),
-                targets.getHeader().getSequenceDictionary());
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(referenceWalker.getSequenceDictionary(),
+                    targets.getHeader().getSequenceDictionary());
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + REFERENCE_SEQUENCE + " does not match dictionary in " + TARGETS, e);
+        }
 
         // Design the baits!
         int discardedBaits = 0;

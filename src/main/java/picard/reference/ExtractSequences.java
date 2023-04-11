@@ -24,6 +24,7 @@
 
 package picard.reference;
 
+import com.sun.org.apache.regexp.internal.RE;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
@@ -93,7 +94,11 @@ public class ExtractSequences extends CommandLineProgram {
 
         final IntervalList intervals = IntervalList.fromFile(INTERVAL_LIST);
         final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-        SequenceUtil.assertSequenceDictionariesEqual(intervals.getHeader().getSequenceDictionary(), ref.getSequenceDictionary());
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(intervals.getHeader().getSequenceDictionary(), ref.getSequenceDictionary());
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + INTERVAL_LIST + " does not match dictionary in " + REFERENCE_SEQUENCE, e);
+        }
 
         final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
 

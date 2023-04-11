@@ -381,13 +381,21 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
 
         // Verify that both VCFs have the same Sequence Dictionary
-        SequenceUtil.assertSequenceDictionariesEqual(truthReader.getFileHeader().getSequenceDictionary(), callReader.getFileHeader().getSequenceDictionary());
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(truthReader.getFileHeader().getSequenceDictionary(), callReader.getFileHeader().getSequenceDictionary());
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + TRUTH_VCF + " does not match dictionary in " + CALL_VCF, e);
+        }
 
         final Optional<VariantContextWriter> writer = getVariantContextWriter(truthReader, callReader);
 
         if (usingIntervals) {
             // If using intervals, verify that the sequence dictionaries agree with those of the VCFs
-            SequenceUtil.assertSequenceDictionariesEqual(intervalsSamSequenceDictionary, truthReader.getFileHeader().getSequenceDictionary());
+            try {
+                SequenceUtil.assertSequenceDictionariesEqual(intervalsSamSequenceDictionary, truthReader.getFileHeader().getSequenceDictionary());
+            } catch (final SequenceUtil.SequenceListsDifferException e) {
+                throw new PicardException("Dictionary in intervals does not match dictionary in " + TRUTH_VCF, e);
+            }
         }
 
         // Build the pair of iterators over the regions of interest

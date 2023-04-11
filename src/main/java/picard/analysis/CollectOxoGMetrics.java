@@ -239,8 +239,12 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
         if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
-            SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                    refWalker.getSequenceDictionary());
+            try {
+                SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
+                        refWalker.getSequenceDictionary());
+            } catch (final SequenceUtil.SequenceListsDifferException e) {
+                throw new PicardException("Dictionaty in " + INPUT + " does not match dictionary in " + REFERENCE_SEQUENCE, e);
+            }
         }
 
         final Set<String> samples = new HashSet<>();

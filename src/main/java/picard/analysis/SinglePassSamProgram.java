@@ -114,8 +114,12 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             walker = new ReferenceSequenceFileWalker(referenceSequence);
 
             if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
-                SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                        walker.getSequenceDictionary());
+                try {
+                    SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
+                            walker.getSequenceDictionary());
+                } catch (final SequenceUtil.SequenceListsDifferException e) {
+                    throw new PicardException("Dictionary in " + input + " does not match dictionary in " + referenceSequence, e);
+                }
             }
         }
 

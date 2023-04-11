@@ -15,6 +15,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.TheoreticalSensitivity;
 import picard.analysis.TheoreticalSensitivityMetrics;
@@ -121,22 +122,35 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         final IntervalList targetIntervals = IntervalList.fromFiles(TARGET_INTERVALS);
 
         // Validate that the targets and baits have the same references as the reads file
-        SequenceUtil.assertSequenceDictionariesEqual(
-                reader.getFileHeader().getSequenceDictionary(),
-                targetIntervals.getHeader().getSequenceDictionary());
-        SequenceUtil.assertSequenceDictionariesEqual(
-                reader.getFileHeader().getSequenceDictionary(),
-                getProbeIntervals().getHeader().getSequenceDictionary()
-        );
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(
+                    reader.getFileHeader().getSequenceDictionary(),
+                    targetIntervals.getHeader().getSequenceDictionary());
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + INPUT + " does not match dictionary in targets.", e);
+        }
+
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(
+                    reader.getFileHeader().getSequenceDictionary(),
+                    getProbeIntervals().getHeader().getSequenceDictionary()
+            );
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + INPUT + " does not match dictionary in probe intervals.", e);
+        }
 
         ReferenceSequenceFile ref = null;
         if (REFERENCE_SEQUENCE != null) {
             IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-            SequenceUtil.assertSequenceDictionariesEqual(
-                    reader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
-                    INPUT, REFERENCE_SEQUENCE
-            );
+            try {
+                SequenceUtil.assertSequenceDictionariesEqual(
+                        reader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
+                        INPUT, REFERENCE_SEQUENCE
+                );
+            } catch (final SequenceUtil.SequenceListsDifferException e) {
+                throw new PicardException("Dictionary in " + INPUT + " does not match dictionary in " + REFERENCE_SEQUENCE, e);
+            }
         }
 
         final COLLECTOR collector = makeCollector(

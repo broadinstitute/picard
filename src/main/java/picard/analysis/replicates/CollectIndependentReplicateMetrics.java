@@ -207,8 +207,11 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final VCFFileReader vcf = new VCFFileReader(VCF, false);
         final VCFHeader vcfFileHeader = vcf.getFileHeader();
 
-
-        SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(), vcfFileHeader.getSequenceDictionary());
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(), vcfFileHeader.getSequenceDictionary());
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + INPUT + " does not match dictionary in " + VCF, e);
+        }
 
         final List<String> samples = vcfFileHeader.getSampleNamesInOrder();
 

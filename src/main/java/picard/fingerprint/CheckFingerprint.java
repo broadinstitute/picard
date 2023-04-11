@@ -248,9 +248,16 @@ public class CheckFingerprint extends CommandLineProgram {
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
         checker.setReferenceFasta(REFERENCE_SEQUENCE);
 
-        SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
-        SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
-
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), SAMSequenceDictionaryExtractor.extractDictionary(genotypesPath), true);
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + inputPath + " does not match dictionary in " + genotypesPath, e);
+        }
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(inputPath), checker.getHeader().getSequenceDictionary(), true);
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException("Dictionary in " + inputPath + " does not match dictionary in " + HAPLOTYPE_MAP, e);
+        }
 
 
         final String observedSampleAlias = extractObservedSampleName(inputPath, OBSERVED_SAMPLE_ALIAS);
