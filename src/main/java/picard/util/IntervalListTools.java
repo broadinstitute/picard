@@ -397,7 +397,7 @@ public class IntervalListTools extends CommandLineProgram {
         IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(SECOND_INPUT));
 
         if (COUNT_OUTPUT != null) {
-            IOUtil.assertFileIsWritable(COUNT_OUTPUT);
+            IOUtil.assertFileIsWritable(COUNT_OUTPUT); // tsato: should I cloudify this too?
         }
 
         // Read in the interval lists and apply any padding
