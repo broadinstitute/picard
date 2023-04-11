@@ -45,6 +45,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,14 +78,14 @@ public class ReplaceSamHeader extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     @Argument(doc = "SAM/BAM/CRAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(doc = "SAM/BAM/CRAM file from which SAMFileHeader will be read.")
-    public File HEADER;
+    public PicardHtsPath HEADER;
 
     @Argument(doc = "header from HEADER file will be written to this file, followed by records from INPUT file",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     /**
      * Do the work after command line has been parsed.

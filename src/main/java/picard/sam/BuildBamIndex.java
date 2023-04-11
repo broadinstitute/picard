@@ -24,12 +24,7 @@
 
 package picard.sam;
 
-import htsjdk.samtools.BAMIndexer;
-import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
@@ -75,7 +70,10 @@ public class BuildBamIndex extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
                     "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
+
+    // The legacy behavior is to use the ".bam.bai"; change it to ".bai"
+    public boolean USE_SANE_EXTENSION = true;
 
     /**
      * Main method for the program.  Checks that all input files are present and
@@ -87,40 +85,39 @@ public class BuildBamIndex extends CommandLineProgram {
 
         // set default output file - input-file.bai
         if (OUTPUT == null) {
-
-            final String baseFileName = inputPath.getFileName().toString();
+            final String baseFileName = inputPath.toUri().toString();
 
             // only BAI indices can be created for now, although CSI indices can be read as well
+            // tsato: would be good to update htsjdk BamFileIoUtils.isBamFile() to support Path
+            // tsato: since we check whether the input is bam below, this check is unnecessary.
+            // csi file...is that inherent to a bam file? Why would anyone input a csi index to buildbamindex....
             if (baseFileName.endsWith(FileExtensions.BAM)) {
-
                 final int index = baseFileName.lastIndexOf('.');
-                OUTPUT = new File(baseFileName.substring(0, index) + FileExtensions.BAI_INDEX);
-
+                OUTPUT = new PicardHtsPath(baseFileName.substring(0, index) + FileExtensions.BAI_INDEX);
             } else {
-                OUTPUT = new File(baseFileName + FileExtensions.BAI_INDEX);
-            }
-        }
+                // tsato: why give two different kinds of output?
+                // Given them a benefit of the doubt...https://github.com/broadinstitute/picard/pull/998/files
+                OUTPUT = new PicardHtsPath(baseFileName + FileExtensions.BAI_INDEX);
+            } // tsato: I guess the possible scenario is that there is already an index in the same directory, and we want to use
+        } // the same kind (csi or bai). Or, this index type information is somehow already encoded in a bam file.
 
-        IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader bam;
-
-
         bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
                 .disable(SamReaderFactory.Option.EAGERLY_DECODE)
                 .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
                 .open(SamInputResource.of(inputPath));
 
-        if (bam.type() != SamReader.Type.BAM_TYPE && bam.type() != SamReader.Type.BAM_CSI_TYPE) {
+        if (bam.type() != SamReader.Type.BAM_TYPE && bam.type() != SamReader.Type.BAM_CSI_TYPE) { // PR: ? what did this PR do exactly?
             throw new SAMException("Input file must be bam file, not sam file.");
-        }
+        } // tsato: see BamFileREader.getIndexType...
 
         if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
             throw new SAMException("Input bam file must be sorted by coordinate");
         }
 
-        BAMIndexer.createIndex(bam, OUTPUT);
+        BAMIndexer.createIndex(bam, OUTPUT.toPath());
 
-        log.info("Successfully wrote bam index file " + OUTPUT);
+        log.info("Successfully wrote bam index file " + OUTPUT.toPath().toUri());
         CloserUtil.close(bam);
         return 0;
     }
