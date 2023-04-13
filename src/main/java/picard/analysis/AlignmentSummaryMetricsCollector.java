@@ -261,7 +261,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         @Override
         public void finish() {
             //summarize read data
-            if (metrics.TOTAL_READS > 0) {
+            if (metrics.TOTAL_READS > 0 && metrics.PF_READS > 0) {
                 metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
                 metrics.PCT_ADAPTER = adapterReads / (double) metrics.PF_READS;
                 metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
