@@ -232,7 +232,6 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         iterator.setIncludeNonPfReads(false);
 
         final AbstractWgsMetricsCollector<?> collector = getCollector(COVERAGE_CAP, getIntervalsToExamine());
-        final WgsHistogramCollector histogramCollector = new WgsHistogramCollector(COVERAGE_CAP);
         final WgsMetricsProcessor processor = getWgsMetricsProcessor(progress, refWalker, iterator, collector);
         processor.processFile();
 
@@ -244,7 +243,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
             // Write out theoretical sensitivity results.
             final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
             log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
-            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.histogram.getUnfilteredDepthHistogram(), histogramCollector.getUnfilteredDepthHistogram(), ALLELE_FRACTION);
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }

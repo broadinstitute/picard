@@ -89,8 +89,6 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
      */
     protected long counter = 0;
 
-    protected WgsHistogramCollector histogram;
-
     /**
      * Creates a collector and initializes the inner data structures
      *
@@ -108,7 +106,6 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
         this.coverageCap    = coverageCap;
         this.intervals      = intervals;
         this.usingStopAfter = collectWgsMetrics.STOP_AFTER > 0;
-        this.histogram = new WgsHistogramCollector(coverageCap);
     }
 
     /**
@@ -137,33 +134,33 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
 
         // add them to the file
         file.addMetric(metrics);
-        file.addHistogram(histogram.getHighQualityDepthHistogram());
-        if (includeBQHistogram) histogram.addBaseQHistogram(file);
+        file.addHistogram(getHighQualityDepthHistogram());
+        if (includeBQHistogram) addBaseQHistogram(file);
     }
 
-//    protected void addBaseQHistogram(final MetricsFile<WgsMetrics, Integer> file) {
-//        file.addHistogram(getUnfilteredBaseQHistogram());
-//    }
-//
-//    protected Histogram<Integer> getHighQualityDepthHistogram() {
-//        return getHistogram(highQualityDepthHistogramArray, "coverage", "high_quality_coverage_count");
-//    }
-//
-//    protected Histogram<Integer> getUnfilteredDepthHistogram() {
-//        return getHistogram(unfilteredDepthHistogramArray, "coverage", "unfiltered_coverage_count");
-//    }
-//
-//    protected Histogram<Integer> getUnfilteredBaseQHistogram() {
-//        return getHistogram(unfilteredBaseQHistogramArray, "baseq", "unfiltered_baseq_count");
-//    }
-//
-//    protected Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
-//        final Histogram<Integer> histogram = new Histogram<>(binLabel, valueLabel);
-//        for (int i = 0; i < array.length; ++i) {
-//            histogram.increment(i, array[i]);
-//        }
-//        return histogram;
-//    }
+    protected void addBaseQHistogram(final MetricsFile<WgsMetrics, Integer> file) {
+        file.addHistogram(getUnfilteredBaseQHistogram());
+    }
+
+    protected Histogram<Integer> getHighQualityDepthHistogram() {
+        return getHistogram(highQualityDepthHistogramArray, "coverage", "high_quality_coverage_count");
+    }
+
+    protected Histogram<Integer> getUnfilteredDepthHistogram() {
+        return getHistogram(unfilteredDepthHistogramArray, "coverage", "unfiltered_coverage_count");
+    }
+
+    protected Histogram<Integer> getUnfilteredBaseQHistogram() {
+        return getHistogram(unfilteredBaseQHistogramArray, "baseq", "unfiltered_baseq_count");
+    }
+
+    protected Histogram<Integer> getHistogram(final long[] array, final String binLabel, final String valueLabel) {
+        final Histogram<Integer> histogram = new Histogram<>(binLabel, valueLabel);
+        for (int i = 0; i < array.length; ++i) {
+            histogram.increment(i, array[i]);
+        }
+        return histogram;
+    }
 
     /**
      * Creates CollectWgsMetrics.WgsMetrics - the object holding the result of CollectWgsMetrics
@@ -179,8 +176,8 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
             final CountingPairedFilter pairFilter) {
         return collectWgsMetrics.generateWgsMetrics(
                 this.intervals,
-                histogram.getHighQualityDepthHistogram(),
-                histogram.getUnfilteredDepthHistogram(),
+                getHighQualityDepthHistogram(),
+                getUnfilteredDepthHistogram(),
                 collectWgsMetrics.getBasesExcludedBy(adapterFilter),
                 collectWgsMetrics.getBasesExcludedBy(mapqFilter),
                 collectWgsMetrics.getBasesExcludedBy(dupeFilter),
@@ -189,7 +186,7 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
                 basesExcludedByOverlap,
                 basesExcludedByCapping,
                 coverageCap,
-                histogram.getUnfilteredBaseQHistogram(),
+                getUnfilteredBaseQHistogram(),
                 collectWgsMetrics.SAMPLE_SIZE);
     }
 
@@ -221,5 +218,4 @@ public abstract class AbstractWgsMetricsCollector<T extends AbstractRecordAndOff
         final byte base = ref.getBases()[position - 1];
         return SequenceUtil.isNoCall(base);
     }
-
 }
