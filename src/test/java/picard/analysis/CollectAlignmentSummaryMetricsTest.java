@@ -29,6 +29,7 @@ import htsjdk.samtools.util.Histogram;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.TestNGUtil;
 
@@ -769,7 +770,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         }
     }
 
-    @Test
+    @Test(expectedExceptions = PicardException.class)
     public void testNoPFReads() throws IOException {
         final File input = new File(TEST_DATA_DIR, "null.sam");
         final File outfile = getTempOutputFile("test", ".txt");
