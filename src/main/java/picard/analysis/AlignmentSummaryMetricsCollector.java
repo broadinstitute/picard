@@ -40,6 +40,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.SequenceUtil;
+import picard.PicardException;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
@@ -298,6 +299,8 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                 }
+            } else {
+                throw new PicardException("Input file contains no PF_READS.");
             }
         }
 
