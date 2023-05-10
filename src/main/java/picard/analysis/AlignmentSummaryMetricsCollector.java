@@ -40,6 +40,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.SequenceUtil;
+import picard.PicardException;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
@@ -261,7 +262,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         @Override
         public void finish() {
             //summarize read data
-            if (metrics.TOTAL_READS > 0) {
+            if (metrics.PF_READS > 0) {
                 metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
                 metrics.PCT_ADAPTER = adapterReads / (double) metrics.PF_READS;
                 metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
@@ -297,6 +298,10 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH = MathUtil.divide(num3PrimeSoftClippedBases, (double) numReadsWith3PrimeSoftClips);
 
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
+                }
+            } else {
+                if (metrics.TOTAL_READS > 0) {
+                    throw new PicardException("Input file contains no PF_READS.");
                 }
             }
         }

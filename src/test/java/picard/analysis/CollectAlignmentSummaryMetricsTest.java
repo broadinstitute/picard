@@ -29,6 +29,7 @@ import htsjdk.samtools.util.Histogram;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.TestNGUtil;
 
@@ -769,6 +770,39 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test(expectedExceptions = PicardException.class)
+    public void testNoPFReads() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "null.sam");
+        final File outfile = getTempOutputFile("test", ".txt");
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+
+        Assert.assertEquals(output.getMetrics().size(), 1);
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_READ_LENGTH, 0.0);
+            Assert.assertEquals(metrics.TOTAL_READS, 3);
+            Assert.assertEquals(metrics.PF_READS, 0);
+            Assert.assertEquals(metrics.PF_NOISE_READS, 0);
+            Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 0);
+            Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 0);
+            Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
+            Assert.assertEquals(metrics.PF_READS_ALIGNED, 0);
+            Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 0);
+            Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.0);
+            Assert.assertEquals(metrics.PF_ALIGNED_BASES, 0);
+            Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
+            Assert.assertEquals(metrics.BAD_CYCLES, 0);
         }
     }
 }
