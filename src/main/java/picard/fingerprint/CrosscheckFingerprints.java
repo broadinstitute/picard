@@ -33,6 +33,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.DeprecatedFeature;
 import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
@@ -384,6 +385,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             "marking has been overly aggressive and coverage is low.")
     public boolean ALLOW_DUPLICATE_READS = false;
 
+    @DeprecatedFeature(detail = "No longer used in fingerprint checking. Will be removed in a future release.")
     @Argument(doc = "Assumed genotyping error rate that provides a floor on the probability that a genotype comes from " +
             "the expected sample. Must be greater than zero. ")
     public double GENOTYPING_ERROR_RATE = 0.01;
@@ -423,12 +425,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        if (GENOTYPING_ERROR_RATE <= 0) {
-            return new String[]{"GENOTYPING_ERROR_RATE must be greater than zero. Found " + GENOTYPING_ERROR_RATE};
-        }
-        if (GENOTYPING_ERROR_RATE >= 1) {
-            return new String[]{"GENOTYPING_ERROR_RATE must be strictly less than 1, found " + GENOTYPING_ERROR_RATE};
-        }
         if (SECOND_INPUT == null && INPUT_SAMPLE_MAP != null) {
             return new String[]{"INPUT_SAMPLE_MAP can only be used when also using SECOND_INPUT"};
         }
@@ -900,7 +896,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsMatchId.equals(rhsMatchId);
 
                 final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFingerprints.get(lhsId), rhsFingerprints.get(rhsId),
-                        GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
+                        LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
                 final FingerprintResult result = getMatchResults(expectedToMatch, results);
 
                 if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
@@ -958,7 +954,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
 
             final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
-                    GENOTYPING_ERROR_RATE, LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
+                    LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
 
             if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {

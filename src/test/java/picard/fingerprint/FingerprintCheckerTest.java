@@ -80,7 +80,7 @@ public class FingerprintCheckerTest {
         fpObserved.add(hpHomRef);
 
         // get match results using pLOD
-        final MatchResults mr = FingerprintChecker.calculateMatchResults(fpObserved, fpExpected, 0.01, pLoH);
+        final MatchResults mr = FingerprintChecker.calculateMatchResults(fpObserved, fpExpected, pLoH);
 
         // make sure that it's more likely to be the same sample, if the observed is "tumor" and the expected is "normal"
         Assert.assertTrue(mr.getLodTN() > mr.getLOD());
