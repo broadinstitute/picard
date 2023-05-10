@@ -58,6 +58,7 @@ import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -212,11 +213,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
         // Verify the sequence dictionaries match
         if (!this.header.getSequenceDictionary().isEmpty()) {
-            try {
-                SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
-            } catch (final SequenceUtil.SequenceListsDifferException e) {
-                throw new PicardException("Dictionary in " + INPUT + " does not match dictionary in " + REFERENCE_SEQUENCE, e);
-            }
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    this.header.getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    refWalker.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
         }
 
         final List<SamRecordFilter> filters = new ArrayList<>();

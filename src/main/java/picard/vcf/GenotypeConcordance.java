@@ -31,7 +31,6 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.tribble.Tribble;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -56,6 +55,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantEvaluationProgramGroup;
 import picard.nio.PicardHtsPath;
+import picard.util.SequenceDictionaryUtils;
 import picard.vcf.GenotypeConcordanceStates.CallState;
 import picard.vcf.GenotypeConcordanceStates.ContingencyState;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
@@ -381,21 +381,21 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
 
         // Verify that both VCFs have the same Sequence Dictionary
-        try {
-            SequenceUtil.assertSequenceDictionariesEqual(truthReader.getFileHeader().getSequenceDictionary(), callReader.getFileHeader().getSequenceDictionary());
-        } catch (final SequenceUtil.SequenceListsDifferException e) {
-            throw new PicardException("Dictionary in " + TRUTH_VCF + " does not match dictionary in " + CALL_VCF, e);
-        }
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                truthReader.getFileHeader().getSequenceDictionary(),
+                TRUTH_VCF.getRawInputString(),
+                callReader.getFileHeader().getSequenceDictionary(),
+                CALL_VCF.getRawInputString());
 
         final Optional<VariantContextWriter> writer = getVariantContextWriter(truthReader, callReader);
 
         if (usingIntervals) {
             // If using intervals, verify that the sequence dictionaries agree with those of the VCFs
-            try {
-                SequenceUtil.assertSequenceDictionariesEqual(intervalsSamSequenceDictionary, truthReader.getFileHeader().getSequenceDictionary());
-            } catch (final SequenceUtil.SequenceListsDifferException e) {
-                throw new PicardException("Dictionary in intervals does not match dictionary in " + TRUTH_VCF, e);
-            }
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    intervalsSamSequenceDictionary,
+                    "provided intervals",
+                    truthReader.getFileHeader().getSequenceDictionary(),
+                    TRUTH_VCF.getRawInputString());
         }
 
         // Build the pair of iterators over the regions of interest
