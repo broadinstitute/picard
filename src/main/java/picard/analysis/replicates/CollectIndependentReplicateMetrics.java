@@ -45,7 +45,6 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -67,6 +66,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingPairedFilter;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.HashMap;
@@ -207,8 +207,11 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final VCFFileReader vcf = new VCFFileReader(VCF, false);
         final VCFHeader vcfFileHeader = vcf.getFileHeader();
 
-
-        SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(), vcfFileHeader.getSequenceDictionary());
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                in.getFileHeader().getSequenceDictionary(),
+                INPUT.getAbsolutePath(),
+                vcfFileHeader.getSequenceDictionary(),
+                VCF.getAbsolutePath());
 
         final List<String> samples = vcfFileHeader.getSampleNamesInOrder();
 

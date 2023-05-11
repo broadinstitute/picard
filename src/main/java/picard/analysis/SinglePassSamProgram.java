@@ -35,7 +35,6 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
@@ -43,6 +42,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.OutputArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredOutputArgumentCollection;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -114,8 +114,11 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             walker = new ReferenceSequenceFileWalker(referenceSequence);
 
             if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
-                SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                        walker.getSequenceDictionary());
+                SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                        in.getFileHeader().getSequenceDictionary(),
+                        input.getAbsolutePath(),
+                        walker.getSequenceDictionary(),
+                        referenceSequence.getAbsolutePath());
             }
         }
 

@@ -40,6 +40,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
 import picard.util.TestNGUtil;
@@ -530,7 +531,7 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         }
     }
 
-    @Test(expectedExceptions = SequenceUtil.SequenceListsDifferException.class)
+    @Test(expectedExceptions = PicardException.class)
     public void testFailDifferentSequenceDictionaries() throws IOException {
         final File input = new File(TEST_DIR, "forMetrics.sam");
         final File outfile = getTempOutputFile("test", ".wgs_metrics");

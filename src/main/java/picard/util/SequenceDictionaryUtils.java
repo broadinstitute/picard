@@ -23,6 +23,7 @@
  */
 package picard.util;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -32,6 +33,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 
@@ -190,6 +192,30 @@ public class SequenceDictionaryUtils {
                 (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
                 tmpDir.toPath()
         );
+    }
+
+    /**
+     * Throw an exception if the two provided sequence dictionaries are not equal.
+     *
+     * @param firstDict first dictionary to compare
+     * @param firstDictSource a user-recognizable message identifying the source of the first dictionary, preferably a file path
+     * @param secondDict second dictionary to compare
+     * @param secondDictSource a user-recognizable message identifying the source of the second dictionary,  preferably a file path
+     */
+    public static void assertSequenceDictionariesEqual(
+            final SAMSequenceDictionary firstDict,
+            final String firstDictSource,
+            final SAMSequenceDictionary secondDict,
+            final String secondDictSource) {
+        try {
+            SequenceUtil.assertSequenceDictionariesEqual(firstDict, secondDict);
+        } catch (final SequenceUtil.SequenceListsDifferException e) {
+            throw new PicardException(
+                    String.format("Sequence dictionary for (%s) does not match sequence dictionary for (%s)",
+                            firstDictSource,
+                            secondDictSource),
+                    e);
+        }
     }
 
     private static class StringCodec implements SortingCollection.Codec<String> {

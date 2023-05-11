@@ -40,12 +40,12 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import htsjdk.samtools.util.SequenceUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.DbSnpBitSetUtil;
 import picard.util.help.HelpConstants;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.*;
@@ -239,8 +239,11 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
         if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
-            SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                    refWalker.getSequenceDictionary());
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    in.getFileHeader().getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    refWalker.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
         }
 
         final Set<String> samples = new HashSet<>();

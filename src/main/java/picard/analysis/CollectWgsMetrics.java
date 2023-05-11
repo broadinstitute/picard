@@ -48,6 +48,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.IntervalArgumentCollection;
@@ -57,6 +58,7 @@ import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -211,7 +213,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 
         // Verify the sequence dictionaries match
         if (!this.header.getSequenceDictionary().isEmpty()) {
-            SequenceUtil.assertSequenceDictionariesEqual(this.header.getSequenceDictionary(), refWalker.getSequenceDictionary());
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    this.header.getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    refWalker.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
         }
 
         final List<SamRecordFilter> filters = new ArrayList<>();
