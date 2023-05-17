@@ -57,7 +57,7 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
 
 ensureBuildPrerequisites(buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '3.0.1')
+final htsjdkVersion = System.getProperty('htsjdk.version', '3.0.5-12-g5700958-SNAPSHOT')
 final googleNio = 'com.google.cloud:google-cloud-nio:0.123.25'
 
 configurations {
