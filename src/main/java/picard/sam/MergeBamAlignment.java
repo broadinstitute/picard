@@ -310,7 +310,7 @@ public class MergeBamAlignment extends CommandLineProgram {
                 "the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the " +
                 "alignments for each end with the best MAPQ. ");
 
-        private final Class<PrimaryAlignmentSelectionStrategy> clazz;
+        private final Class<? extends PrimaryAlignmentSelectionStrategy> clazz;
 
         private final String description;
 
@@ -318,14 +318,14 @@ public class MergeBamAlignment extends CommandLineProgram {
             return description;
         }
 
-        PrimaryAlignmentStrategy(final Class<?> clazz, final String description) {
-            this.clazz = (Class<PrimaryAlignmentSelectionStrategy>) clazz;
+        PrimaryAlignmentStrategy(final Class<? extends PrimaryAlignmentSelectionStrategy> clazz, final String description) {
+            this.clazz = clazz;
             this.description = description;
         }
 
         PrimaryAlignmentSelectionStrategy newInstance() {
             try {
-                return clazz.newInstance();
+                return clazz.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw new PicardException("Trouble instantiating " + clazz.getName(), e);
             }

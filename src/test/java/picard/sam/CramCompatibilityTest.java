@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgram;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -258,7 +259,12 @@ public class CramCompatibilityTest {
             args.add("REFERENCE_SEQUENCE=" + new File(reference).getAbsolutePath());
         }
 
-        final CommandLineProgram program = (CommandLineProgram) Class.forName(programClassname).newInstance();
+        final CommandLineProgram program;
+        try {
+            program = (CommandLineProgram) Class.forName(programClassname).getDeclaredConstructor().newInstance();
+        } catch (InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
         program.instanceMain(args.toArray(new String[0]));
     }
 

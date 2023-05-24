@@ -7,6 +7,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class PicardCommandLineTest {
@@ -50,13 +52,13 @@ public class PicardCommandLineTest {
             // Check for missing annotations
             Assert.assertNotNull(clProperties);
             try {
-                final Object commandLineProgram = clazz.newInstance();
+                final Object commandLineProgram = clazz.getDeclaredConstructor().newInstance();
                 try {
                     new CommandLineArgumentParser(commandLineProgram);
                 } catch (CommandLineException.CommandLineParserInternalException e) {
                     throw new RuntimeException("Barclay command line parser internal exception parsing class: " + clazz.getName(), e);
                 }
-            } catch (IllegalAccessException | InstantiationException e) {
+            } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
                 throw new RuntimeException("Failure instantiating command line program: " + clazz.getName(), e);
             }
         });
