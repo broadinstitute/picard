@@ -218,7 +218,6 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
 
         // Set the compression level everywhere we can think of
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
@@ -256,6 +255,10 @@ public abstract class CommandLineProgram {
         if (!USE_JDK_INFLATER) {
             BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
         }
+
+        // This has to happen after the inflater factory is set because it causes a reinitialization of the static
+        // default reader factory.  At least until https://github.com/samtools/htsjdk/issues/1666 is resolved
+        SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
 
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
