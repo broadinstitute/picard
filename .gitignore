@@ -16,3 +16,9 @@ jacoco.data
 .gradle
 build
 *.swp
+
+# OSX file system stuff
+.DS_STORE
+
+# Jenv file to set directory java version
+.java-version
