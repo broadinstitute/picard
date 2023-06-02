@@ -3,6 +3,7 @@ package picard.sam;
 import htsjdk.samtools.SamStreams;
 import htsjdk.samtools.cram.CRAMException;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.RuntimeIOException;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
@@ -109,7 +110,7 @@ public class CramCompatibilityTest {
     public void testShouldWriteCRAMWhenCRAMWithReference(String program,
                                                          String parameters,
                                                          String cramFile,
-                                                         String reference) throws IOException, IllegalAccessException, InstantiationException, ClassNotFoundException {
+                                                         String reference) throws IOException {
         if (!program.equals("picard.sam.SplitSamByLibrary")) {
             final File outputFile = createTempCram(program);
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, reference);
@@ -161,7 +162,7 @@ public class CramCompatibilityTest {
     @Test(dataProvider = "programArgsForCRAMWithoutReferenceToFail", expectedExceptions = {CRAMException.class, IllegalArgumentException.class})
     public void testShouldFailWhenCRAMWithoutReference(String program,
                                                        String parameters,
-                                                       String cramFile) throws IOException, IllegalAccessException, InstantiationException, ClassNotFoundException {
+                                                       String cramFile) throws IOException {
         if (!program.equals("picard.sam.SplitSamByLibrary")) {
             final File outputFile = createTempCram(program);
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, null);
@@ -211,7 +212,7 @@ public class CramCompatibilityTest {
     @Test(dataProvider = "programArgsWithUnmappedCRAM")
     public void testShouldWriteCRAMWhenUnmappedCRAMWithoutReference(String program,
                                                                     String parameters,
-                                                                    String cramFile) throws IOException, IllegalAccessException, InstantiationException, ClassNotFoundException {
+                                                                    String cramFile) throws IOException {
         if (!program.equals("picard.sam.SplitSamByLibrary")) {
             final File outputFile = createTempCram(program);
             launchProgram(program, cramFile, outputFile.getAbsolutePath(), parameters, null);
@@ -223,7 +224,7 @@ public class CramCompatibilityTest {
         }
     }
 
-    private File createTempCram(String name) throws IOException {
+    private File createTempCram(String name) {
         return createTempFile(name, ".cram");
     }
 
@@ -243,7 +244,7 @@ public class CramCompatibilityTest {
                                String input,
                                String output,
                                String exParams,
-                               String reference) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+                               String reference) {
         final Collection<String> args = new ArrayList<>();
 
         if (input != null) {
@@ -262,7 +263,7 @@ public class CramCompatibilityTest {
         final CommandLineProgram program;
         try {
             program = (CommandLineProgram) Class.forName(programClassname).getDeclaredConstructor().newInstance();
-        } catch (InvocationTargetException | NoSuchMethodException e) {
+        } catch (ReflectiveOperationException e){
             throw new RuntimeException(e);
         }
         program.instanceMain(args.toArray(new String[0]));
@@ -273,7 +274,7 @@ public class CramCompatibilityTest {
         try (InputStream in = new FileInputStream(outputFile)) {
             Assert.assertTrue(SamStreams.isCRAMFile(new BufferedInputStream(in)), "File " + outputFile.getAbsolutePath() + " is not a CRAM.");
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeIOException(e);
         }
     }
 
