@@ -54,9 +54,8 @@ import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -645,8 +644,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         });
 
         if (CollectionUtil.makeSet(resultingSamples.toArray(new String[0])).size() != resultingSamples.size()) {
-            final Set<String> duplicates = new HashSet<>();
-            final Set<String> unique = new HashSet<>();
+            final Set<String> duplicates = new LinkedHashSet<>();
+            final Set<String> unique = new LinkedHashSet<>();
             resultingSamples.forEach(s -> {
                 if (unique.add(s)) {
                     duplicates.add(s);
@@ -658,7 +657,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         // replace samples with their mapped values:
-        final Set<FingerprintIdDetails> ids = new HashSet<>(fpMap.keySet());
+        final Set<FingerprintIdDetails> ids = new LinkedHashSet<>(fpMap.keySet());
         ids.forEach(id -> {
             // if sample isn't in sampleMap, leave it alone
             if (!sampleMap.containsKey(id.sample)) {
@@ -699,7 +698,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
         final Map<String, List<FingerprintIdDetails>> fileFpDetailSetMap = fpMap.keySet().stream().collect(Collectors.groupingBy(s -> s.file));
 
-        final Map<String, String> fileSampleMap = new HashMap<>();
+        final Map<String, String> fileSampleMap = new LinkedHashMap<>();
         // check that each file in the map points only to one sample
         fileFpDetailSetMap.forEach((key, fingerprintIdDetails) -> {
             final Set<String> samples = fingerprintIdDetails.stream().map(id -> id.sample).collect(Collectors.toSet());
@@ -721,8 +720,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         });
 
         if (CollectionUtil.makeSet(resultingSamples.toArray(new String[0])).size() != resultingSamples.size()) {
-            final Set<String> duplicates = new HashSet<>();
-            final Set<String> unique = new HashSet<>();
+            final Set<String> duplicates = new LinkedHashSet<>();
+            final Set<String> unique = new LinkedHashSet<>();
             resultingSamples.forEach(s -> {
                 if (unique.add(s)) {
                     duplicates.add(s);
@@ -734,7 +733,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         }
 
         // replace samples with their mapped values:
-        final Set<FingerprintIdDetails> ids = new HashSet<>(fpMap.keySet());
+        final Set<FingerprintIdDetails> ids = new LinkedHashSet<>(fpMap.keySet());
         ids.forEach(id -> {
             // if sample isn't in sampleMap, leave it alone
             if (!sampleMap.containsKey(id.file)) {
@@ -772,7 +771,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
 
     private Map<Path, Path> getSamplePathToIndexMap(final File indexMapFile, final String inputArgumentName) {
         final Map<String, String> indexStringMap = getStringStringMap(indexMapFile, inputArgumentName);
-        final HashMap<Path, Path> indexPathMap = new LinkedHashMap<Path, Path>();
+        final LinkedHashMap<Path, Path> indexPathMap = new LinkedHashMap<Path, Path>();
         for (Map.Entry<String, String> entry: indexStringMap.entrySet()) {
             final Path inputPath;
             final Path indexPath;
@@ -931,7 +930,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         final Map<String, FingerprintIdDetails> sampleToDetail1 = fingerprints1BySample.keySet().stream().collect(Collectors.toMap(id -> id.group, id -> id));
         final Map<String, FingerprintIdDetails> sampleToDetail2 = fingerprints2BySample.keySet().stream().collect(Collectors.toMap(id -> id.group, id -> id));
 
-        Set<String> samples = new HashSet<>();
+        Set<String> samples = new LinkedHashSet<>();
         samples.addAll(sampleToDetail1.keySet());
         samples.addAll(sampleToDetail2.keySet());
 
