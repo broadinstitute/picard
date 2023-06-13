@@ -161,17 +161,17 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
     public PicardHtsPath FASTQ2;
 
-    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz." +
-            "The files should be named:\n" +
+    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq[.gz]." +
+            " The files should be named:\n" +
             "    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>\n" +
-            " The base files should be:\n" +
-            "    <prefix>_001.<extension>\n" +
-            " An example would be:\n" +
+            "Use the *first* file for the --FASTQ argument, e.g., --FASTQ <prefix>_001.<extension>.\n" +
+            "If paired end, use the *first* read2 file for the --FASTQ2 argument, e.g., <R2_prefix>_001.<extension>.\n" + 
+            "Example: combine and convert 4 single end fastqs with filenames:\n" +
             "    RUNNAME_S8_L005_R1_001.fastq\n" +
             "    RUNNAME_S8_L005_R1_002.fastq\n" +
             "    RUNNAME_S8_L005_R1_003.fastq\n" +
             "    RUNNAME_S8_L005_R1_004.fastq\n" +
-            "RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.", optional=true)
+            "Run command with --FASTQ RUNNAME_S8_L005_R1_001.fastq --USE_SEQUENTIAL_FASTQS true", optional=true)
     public boolean USE_SEQUENTIAL_FASTQS = false;
 
     @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
