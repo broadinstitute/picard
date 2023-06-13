@@ -161,7 +161,7 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
     public PicardHtsPath FASTQ2;
 
-    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq[.qz]." +
+    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq[.gz]." +
             " The files should be named:\n" +
             "    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>\n" +
             "Use the *first* file for the --FASTQ argument, e.g., --FASTQ <prefix>_001.<extension>.\n" +
