@@ -778,7 +778,7 @@ public class FingerprintChecker {
 
                 final FingerprintResults results = new FingerprintResults(p, null, specificSample);
                 for (final Fingerprint expectedFp : expectedFingerprints) {
-                    final MatchResults result = calculateMatchResults(combinedFp, expectedFp, 0, pLossofHet);
+                    final MatchResults result = calculateMatchResults(combinedFp, expectedFp, pLossofHet);
                     results.addResults(result);
                 }
 
@@ -788,7 +788,7 @@ public class FingerprintChecker {
                 for (final FingerprintIdDetails rg : fingerprintsByReadGroup.keySet()) {
                     final FingerprintResults results = new FingerprintResults(p, rg.platformUnit, rg.sample);
                     for (final Fingerprint expectedFp : expectedFingerprints) {
-                        final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
+                        final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, pLossofHet);
                         results.addResults(result);
                     }
 
@@ -835,7 +835,7 @@ public class FingerprintChecker {
             for (final String sample : observedFingerprintsBySample.keySet()) {
                 final FingerprintResults results = new FingerprintResults(p, null, sample);
                 for (final Fingerprint expectedFp : expectedFingerprints) {
-                    final MatchResults result = calculateMatchResults(observedFingerprintsBySample.get(sample), expectedFp, 0, pLossofHet);
+                    final MatchResults result = calculateMatchResults(observedFingerprintsBySample.get(sample), expectedFp, pLossofHet);
                     results.addResults(result);
                 }
                 resultsList.add(results);
@@ -844,8 +844,8 @@ public class FingerprintChecker {
         return resultsList;
     }
 
-    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH) {
-        return calculateMatchResults(observedFp, expectedFp, minPExpected, pLoH, true, true);
+    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double pLoH) {
+        return calculateMatchResults(observedFp, expectedFp, pLoH, true, true);
 
     }
 
@@ -860,7 +860,7 @@ public class FingerprintChecker {
      * In the cases where the most likely genotypes from the two fingerprints do not match the
      * lExpectedSample is Max(actualpExpectedSample, minPExpected).
      */
-    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double minPExpected, final double pLoH, final boolean calculateLocusInfo, final boolean calculateTumorAwareLod) {
+    public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp, final double pLoH, final boolean calculateLocusInfo, final boolean calculateTumorAwareLod) {
         final List<LocusResult> locusResults = calculateLocusInfo ? new ArrayList<>() : null;
 
         double llNoSwapModel = 0;
@@ -938,7 +938,7 @@ public class FingerprintChecker {
      * as the observedFp and the genotype data as the expectedFp in order to get the best output.
      */
     public static MatchResults calculateMatchResults(final Fingerprint observedFp, final Fingerprint expectedFp) {
-        return calculateMatchResults(observedFp, expectedFp, 0, 0);
+        return calculateMatchResults(observedFp, expectedFp, 0);
     }
 
     public void setReferenceFasta(final File referenceFasta) {
