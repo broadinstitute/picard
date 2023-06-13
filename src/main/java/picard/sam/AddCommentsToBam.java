@@ -11,6 +11,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.util.List;
@@ -42,23 +43,23 @@ public class AddCommentsToBam extends CommandLineProgram {
             "" +
             "<hr />";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input BAM file to add a comment to the header")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output BAM file to write results")
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "C", doc = "Comments to add to the BAM file")
     public List<String> COMMENT;
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        // IOUtil.assertFileIsWritable(OUTPUT.toPath()); // tsato: usual writable conundrum
 
-        if (INPUT.getAbsolutePath().endsWith(".sam")) {
+        if (INPUT.toPath().getFileName().endsWith(".sam")) {
             throw new PicardException("SAM files are not supported");
         }
 
-        final SAMFileHeader samFileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT);
+        final SAMFileHeader samFileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT.toPath());
         for (final String comment : COMMENT) {
             if (comment.contains("\n")) {
                 throw new PicardException("Comments can not contain a new line");
@@ -66,7 +67,7 @@ public class AddCommentsToBam extends CommandLineProgram {
             samFileHeader.addComment(comment);
         }
 
-        BamFileIoUtils.reheaderBamFile(samFileHeader, INPUT, OUTPUT, CREATE_MD5_FILE, CREATE_INDEX);
+        BamFileIoUtils.reheaderBamFile(samFileHeader, INPUT.toPath(), OUTPUT.toPath(), CREATE_MD5_FILE, CREATE_INDEX);
 
         return 0;
     }

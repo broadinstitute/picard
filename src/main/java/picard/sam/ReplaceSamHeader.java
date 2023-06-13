@@ -46,11 +46,13 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.nio.PicardHtsPath;
+import picard.util.PicardIOUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -95,29 +97,28 @@ public class ReplaceSamHeader extends CommandLineProgram {
      */
     @Override
     protected int doWork() {
+        IOUtil.assertPathsAreReadable(Arrays.asList(INPUT.toPath(), HEADER.toPath()));
+        // tsato: is there a good way to check that a path is writable?
+        // IOUtil.assertFileIsWritable(OUTPUT);
 
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(HEADER);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        final SAMFileHeader replacementHeader = getHeaderFromPath(HEADER.toPath());
 
-        final SAMFileHeader replacementHeader = getHeaderFromFile(HEADER);
-
-        if (BamFileIoUtils.isBamFile(INPUT)) {
-            blockCopyReheader(replacementHeader);
+        if (PicardIOUtils.isBamFile(INPUT.toPath())) {
+            blockCopyReheader(replacementHeader); // tsato: if bam file, block copy reheader....
         } else {
-            standardReheader(replacementHeader);
+            standardReheader(replacementHeader); // tsato: what's the difference vs blockCopyReheader?
         }
 
         return 0;
     }
 
     private void standardReheader(final SAMFileHeader replacementHeader) {
-        final SamReader recordReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(ValidationStringency.SILENT).open(INPUT);
+        final SamReader recordReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE.toPath()).validationStringency(ValidationStringency.SILENT).open(INPUT.toPath());
         if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
             throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
                     ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
         }
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(replacementHeader, true, OUTPUT, REFERENCE_SEQUENCE);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(replacementHeader, true, OUTPUT.toPath(), REFERENCE_SEQUENCE.toPath());
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
         for (final SAMRecord rec : recordReader) {
@@ -130,12 +131,12 @@ public class ReplaceSamHeader extends CommandLineProgram {
     }
 
     private void blockCopyReheader(final SAMFileHeader replacementHeader) {
-        BamFileIoUtils.reheaderBamFile(replacementHeader, INPUT, OUTPUT, CREATE_MD5_FILE, CREATE_INDEX);
+        BamFileIoUtils.reheaderBamFile(replacementHeader, INPUT.toPath(), OUTPUT.toPath(), CREATE_MD5_FILE, CREATE_INDEX);
     }
 
-    private SAMFileHeader getHeaderFromFile(final File file) {
+    private SAMFileHeader getHeaderFromPath(final Path file) {
         if (SamReader.Type.CRAM_TYPE.hasValidFileExtension(file.toString())) {
-            try (InputStream in = new FileInputStream(file)) {
+            try (InputStream in = Files.newInputStream(file)) {
                 final CramHeader cramHeader = CramIO.readCramHeader(in);
                 final Optional<SAMFileHeader> samHeader = Optional.ofNullable(
                         Container.readSAMFileHeaderContainer(cramHeader.getCRAMVersion(), in, file.toString()));

@@ -55,6 +55,7 @@ import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PathProvider;
+import picard.nio.PicardHtsPath;
 import picard.util.RExecutor;
 
 import java.io.File;
