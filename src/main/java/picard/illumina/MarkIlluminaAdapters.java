@@ -140,11 +140,15 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        if ((FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null)) {
+        if (hasEitherAdapter()) {
             return new String[]{"THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set."};
         } else {
             return null;
         }
+    }
+
+    private boolean hasEitherAdapter() {
+        return (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null);
     }
 
     @Override
@@ -167,7 +171,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         {
             final List<AdapterPair> tmp = new ArrayList<AdapterPair>();
             tmp.addAll(ADAPTERS);
-            if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+            if (hasBothAdapters()) {
                 tmp.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
             }
             adapters = tmp.toArray(new AdapterPair[tmp.size()]);
@@ -245,5 +249,9 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
         CloserUtil.close(in);
         return 0;
+    }
+
+    private boolean hasBothAdapters(){
+        return FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null;
     }
 }

@@ -29,15 +29,9 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.SortingLongCollection;
 import picard.sam.markduplicates.util.ReadEndsForMarkDuplicates;
-import picard.sam.markduplicates.util.RepresentativeReadIndexerCodec;
-import picard.sam.util.RepresentativeReadIndexer;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -86,32 +80,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
      * applicable for flow mode invocation.
      */
     public void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
-        final int entryOverhead;
-        if (md.TAG_DUPLICATE_SET_MEMBERS) {
-            // Memory requirements for RepresentativeReadIndexer:
-            // three int entries + overhead: (3 * 4) + 4 = 16 bytes
-            entryOverhead = 16;
-        } else {
-            entryOverhead = SortingLongCollection.SIZEOF;
-        }
-        // Keep this number from getting too large even if there is a huge heap.
-        int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / entryOverhead, (double) (Integer.MAX_VALUE - 5));
-        // If we're also tracking optical duplicates, reduce maxInMemory, since we'll need two sorting collections
-        if (indexOpticalDuplicates) {
-            maxInMemory /= ((entryOverhead + SortingLongCollection.SIZEOF) / entryOverhead);
-            md.opticalDuplicateIndexes = new SortingLongCollection(maxInMemory, md.TMP_DIR.toArray(new File[md.TMP_DIR.size()]));
-        }
-        log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
-        md.duplicateIndexes = new SortingLongCollection(maxInMemory, md.TMP_DIR.toArray(new File[md.TMP_DIR.size()]));
-        if (md.TAG_DUPLICATE_SET_MEMBERS) {
-            final RepresentativeReadIndexerCodec representativeIndexCodec = new RepresentativeReadIndexerCodec();
-            md.representativeReadIndicesForDuplicates = SortingCollection.newInstance(RepresentativeReadIndexer.class,
-                    representativeIndexCodec,
-                    Comparator.comparing(read -> read.readIndexInFile),
-                    maxInMemory,
-                    md.TMP_DIR);
-        }
-
+        md.sortIndicesForDuplicates(indexOpticalDuplicates);
         // this code does support pairs at this time
         if ( md.pairSort.iterator().hasNext() ) {
             throw new IllegalArgumentException("Flow based code does not support paired reads");
