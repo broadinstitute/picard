@@ -2,17 +2,12 @@ package picard.util;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
-import picard.analysis.AlignmentSummaryMetrics;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 
 public class SequenceDictionaryUtilsTest {
