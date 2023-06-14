@@ -216,10 +216,10 @@ public class DbSnpBitSetUtil {
         final VCFFileReader variantReader = new VCFFileReader(dbSnpFile.toPath(), intervals != null);
         
         SequenceDictionaryUtils.assertSequenceDictionariesEqual(
-            sequenceDictionary,
-            "Reference genome",
             variantReader.getFileHeader().getSequenceDictionary(),
-            variantReader.getRawInputString()
+            "DBSNP_REFERENCE_VCF",
+            sequenceDictionary,
+            "INPUT_VCF"
         );
                 
         final Iterator<VariantContext> variantIterator;
