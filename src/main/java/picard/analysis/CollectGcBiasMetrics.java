@@ -33,6 +33,7 @@ import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.metrics.GcBiasMetrics;
 import picard.util.RExecutor;
@@ -146,6 +147,14 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     // at bins of each GC %. Need 101 to get from 0-100.
     private static final int BINS = 101;
 
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // Setup calculates windowsByGc for the entire reference. Must be done at
     // startup to avoid missing reference contigs in the case of small files
@@ -202,7 +211,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         RExecutor.executeFromClasspath(R_SCRIPT,
                 OUTPUT.getAbsolutePath(),
                 SUMMARY_OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath(),
+                CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                 String.valueOf(SCAN_WINDOW_SIZE));
     }
 }

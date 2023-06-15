@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2015-2020 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,17 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.DownsamplingIterator;
+import htsjdk.samtools.DownsamplingIteratorFactory;
 import htsjdk.samtools.DownsamplingIteratorFactory.Strategy;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -43,7 +52,9 @@ import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * <h3>Summary</h3>
@@ -121,6 +132,8 @@ import java.util.Random;
 @DocumentedFeature
 public class DownsampleSam extends CommandLineProgram {
 
+    final String PG_PROGRAM_NAME = getClass().getSimpleName();
+
     static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.";
     static final String USAGE_DETAILS = "This tool applies a downsampling algorithm to a SAM or BAM file to retain " +
             "only a (deterministically random) subset of the reads. Reads from the same template (e.g. read-pairs, secondary " +
@@ -160,14 +173,16 @@ public class DownsampleSam extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
     public File INPUT;
 
-    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM or BAM file to write.")
+    @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM, BAM or CRAM file to write.")
     public File OUTPUT;
 
     @Argument(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
     public Strategy STRATEGY = Strategy.ConstantMemory;
 
     @Argument(shortName = "R", doc = "Random seed used for deterministic results. " +
-            "Setting to null will cause multiple invocations to produce different results.")
+            "Setting to null will cause multiple invocations to produce different results.  The header if the file will be checked for any previous runs " +
+            "of DownsampleSam.  If DownsampleSam has been run before on this data with the same seed, the seed will be updated in a deterministic fashion " +
+            "so the DownsampleSam will perform correctly, and still deterministically.")
     public Integer RANDOM_SEED = 1;
 
     @Argument(shortName = "P", doc = "The probability of keeping any individual read, between 0 and 1.")
@@ -182,6 +197,8 @@ public class DownsampleSam extends CommandLineProgram {
     public File METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
+
+    public static final String RANDOM_SEED_TAG = "rs";
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -212,7 +229,44 @@ public class DownsampleSam extends CommandLineProgram {
         }
 
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
+        final SAMFileHeader header = in.getFileHeader().clone();
+
+        if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
+            //if running using ConstantMemory or Chained strategy, need to check if we have previously run with the same random seed
+            //collect previously used seeds
+            final Integer userSeed = RANDOM_SEED;
+            final Set<Integer> previousSeeds = new HashSet<>();
+            for (final SAMProgramRecord pg : header.getProgramRecords()) {
+                if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
+                    final String previousSeedString = pg.getAttribute(RANDOM_SEED_TAG);
+                    if (previousSeedString == null) {
+                        /* The previous seed was not recorded.  In this case, the current seed may be the same as the previous seed,
+                        so we will change it to a randomly selected seed, which is very likely to be unique
+                         */
+                        RANDOM_SEED = new Random(pg.hashCode()).nextInt();
+                        log.warn("DownsampleSam has been run before on this data, but the previous seed was not recorded.  The used seed will be changed to minimize the chance of using" +
+                                " the same seed as in a previous run.");
+                    } else {
+                        previousSeeds.add(Integer.parseInt(previousSeedString));
+                    }
+                }
+            }
+
+            final Random rnd = new Random(RANDOM_SEED);
+            while (previousSeeds.contains(RANDOM_SEED)) {
+                RANDOM_SEED = rnd.nextInt();
+                log.warn("DownsampleSam has been run before on this data with the seed " + RANDOM_SEED + ".  The random seed will be changed to avoid using the " +
+                        "same seed as previously.");
+            }
+            if (!userSeed.equals(RANDOM_SEED)) {
+                log.warn("RANDOM_SEED has been changed to " + RANDOM_SEED + ".");
+            }
+        }
+
+        final SAMProgramRecord pgRecord = getPGRecord(header);
+        pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
+        header.addProgramRecord(pgRecord);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT, referenceSequence.getReferenceFile());
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);

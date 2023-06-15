@@ -84,9 +84,8 @@ public class CollectDuplicateMetricsTester extends AbstractMarkDuplicatesCommand
     public void recordOpticalDuplicatesMarked() {}
 
     @Override
-    public void test() throws IOException {
+    void updateExpectationsHook() {
         // CollectDuplicateMetrics cannot identify Optical duplicates....
         setExpectedOpticalDuplicate(0);
-        super.test();
     }
 }

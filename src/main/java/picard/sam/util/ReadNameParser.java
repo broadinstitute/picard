@@ -27,6 +27,10 @@ public class ReadNameParser implements Serializable {
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
+    private String readNameStored = null;
+
+    private PhysicalLocation physicalLocationStored = new PhysicalLocationInt();
+
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
     private final boolean useOptimizedDefaultParsing; // was the regex default?
@@ -76,7 +80,7 @@ public class ReadNameParser implements Serializable {
      * @param loc the object to add tile/x/y to
      * @return true if the read name contained the information in parsable form, false otherwise
      */
-    public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
+    private boolean readLocationInformation(final String readName, final PhysicalLocation loc) {
         try {
             // Optimized version if using the default read name regex (== used on purpose):
             if (this.useOptimizedDefaultParsing) {
@@ -125,6 +129,25 @@ public class ReadNameParser implements Serializable {
                 warnedAboutRegexNotMatching = true;
             }
             return false;
+        }
+    }
+
+    public boolean addLocationInformation(final String readName, final PhysicalLocation loc){
+        if (!readName.equals(readNameStored)) {
+            if (readLocationInformation(readName, loc)) {
+                readNameStored = readName;
+                physicalLocationStored.setX(loc.getX());
+                physicalLocationStored.setY(loc.getY());
+                physicalLocationStored.setTile(loc.getTile());
+                return true;
+            }
+            // return false if read name cannot be parsed
+            return false;
+        } else {
+            loc.setTile(physicalLocationStored.getTile());
+            loc.setX(physicalLocationStored.getX());
+            loc.setY(physicalLocationStored.getY());
+            return true;
         }
     }
 

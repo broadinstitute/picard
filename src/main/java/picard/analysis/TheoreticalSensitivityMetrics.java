@@ -25,6 +25,8 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 /**
  * TheoreticalSensitivityMetrics, are metrics calculated from TheoreticalSensitivity and parameters used in
@@ -35,6 +37,7 @@ import htsjdk.samtools.metrics.MetricBase;
  *
  * @author Mark Fleharty
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class TheoreticalSensitivityMetrics extends MetricBase {
     /** The allele fraction which theoretical sensitivity is calculated for. */
     public double ALLELE_FRACTION;

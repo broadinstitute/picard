@@ -24,9 +24,16 @@
 
 package picard.sam.SamErrorMetric;
 
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
+
+import java.util.List;
 
 /**
  * A calculator that estimates the error rate of the bases it observes, assuming that the reference is truth.
@@ -41,9 +48,11 @@ public class SimpleErrorCalculator extends BaseErrorCalculator {
     @Override
     public void addBase(final SamLocusIterator.RecordAndOffset recordAndOffset, final SamLocusAndReferenceIterator.SAMLocusAndReference locusAndRef) {
         super.addBase(recordAndOffset, locusAndRef);
-        final byte readBase = recordAndOffset.getReadBase();
-        if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {
-            nMismatchingBases++;
+        if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Match) {
+            final byte readBase = recordAndOffset.getReadBase();
+            if (!SequenceUtil.isNoCall(readBase) && (readBase != locusAndRef.getReferenceBase())) {
+                nMismatchingBases++;
+            }
         }
     }
 

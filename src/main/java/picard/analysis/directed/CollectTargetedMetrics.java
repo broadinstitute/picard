@@ -15,12 +15,14 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.TheoreticalSensitivity;
 import picard.analysis.TheoreticalSensitivityMetrics;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.MultilevelMetrics;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.*;
@@ -34,7 +36,7 @@ import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_S
  * <p/>
  * <p>This program verifies the input parameters to TargetMetricsCollector and converts all files to
  * the format desired by TargetMetricsCollector.  Then it instantiates a TargetMetricsCollector and
- * collects metric information for all reads in the INPUT sam file.</p>
+ * collects metric information for all reads in the INPUT file.</p>
  */
 public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, COLLECTOR extends TargetMetricsCollector<METRIC>> extends CommandLineProgram {
 
@@ -64,7 +66,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Argument(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
     public List<File> TARGET_INTERVALS;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM/BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file to write the metrics to.")
@@ -121,22 +123,26 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         final IntervalList targetIntervals = IntervalList.fromFiles(TARGET_INTERVALS);
 
         // Validate that the targets and baits have the same references as the reads file
-        SequenceUtil.assertSequenceDictionariesEqual(
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
                 reader.getFileHeader().getSequenceDictionary(),
-                targetIntervals.getHeader().getSequenceDictionary());
-        SequenceUtil.assertSequenceDictionariesEqual(
+                INPUT.getAbsolutePath(),
+                targetIntervals.getHeader().getSequenceDictionary(),
+                "target intervals");
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
                 reader.getFileHeader().getSequenceDictionary(),
-                getProbeIntervals().getHeader().getSequenceDictionary()
-        );
+                INPUT.getAbsolutePath(),
+                getProbeIntervals().getHeader().getSequenceDictionary(),
+                "probe intervals");
 
         ReferenceSequenceFile ref = null;
         if (REFERENCE_SEQUENCE != null) {
             IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-            SequenceUtil.assertSequenceDictionariesEqual(
-                    reader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
-                    INPUT, REFERENCE_SEQUENCE
-            );
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    reader.getFileHeader().getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    ref.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
         }
 
         final COLLECTOR collector = makeCollector(

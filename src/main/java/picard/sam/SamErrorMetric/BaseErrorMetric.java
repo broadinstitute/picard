@@ -25,9 +25,13 @@
 
 package picard.sam.SamErrorMetric;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
+
 /**
  * An error metric for the errors in bases.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class BaseErrorMetric extends ErrorMetric {
     /** The number of bases that disagree with the reference */
     @MergeByAdding

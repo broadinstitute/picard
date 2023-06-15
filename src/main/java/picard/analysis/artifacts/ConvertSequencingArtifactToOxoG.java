@@ -12,11 +12,14 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Argument;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
-import picard.analysis.CollectOxoGMetrics.*;
-import picard.analysis.artifacts.SequencingArtifactMetrics.*;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @CommandLineProgramProperties(
         summary = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY + ConvertSequencingArtifactToOxoG.USAGE_DETAILS,
@@ -26,48 +29,94 @@ import java.util.*;
 
 @DocumentedFeature
 public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
-static final String USAGE_SUMMARY = "Extract OxoG metrics from generalized artifacts metrics.  ";
-static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of " +
-"CollectSequencingArtifactsMetrics (a tool that provides detailed information on a variety of artifacts found in sequencing " +
-"libraries) and converts them to the CollectOxoGMetrics tool's output format. This conveniently eliminates the need to run " +
-"CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for " +
-"<a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectSequencingArtifactsMetrics'>CollectSequencingArtifactsMetrics</a> "+
-"and <a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectOxoGMetrics'>CollectOxoGMetrics</a> "+
-"for additional information on these tools.</p>." +
 
-"<p>Note that only the base of the CollectSequencingArtifactsMetrics output file name is required for the (INPUT_BASE) "+
-"parameter. For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics or "+
-"artifact_metrics.txt.pre_adapter_detail_metrics, only the file name base 'artifact_metrics' is " +
-"required on the command line for this parameter.  An output file called 'artifact_metrics.oxog_metrics' will be generated "+
-"automatically.  Finally, to run this tool successfully, the REFERENCE_SEQUENCE must be provided.</p>"+
-"<h4>Usage example:</h4>" +
-"<pre>" +
-"java -jar picard.jar ConvertSequencingArtifactToOxoG \\<br />" +
-"     I=artifact_metrics \\<br />" +
-"     R=reference.fasta" +
-"</pre>" +
-"Please see the metrics definitions page at " +
-"<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectOxoGMetrics.CpcgMetrics'>ConvertSequencingArtifactToOxoG</a> "+
-"for detailed descriptions of the output metrics produced by this tool."+
-"<hr />"
-;
+    static final String USAGE_SUMMARY = "Extract OxoG metrics from generalized artifacts metrics.  ";
+    static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of " +
+            "CollectSequencingArtifactsMetrics (a tool that provides detailed information on a variety of artifacts found in sequencing " +
+            "libraries) and converts them to the CollectOxoGMetrics tool's output format. This conveniently eliminates the need to run " +
+            "CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for " +
+            "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectSequencingArtifactsMetrics'>CollectSequencingArtifactsMetrics</a> " +
+            "and <a href='http://broadinstitute.github.io/picard/command-line-overview.html#CollectOxoGMetrics'>CollectOxoGMetrics</a> " +
+            "for additional information on these tools. " +
+
+            "<p>Note that only the base of the CollectSequencingArtifactsMetrics output file name is required for the (INPUT_BASE) " +
+            "parameter. For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics or " +
+            "artifact_metrics.txt.pre_adapter_detail_metrics, only the file name base 'artifact_metrics' is " +
+            "required on the command line for this parameter.  An output file called 'artifact_metrics.oxog_metrics' will be generated " +
+            "automatically.  Finally, to run this tool successfully, the REFERENCE_SEQUENCE must be provided." +
+            "<p>This command also lets you specify the detail metrics files by name, if files are not in the usual location " +
+            "or have different names. For example, the arguments PRE_ADAPTER_IN and BAIT_BIAS_IN specify the file location of the  " +
+            "pre adapter detail metrics and the bait bias detail metrics respectively. If these arguments are provided then the " +
+            "value of INPUT_BASE is ignored. " +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar ConvertSequencingArtifactToOxoG \\<br />" +
+            "     I=artifact_metrics \\<br />" +
+            "     R=reference.fasta" +
+            "</pre>" +
+            "Please see the metrics definitions page at " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectOxoGMetrics.CpcgMetrics'>ConvertSequencingArtifactToOxoG</a> " +
+            "for detailed descriptions of the output metrics produced by this tool." +
+            "<hr />";
+
+    public static final String OXOG_METRICS_EXT = ".oxog_metrics";
+
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "Basename of the input artifact metrics file (output by CollectSequencingArtifactMetrics)")
+            doc = "Basename of the input artifact metrics file (output by CollectSequencingArtifactMetrics). If this is not " +
+                    " specified, you must specify PRE_ADAPTER_IN and BAIT_BIAS_IN",
+            optional = true)
     public File INPUT_BASE;
+
+    @Argument(doc = "The pre adapter details input file. Defaults to a filename based on the input basename",
+            optional = true)
+    public File PRE_ADAPTER_IN;
+
+    @Argument(doc = "The bait bias input file. Defaults to a filename based on the input basename",
+            optional = true)
+    public File BAIT_BIAS_IN;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Basename for output OxoG metrics. Defaults to same basename as input metrics",
             optional = true)
     public File OUTPUT_BASE;
 
+    @Argument(doc = "File for the output OxoG metrics. Defaults to a filename based on the output basename",
+            optional = true)
+    public File OXOG_OUT;
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        final List<String> errors = new ArrayList<>();
+        if (OUTPUT_BASE == null) {
+            OUTPUT_BASE = INPUT_BASE;
+        }
+        if (PRE_ADAPTER_IN == null) {
+            if (INPUT_BASE == null) {
+                errors.add("Must specify either INPUT_BASE or PRE_ADAPTER_IN");
+            }
+            PRE_ADAPTER_IN = new File(INPUT_BASE + SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT);
+        }
+        if (BAIT_BIAS_IN == null) {
+            if (INPUT_BASE == null) {
+                errors.add("Must specify either INPUT_BASE or BAIT_BIAS_IN");
+            }
+            BAIT_BIAS_IN = new File(INPUT_BASE + SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT);
+        }
+        if (OXOG_OUT == null) {
+            if (OUTPUT_BASE == null) {
+                errors.add("Must specify either OUTPUT_BASE or OXOG_OUT");
+            }
+            OXOG_OUT = new File(OUTPUT_BASE + OXOG_METRICS_EXT);
+        }
+
+        if (errors.isEmpty()) {
+            return null;
+        }
+        return errors.toArray(new String[0]);
+    }
+
     @Override
     protected int doWork() {
-        if (OUTPUT_BASE == null) { OUTPUT_BASE = INPUT_BASE; }
-
-        final File PRE_ADAPTER_IN = new File(INPUT_BASE + SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT);
-        final File BAIT_BIAS_IN = new File(INPUT_BASE + SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT);
-        final File OXOG_OUT = new File(OUTPUT_BASE + ".oxog_metrics");
-
         IOUtil.assertFileIsReadable(PRE_ADAPTER_IN);
         IOUtil.assertFileIsReadable(BAIT_BIAS_IN);
         IOUtil.assertFileIsWritable(OXOG_OUT);
@@ -77,7 +126,7 @@ static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) a
 
         // TODO should we validate that the two inputs match up as expected?
 
-        /**
+        /*
          * Determine output fields. Just copy these from the input for now.
          */
         final String oxogSampleAlias = preAdapterDetailMetricsList.get(0).SAMPLE_ALIAS;
@@ -91,7 +140,7 @@ static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) a
             }
         }
 
-        /**
+        /*
          * Store the inputs in maps of {Library -> {Context, Metric}} for easy access.
          * Remember, we only care about two transitions - C>A and G>T! Thus, for each context we
          * will only store one metric.
@@ -117,7 +166,7 @@ static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) a
             }
         }
 
-        /**
+        /*
          * Create the OxoG metrics
          */
         final List<CpcgMetrics> oxogMetrics = new ArrayList<>();
@@ -129,7 +178,7 @@ static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) a
                 m.CONTEXT = context;
                 m.TOTAL_SITES = 0; // not calculated in the input metrics
 
-                /**
+                /*
                  * Get the relevant input metrics. This is done in a somewhat confusing way:
                  *
                  * 1. For pre-adapter metrics: note that OxoG only reports 'C' contexts, even though the actual pre-adapter OxoG artifact
@@ -187,7 +236,7 @@ static final String USAGE_DETAILS = "<p>This tool extracts 8-oxoguanine (OxoG) a
         return 0;
     }
 
-    private boolean isOxoG(final Transition t) {
-        return t.equals(Transition.CtoA) || t.equals(Transition.GtoT);
+    private static boolean isOxoG(final Transition t) {
+        return t == Transition.CtoA || t == Transition.GtoT;
     }
 }

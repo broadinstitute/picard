@@ -3,10 +3,12 @@ package picard.cmdline;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.BetaFeature;
+import org.broadinstitute.barclay.argparser.ClassFinder;
 import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -149,12 +151,11 @@ public class PicardCommandLine {
                 printCommandList(classes);
             } else {
                 if (simpleNameToClass.containsKey(args[0])) {
-                    final Class clazz = simpleNameToClass.get(args[0]);
+                    final Class<?> clazz = simpleNameToClass.get(args[0]);
                     try {
-                        return (CommandLineProgram)clazz.newInstance();
-                    } catch (final InstantiationException e) {
-                        throw new RuntimeException(e);
-                    } catch (final IllegalAccessException e) {
+                        return (CommandLineProgram)clazz.getDeclaredConstructor().newInstance();
+                    } catch (final InstantiationException | IllegalAccessException
+                                   | InvocationTargetException | NoSuchMethodException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -228,10 +229,9 @@ public class PicardCommandLine {
             CommandLineProgramGroup programGroup = programGroupClassToProgramGroupInstance.get(property.programGroup());
             if (null == programGroup) {
                 try {
-                    programGroup = property.programGroup().newInstance();
-                } catch (final InstantiationException e) {
-                    throw new RuntimeException(e);
-                } catch (final IllegalAccessException e) {
+                    programGroup = property.programGroup().getDeclaredConstructor().newInstance();
+                } catch (final InstantiationException | IllegalAccessException
+                               | NoSuchMethodException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
                 programGroupClassToProgramGroupInstance.put(property.programGroup(), programGroup);

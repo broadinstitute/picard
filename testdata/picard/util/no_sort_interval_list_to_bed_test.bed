@@ -1,0 +1,13 @@
+chr1	0	50	target_at_chrom_start	333	+
+chr1	99	110	target_1	333	+
+chr2	199	220	target_2	333	-
+chr3	299	330	target_3	333	+
+chr4	399	440	target_4	333	+
+chr5	499	550	target_5	333	-
+chr5	4999	5150	overlapping_1	333	+
+chr5	5099	5250	overlapping_2	333	-
+chr5	5199	5350	overlapping_3	333	-
+chr5	5299	5450	overlapping_4	333	+
+chr5	9999	10000	one_base_feature	333	+
+chr5	10000	10000	zero_base_feature	333	+
+chr5	999999	1000000	target_at_chrom_end	333	+

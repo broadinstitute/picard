@@ -75,7 +75,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
             setBuilder.addPair(readName, 1, 1, 100);
         }
 
-        tempDir = IOUtil.createTempDir("pds_test", "PositionalDownsampling");
+        tempDir = IOUtil.createTempDir("pds_test_PositionalDownsampling").toFile();
         tempSamFile = File.createTempFile("PositionalDownsampleSam", ".bam", tempDir);
 
         BufferedLineReader bufferedLineReader = null;

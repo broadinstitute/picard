@@ -1,10 +1,7 @@
 package picard.arrays;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -91,13 +88,15 @@ public class CombineGenotypingArrayVcfs extends CommandLineProgram {
     }
 
     // These items will be removed from the merged header
-    private final Set<String> sampleSpecificHeaders = new HashSet<String>(Arrays.asList(
+    private final Set<String> sampleSpecificHeaders = new HashSet<>(Arrays.asList(
+            InfiniumVcfFields.PIPELINE_VERSION,
             InfiniumVcfFields.ANALYSIS_VERSION_NUMBER,
             InfiniumVcfFields.AUTOCALL_DATE,
             InfiniumVcfFields.AUTOCALL_GENDER,
             InfiniumVcfFields.CHIP_WELL_BARCODE,
             InfiniumVcfFields.EXPECTED_GENDER,
             InfiniumVcfFields.FINGERPRINT_GENDER,
+            InfiniumVcfFields.GTC_CALL_RATE,
             InfiniumVcfFields.IMAGING_DATE,
             InfiniumVcfFields.P_95_GREEN,
             InfiniumVcfFields.P_95_RED,
@@ -114,15 +113,15 @@ public class CombineGenotypingArrayVcfs extends CommandLineProgram {
     @Override
     public int doWork() {
         log.info("Checking inputs.");
-        final List<File> UNROLLED_INPUT = IOUtil.unrollFiles(INPUT, IOUtil.VCF_EXTENSIONS);
+        final List<File> UNROLLED_INPUT = IOUtil.unrollFiles(INPUT, FileExtensions.VCF_LIST.toArray(new String[0]));
         IOUtil.assertFilesAreReadable(UNROLLED_INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final SAMSequenceDictionary sequenceDictionary = VCFFileReader.getSequenceDictionary(UNROLLED_INPUT.get(0));
 
-        final List<String> sampleList = new ArrayList<String>();
+        final List<String> sampleList = new ArrayList<>();
         final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<>(UNROLLED_INPUT.size());
-        final Collection<VCFHeader> headers = new HashSet<VCFHeader>(UNROLLED_INPUT.size());
+        final Collection<VCFHeader> headers = new HashSet<>(UNROLLED_INPUT.size());
 
         Set<String> sampleNames = new HashSet<>();
 
@@ -228,18 +227,21 @@ public class CombineGenotypingArrayVcfs extends CommandLineProgram {
             if (vc.hasAttribute(VCFConstants.DEPTH_KEY))
                 depth += vc.getAttributeAsInt(VCFConstants.DEPTH_KEY, 0);
 
-            // Go through all attributes - if any differ (other than AC, AF, or AN) that's an error.  (recalc AC, AF, and AN later)
+            // Go through all attributes - Ignore differences in AC, AF and AN as we recal later.
+            // Ignore differences in dev[XY]_AB and SOURCE/refSNP as there are minor allowable changes
             for (final Map.Entry<String, Object> p : vc.getAttributes().entrySet()) {
                 final String key = p.getKey();
-                if ((!key.equals("AC")) && (!key.equals("AF")) && (!key.equals("AN")) && (!key.equals("devX_AB")) && (!key.equals("devY_AB"))) {
+                if ((!key.equals("AC")) && (!key.equals("AF")) && (!key.equals("AN")) &&
+                        (!key.equals("devX_AB")) && (!key.equals("devY_AB")) &&
+                        (!key.equals("SOURCE")) && (!key.equals("refSNP"))) {
                     final Object value = p.getValue();
                     final Object extantValue = firstAttributes.get(key);
                     if (extantValue == null) {
-                        // attribute in one VCF but not another.  Die!
+                        // attribute in one VCF but not another.
                         throw new PicardException("Attribute '" + key + "' not found in all VCFs");
                     }
                     else if (!extantValue.equals(value)) {
-                        // Attribute disagrees in value between one VCF Die! (if not AC, AF, nor AN, skipped above)
+                        // Attribute disagrees in value between one VCF and the other
                         throw new PicardException("Values for attribute '" + key + "' disagrees among input VCFs");
                     }
                 }

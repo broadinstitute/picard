@@ -10,17 +10,13 @@ import picard.PicardException;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 
+@SuppressWarnings("removal")
 public class IlluminaFileUtilTest {
     private static final int DEFAULT_LANE = 7;
     private static final List<Integer> DEFAULT_TILES = makeList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
@@ -43,7 +39,7 @@ public class IlluminaFileUtilTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        intensityDir = IOUtil.createTempDir("ift_test", "Intensities");
+        intensityDir = IOUtil.createTempDir("ift_test.Intensities").toFile();
         basecallDir = new File(intensityDir, "BaseCalls");
         if (!basecallDir.mkdir()) {
             throw new RuntimeException("Couldn't make basecalls dir " + basecallDir.getAbsolutePath());
@@ -270,9 +266,13 @@ public class IlluminaFileUtilTest {
     @Test(dataProvider = "missingTileFormats")
     public void missingTileTest(final int lane,
                                 final List<SupportedIlluminaFormat> formats,
-                                final List<SupportedIlluminaFormat> formatsToGetTiles,
+                                List<SupportedIlluminaFormat> formatsToGetTiles,
                                 final List<String> relativeFilesToDelete,
                                 final String compression) {
+
+        formatsToGetTiles = new LinkedList<>(formatsToGetTiles);
+        formatsToGetTiles.remove(SupportedIlluminaFormat.Cbcl);
+
         for (final SupportedIlluminaFormat format : formats) {
             makeFiles(format, intensityDir, lane, DEFAULT_TILES, DEFAULT_CYCLES, compression);
         }
@@ -518,7 +518,7 @@ public class IlluminaFileUtilTest {
                              final boolean createCbcl,
                              final boolean expectedResult) throws IOException {
 
-        final File basecallsDir = IOUtil.createTempDir("basecalls", "");
+        final File basecallsDir = IOUtil.createTempDir("basecalls").toFile();
         basecallsDir.deleteOnExit();
 
         if (0 < lane) {

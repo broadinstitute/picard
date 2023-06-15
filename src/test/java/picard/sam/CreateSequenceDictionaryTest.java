@@ -25,16 +25,16 @@ package picard.sam;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -211,5 +211,72 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
             final Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
             Assert.assertTrue(anSet.contains("2/hello"));
         }
+    }
+
+    // Test that dictionary MD5s are invariant across dos/unix line endings
+    @Test
+    public void testSequenceMD5sRespectLineEndings() throws IOException {
+        // NOTE: the .fasta test files here that use windows cr/lf line endings have to be listed in
+        // the repo .gitattributes file in order to prevent git from converting them to use local
+        // platform line endings on checkout
+        final Path picardDictPath = makeTempDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/test.fasta"),
+                "CreateSequenceDictionaryTest_unix.");
+
+        final Path picardDosDictPath = makeTempDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/test_dos_line_endings.fasta"),
+                "CreateSequenceDictionaryTest_dos.");
+
+        final Path picardDosGZDictPath = makeTempDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/test_dos_line_endings.fasta.gz"),
+                "CreateSequenceDictionaryTest_dos_gz.");
+        final SAMSequenceDictionary unixDict = SAMSequenceDictionaryExtractor.extractDictionary(picardDictPath);
+        final SAMSequenceDictionary dosDict = SAMSequenceDictionaryExtractor.extractDictionary(picardDosDictPath);
+        final SAMSequenceDictionary dosGZDict = SAMSequenceDictionaryExtractor.extractDictionary(picardDosGZDictPath);
+
+        // test files generated with samtools 1.17
+
+        // converted by samtools from test.fasta
+        final SAMSequenceDictionary samtoolsDict = SAMSequenceDictionaryExtractor.extractDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/samtools_test.dict"));
+        // converted by samtools from test_windows_line_endings.fasta
+        final SAMSequenceDictionary samtoolsDosDict = SAMSequenceDictionaryExtractor.extractDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/samtools_test_dos_line_endings.dict"));
+        // from test_windows_line_endings.fasta.gz
+        final SAMSequenceDictionary samtoolsDosGZDict = SAMSequenceDictionaryExtractor.extractDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/samtools_test_dos_line_endings_gz.dict"));
+
+        final List<SAMSequenceRecord> picardRecords = unixDict.getSequences();
+        final List<SAMSequenceRecord> picardDosRecords = dosDict.getSequences();
+        final List<SAMSequenceRecord> picardDosGZRecords = dosGZDict.getSequences();
+        final List<SAMSequenceRecord> samtoolsRecords = samtoolsDict.getSequences();
+        final List<SAMSequenceRecord> samtoolsDosRecords = samtoolsDosDict.getSequences();
+        final List<SAMSequenceRecord> samtoolsDosGZRecords = samtoolsDosGZDict.getSequences();
+
+        Assert.assertEquals(picardRecords.size(), picardDosRecords.size());
+        Assert.assertEquals(picardRecords.size(), picardDosGZRecords.size());
+        Assert.assertEquals(picardRecords.size(), samtoolsRecords.size());
+        Assert.assertEquals(picardRecords.size(), samtoolsDosRecords.size());
+        Assert.assertEquals(picardRecords.size(), samtoolsDosGZRecords.size());
+
+        for (int i = 0; i < picardRecords.size(); i++) {
+            Assert.assertEquals(picardRecords.get(i).getMd5(), picardDosRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), picardDosGZRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), samtoolsRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), samtoolsDosRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), samtoolsDosGZRecords.get(i).getMd5());
+        }
+    }
+
+    final Path makeTempDictionary(final Path inputFasta, final String dictNamePrefix) throws IOException {
+        final File tempDict = File.createTempFile(dictNamePrefix, ".dict");
+        tempDict.delete();
+        tempDict.deleteOnExit();
+        final String[] argv = {
+                "REFERENCE=" + inputFasta.toAbsolutePath(),
+                "OUTPUT=" + tempDict
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        return tempDict.toPath();
     }
 }

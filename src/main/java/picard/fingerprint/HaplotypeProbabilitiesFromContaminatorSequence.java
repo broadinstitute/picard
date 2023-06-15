@@ -39,9 +39,9 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
     public double contamination;
 
-    // for each model (contGenotype, mainGenotype) there's a likelihood of the data. These need to be collected separately
+    // for each model (contGenotype, mainGenotype) there's a LogLikelihood of the data. These need to be collected separately
     // and only collated once all the data is in.
-    private final double[][] likelihoodMap = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+    private final double[][] logLikelihoodMap = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
     private boolean valuesNeedUpdating = true;
 
     public HaplotypeProbabilitiesFromContaminatorSequence(final HaplotypeBlock haplotypeBlock, final double contamination) {
@@ -58,15 +58,14 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
         contamination = other.contamination;
         for (final Genotype g : Genotype.values()) {
-            System.arraycopy(other.likelihoodMap[g.v], 0, likelihoodMap[g.v], 0, NUM_GENOTYPES);
+            System.arraycopy(other.logLikelihoodMap[g.v], 0, logLikelihoodMap[g.v], 0, NUM_GENOTYPES);
         }
     }
 
-
-        /**
-         * Adds a base observation with the observed quality to the evidence for this haplotype
-         * based on the fact that the SNP is part of the haplotype.
-         */
+    /**
+     * Adds a base observation with the observed quality to the evidence for this haplotype
+     * based on the fact that the SNP is part of the haplotype.
+     */
     public void addToProbs(final Snp snp, final byte base, final byte qual) {
         assertSnpPartOfHaplotype(snp);
         valuesNeedUpdating = true;
@@ -91,10 +90,11 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
         for (final Genotype contGeno : Genotype.values()) {
             for (final Genotype mainGeno : Genotype.values()) {
-                //theta is the expected frequency of the alternate allele
+                // theta is the expected frequency of the alternate allele
                 final double theta = 0.5 * ((1 - contamination) * mainGeno.v + contamination * contGeno.v);
-                likelihoodMap[contGeno.v][mainGeno.v] *= ((altAllele ? theta : (1 - theta)) * (1 - pErr) +
-                        (!altAllele ? theta : (1 - theta)) * pErr);
+                logLikelihoodMap[contGeno.v][mainGeno.v] +=
+                        Math.log10((( altAllele ? theta : (1 - theta)) * (1 - pErr) +
+                         (!altAllele ? theta : (1 - theta)) * pErr         ));
             }
         }
     }
@@ -104,13 +104,13 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         if (!valuesNeedUpdating) {
             return;
         }
+        valuesNeedUpdating = false;
         final double[] ll = new double[NUM_GENOTYPES];
         for (final Genotype contGeno : Genotype.values()) {
             // p(a | g_c) = \sum_g_m { P(g_m) \prod_i P(a_i| g_m, g_c)}
-            ll[contGeno.v] = Math.log10(MathUtil.sum(MathUtil.multiply(this.getPriorProbablities(), likelihoodMap[contGeno.v])));
+            ll[contGeno.v] = MathUtil.LOG_10_MATH.sum( MathUtil.sum(MathUtil.LOG_10_MATH.getLogValue(this.getPriorProbablities()), logLikelihoodMap[contGeno.v]));
         }
         setLogLikelihoods(ll);
-        valuesNeedUpdating = false;
     }
 
     @Override
@@ -137,7 +137,7 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
         }
 
         for (final Genotype contGeno : Genotype.values()) {
-            this.likelihoodMap[contGeno.v] = MathUtil.multiply(this.likelihoodMap[contGeno.v], o.likelihoodMap[contGeno.v]);
+            this.logLikelihoodMap[contGeno.v] = MathUtil.sum(this.logLikelihoodMap[contGeno.v], o.logLikelihoodMap[contGeno.v]);
         }
         valuesNeedUpdating = true;
         return this;
@@ -151,6 +151,7 @@ public class HaplotypeProbabilitiesFromContaminatorSequence extends HaplotypePro
 
     @Override
     public double[] getLogLikelihoods() {
+        updateLikelihoods();
         return super.getLogLikelihoods();
     }
 }

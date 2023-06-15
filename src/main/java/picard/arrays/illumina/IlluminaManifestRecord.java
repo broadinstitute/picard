@@ -25,7 +25,7 @@
 package picard.arrays.illumina;
 
 import htsjdk.tribble.annotation.Strand;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import picard.PicardException;
 
 import java.util.Map;
@@ -42,11 +42,9 @@ public class IlluminaManifestRecord {
 
     private final String ilmnId;
     private final String name;
-    private IlluminaStrand ilmnStrand;
+    private final IlluminaStrand ilmnStrand;
 
     private final String snp;
-    private final boolean isIndel;              // Not part of the file...
-    private final boolean isAmbiguous;          // Not part of the file
 
     private final String addressAId;
     private final String alleleAProbeSeq;
@@ -54,23 +52,28 @@ public class IlluminaManifestRecord {
     private final String alleleBProbeSeq;
 
     private final String genomeBuild;
-    private final String majorGenomeBuild;      // Not part of the file... (35, 36, 37)
-    private String hgGenomeBuild;               // Not part of the file... (HG17, HG18, HG19)
 
     private final String chr;
-    private final int position;                       // annotated as 'MapInfo'
+    private final int position;                 // annotated as 'MapInfo'
 
     private final String ploidy;
     private final String species;
     private final String source;
     private final String sourceVersion;
-    private IlluminaStrand sourceStrand;
+    private final IlluminaStrand sourceStrand;
     private final String sourceSeq;
     private final String topGenomicSeq;
     private final int beadSetId;
     private final String expClusters;
-    private Strand refStrand;
+    private final Strand refStrand;
     private final boolean intensityOnly;
+
+    // These are not found in the original manifest - we create them for ease of use:
+    private final boolean isIndel;
+    private final boolean isAmbiguous;
+
+    private final String majorGenomeBuild;      // (35, 36, 37)
+    private String hgGenomeBuild;               // (HG17, HG18, HG19)
 
     private static final Set<String> indels = Stream.of("[D/I]", "[I/D]").collect(Collectors.toSet());
     private static final Set<String> ambiguousSnps = Stream.of("[A/T]", "[T/A]", "[G/C]", "[C/G]").collect(Collectors.toSet());
@@ -336,7 +339,7 @@ public class IlluminaManifestRecord {
 
     public boolean getIntensityOnly() { return intensityOnly; }
 
-    private String getMajorGenomeBuild(String genomeBuild) {
+    String getMajorGenomeBuild(String genomeBuild) {
 
         final String majorGenomeBuild;
         // determine majorGenomeBuild and hgGenomeBuild
@@ -347,10 +350,10 @@ public class IlluminaManifestRecord {
             majorGenomeBuild = genomeBuild;
         }
 
-        return majorGenomeBuild;
+        return majorGenomeBuild.trim();
     }
 
-    private String getHgGenomeBuild(String majorGenomeBuild) {
+    String getHgGenomeBuild(String majorGenomeBuild) {
         return IlluminaManifest.HG_TO_NCBI.inverseBidiMap().containsKey(majorGenomeBuild)
                 ? IlluminaManifest.HG_TO_NCBI.inverseBidiMap().get(majorGenomeBuild).toString()
                 : "UNKNOWN";
@@ -358,5 +361,15 @@ public class IlluminaManifestRecord {
 
     public int getIndex() {
         return index;
+    }
+
+    @Override
+    public String toString() {
+        return "IlluminaManifestRecord{" +
+                "name='" + name + '\'' +
+                ", snp='" + snp + '\'' +
+                ", chr='" + chr + '\'' +
+                ", position=" + position +
+                '}';
     }
 }

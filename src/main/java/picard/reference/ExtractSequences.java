@@ -39,6 +39,7 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.ReferenceProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -93,7 +94,11 @@ public class ExtractSequences extends CommandLineProgram {
 
         final IntervalList intervals = IntervalList.fromFile(INTERVAL_LIST);
         final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-        SequenceUtil.assertSequenceDictionariesEqual(intervals.getHeader().getSequenceDictionary(), ref.getSequenceDictionary());
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                intervals.getHeader().getSequenceDictionary(),
+                INTERVAL_LIST.getAbsolutePath(),
+                ref.getSequenceDictionary(),
+                REFERENCE_SEQUENCE.getAbsolutePath());
 
         final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
 

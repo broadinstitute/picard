@@ -24,6 +24,8 @@
 
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.SAMFileHeader;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -36,69 +38,76 @@ public class MarkDuplicatesTagRepresentativeReadIndexTest extends AbstractMarkDu
         return new MarkDuplicatesTagRepresentativeReadIndexTester();
     }
 
+    protected MarkDuplicatesTagRepresentativeReadIndexTester getTester(final SAMFileHeader.SortOrder sortOrder) {
+        return new MarkDuplicatesTagRepresentativeReadIndexTester(sortOrder);
+    }
+
     // This tests the creation of a single duplicate pair. The expected size of the duplicate set is 2
     // and the expected representative read is the first read defined in the text. The test fails if
     // the 'DI' and 'DS' tags do not match the expectation.
-    @Test
-    public void testRepresentativeReadTag() {
-        final MarkDuplicatesTagRepresentativeReadIndexTester tester = getTester();
+    @DataProvider(name = "sortOrderDataProvider")
+    public Object[][] sortOrderDataProvider() {
+        return new Object[][]{
+                {SAMFileHeader.SortOrder.coordinate},
+                {SAMFileHeader.SortOrder.queryname}
+        };
+    }
+
+    @Test(dataProvider = "sortOrderDataProvider")
+    public void testRepresentativeReadTag(final SAMFileHeader.SortOrder sortOrder) {
+        final MarkDuplicatesTagRepresentativeReadIndexTester tester = getTester(sortOrder);
         tester.getSamRecordSetBuilder().setReadLength(45);
         tester.testRepresentativeReads = true;
         tester.setExpectedOpticalDuplicate(1);
-        String representativeReadName = "RUNID:1:1:16020:13352";
-        Integer representativeReadIndexInFileForward = 1;
+        final String representativeReadName = "RUNID:1:1:16020:13352";
         tester.addMatePair(representativeReadName, 1, 485253, 485253, false, false, false, false, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(representativeReadIndexInFileForward, representativeReadIndexInFileForward);
-        tester.expectedRepresentativeIndexMap.put(3, representativeReadIndexInFileForward);
+        tester.expectedRepresentativeReadMap.put(representativeReadName, representativeReadName);
         tester.expectedSetSizeMap.put(representativeReadName,2);
-        tester.addMatePair("RUNID:1:1:15993:13361", 1, 485253, 485253, false, false, true, true, "44M1S", "44M1S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(0, representativeReadIndexInFileForward);
-        tester.expectedRepresentativeIndexMap.put(2, representativeReadIndexInFileForward);
-        tester.expectedSetSizeMap.put("RUNID:1:1:15993:13361",2);
+        final String duplicateReadName = "RUNID:1:1:15993:13361";
+        tester.addMatePair(duplicateReadName, 1, 485253, 485253, false, false, true, true, "44M1S", "44M1S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.expectedRepresentativeReadMap.put(duplicateReadName, representativeReadName);
+        tester.expectedSetSizeMap.put(duplicateReadName,2);
         tester.runTest();
     }
 
     // This tests the creation of a two duplicate sets of size 2 and 3 respectively. The test fails if
     // the 'DI' and 'DS' tags do not match the expectation.
-    @Test
-    public void testMultiRepresentativeReadTags() {
-        final MarkDuplicatesTagRepresentativeReadIndexTester tester = getTester();
+
+    @Test(dataProvider = "sortOrderDataProvider")
+    public void testMultiRepresentativeReadTags(final SAMFileHeader.SortOrder sortOrder) {
+        final MarkDuplicatesTagRepresentativeReadIndexTester tester = getTester(sortOrder);
         tester.getSamRecordSetBuilder().setReadLength(45);
         tester.testRepresentativeReads = true;
         tester.setExpectedOpticalDuplicate(3);
         // Duplicate set: size 2 - all optical
-        String representativeReadName1 = "RUNID:1:1:16020:13352";
-        Integer representativeReadIndexInFileForward = 1;
+        final String representativeReadName1 = "RUNID:1:1:16020:13352";
         tester.addMatePair(representativeReadName1, 1, 485253, 485253, false, false, false, false, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(representativeReadIndexInFileForward, representativeReadIndexInFileForward);
-        tester.expectedRepresentativeIndexMap.put(3, representativeReadIndexInFileForward);
+        tester.expectedRepresentativeReadMap.put(representativeReadName1, representativeReadName1);
         tester.expectedSetSizeMap.put(representativeReadName1,2);
-        tester.addMatePair("RUNID:1:1:15993:13361", 1, 485253, 485253, false, false, true, true, "44M1S", "44M1S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(0, representativeReadIndexInFileForward);
-        tester.expectedRepresentativeIndexMap.put(2, representativeReadIndexInFileForward);
-        tester.expectedSetSizeMap.put("RUNID:1:1:15993:13361",2);
+        final String duplicateSet1DuplicateReadName = "RUNID:1:1:15993:13361";
+        tester.addMatePair(duplicateSet1DuplicateReadName, 1, 485253, 485253, false, false, true, true, "44M1S", "44M1S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.expectedRepresentativeReadMap.put(duplicateSet1DuplicateReadName, representativeReadName1);
+        tester.expectedSetSizeMap.put(duplicateSet1DuplicateReadName,2);
 
         // Duplicate set: size 3 - all optical
-        String representativeReadName2 = "RUNID:1:1:15993:13360";
-        Integer representativeReadIndexInFileForward2 = 6;
+        final String representativeReadName2 = "RUNID:1:1:15993:13360";
         tester.addMatePair(representativeReadName2, 1, 485299, 485299, false, false, false, false, "45M", "45M", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(representativeReadIndexInFileForward2, representativeReadIndexInFileForward2);
-        tester.expectedRepresentativeIndexMap.put(9, representativeReadIndexInFileForward2);
+        tester.expectedRepresentativeReadMap.put(representativeReadName2, representativeReadName2);
         tester.expectedSetSizeMap.put(representativeReadName2,3);
-        tester.addMatePair("RUNID:1:1:15993:13365", 1, 485299, 485299, false, false, true, true, "44M1S", "44M1S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(7, representativeReadIndexInFileForward2);
-        tester.expectedRepresentativeIndexMap.put(10, representativeReadIndexInFileForward2);
-        tester.expectedSetSizeMap.put("RUNID:1:1:15993:13365",3);
-        tester.addMatePair("RUNID:1:1:15993:13370", 1, 485299, 485299, false, false, true, true, "43M2S", "43M2S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(8, representativeReadIndexInFileForward2);
-        tester.expectedRepresentativeIndexMap.put(11, representativeReadIndexInFileForward2);
-        tester.expectedSetSizeMap.put("RUNID:1:1:15993:13370",3);
+        final String duplicateSet2DuplicateReadName1 = "RUNID:1:1:15993:13365";
+        tester.addMatePair(duplicateSet2DuplicateReadName1, 1, 485299, 485299, false, false, true, true, "44M1S", "44M1S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.expectedRepresentativeReadMap.put(duplicateSet2DuplicateReadName1, representativeReadName2);
+        tester.expectedSetSizeMap.put(duplicateSet2DuplicateReadName1,3);
+        final String duplicateSet2DuplicateReadName2 = "RUNID:1:1:15993:13370";
+        tester.addMatePair(duplicateSet2DuplicateReadName2, 1, 485299, 485299, false, false, true, true, "43M2S", "43M2S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.expectedRepresentativeReadMap.put(duplicateSet2DuplicateReadName2, representativeReadName2);
+        tester.expectedSetSizeMap.put(duplicateSet2DuplicateReadName2,3);
 
         // Add non-duplicate read
-        tester.addMatePair("RUNID:1:1:15993:13375", 1, 485255, 485255, false, false, false, false, "43M2S", "43M2S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
-        tester.expectedRepresentativeIndexMap.put(4, null);
-        tester.expectedRepresentativeIndexMap.put(5, null);
-        tester.expectedSetSizeMap.put("RUNID:1:1:15993:13375",null);
+        final String nonDuplicateReadName = "RUNID:1:1:15993:13375";
+        tester.addMatePair(nonDuplicateReadName, 1, 485255, 485255, false, false, false, false, "43M2S", "43M2S", false, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.expectedRepresentativeReadMap.put(nonDuplicateReadName, null);
+        tester.expectedSetSizeMap.put(nonDuplicateReadName,null);
 
         tester.runTest();
     }

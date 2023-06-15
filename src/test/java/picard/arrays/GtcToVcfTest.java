@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class GtcToVcfTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/arrays/illumina");
-    private static final File TEST_EXTENDED_MANIFEST_FILE = new File(TEST_DATA_DIR, "HumanExome-12v1-1_A.extended.csv");
+    private static final File TEST_EXTENDED_MANIFEST_FILE = new File(TEST_DATA_DIR, "HumanExome-12v1-1_A.1.3.extended.csv");
     private static final File TEST_GTC_RECORDS_FILE = new File(TEST_DATA_DIR, "Test.gtc_records.csv");
     private static final File TEST_FINGERPRINT_GENOTYPES_FILE = new File(TEST_DATA_DIR, "Test.fingerprint.vcf");
 

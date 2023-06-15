@@ -1,0 +1,9 @@
+## htsjdk.samtools.metrics.StringHeader
+# CheckFingerprint INPUT=/cromwell_root/broad-gotc-dev-cromwell-execution/WholeGenomeGermlineSingleSample/e36be5d3-ddbf-4ee6-a98d-2a1933826550/call-UnmappedBamToAlignedBam/UnmappedBamToAlignedBam/da7029e5-cf73-4d9b-8369-23c3aea72f19/call-GatherBamFiles/NA12878_PLUMBING.bam SUMMARY_OUTPUT=NA12878_PLUMBING.fingerprinting_summary_metrics DETAIL_OUTPUT=NA12878_PLUMBING.fingerprinting_detail_metrics GENOTYPES=/cromwell_root/broad-gotc-test-storage/germline_single_sample/wgs/plumbing/bams/NA12878_PLUMBING.hg38.reference.fingerprint.vcf.gz EXPECTED_SAMPLE_ALIAS=NA12878 PLUMBING HAPLOTYPE_MAP=/cromwell_root/broad-references-private/hg38/v0/Homo_sapiens_assembly38.haplotype_database.txt IGNORE_READ_GROUPS=true    GENOTYPE_LOD_THRESHOLD=5.0 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Fri Mar 20 20:48:22 UTC 2020
+
+## METRICS CLASS	picard.analysis.FingerprintingSummaryMetrics
+READ_GROUP	SAMPLE	LL_EXPECTED_SAMPLE	LL_RANDOM_SAMPLE	LOD_EXPECTED_SAMPLE	HAPLOTYPES_WITH_GENOTYPES	HAPLOTYPES_CONFIDENTLY_CHECKED	HAPLOTYPES_CONFIDENTLY_MATCHING	HET_AS_HOM	HOM_AS_HET	HOM_AS_OTHER_HOM
+	NA12878 PLUMBING	-151.58161	-152.354205	0.772594	170	0	0	0	0	0
+	NA12345 PLUMBING	-152.354205	-151.58161	-0.772594	170	0	0	0	0	0

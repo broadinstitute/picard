@@ -1,12 +1,15 @@
 package picard.sam;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.sam.util.SamComparison;
+import picard.util.help.HelpConstants;
 
 /**
  * Metric for results of SamComparison.  Used to store results in CompareSAMs.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class SamComparisonMetric extends MetricBase {
 
     /**

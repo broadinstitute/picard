@@ -24,18 +24,8 @@
 
 package picard.arrays;
 
-import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.arrays.illumina.ArraysControlInfo;
-import picard.arrays.illumina.Build37ExtendedIlluminaManifest;
-import picard.arrays.illumina.Build37ExtendedIlluminaManifestRecord;
-import picard.arrays.illumina.IlluminaManifestRecord;
-import picard.arrays.illumina.InfiniumEGTFile;
-import picard.arrays.illumina.InfiniumGTCFile;
-import picard.arrays.illumina.InfiniumGTCRecord;
-import picard.arrays.illumina.InfiniumNormalizationManifest;
-import picard.arrays.illumina.InfiniumVcfFields;
-import picard.pedigree.Sex;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
@@ -62,18 +52,25 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFRecordCodec;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
+import picard.arrays.illumina.ArraysControlInfo;
+import picard.arrays.illumina.Build37ExtendedIlluminaManifest;
+import picard.arrays.illumina.Build37ExtendedIlluminaManifestRecord;
+import picard.arrays.illumina.IlluminaManifestRecord;
+import picard.arrays.illumina.InfiniumEGTFile;
+import picard.arrays.illumina.InfiniumGTCFile;
+import picard.arrays.illumina.InfiniumGTCRecord;
+import picard.arrays.illumina.InfiniumVcfFields;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.pedigree.Sex;
 
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,16 +84,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Class to convert a GTC file and a BPM file to a VCF file.
+ * Class to convert an Illumina GTC file into a VCF file.
  */
 @CommandLineProgramProperties(
         summary = GtcToVcf.USAGE_DETAILS,
-        oneLineSummary = "Program to convert a GTC file to a VCF",
+        oneLineSummary = "Program to convert an Illumina GTC file to a VCF",
         programGroup = picard.cmdline.programgroups.GenotypingArraysProgramGroup.class
 )
 @DocumentedFeature
 public class GtcToVcf extends CommandLineProgram {
-
 
     static final String USAGE_DETAILS =
             "GtcToVcf takes an Illumina GTC file and converts it to a VCF file using several supporting files. " +
@@ -112,7 +108,7 @@ public class GtcToVcf extends CommandLineProgram {
                     "      OUTPUT=output.vcf \\<br />" +
                     "      EXTENDED_ILLUMINA_MANIFEST=chip_name.extended.csv \\<br />" +
                     "      CLUSTER_FILE=chip_name.egt \\<br />" +
-                    "      ILLUMINA_NORMALIZATION_MANIFEST=chip_name.bpm.csv \\<br />" +
+                    "      ILLUMINA_BEAD_POOL_MANIFEST_FILE=chip_name.bpm \\<br />" +
                     "      SAMPLE_ALIAS=my_sample_alias \\<br />" +
                     "</pre>";
 
@@ -131,14 +127,17 @@ public class GtcToVcf extends CommandLineProgram {
     @Argument(shortName = "CF", doc = "An Illumina cluster file (egt)")
     public File CLUSTER_FILE;
 
-    @Argument(shortName = "NORM_MANIFEST", doc = "An Illumina bead pool manifest (a manifest containing the Illumina normalization ids) (bpm.csv)")
-    public File ILLUMINA_NORMALIZATION_MANIFEST;
+    @Argument(shortName = "BPM_FILE", doc = "The Illumina Bead Pool Manifest (.bpm) file")
+    public File ILLUMINA_BEAD_POOL_MANIFEST_FILE;
 
     @Argument(shortName = "E_GENDER", doc = "The expected gender for this sample.", optional = true)
     public String EXPECTED_GENDER;
 
     @Argument(doc = "The sample alias")
     public String SAMPLE_ALIAS;
+
+    @Argument(doc = "The version of the pipeline used to generate this VCF", optional = true)
+    public String PIPELINE_VERSION;
 
     @Argument(doc = "The analysis version of the data used to generate this VCF", optional = true)
     public Integer ANALYSIS_VERSION_NUMBER;
@@ -154,16 +153,6 @@ public class GtcToVcf extends CommandLineProgram {
 
     static final List<Allele> NO_CALL_ALLELES = Collections.unmodifiableList(Arrays.asList(Allele.NO_CALL, Allele.NO_CALL));
 
-    // This file gets initialized during customCommandLineValidation.
-    // It is a static member so we don't have to parse the file twice.
-    private static InfiniumGTCFile infiniumGTCFile;
-
-    private static InfiniumEGTFile infiniumEGTFile;
-
-    private static String gtcGender = null;
-
-    private static Sex fingerprintGender;
-
     private static ReferenceSequenceFile refSeq;
 
     private static final DecimalFormat df = new DecimalFormat();
@@ -175,6 +164,8 @@ public class GtcToVcf extends CommandLineProgram {
         df.setGroupingSize(0);
     }
 
+    int NumZeroedOutAssays = 0;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -182,27 +173,54 @@ public class GtcToVcf extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        final Build37ExtendedIlluminaManifest manifest = setupAndGetManifest();
+        Sex fingerprintSex = getFingerprintSex(FINGERPRINT_GENOTYPES_VCF_FILE);
+        String gtcGender = getGenderFromGtcFile(GENDER_GTC, ILLUMINA_BEAD_POOL_MANIFEST_FILE);
+        try (InfiniumGTCFile infiniumGTCFile = new InfiniumGTCFile(INPUT, ILLUMINA_BEAD_POOL_MANIFEST_FILE);
+             InfiniumEGTFile infiniumEGTFile = new InfiniumEGTFile(CLUSTER_FILE)) {
+            final Build37ExtendedIlluminaManifest manifest = setupAndGetManifest(infiniumGTCFile);
 
-        final VCFHeader vcfHeader = createVCFHeader(manifest, infiniumGTCFile, gtcGender, CLUSTER_FILE,
-                REFERENCE_SEQUENCE, refSeq.getSequenceDictionary());
+            final VCFHeader vcfHeader = createVCFHeader(manifest, infiniumGTCFile, gtcGender, fingerprintSex, CLUSTER_FILE,
+                    REFERENCE_SEQUENCE, refSeq.getSequenceDictionary());
 
-        // Setup a collection that will sort contexts properly
-        // Necessary because input GTC file is not sorted
-        final SortingCollection<VariantContext> contexts =
-                SortingCollection.newInstance(
-                        VariantContext.class,
-                        new VCFRecordCodec(vcfHeader),
-                        new VariantContextComparator(refSeq.getSequenceDictionary()),
-                        MAX_RECORDS_IN_RAM,
-                        TMP_DIR.stream().map(File::toPath).toArray(Path[]::new));
+            // Setup a collection that will sort contexts properly
+            // Necessary because input GTC file is not sorted
+            final SortingCollection<VariantContext> contexts =
+                    SortingCollection.newInstance(
+                            VariantContext.class,
+                            new VCFRecordCodec(vcfHeader),
+                            new VariantContextComparator(refSeq.getSequenceDictionary()),
+                            MAX_RECORDS_IN_RAM);
 
-        // fill the sorting collection
-        fillContexts(contexts, infiniumGTCFile, manifest, infiniumEGTFile);
+            // fill the sorting collection
+            fillContexts(contexts, infiniumGTCFile, manifest, infiniumEGTFile);
 
-        writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
+            final int numCalls = infiniumGTCFile.getNumCalls();
+            final int numSnps = infiniumGTCFile.getNumberOfSnps();
+            final double callRate = ((double) numCalls) / (numSnps - NumZeroedOutAssays);
 
-        return 0;
+            log.debug("NumCalls:    " + numCalls);
+            log.debug("NumNoCalls:  " + infiniumGTCFile.getNumNoCalls());
+            log.debug("NumSnps:     " + numSnps);
+            log.debug("Zeroed:      " + NumZeroedOutAssays);
+            log.debug("IntOnly:     " + infiniumGTCFile.getNumIntensityOnly());
+            log.debug("GtcCallRate: " + infiniumGTCFile.getCallRate());
+            log.debug("CallRate:    " + callRate);
+
+            // The Call Rate in the Illumina GTC File does not take into account zeroed out SNPs.
+            // So we recalculate it (and ignore zeroed out assays - which also includes intensity only probes)
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE, String.valueOf(callRate)));
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(InfiniumVcfFields.GTC_CALL_RATE_DETAIL,
+                    "The gtcCallRate is the Call Rate reported in the Illumina GTC file, corrected for the presence of Zeroed-Out SNPs"));
+
+            writeVcf(contexts, OUTPUT, refSeq.getSequenceDictionary(), vcfHeader);
+
+            // not sure this is needed but it's definitely **cleaner**
+            contexts.cleanup();
+
+            return 0;
+        } catch (IOException e) {
+            throw new PicardException("Error processing GTC File: " + INPUT.getAbsolutePath(), e);
+        }
     }
 
     @Override
@@ -210,10 +228,14 @@ public class GtcToVcf extends CommandLineProgram {
 
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(EXTENDED_ILLUMINA_MANIFEST);
+        IOUtil.assertFileIsReadable(ILLUMINA_BEAD_POOL_MANIFEST_FILE);
         IOUtil.assertFileIsWritable(OUTPUT);
         refSeq = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
         final SAMSequenceDictionary sequenceDictionary = refSeq.getSequenceDictionary();
         final String assembly = sequenceDictionary.getSequence(0).getAssembly();
+        if (assembly == null) {
+            return new String[]{"Assembly tag ('" + SAMSequenceRecord.ASSEMBLY_TAG + "') is required in the sequence dictionary)."};
+        }
         if (!assembly.equals("GRCh37")) {
             return new String[]{"The selected reference sequence ('" + assembly + "') is not supported.  This tool is currently only implemented to support NCBI Build 37 / HG19 Reference Sequence."};
         }
@@ -228,20 +250,10 @@ public class GtcToVcf extends CommandLineProgram {
         return super.customCommandLineValidation();
     }
 
-    private Build37ExtendedIlluminaManifest setupAndGetManifest() {
-        fingerprintGender = getFingerprintSex(FINGERPRINT_GENOTYPES_VCF_FILE);
-        final InfiniumNormalizationManifest infiniumNormalizationManifest = new InfiniumNormalizationManifest(ILLUMINA_NORMALIZATION_MANIFEST);
-        try (final DataInputStream gtcInputStream = new DataInputStream(new FileInputStream(INPUT))) {
+    private Build37ExtendedIlluminaManifest setupAndGetManifest(InfiniumGTCFile infiniumGTCFile) {
 
-            infiniumEGTFile = new InfiniumEGTFile(CLUSTER_FILE);
-            infiniumGTCFile = new InfiniumGTCFile(gtcInputStream, infiniumNormalizationManifest);
+        try {
             final Build37ExtendedIlluminaManifest manifest = new Build37ExtendedIlluminaManifest(EXTENDED_ILLUMINA_MANIFEST);
-
-            if (GENDER_GTC != null) {
-                try (DataInputStream genderGtcStream = new DataInputStream(new FileInputStream(GENDER_GTC))) {
-                    gtcGender = new InfiniumGTCFile(genderGtcStream, infiniumNormalizationManifest).getGender();
-                }
-            }
 
             final String gtcManifestName = FilenameUtils.removeExtension(infiniumGTCFile.getSnpManifest());
             final String illuminaManifestName = FilenameUtils.removeExtension(manifest.getDescriptorFileName());
@@ -274,6 +286,18 @@ public class GtcToVcf extends CommandLineProgram {
         return Sex.Unknown;
     }
 
+    private String getGenderFromGtcFile(final File gtcFile, final File bpmFile) {
+        String gtcGender = null;
+        if (gtcFile != null) {
+            try (InfiniumGTCFile infiniumGTCGenderFile = new InfiniumGTCFile(gtcFile, bpmFile)) {
+                gtcGender = infiniumGTCGenderFile.getGender();
+            } catch (IOException e) {
+                throw new PicardException("Error processing GTC File: " + gtcFile.getAbsolutePath(), e);
+            }
+        }
+        return gtcGender;
+    }
+
     private void fillContexts(final SortingCollection<VariantContext> contexts, final InfiniumGTCFile gtcFile,
                               final Build37ExtendedIlluminaManifest manifest, final InfiniumEGTFile egtFile) {
         final ProgressLogger progressLogger = new ProgressLogger(log, 100000, "sorted");
@@ -286,9 +310,17 @@ public class GtcToVcf extends CommandLineProgram {
         while (iterator.hasNext()) {
             final Build37ExtendedIlluminaManifestRecord record = iterator.next();
 
-            if (!record.isBad()) {
+            Integer egtIndex = egtFile.rsNameToIndex.get(record.getName());
+            if (egtIndex == null) {
+                throw new PicardException("Found no record in cluster file for manifest entry '" + record.getName() + "'");
+            }
+            if (egtFile.totalScore[egtIndex] == 0.0) {
+                NumZeroedOutAssays++;
+            }
+
+            if (!record.isFail()) {
                 InfiniumGTCRecord gtcRecord = gtcFile.getRecord(gtcIndex);
-                VariantContext context = makeVariantContext(record, gtcRecord, egtFile, progressLogger);
+                VariantContext context = makeVariantContext(record, gtcRecord, egtFile, egtIndex, progressLogger);
                 numVariantsWritten++;
                 contexts.add(context);
             }
@@ -296,12 +328,13 @@ public class GtcToVcf extends CommandLineProgram {
         }
 
         log.info(numVariantsWritten + " Variants were written to file");
-        log.info(gtcFile.getNumberOfSnps() + " SNPs in the GTC file");
+        log.info(gtcFile.getNumberOfSnps() + " Variants in the GTC file");
+        log.info(NumZeroedOutAssays + " Assays were zeroed out in the EGT file");
         log.info(manifest.getNumAssays() + " Variants on the " + manifest.getDescriptorFileName() + " genotyping array manifest file");
     }
 
     private VariantContext makeVariantContext(Build37ExtendedIlluminaManifestRecord record, final InfiniumGTCRecord gtcRecord,
-                                              final InfiniumEGTFile egtFile, final ProgressLogger progressLogger) {
+                                              final InfiniumEGTFile egtFile, final int egtIndex, final ProgressLogger progressLogger) {
         // If the record is not flagged as errant in the manifest we include it in the VCF
         Allele A = record.getAlleleA();
         Allele B = record.getAlleleB();
@@ -309,11 +342,7 @@ public class GtcToVcf extends CommandLineProgram {
 
         final String chr = record.getB37Chr();
         final Integer position = record.getB37Pos();
-        final Integer endPosition = position + ref.length() - 1;
-        Integer egtIndex = egtFile.rsNameToIndex.get(record.getName());
-        if (egtIndex == null) {
-            throw new PicardException("Found no record in cluster file for manifest entry '" + record.getName() + "'");
-        }
+        final int endPosition = position + ref.length() - 1;
 
         progressLogger.record(chr, position);
 
@@ -359,7 +388,8 @@ public class GtcToVcf extends CommandLineProgram {
         builder.attribute(InfiniumVcfFields.ILLUMINA_CHR, record.getChr());
         builder.attribute(InfiniumVcfFields.ILLUMINA_POS, record.getPosition());
         builder.attribute(InfiniumVcfFields.ILLUMINA_BUILD, record.getGenomeBuild());
-        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(' ', '_'));
+        // Source field from the Illumina manifest may contain semicolons as separator characters.  Replace with a ',' for VCF
+        builder.attribute(InfiniumVcfFields.SOURCE, record.getSource().replace(';', ',').replace(' ', '_'));
         builder.attribute(InfiniumVcfFields.GC_SCORE, formatFloatForVcf(egtFile.totalScore[egtIndex]));
 
         for (InfiniumVcfFields.GENOTYPE_VALUES gtValue : InfiniumVcfFields.GENOTYPE_VALUES.values()) {
@@ -478,7 +508,7 @@ public class GtcToVcf extends CommandLineProgram {
     }
 
     public static String formatFloatForVcf(final float value) {
-        if (Float.isNaN(value)) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
             return DOT;
         }
         return df.format(value);
@@ -514,6 +544,7 @@ public class GtcToVcf extends CommandLineProgram {
     private VCFHeader createVCFHeader(final Build37ExtendedIlluminaManifest manifest,
                                       final InfiniumGTCFile gtcFile,
                                       final String gtcGender,
+                                      final Sex fingerprintGender,
                                       final File clusterFile,
                                       final File reference,
                                       final SAMSequenceDictionary dict) {
@@ -535,6 +566,9 @@ public class GtcToVcf extends CommandLineProgram {
         lines.add(new VCFHeaderLine(InfiniumVcfFields.SAMPLE_ALIAS, SAMPLE_ALIAS));
         if (EXPECTED_GENDER != null) {
             lines.add(new VCFHeaderLine(InfiniumVcfFields.EXPECTED_GENDER, EXPECTED_GENDER));
+        }
+        if (PIPELINE_VERSION != null) {
+            lines.add(new VCFHeaderLine(InfiniumVcfFields.PIPELINE_VERSION, PIPELINE_VERSION));
         }
         //add control codes
         final int measurementCount = gtcFile.getRawControlXIntensities().length / ArraysControlInfo.CONTROL_INFO.length;
