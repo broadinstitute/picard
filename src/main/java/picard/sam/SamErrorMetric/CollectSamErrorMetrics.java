@@ -363,7 +363,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             vcfFileReader.close();
         }
         else {
-            vcfIterator.close();
+            if(vcfIterator != null) {
+                vcfIterator.close();
+            }
         }
     }
 
@@ -411,7 +413,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
         finally {
             // Close our data source:
-            closeVcfDataSource();
+            if(VCF != null) {
+                closeVcfDataSource();
+            }
         }
 
         return 0;
