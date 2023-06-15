@@ -32,6 +32,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.nio.PicardHtsPath;
 import picard.vcf.ByIntervalListVariantContextIterator;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -213,6 +214,14 @@ public class DbSnpBitSetUtil {
 
         final Optional<ProgressLogger> progress = log.map(l -> new ProgressLogger(l, (int) 1e5, "Read", "variants"));
         final VCFFileReader variantReader = new VCFFileReader(dbSnpFile.toPath(), intervals != null);
+
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+            variantReader.getFileHeader().getSequenceDictionary(),
+            "DBSNP: " + dbSnpFile.getRawInputString(),
+            sequenceDictionary,
+            "INPUT"
+        );
+
         final Iterator<VariantContext> variantIterator;
         if (intervals != null) {
             variantIterator = new ByIntervalListVariantContextIterator(variantReader, intervals);

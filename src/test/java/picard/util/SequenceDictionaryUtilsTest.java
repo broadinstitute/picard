@@ -2,10 +2,12 @@ package picard.util;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 
+import java.io.File;
 import java.util.List;
 
 public class SequenceDictionaryUtilsTest {
@@ -45,4 +47,35 @@ public class SequenceDictionaryUtilsTest {
         SequenceDictionaryUtils.assertSequenceDictionariesEqual(s1, "s1", s2, "s2");
     }
 
+    @Test
+    public void testDbSnpSequenceDictionaryPositive() {
+        final File f1 = new File("testdata/picard/vcf", "mini.dbsnp.vcf");
+        final File f2 = new File("testdata/picard/vcf", "mini.vcf");
+
+        final SAMSequenceDictionary s1 = SAMSequenceDictionaryExtractor.extractDictionary(f1.toPath());
+        final SAMSequenceDictionary s2 = SAMSequenceDictionaryExtractor.extractDictionary(f2.toPath());
+
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+            s1,
+            "s1",
+            s2,
+            "s2"
+        );
+    }
+
+    @Test(expectedExceptions = PicardException.class)
+    public void testDbSnpSequenceDictionaryNegative() {
+        final File f1 = new File("testdata/picard/vcf", "mini.dbsnp.vcf");
+        final File f2 = new File("testdata/picard/vcf", "spanningDeletionCallset.vcf");
+
+        final SAMSequenceDictionary s1 = SAMSequenceDictionaryExtractor.extractDictionary(f1.toPath());
+        final SAMSequenceDictionary s2 = SAMSequenceDictionaryExtractor.extractDictionary(f2.toPath());
+
+        SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+            s1,
+            "s1",
+            s2,
+            "s2"
+        );
+    }
 }
