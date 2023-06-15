@@ -214,14 +214,14 @@ public class DbSnpBitSetUtil {
 
         final Optional<ProgressLogger> progress = log.map(l -> new ProgressLogger(l, (int) 1e5, "Read", "variants"));
         final VCFFileReader variantReader = new VCFFileReader(dbSnpFile.toPath(), intervals != null);
-        
+
         SequenceDictionaryUtils.assertSequenceDictionariesEqual(
             variantReader.getFileHeader().getSequenceDictionary(),
-            "DBSNP_REFERENCE_VCF",
+            "DBSNP: " + dbSnpFile.getRawInputString(),
             sequenceDictionary,
-            "INPUT_VCF"
+            "INPUT"
         );
-                
+
         final Iterator<VariantContext> variantIterator;
         if (intervals != null) {
             variantIterator = new ByIntervalListVariantContextIterator(variantReader, intervals);
