@@ -26,6 +26,11 @@ public class MarkDuplicatesForFlowArgumentCollection {
             "(for this argument, \"read end\" means 3' end)", optional = true)
     public int UNPAIRED_END_UNCERTAINTY = 0;
 
+    @Argument(doc = "Maximal difference of the read start position that counted as equal. Useful for flow based " +
+            "reads where the end position might vary due to sequencing errors. " +
+            "(for this argument, \"read start\" means 5' end in the direction of sequencing)", optional = true)
+    public int UNPAIRED_START_UNCERTAINTY = 0;
+
     @Argument(doc = "Skip first N flows, starting from the read's start, when considering duplicates. Useful for flow based reads where sometimes there " +
             "is noise in the first flows " +
             "(for this argument, \"read start\" means 5' end).", optional = true)

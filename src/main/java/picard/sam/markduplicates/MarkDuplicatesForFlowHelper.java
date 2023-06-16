@@ -105,19 +105,24 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
         int nextChunkRead1Coordinate2Min = Integer.MAX_VALUE;
         int nextChunkRead1Coordinate2Max = Integer.MIN_VALUE;
+        int nextChunkRead1Coordinate1Min = Integer.MAX_VALUE;
+        int nextChunkRead1Coordinate1Max = Integer.MIN_VALUE;
+
         final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
         boolean containsPairs = false;
         boolean containsFrags = false;
 
         for (final ReadEndsForMarkDuplicates next : md.fragSort) {
             if (firstOfNextChunk != null && areComparableForDuplicatesWithEndSignificance(firstOfNextChunk, next, useBarcodes,
-                    nextChunkRead1Coordinate2Min, nextChunkRead1Coordinate2Max)) {
+                    nextChunkRead1Coordinate2Min, nextChunkRead1Coordinate2Max, nextChunkRead1Coordinate1Min, nextChunkRead1Coordinate1Max)) {
                 nextChunk.add(next);
                 containsPairs = containsPairs || next.isPaired();
                 containsFrags = containsFrags || !next.isPaired();
                 if ( next.read2Coordinate != END_INSIGNIFICANT_VALUE) {
                     nextChunkRead1Coordinate2Min = Math.min(nextChunkRead1Coordinate2Min, next.read2Coordinate);
                     nextChunkRead1Coordinate2Max = Math.max(nextChunkRead1Coordinate2Max, next.read2Coordinate);
+                    nextChunkRead1Coordinate1Min = Math.min(nextChunkRead1Coordinate1Min, next.read1Coordinate);
+                    nextChunkRead1Coordinate1Max = Math.max(nextChunkRead1Coordinate1Max, next.read1Coordinate);
 
                     if ( firstOfNextChunk.read2Coordinate == END_INSIGNIFICANT_VALUE)
                         firstOfNextChunk = next;
@@ -129,6 +134,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
                 nextChunk.clear();
                 nextChunk.add(next);
                 firstOfNextChunk = next;
+                nextChunkRead1Coordinate1Min = nextChunkRead1Coordinate1Max = next.read1Coordinate;
                 if ( next.read2Coordinate != END_INSIGNIFICANT_VALUE)
                     nextChunkRead1Coordinate2Min = nextChunkRead1Coordinate2Max = next.read2Coordinate;
                 else {
@@ -191,15 +197,46 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         }
     }
 
+    //This method is identical to areComparableForDuplicates but allow working with readStartUncertainty
+    protected boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs,
+                                                 final boolean compareRead2, final boolean useBarcodes) {
+        boolean areComparable = lhs.libraryId == rhs.libraryId;
+
+        if (useBarcodes && areComparable) { // areComparable is useful here to avoid the casts below
+            final ReadEndsForMarkDuplicatesWithBarcodes lhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) lhs;
+            final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
+            areComparable = lhsWithBarcodes.barcode == rhsWithBarcodes.barcode &&
+                    lhsWithBarcodes.readOneBarcode == rhsWithBarcodes.readOneBarcode &&
+                    lhsWithBarcodes.readTwoBarcode == rhsWithBarcodes.readTwoBarcode;
+        }
+
+        if (areComparable) {
+            areComparable = lhs.read1ReferenceIndex == rhs.read1ReferenceIndex &&
+                    lhs.orientation == rhs.orientation;
+        }
+
+        if (areComparable && compareRead2) {
+            areComparable = lhs.read2ReferenceIndex == rhs.read2ReferenceIndex &&
+                    lhs.read2Coordinate == rhs.read2Coordinate;
+        }
+
+        return areComparable;
+    }
+
     /**
      * This method is identical in function to areComparableForDuplicates except that it accomodates for
      * the possible significance of the end side of the reads (w/ or wo/ uncertainty). This is only
      * applicable for flow mode invocation.
      */
     private boolean areComparableForDuplicatesWithEndSignificance(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean useBarcodes,
-                                                                  final int lhsRead1Coordinate2Min, final int lhsRead1Coordinate2Max) {
-        boolean areComparable = md.areComparableForDuplicates(lhs, rhs, false, useBarcodes);
+                                                                  final int lhsRead1Coordinate2Min, final int lhsRead1Coordinate2Max,
+                                                                  final int lhsRead1Coordinate1Min, final int lhsRead1Coordinate1Max) {
+        boolean areComparable = areComparableForDuplicates(lhs, rhs, false, useBarcodes);
 
+        if (areComparable) {
+            areComparable = endCoorInRangeWithUncertainty(lhsRead1Coordinate1Min, lhsRead1Coordinate1Max,
+                    rhs.read1Coordinate, md.flowBasedArguments.UNPAIRED_START_UNCERTAINTY);
+        }
         if (areComparable) {
             areComparable = (!endCoorSignificant(lhs.read2Coordinate, rhs.read2Coordinate) ||
                     endCoorInRangeWithUncertainty(lhsRead1Coordinate2Min, lhsRead1Coordinate2Max,
