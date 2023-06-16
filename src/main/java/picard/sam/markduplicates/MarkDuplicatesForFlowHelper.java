@@ -236,8 +236,8 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         final byte[]  bases = rec.getReadBases();
 
         // create iteration range and direction
-        final int startingOffset = !rec.getReadNegativeStrandFlag() ? 0 : bases.length;
-        final int endOffset = !rec.getReadNegativeStrandFlag() ? bases.length : 0;
+        final int startingOffset = !rec.getReadNegativeStrandFlag() ? 0 : bases.length - 1;
+        final int endOffset = !rec.getReadNegativeStrandFlag() ? bases.length : -1;
         final int  iterIncr = !rec.getReadNegativeStrandFlag() ? 1 : -1;
 
         // loop on bases, extract qual related to homopolymer from start of homopolymer
