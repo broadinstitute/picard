@@ -298,10 +298,10 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
      * A quality summing scoring strategy used for flow based reads.
      *
      * We look at the bases of the reads that are close to the ends of the fragment
-     * and calculate the minimal quality
+     * and calculate the minimal quality of the homopolymers
      *
      * @param rec - SAMRecord to get a score for
-     * @param threshold - threshold above which effective quality is included
+     * @param dist - Distance fro the end end
      * @return - calculated score (see method description)
      */
     static protected int getFlowSumOfBaseQualitiesNearEnds(final SAMRecord rec, int dist) {
