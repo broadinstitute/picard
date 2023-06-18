@@ -334,7 +334,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
             }
         }
 
-        for ( int i = bases.length-1 ; (i > bases.length - 1 - dist) || ( insideHpol ) ; i ++ ) {
+        for ( int i = bases.length-1 ; (i > bases.length - 1 - dist) || ( insideHpol ) ; i -- ) {
             final byte base = bases[i];
             if ( (i == 0) || ( base != bases[i - 1] )) {
                 insideHpol = false;
