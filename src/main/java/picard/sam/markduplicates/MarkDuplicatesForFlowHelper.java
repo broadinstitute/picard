@@ -323,7 +323,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
 
         for ( int i = 0 ; (i < dist) || ( insideHpol ) ; i ++ ) {
             final byte base = bases[i];
-            if ( (i == bases.length) || ( base != bases[i+1] )) {
+            if ( (i == bases.length - 1) || ( base != bases[i+1] )) {
                 insideHpol = false;
             } else {
                 insideHpol = true;
