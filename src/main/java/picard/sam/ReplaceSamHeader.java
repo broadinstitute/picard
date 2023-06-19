@@ -112,6 +112,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
         return 0;
     }
 
+    // tsato: add documentation here re: standard vs block-copy reheader. I think "standard" means sequential (for loop)
     private void standardReheader(final SAMFileHeader replacementHeader) {
         final SamReader recordReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE.toPath()).validationStringency(ValidationStringency.SILENT).open(INPUT.toPath());
         if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
@@ -126,6 +127,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
             writer.addAlignment(rec);
             progress.record(rec);
         }
+        // tsato: make sure these are cloud compatible
         writer.close();
         CloserUtil.close(recordReader);
     }

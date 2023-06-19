@@ -5,7 +5,7 @@ import htsjdk.samtools.SamReader;
 import java.nio.file.Path;
 
 /**
- * These utility methods should probably go to htsjdk, but implement them here in order to avoid waiting for
+ * These utility methods should probably go to htsjdk, but implement here temporarily in order to avoid waiting for
  * picard-htsjdk synchronization.
  */
 public class PicardIOUtils {
