@@ -48,6 +48,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.IntervalArgumentCollection;
@@ -57,6 +58,7 @@ import picard.filter.CountingDuplicateFilter;
 import picard.filter.CountingFilter;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -99,7 +101,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 "<hr />"
 ;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
@@ -131,7 +133,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     public int SAMPLE_SIZE=10000;
 
     @ArgumentCollection
-    protected IntervalArgumentCollection intervalArugmentCollection = makeIntervalArgumentCollection();
+    protected IntervalArgumentCollection intervalArgumentCollection = makeIntervalArgumentCollection();
 
     @Argument(doc="Output for Theoretical Sensitivity metrics.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
@@ -189,7 +191,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        INTERVALS = intervalArugmentCollection.getIntervalFile();
+        INTERVALS = intervalArgumentCollection.getIntervalFile();
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
         }
@@ -208,6 +210,15 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SamReader in = getSamReader();
         final AbstractLocusIterator iterator = getLocusIterator(in);
+
+        // Verify the sequence dictionaries match
+        if (!this.header.getSequenceDictionary().isEmpty()) {
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    this.header.getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    refWalker.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
+        }
 
         final List<SamRecordFilter> filters = new ArrayList<>();
         final CountingFilter adapterFilter = new CountingAdapterFilter();

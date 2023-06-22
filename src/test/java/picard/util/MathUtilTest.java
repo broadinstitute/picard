@@ -4,7 +4,6 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -92,7 +91,7 @@ public class MathUtilTest {
     @Test
     public void testRandomSublist() {
         final Random random = new Random();
-        final List<Integer> list = Arrays.asList(1,2,3);
+        final List<Integer> list = Arrays.asList(1, 2, 3);
 
         Assert.assertEquals(list, MathUtil.randomSublist(list, 3, random));
         Assert.assertEquals(list, MathUtil.randomSublist(list, 4, random));
@@ -155,7 +154,7 @@ public class MathUtilTest {
                         new double[]{1000D, 1000D}, new double[]{0.5, 0.5}
                 },
                 new Object[]{
-                        new double[]{1002D, 1001D, 1000D},  new double[]{1 / 1.11, .1 / 1.11, 0.01 / 1.11}
+                        new double[]{1002D, 1001D, 1000D}, new double[]{1 / 1.11, .1 / 1.11, 0.01 / 1.11}
                 },
         };
     }
@@ -164,4 +163,127 @@ public class MathUtilTest {
     public void pNormalizeLogProbabilityTest(final double[] input, final double[] expected) {
         TestNGUtil.assertEqualDoubleArrays(MathUtil.pNormalizeLogProbability(input), expected, 1e-8);
     }
+
+    @DataProvider
+    public Object[][] testMaxWithArrayAndScalarData() {
+        return new Object[][]{
+                {new double[]{1, 2, 3}, 2D, new double[]{2, 2, 3}},
+                {new double[]{2, 1, 3}, 2D, new double[]{2, 2, 3}},
+                {new double[]{3, 2, 1}, 2D, new double[]{3, 2, 2}},
+                {new double[]{2, 3, 1}, 2D, new double[]{2, 3, 2}},
+                {new double[]{}, 2D, new double[]{}},
+        };
+    }
+
+    @Test(dataProvider = "testMaxWithArrayAndScalarData")
+    public void testMaxWithArrayAndScalar(final double[] array, final double scalar, final double[] expected) {
+        Assert.assertEquals(MathUtil.capFromBelow(array, scalar), expected);
+    }
+
+    @DataProvider
+    public Object[][] testMinWithArrayAndScalarData() {
+        return new Object[][]{
+                {new double[]{1, 2, 3}, 2D, new double[]{1, 2, 2}},
+                {new double[]{2, 1, 3}, 2D, new double[]{2, 1, 2}},
+                {new double[]{3, 2, 1}, 2D, new double[]{2, 2, 1}},
+                {new double[]{2, 3, 1}, 2D, new double[]{2, 2, 1}},
+                {new double[]{}, 2D, new double[]{}},
+        };
+    }
+
+    @Test(dataProvider = "testMinWithArrayAndScalarData")
+    public void testMinWithArrayAndScalar(final double[] array, final double scalar, final double[] expected) {
+        Assert.assertEquals(MathUtil.capFromAbove(array, scalar), expected);
+    }
+
+    @DataProvider
+    public Object[][] testMinWithArrayData() {
+        return new Object[][]{
+                {new double[]{1, 2, 3}, 1D},
+                {new double[]{2, 1, 3}, 1D},
+                {new double[]{3, 2, 1}, 1D},
+                {new double[]{2, 3, 1}, 1D},
+        };
+    }
+
+    @Test(dataProvider = "testMinWithArrayData")
+    public void testMinOfArray(final double[] array, final double expected) {
+        Assert.assertEquals(MathUtil.min(array), expected);
+    }
+
+    @DataProvider
+    public Object[][] testMaxWithArrayData() {
+        return new Object[][]{
+                {new double[]{1, 2, 3}, 3D},
+                {new double[]{2, 1, 3}, 3D},
+                {new double[]{3, 2, 1}, 3D},
+                {new double[]{2, 3, 1}, 3D},
+        };
+    }
+
+    @Test(dataProvider = "testMaxWithArrayData")
+    public void testMaxOfArray(final double[] array, final double expected) {
+        Assert.assertEquals(MathUtil.max(array), expected);
+    }
+
+    @DataProvider
+    public Object[][] testMinWithArrayIntData() {
+        return new Object[][]{
+                {new int[]{1, 2, 3}, 1},
+                {new int[]{2, 1, 3}, 1},
+                {new int[]{3, 2, 1}, 1},
+                {new int[]{2, 3, 1}, 1},
+        };
+    }
+
+    @Test(dataProvider = "testMinWithArrayIntData")
+    public void testMinOfIntArray(final int[] array, final int expected) {
+        Assert.assertEquals(MathUtil.min(array), expected);
+    }
+
+    @DataProvider
+    public Object[][] testMinWithArrayShortData() {
+        return new Object[][]{
+                {new short[]{1, 2, 3},(short) 1},
+                {new short[]{2, 1, 3},(short) 1},
+                {new short[]{3, 2, 1},(short) 1},
+                {new short[]{2, 3, 1},(short) 1},
+        };
+    }
+
+    @Test(dataProvider = "testMinWithArrayShortData")
+    public void testMinOfShortArray(final short[] array, final short expected) {
+        Assert.assertEquals(MathUtil.min(array), expected);
+    }
+
+    @DataProvider
+    public Object[][] testMinWithArrayByteData() {
+        return new Object[][]{
+                {new byte[]{1, 2, 3}, (byte)1},
+                {new byte[]{2, 1, 3}, (byte)1},
+                {new byte[]{3, 2, 1}, (byte)1},
+                {new byte[]{2, 3, 1}, (byte)1},
+        };
+    }
+
+    @Test(dataProvider = "testMinWithArrayByteData")
+    public void testMaxOfByteArray(final byte[] array, final byte expected) {
+        Assert.assertEquals(MathUtil.min(array), expected);
+    }
+
+    @DataProvider
+    public Object[][] testSubtractMaxData() {
+        return new Object[][]{
+                {new double[]{1, 2, 3}, new double[]{-2, -1, 0}},
+                {new double[]{2, 1, 3}, new double[]{-1, -2, 0}},
+                {new double[]{3, 2, 1}, new double[]{0, -1, -2}},
+                {new double[]{2, 3, 1}, new double[]{-1, 0, -2}},
+        };
+    }
+
+    @Test(dataProvider = "testSubtractMaxData")
+    public void testSubtractMax(final double[] array, final double[] expected) {
+        Assert.assertEquals(MathUtil.subtractMax(array), expected);
+    }
 }
+

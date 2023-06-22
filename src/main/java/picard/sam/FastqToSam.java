@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,9 +51,15 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -150,22 +156,22 @@ public class FastqToSam extends CommandLineProgram {
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 
     @Argument(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
-    public File FASTQ;
+    public PicardHtsPath FASTQ;
 
     @Argument(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
-    public File FASTQ2;
+    public PicardHtsPath FASTQ2;
 
-    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz." +
-            "The files should be named:\n" +
+    @Argument(doc="Use sequential fastq files with the suffix <prefix>_###.fastq[.gz]." +
+            " The files should be named:\n" +
             "    <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>\n" +
-            " The base files should be:\n" +
-            "    <prefix>_001.<extension>\n" +
-            " An example would be:\n" +
+            "Use the *first* file for the --FASTQ argument, e.g., --FASTQ <prefix>_001.<extension>.\n" +
+            "If paired end, use the *first* read2 file for the --FASTQ2 argument, e.g., <R2_prefix>_001.<extension>.\n" + 
+            "Example: combine and convert 4 single end fastqs with filenames:\n" +
             "    RUNNAME_S8_L005_R1_001.fastq\n" +
             "    RUNNAME_S8_L005_R1_002.fastq\n" +
             "    RUNNAME_S8_L005_R1_003.fastq\n" +
             "    RUNNAME_S8_L005_R1_004.fastq\n" +
-            "RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.", optional=true)
+            "Run command with --FASTQ RUNNAME_S8_L005_R1_001.fastq --USE_SEQUENTIAL_FASTQS true", optional=true)
     public boolean USE_SEQUENTIAL_FASTQS = false;
 
     @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
@@ -173,7 +179,7 @@ public class FastqToSam extends CommandLineProgram {
             "If this value is not specified, the quality format will be detected automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
-    @Argument(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Argument(doc="Output BAM/SAM/CRAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT ;
 
     @Argument(shortName="RG", doc="Read group name")
@@ -212,7 +218,7 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName = "DT", doc = "Date the run was produced, to insert into the read group header", optional = true)
     public Iso8601Date RUN_DATE;
 
-    @Argument(shortName="SO", doc="The sort order for the output sam/bam file.")
+    @Argument(shortName="SO", doc="The sort order for the output BAM/SAM/CRAM file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
     @Argument(doc="Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.")
@@ -227,6 +233,9 @@ public class FastqToSam extends CommandLineProgram {
 
     @Argument(doc="Allow (and ignore) empty lines")
     public Boolean ALLOW_AND_IGNORE_EMPTY_LINES = false;
+
+    @Argument(doc="Allow empty input fastq")
+    public Boolean ALLOW_EMPTY_FASTQ = false;
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
@@ -274,8 +283,8 @@ public class FastqToSam extends CommandLineProgram {
      *   RUNNAME_S8_L005_R1_004.fastq
      * where `baseFastq` is the first in that list.
      */
-    protected static List<File> getSequentialFileList(final File baseFastq) {
-        final List<File> files = new ArrayList<>();
+    protected static List<Path> getSequentialFileList(final Path baseFastq) {
+        final List<Path> files = new ArrayList<>();
         files.add(baseFastq);
 
         // Find the correct extension used in the base FASTQ
@@ -283,25 +292,25 @@ public class FastqToSam extends CommandLineProgram {
         String suffix = null; // store the suffix including the extension
         for (final FastqExtensions ext : FastqExtensions.values()) {
             suffix = "_001" + ext.getExtension();
-            if (baseFastq.getAbsolutePath().endsWith(suffix)) {
+            if (baseFastq.toString().endsWith(suffix)) {
                 fastqExtensions = ext;
                 break;
             }
         }
         if (null == fastqExtensions) {
-            throw new PicardException(String.format("Could not parse the FASTQ extension (expected '_001' + '%s'): %s", FastqExtensions.values().toString(), baseFastq));
+            throw new PicardException(String.format("Could not parse the FASTQ extension (expected '_001' + '%s'): %s", Arrays.toString(FastqExtensions.values()), baseFastq));
         }
 
         // Find all the files
         for (int idx = 2; true; idx++) {
-            String fastq = baseFastq.getAbsolutePath();
+            String fastq = baseFastq.toAbsolutePath().toString();
             fastq = String.format("%s_%03d%s", fastq.substring(0, fastq.length() - suffix.length()), idx, fastqExtensions.getExtension());
             try {
-                IOUtil.assertFileIsReadable(new File(fastq));
+                IOUtil.assertFileIsReadable(Paths.get(fastq));
             } catch (final SAMException e) { // the file is not readable, so do not continue
                 break;
             }
-            files.add(new File(fastq));
+            files.add(Paths.get(fastq));
         }
 
         return files;
@@ -309,19 +318,28 @@ public class FastqToSam extends CommandLineProgram {
 
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
-        IOUtil.assertFileIsReadable(FASTQ);
+        IOUtil.assertFileIsReadable(FASTQ.toPath());
         if (FASTQ2 != null) {
-            IOUtil.assertFileIsReadable(FASTQ2);
+            IOUtil.assertFileIsReadable(FASTQ2.toPath());
         }
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final SAMFileHeader header = createSamFileHeader();
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, false, OUTPUT, REFERENCE_SEQUENCE);
 
-        // Set the quality format
-        QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ),
-                (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2),
-                QUALITY_FORMAT);
+        final FastqReader reader1 = fileToFastqReader(FASTQ.toPath());
+        if (reader1.hasNext()) {
+            // Set the quality format
+            QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader1,
+                    (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
+                    QUALITY_FORMAT);
+        } else {
+            if (ALLOW_EMPTY_FASTQ) {
+                LOG.warn("Input FASTQ is empty, will write out SAM/BAM file with no reads.");
+            } else {
+                throw new PicardException("Input fastq is empty. Set ALLOW_EMPTY_FASTQ if you still want to write out a file with no reads.");
+            }
+        }
 
         // Lists for sequential files, but also used when not sequential
         final List<FastqReader> readers1 = new ArrayList<>();
@@ -329,11 +347,11 @@ public class FastqToSam extends CommandLineProgram {
 
         if (USE_SEQUENTIAL_FASTQS) {
             // Get all the files
-            for (final File fastq : getSequentialFileList(FASTQ)) {
+            for (final Path fastq : getSequentialFileList(FASTQ.toPath())) {
                 readers1.add(fileToFastqReader(fastq));
             }
             if (null != FASTQ2) {
-                for (final File fastq : getSequentialFileList(FASTQ2)) {
+                for (final Path fastq : getSequentialFileList(FASTQ2.toPath())) {
                     readers2.add(fileToFastqReader(fastq));
                 }
                 if (readers1.size() != readers2.size()) {
@@ -342,9 +360,9 @@ public class FastqToSam extends CommandLineProgram {
             }
         }
         else {
-            readers1.add(fileToFastqReader(FASTQ));
+            readers1.add(fileToFastqReader(FASTQ.toPath()));
             if (FASTQ2 != null) {
-                readers2.add(fileToFastqReader(FASTQ2));
+                readers2.add(fileToFastqReader(FASTQ2.toPath()));
             }
         }
 
@@ -428,8 +446,8 @@ public class FastqToSam extends CommandLineProgram {
         return readCount;
     }
 
-    private FastqReader fileToFastqReader(final File file) {
-        return new FastqReader(file, ALLOW_AND_IGNORE_EMPTY_LINES);
+    private FastqReader fileToFastqReader(final Path path) throws PicardException {
+        return new FastqReader(null, IOUtil.openFileForBufferedReading(path), ALLOW_AND_IGNORE_EMPTY_LINES);
     }
 
     private SAMRecord createSamRecord(final SAMFileHeader header, final String baseName, final FastqRecord frec, final boolean paired) {

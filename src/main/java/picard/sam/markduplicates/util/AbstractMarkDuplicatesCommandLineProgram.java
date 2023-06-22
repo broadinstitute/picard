@@ -42,6 +42,8 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
+import picard.sam.markduplicates.MarkDuplicatesForFlowHelper;
 import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
@@ -54,7 +56,7 @@ import java.util.Set;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
- * detection and/or marking within SAM/BAM files.
+ * detection and/or marking within SAM/BAM/CRAM files.
  *
  * @author Nils Homer
  */
@@ -64,7 +66,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     protected final PGTagArgumentCollection pgTagArgumentCollection = new PGTagArgumentCollection();
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
+            doc = "One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.")
     public List<String> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
@@ -202,38 +204,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         metricsFile.write(outputFile);
     }
 
-    public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator) {
+    public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator, final boolean flowMetrics) {
         final String library = LibraryIdGenerator.getLibraryName(header, rec);
         DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
         if (metrics == null) {
-            metrics = new DuplicationMetrics();
+            metrics = DuplicationMetricsFactory.createMetrics(flowMetrics);
             metrics.LIBRARY = library;
             libraryIdGenerator.addMetricsByLibrary(library, metrics);
         }
 
-        // First bring the simple metrics up to date
-        if (rec.getReadUnmappedFlag()) {
-            ++metrics.UNMAPPED_READS;
-        } else if (rec.isSecondaryOrSupplementary()) {
-            ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-        } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-            ++metrics.UNPAIRED_READS_EXAMINED;
-        } else {
-            ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-        }
+        metrics.addReadToLibraryMetrics(rec);
         return metrics;
-    }
-
-    public static void addDuplicateReadToMetrics(final SAMRecord rec, final DuplicationMetrics metrics) {
-        // only update duplicate counts for "decider" reads, not tag-a-long reads
-        if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-            // Update the duplication metrics
-            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                ++metrics.UNPAIRED_READ_DUPLICATES;
-            } else {
-                ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
-            }
-        }
     }
 
     /**
@@ -258,11 +239,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         final List<SamReader> readers = new ArrayList<>(INPUT.size());
 
         for (final String input : INPUT) {
-            SamReaderFactory readerFactory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE);
-            SamReader reader = eagerlyDecode ? readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(input)) :
-                    readerFactory.open(SamInputResource.of(input));
+            final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+            if (eagerlyDecode) {
+                readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE);
+            }
+            final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(input));
             final SAMFileHeader header = reader.getFileHeader();
-
             headers.add(header);
             readers.add(reader);
         }

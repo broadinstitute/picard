@@ -42,6 +42,7 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingFilter;
 import picard.filter.CountingPairedFilter;
 import picard.util.RExecutor;
+import picard.util.help.HelpConstants;
 
 import java.io.File;
 import java.util.List;
@@ -87,6 +88,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     /**
      * Metrics for evaluating the performance of whole genome sequencing experiments.
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class WgsMetricsWithNonZeroCoverage extends WgsMetrics {
         public enum Category {WHOLE_GENOME, NON_ZERO_REGIONS}
 
@@ -120,6 +122,14 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
+    }
+
+    @Override
     protected SamReader getSamReader() {
         if (this.samReader == null) {
             this.samReader = super.getSamReader();
@@ -146,7 +156,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         } else {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/wgsHistogram.R",
                     OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     INPUT.getName(),
                     plotSubtitle);
             if (rResult != 0) {

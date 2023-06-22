@@ -24,17 +24,17 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
-import htsjdk.samtools.util.TestUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.DuplicateScoringStrategy;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -84,7 +84,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test(dataProvider = "pgRecordChainingTest")
     public void pgRecordChainingTest(final boolean suppressPg,
                                      final Map<String, List<ExpectedPnAndVn>> expectedPnVnByReadName) {
-        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".tmp").toFile();
         outputDir.deleteOnExit();
         try {
             // Run MarkDuplicates, merging the 3 input files, and either enabling or suppressing PG header
@@ -144,7 +144,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     }
 
     /**
-     * Represents an expected PN value and VN value for a PG record.  If one of thexe is null, any value is allowed
+     * Represents an expected PN value and VN value for a PG record.  If one of these is null, any value is allowed
      * in the PG record being tested.
      */
     private static class ExpectedPnAndVn {
@@ -177,7 +177,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
 
     @Test(dataProvider = "testOpticalDuplicateDetectionDataProvider")
     public void testOpticalDuplicateDetection(final File sam, final long expectedNumOpticalDuplicates) {
-        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".", ".tmp");
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".tmp").toFile();
         outputDir.deleteOnExit();
         final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
         outputSam.deleteOnExit();

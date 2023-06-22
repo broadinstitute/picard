@@ -25,12 +25,15 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 /**
  * Detailed metrics about an individual SNP/Haplotype comparison within a fingerprint comparison.
  *
  * @author Tim Fennell
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class FingerprintingDetailMetrics extends MetricBase {
     /** The sequencing read group from which sequence data was fingerprinted. */
     public String READ_GROUP;

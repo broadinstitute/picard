@@ -25,8 +25,11 @@
 package picard.analysis;
 
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.TestNGUtil;
 
@@ -34,6 +37,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tests CollectAlignmentSummaryStatistics
@@ -41,7 +46,7 @@ import java.text.NumberFormat;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
-    private static final File TEST_DATA_DIR = new File("testdata/picard/sam");
+    public static final File TEST_DATA_DIR = new File("testdata/picard/sam/AlignmentSummaryMetrics");
 
     public String getCommandLineProgramName() {
         return CollectAlignmentSummaryMetrics.class.getSimpleName();
@@ -51,8 +56,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void test() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("test", ".txt");
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -123,8 +127,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void testBisulfite() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testBisulfite", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -187,8 +191,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void testBisulfiteButNot() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testBisulfiteButNot", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -250,8 +254,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testNoReference() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testNoReference", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -299,6 +303,12 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     Assert.assertEquals(metrics.PF_ALIGNED_BASES, 0);
                     Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
                     Assert.assertEquals(metrics.BAD_CYCLES, 22);
+                    Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
+                    Assert.assertEquals(metrics.SD_READ_LENGTH, 0.0);
+                    Assert.assertEquals(metrics.MEDIAN_READ_LENGTH, 101.0);
+                    Assert.assertEquals(metrics.MAD_READ_LENGTH, 0.0);
+                    Assert.assertEquals(metrics.MIN_READ_LENGTH, 101.0);
+                    Assert.assertEquals(metrics.MAX_READ_LENGTH, 101.0);
                     break;
                 case UNPAIRED:
                 default:
@@ -310,8 +320,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testZeroLengthReads() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testZeroLengthReads", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -331,8 +341,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testMultipleLevelsOfMetrics() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_multiple.sam");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testMultipleLevelsOfMetrics", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -588,8 +598,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     public void testChimeras() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_chimeras.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testChimeras", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -616,8 +626,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testAdapterReads() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_adapter_reads.sam");
-        final File outfile = File.createTempFile("alignmentMetrics", ".txt");
-        outfile.deleteOnExit();
+        final File outfile = getTempOutputFile("testAdapterReads", ".txt");
+
         final String[] args = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
@@ -640,6 +650,159 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_ADAPTER, 1D, 0.0001);
                 TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_PF_READS_ALIGNED, 0D, 0.0001);
             }
+        }
+    }
+
+
+    @DataProvider
+    Object[][] fileForTestReadLengthHistogram(){
+        return new Object[][]{
+                {"summary_alignment_stats_test.sam", true},
+                {"summary_alignment_stats_test2.sam", true},
+                {"summary_alignment_stats_test3.sam", true},
+                {"summary_alignment_stats_test_empty.sam", false}
+        };
+    }
+
+    @Test(dataProvider = "fileForTestReadLengthHistogram")
+    public void testReadLengthHistogram(final String fileToUse, final Boolean expectHistogramOut) throws IOException {
+        final File input = new File(TEST_DATA_DIR, fileToUse);
+        final File outFile = getTempOutputFile("testReadLengthHistogram", ".txt");
+
+        final List<String> argsList = new ArrayList<>();
+        final File outHist = getTempOutputFile("testReadLengthHistogram", ".pdf");
+
+        argsList.add("INPUT=" + input.getAbsolutePath());
+        argsList.add("OUTPUT=" + outFile.getAbsolutePath());
+        argsList.add("HISTOGRAM_FILE=" + outHist);
+
+        Assert.assertEquals(runPicardCommandLine(argsList.toArray(new String[0])),0);
+
+        if (expectHistogramOut) {
+            Assert.assertTrue(outHist.exists());
+        }
+    }
+
+
+    @DataProvider()
+    Object[][] TrueFalse() {
+        return new Object[][]{
+                {true},
+                {false},
+        };
+    }
+
+    @Test(dataProvider = "TrueFalse")
+    public void testReadLengthHistogram(final boolean plotChart) throws IOException {
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test3.sam");
+        final File outFile = getTempOutputFile("testReadLengthHistogram", ".txt");
+
+        final List<String> argsList = new ArrayList<>();
+        argsList.add("INPUT=" + input.getAbsolutePath());
+        argsList.add("OUTPUT=" + outFile.getAbsolutePath());
+        final File outHist;
+
+        if (plotChart) {
+            outHist = getTempOutputFile("testReadLengthHistogram", ".pdf");
+            argsList.add("HISTOGRAM_FILE=" + outHist);
+        } else {
+            outHist = null;
+        }
+
+        final String[] args = argsList.toArray(new String[0]);
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        if (plotChart) {
+            Assert.assertTrue(outHist.exists());
+        }
+
+        final MetricsFile<AlignmentSummaryMetrics, Integer> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outFile)) {
+            output.read(reader);
+        }
+
+        Assert.assertFalse(output.getMetrics().isEmpty());
+
+
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            if (metrics.CATEGORY != AlignmentSummaryMetrics.Category.SECOND_OF_PAIR) {
+                Assert.assertEquals(metrics.PCT_HARDCLIP, 10 / (double) 66, 0.0001);
+                Assert.assertEquals(metrics.PCT_SOFTCLIP, 23 / (double) 66, 0.0001);
+                Assert.assertEquals(metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH, 22 / (double) 2, 0.0001);
+            } else {
+                Assert.assertEquals(metrics.PCT_HARDCLIP, 0D);
+                Assert.assertEquals(metrics.PCT_SOFTCLIP, 0D);
+                Assert.assertEquals(metrics.AVG_POS_3PRIME_SOFTCLIP_LENGTH, 0D);
+            }
+        }
+
+        Assert.assertFalse(output.getAllHistograms().isEmpty());
+
+        for (final Histogram<Integer> histogram : output.getAllHistograms()) {
+            switch (histogram.getValueLabel()) {
+                case "PAIRED_TOTAL_LENGTH_COUNT":
+                case "UNPAIRED_TOTAL_LENGTH_COUNT":
+                    Assert.assertEquals(histogram.getSum(), 66D); //1+2+11+10+42
+                    break;
+                case "PAIRED_ALIGNED_LENGTH_COUNT":
+                case "UNPAIRED_ALIGNED_LENGTH_COUNT":
+                    Assert.assertEquals(histogram.getSum(), 43D); //1+2+10+10+10+10;
+                    break;
+            }
+
+            Assert.assertFalse(histogram.isEmpty());
+            if (histogram.getValueLabel().equals("PAIRED_TOTAL_LENGTH_COUNT")) {
+                for (int i = 0; i < histogram.getMax(); i++) {
+                    switch (i) {
+                        case 1:
+                        case 2:
+                        case 10:
+                        case 11:
+                        case 42:
+                            Assert.assertEquals(histogram.get(i).getValue(), 1D);
+                            break;
+                        default:
+                            Assert.assertTrue(
+                                    histogram.get(i) == null ||
+                                            histogram.get(i).getValue() == 0D);
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    @Test(expectedExceptions = PicardException.class)
+    public void testNoPFReads() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "null.sam");
+        final File outfile = getTempOutputFile("test", ".txt");
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        try (FileReader reader = new FileReader(outfile)) {
+            output.read(reader);
+        }
+
+        Assert.assertEquals(output.getMetrics().size(), 1);
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_READ_LENGTH, 0.0);
+            Assert.assertEquals(metrics.TOTAL_READS, 3);
+            Assert.assertEquals(metrics.PF_READS, 0);
+            Assert.assertEquals(metrics.PF_NOISE_READS, 0);
+            Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 0);
+            Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 0);
+            Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
+            Assert.assertEquals(metrics.PF_READS_ALIGNED, 0);
+            Assert.assertEquals(metrics.PF_READS_IMPROPER_PAIRS, 0);
+            Assert.assertEquals(metrics.PCT_PF_READS_IMPROPER_PAIRS, 0.0);
+            Assert.assertEquals(metrics.PF_ALIGNED_BASES, 0);
+            Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
+            Assert.assertEquals(metrics.BAD_CYCLES, 0);
         }
     }
 }

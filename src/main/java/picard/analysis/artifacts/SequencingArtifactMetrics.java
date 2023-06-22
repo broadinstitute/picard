@@ -2,6 +2,8 @@ package picard.analysis.artifacts;
 
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.QualityUtil;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 public class SequencingArtifactMetrics {
     public static final String PRE_ADAPTER_SUMMARY_EXT = ".pre_adapter_summary_metrics";
@@ -31,6 +33,7 @@ public class SequencingArtifactMetrics {
      * their contributions will cancel out in the calculation.
      *
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class PreAdapterSummaryMetrics extends MetricBase {
         /** The name of the sample being assayed. */
         public String SAMPLE_ALIAS;
@@ -89,6 +92,7 @@ public class SequencingArtifactMetrics {
      * relative to sites with the flip (C positive / G negative). This is known as the "G-Ref" artifact.
      *
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class BaitBiasSummaryMetrics extends MetricBase {
         /** The name of the sample being assayed. */
         public String SAMPLE_ALIAS;
@@ -138,6 +142,7 @@ public class SequencingArtifactMetrics {
     /**
      * Pre-adapter artifacts broken down by context.
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class PreAdapterDetailMetrics extends MetricBase {
         /** The name of the sample being assayed. */
         public String SAMPLE_ALIAS;
@@ -200,6 +205,7 @@ public class SequencingArtifactMetrics {
     /**
      * Bait bias artifacts broken down by context.
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class BaitBiasDetailMetrics extends MetricBase {
         public String SAMPLE_ALIAS;
         /** The name of the library being assayed. */

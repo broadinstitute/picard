@@ -32,7 +32,9 @@ import java.io.File;
  * Describes a segment of a particular VCF file.
  * 
  * @author mccowan
+ * @deprecated from 2022-03-17, Use VcfPathSegment
  */
+@Deprecated
 public abstract class VcfFileSegment {
     abstract public int start();
     abstract public int stop();

@@ -1,13 +1,19 @@
 package picard.fingerprint;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.util.MathUtil;
+import picard.vcf.SamTestUtils;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
@@ -17,6 +23,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +33,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static picard.util.TestNGUtil.compareDoubleWithAccuracy;
+import static picard.util.TestNGUtil.interaction;
 
 /**
  * Created by farjoun on 8/27/15.
@@ -33,7 +41,7 @@ import static picard.util.TestNGUtil.compareDoubleWithAccuracy;
 public class FingerprintCheckerTest {
 
     private final double maf = 0.4;
-    private final Snp snp = new Snp("test", "chr1", 1, (byte) 'A', (byte) 'C', maf, Collections.singletonList("dummy"));
+    private final Snp snp = new Snp("test", "chr1", 1, (byte) 'A', (byte) 'T', maf, Collections.singletonList("dummy"));
     private final HaplotypeBlock hb = new HaplotypeBlock(maf);
 
     private static final double DELTA = 1e-6;
@@ -72,7 +80,7 @@ public class FingerprintCheckerTest {
         fpObserved.add(hpHomRef);
 
         // get match results using pLOD
-        final MatchResults mr = FingerprintChecker.calculateMatchResults(fpObserved, fpExpected, 0.01, pLoH);
+        final MatchResults mr = FingerprintChecker.calculateMatchResults(fpObserved, fpExpected, pLoH);
 
         // make sure that it's more likely to be the same sample, if the observed is "tumor" and the expected is "normal"
         Assert.assertTrue(mr.getLodTN() > mr.getLOD());
@@ -89,14 +97,15 @@ public class FingerprintCheckerTest {
     public Object[][] testCheckFingerprintsVcfDataProvider() {
         return new Object[][]{
                 {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12891", "NA12891", -1.048021, -2.053484, 1.005462},
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12891", "NA12891", -1.037564, -2.049586, 1.012022},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12891", "NA12891", -1.034969, -2.048616, 1.013647},
                 {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12892", "NA12892", -1.105025, -2.166160, 1.061135},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"), "NA12892", "NA12892", -1.094570, -2.162798, 1.068227},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"), "NA12892", "NA12892", -1.091976, -2.161961, 1.069985},
                 {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.fp.vcf"), "NA12891", "NA12892", -7.024770, -2.109822, -4.914948},
-                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"), "NA12891", "NA12892", -7.718515, -2.106459, -5.612055},
+                {new File(TEST_DATA_DIR, "NA12891.vcf"), new File(TEST_DATA_DIR, "NA12892.g.vcf"), "NA12891", "NA12892", -7.981971, -2.105623, -5.876347},
                 {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.fp.vcf"), "NA12892", "NA12891", -7.024770, -2.109822, -4.914948},
-                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12892", "NA12891", -7.679670, -2.105924, -5.573746},
+                {new File(TEST_DATA_DIR, "NA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12892", "NA12891", -7.924964, -2.104955, -5.820009},
                 {new File(TEST_DATA_DIR, "emptyNA12892.vcf"), new File(TEST_DATA_DIR, "NA12891.g.vcf"), "NA12892", "NA12891", 0, 0, 0},
+
         };
     }
 
@@ -143,15 +152,32 @@ public class FingerprintCheckerTest {
                 final MatchResults matchResults12 = FingerprintChecker.calculateMatchResults(fp1, fp2);
                 final MatchResults matchResults21 = FingerprintChecker.calculateMatchResults(fp2, fp1);
                 compareDoubleWithAccuracy(matchResults12.getLOD(), matchResults21.getLOD(), 1e-10);
+                compareDoubleWithAccuracy(matchResults12.getLodTN(), matchResults21.getLodNT(), 1e-10);
+                compareDoubleWithAccuracy(matchResults12.getLodNT(), matchResults21.getLodTN(), 1e-10);
             }
         }
     }
 
-    @Test(expectedExceptions = PicardException.class)
-    public void testTerminateOnBadFile() {
+    @DataProvider
+    Object[][] samFilesforFingerprinting() {
+        return new Object[][]{
+                {"NA12891.over.fingerprints.r1.sam", true},
+                {"aligned_queryname_sorted.sam", false},
+                {"aligned_unsorted.sam", false},
+        };
+    }
+
+    @Test(dataProvider = "samFilesforFingerprinting")
+    public void testTerminateOnBadFile(final String fileName, final boolean shouldSucceed) throws Throwable {
         final FingerprintChecker fpChecker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
-        final File badSam = new File(TEST_DATA_DIR, "aligned_queryname_sorted.sam");
-        fpChecker.fingerprintFiles(Collections.singletonList(badSam.toPath()), 1, 1, TimeUnit.DAYS);
+        final File samFile = new File(TEST_DATA_DIR, fileName);
+
+        final Assert.ThrowingRunnable runnable = () -> fpChecker.fingerprintFiles(Collections.singletonList(samFile.toPath()), 1, 2, TimeUnit.MINUTES);
+        if (shouldSucceed) {
+            runnable.run();
+        } else {
+            Assert.assertThrows(PicardException.class, runnable);
+        }
     }
 
     @DataProvider(name = "checkFingerprintsSamDataProvider")
@@ -202,10 +228,11 @@ public class FingerprintCheckerTest {
         metricsFileReader.read(new FileReader(metricsFile));
         final List<CrosscheckMetric> metrics = metricsFileReader.getMetrics();
 
-        final Map<Set<String>, Set<String>> collected = metrics.stream()
-                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> s.LOD_SCORE.toString(), Collectors.toSet())));
+        final Map<Set<String>, Set<String>> collectedLOD = metrics.stream()
+                // we sometimes get -0.0, and so the comparison fails...hence the 'String.valueOf(s.LOD_SCORE + 0)'
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE + 0), Collectors.toSet())));
 
-        for (Map.Entry<Set<String>, Set<String>> entry : collected.entrySet()) {
+        for (Map.Entry<Set<String>, Set<String>> entry : collectedLOD.entrySet()) {
             if (entry.getValue().size() > 1) {
 
                 final List<CrosscheckMetric> mismatchingMetrics = metrics.stream()
@@ -214,6 +241,40 @@ public class FingerprintCheckerTest {
                 Assert.fail("Metrics disagree: LOD scores are: \n[" + String.join(", ", entry.getValue()) +
                         "],\n from the following metrics: \n" + mismatchingMetrics.get(0) + mismatchingMetrics.get(1));
             }
+        }
+
+        final Map<Set<String>, Set<String>> collectedTN_LOD = metrics.stream()
+                // we sometimes get -0.0, and so the comparison fails...hence the 'String.valueOf(s.LOD_SCORE + 0)'
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE_TUMOR_NORMAL + 0), Collectors.toSet())));
+
+        final Map<Set<String>, Set<String>> collectedNT_LOD = metrics.stream()
+                // we sometimes get -0.0, and so the comparison fails...hence the 'String.valueOf(s.LOD_SCORE + 0)'
+                .collect(Collectors.groupingBy(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE), Collectors.mapping(s -> String.valueOf(s.LOD_SCORE_NORMAL_TUMOR + 0), Collectors.toSet())));
+
+        for (Set<String> key : collectedLOD.keySet()) {
+            if (key.size() == 1) {
+                continue;
+            }
+            Assert.assertEquals(key.size(), 2, "Odd..should be size 2 here.");
+
+            final Set<String> TN_values = collectedTN_LOD.get(key);
+            final Set<String> NT_values = collectedNT_LOD.get(key);
+
+            final Set<String> allValues = new HashSet<>();
+            allValues.addAll(TN_values);
+            allValues.addAll(NT_values);
+
+            if (allValues.size() > 2) {
+
+                final List<CrosscheckMetric> mismatchingMetrics = metrics.stream()
+                        .filter(s -> CollectionUtil.makeSet(s.LEFT_GROUP_VALUE, s.RIGHT_GROUP_VALUE).equals(key)).collect(Collectors.toList());
+
+                Assert.fail(
+                        "Metrics disagree: TN_LOD scores are: [" + String.join(", ", TN_values) + "]\n" +
+                                "Metrics disagree: TN_LOD scores are: [" + String.join(", ", NT_values) + "]\n" +
+                                "from the following metrics: \n" + mismatchingMetrics.get(0) + "\n" + mismatchingMetrics.get(1));
+            }
+
         }
     }
 
@@ -262,8 +323,65 @@ public class FingerprintCheckerTest {
         }
     }
 
+    @Test(dataProvider = "queryableData")
+    public void testQueryableVcf(final File vcfFile, boolean expectedQueryable) throws IOException {
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final VCFFileReader reader = checker.getVCFReader(vcfFile.toPath(), null, false);
+        Assert.assertEquals(reader.isQueryable(), expectedQueryable);
+    }
+
+    @DataProvider(name = "queryableSam")
+    public Iterator<Object[]> queryableSam() throws IOException {
+        final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
+        final File NA12891_r1 = SamTestUtils.createIndexedBamOrCram(NA12891_r1_sam, NA12891_r1_sam, SamReader.Type.BAM_TYPE);
+
+        final List<Object[]> tests = new ArrayList<>();
+        tests.add(new Object[]{NA12891_r1_sam, false});
+        tests.add(new Object[]{NA12891_r1, true});
+
+        return tests.iterator();
+    }
+
+    @Test(dataProvider = "queryableSam")
+    public void testQueryableSam(final File samFile, boolean expectedQueryable) throws IOException {
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
+        final SamReader reader = checker.getSamReader(samFile.toPath(), null, false);
+        Assert.assertEquals(reader.isQueryable(), expectedQueryable);
+    }
+
+
+    Object[][] deepData() {
+        return new Object[][]{{10}, {50}, {100}, {500}, {1000}, {5000}, {10000}, {50000}};
+    }
+
+    Object[][] haplotypeProbabilities() {
+        return new Object[][]{{new HaplotypeProbabilitiesFromSequence(hb)}, {new HaplotypeProbabilitiesFromContaminatorSequence(hb, 0.999)}};
+    }
+
+    @DataProvider
+    Iterator<Object[]> deepDataProvider(){
+        return interaction(haplotypeProbabilities(), deepData());
+    }
+
+    @Test(dataProvider = "deepDataProvider")
+    void testCanHandleDeepData(final HaplotypeProbabilitiesFromSequence hp, final int counts)  throws IOException {
+
+        addObservation(hp, hb, counts, hb.getFirstSnp().getAllele1());
+        addObservation(hp, hb, counts, hb.getFirstSnp().getAllele2());
+
+        final double[] logLikelihoods = hp.getLogLikelihoods();
+        Assert.assertTrue( MathUtil.min(logLikelihoods) < 0 );
+
+        final File fasta = new File(TEST_DATA_DIR, "reference.fasta");
+
+        try (final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(fasta)) {
+            final VariantContext vc = FingerprintUtils.getVariantContext(ref, "test", hp);
+            Assert.assertTrue(MathUtil.max(MathUtil.promote(vc.getGenotype(0).getPL())) > 0);
+        }
+    }
+
     @DataProvider()
-    Object[][] mergeIsDafeProvider() {
+    Object[][] mergeIsSafeProvider() {
         final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);
         final HaplotypeProbabilitiesFromSequence hp2 = new HaplotypeProbabilitiesFromSequence(hb);
 
@@ -281,25 +399,27 @@ public class FingerprintCheckerTest {
         addObservation(hpcs2, hb, 1, hb.getFirstSnp().getAllele1());
 
         return new Object[][]{
-                new Object[]{new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D)},
-                new Object[]{
+                {new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D)},
+                {
                         new HaplotypeProbabilityOfNormalGivenTumor(
                                 new HaplotypeProbabilitiesFromGenotype(snp, hb, 5D, 0D, 10D), .05),
                         new HaplotypeProbabilityOfNormalGivenTumor(
                                 new HaplotypeProbabilitiesFromGenotype(snp, hb, 0D, 10D, 100D), 0.05)},
-                new Object[]{hp1, hp2},
-                new Object[]{hpcs1, hpcs2},
+                {hp1, hp2},
+                {hpcs1, hpcs2},
         };
     }
 
-    private static void addObservation(final HaplotypeProbabilitiesFromSequence haplotypeProb, final HaplotypeBlock haplotypeBlock, final int count, final byte allele) {
+    private static void addObservation(final HaplotypeProbabilitiesFromSequence haplotypeProb,
+                                       final HaplotypeBlock haplotypeBlock, final int count, final byte allele) {
         for (int i = 0; i < count; i++) {
             haplotypeProb.addToProbs(haplotypeBlock.getFirstSnp(), allele, (byte) 30);
         }
     }
 
-    @Test(dataProvider = "mergeIsDafeProvider")
-    public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2) {
+    @Test(dataProvider = "mergeIsSafeProvider")
+    public void testMergeHaplotypeProbabilitiesIsSafe(final HaplotypeProbabilities hp1,
+                                                      final HaplotypeProbabilities hp2) {
 
         final HaplotypeProbabilities merged1 = hp1.deepCopy().merge(hp2);
         final HaplotypeProbabilities merged2 = hp1.deepCopy().merge(hp2);
@@ -307,7 +427,7 @@ public class FingerprintCheckerTest {
         Assert.assertEquals(merged1.getLikelihoods(), merged2.getLikelihoods());
     }
 
-    @Test(dataProvider = "mergeIsDafeProvider")
+    @Test(dataProvider = "mergeIsSafeProvider")
     public void testMergeFingerprintIsSafe(final HaplotypeProbabilities hp1, final HaplotypeProbabilities hp2) {
 
         final Fingerprint fpA = new Fingerprint("test2", null, "none");

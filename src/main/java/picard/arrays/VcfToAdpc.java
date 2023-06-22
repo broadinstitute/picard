@@ -32,7 +32,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -215,7 +215,7 @@ public class VcfToAdpc extends CommandLineProgram {
 
     private Float getFloatAttribute(final Genotype genotype, final String key) {
         final Object value = genotype.getAnyAttribute(key);
-        if (value != null) {
+        if ((value != null) && (!value.equals("?"))) {
             return Float.parseFloat(value.toString());
         }
         return null;

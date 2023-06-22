@@ -193,46 +193,40 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
     }
 
     @Override
-    public void test() {
-        final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
-        for (final SAMRecord record : reader) {
-            // If there are expected assigned UMIs, check to make sure they match
-            if (expectedAssignedUmis != null) {
-                Assert.assertEquals(getAssignedUmi(record.getStringAttribute("MI")), record.getAttribute(expectedUmiTag));
-            }
+    void testRecordHook(final SAMRecord record) {
+        if (expectedAssignedUmis != null) {
+            Assert.assertEquals(getAssignedUmi(record.getStringAttribute("MI")), record.getAttribute(expectedUmiTag));
         }
+    }
 
+    @Override
+    void testOutputsHook() {
         if (expectedMetrics != null) {
             // Check the values written to metrics.txt against our input expectations
-            final MetricsFile<UmiMetrics, Comparable<?>> metricsOutput = new MetricsFile<UmiMetrics, Comparable<?>>();
-            try {
-                metricsOutput.read(new FileReader(umiMetricsFile));
-            }
-            catch (final FileNotFoundException ex) {
-                System.err.println("Metrics file not found: " + ex);
-            }
-            final double tolerance = 1e-6;
-            Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
-            final UmiMetrics observedMetrics = metricsOutput.getMetrics().get(0);
+            try (final FileReader umiMetricsFileReader = new FileReader(umiMetricsFile)) {
+                final MetricsFile<UmiMetrics, Comparable<?>> metricsOutput = new MetricsFile<UmiMetrics, Comparable<?>>();
+                metricsOutput.read(umiMetricsFileReader);
 
-            Assert.assertEquals(observedMetrics.LIBRARY, expectedMetrics.LIBRARY, "LIBRARY does not match expected");
-            Assert.assertEquals(observedMetrics.MEAN_UMI_LENGTH, expectedMetrics.MEAN_UMI_LENGTH, "UMI_LENGTH does not match expected");
-            Assert.assertEquals(observedMetrics.OBSERVED_UNIQUE_UMIS, expectedMetrics.OBSERVED_UNIQUE_UMIS, "OBSERVED_UNIQUE_UMIS does not match expected");
-            Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
-            Assert.assertEquals(observedMetrics.OBSERVED_BASE_ERRORS, expectedMetrics.OBSERVED_BASE_ERRORS, "OBSERVED_BASE_ERRORS does not match expected");
-            Assert.assertEquals(observedMetrics.DUPLICATE_SETS_IGNORING_UMI, expectedMetrics.DUPLICATE_SETS_IGNORING_UMI, "DUPLICATE_SETS_IGNORING_UMI does not match expected");
-            Assert.assertEquals(observedMetrics.DUPLICATE_SETS_WITH_UMI, expectedMetrics.DUPLICATE_SETS_WITH_UMI, "DUPLICATE_SETS_WITH_UMI does not match expected");
-            Assert.assertEquals(observedMetrics.INFERRED_UMI_ENTROPY, expectedMetrics.INFERRED_UMI_ENTROPY, tolerance, "INFERRED_UMI_ENTROPY does not match expected");
-            Assert.assertEquals(observedMetrics.OBSERVED_UMI_ENTROPY, expectedMetrics.OBSERVED_UMI_ENTROPY, tolerance, "OBSERVED_UMI_ENTROPY does not match expected");
-            Assert.assertEquals(observedMetrics.UMI_BASE_QUALITIES, expectedMetrics.UMI_BASE_QUALITIES, tolerance, "UMI_BASE_QUALITIES does not match expected");
-            Assert.assertEquals(observedMetrics.PCT_UMI_WITH_N, expectedMetrics.PCT_UMI_WITH_N, tolerance,"PERCENT_UMI_WITH_N does not match expected" );
-        }
+                final double tolerance = 1e-6;
+                Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
+                final UmiMetrics observedMetrics = metricsOutput.getMetrics().get(0);
 
-        // Also do tests from AbstractMarkDuplicatesCommandLineProgramTester
-        try {
-            super.test();
-        } catch (IOException ex) {
-            Assert.fail("Could not open metrics file: ", ex);
+                Assert.assertEquals(observedMetrics.LIBRARY, expectedMetrics.LIBRARY, "LIBRARY does not match expected");
+                Assert.assertEquals(observedMetrics.MEAN_UMI_LENGTH, expectedMetrics.MEAN_UMI_LENGTH, "UMI_LENGTH does not match expected");
+                Assert.assertEquals(observedMetrics.OBSERVED_UNIQUE_UMIS, expectedMetrics.OBSERVED_UNIQUE_UMIS, "OBSERVED_UNIQUE_UMIS does not match expected");
+                Assert.assertEquals(observedMetrics.INFERRED_UNIQUE_UMIS, expectedMetrics.INFERRED_UNIQUE_UMIS, "INFERRED_UNIQUE_UMIS does not match expected");
+                Assert.assertEquals(observedMetrics.OBSERVED_BASE_ERRORS, expectedMetrics.OBSERVED_BASE_ERRORS, "OBSERVED_BASE_ERRORS does not match expected");
+                Assert.assertEquals(observedMetrics.DUPLICATE_SETS_IGNORING_UMI, expectedMetrics.DUPLICATE_SETS_IGNORING_UMI, "DUPLICATE_SETS_IGNORING_UMI does not match expected");
+                Assert.assertEquals(observedMetrics.DUPLICATE_SETS_WITH_UMI, expectedMetrics.DUPLICATE_SETS_WITH_UMI, "DUPLICATE_SETS_WITH_UMI does not match expected");
+                Assert.assertEquals(observedMetrics.INFERRED_UMI_ENTROPY, expectedMetrics.INFERRED_UMI_ENTROPY, tolerance, "INFERRED_UMI_ENTROPY does not match expected");
+                Assert.assertEquals(observedMetrics.OBSERVED_UMI_ENTROPY, expectedMetrics.OBSERVED_UMI_ENTROPY, tolerance, "OBSERVED_UMI_ENTROPY does not match expected");
+                Assert.assertEquals(observedMetrics.UMI_BASE_QUALITIES, expectedMetrics.UMI_BASE_QUALITIES, tolerance, "UMI_BASE_QUALITIES does not match expected");
+                Assert.assertEquals(observedMetrics.PCT_UMI_WITH_N, expectedMetrics.PCT_UMI_WITH_N, tolerance, "PERCENT_UMI_WITH_N does not match expected");
+            } catch (final FileNotFoundException ex) {
+                Assert.fail("Metrics file not found: " + ex);
+            } catch (final IOException ex) {
+                Assert.fail("Could not open metrics file: ", ex);
+            }
         }
     }
 

@@ -27,6 +27,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.MergingIterator;
@@ -38,20 +39,24 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFUtils;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Combines multiple variant files into a single variant file.
@@ -139,13 +144,16 @@ public class MergeVcfs extends CommandLineProgram {
 	  	
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
               doc="VCF or BCF input files (File format is determined by file extension), or a file having a '.list' suffix containing the path to the files, one per line.", minElements=1)
-    public List<File> INPUT;
+    public List<PicardHtsPath> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
     public File OUTPUT;
 
     @Argument(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input files", optional = true)
-    public File SEQUENCE_DICTIONARY;
+    public PicardHtsPath SEQUENCE_DICTIONARY;
+
+    @Argument(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
+    public List<String>  COMMENT = new ArrayList<>();
 
     private final static String SEQ_DICT_REQUIRED = "A sequence dictionary must be available (either through the input file or by setting it explicitly).";
 
@@ -158,20 +166,20 @@ public class MergeVcfs extends CommandLineProgram {
     @Override
     protected int doWork() {
         final ProgressLogger progress = new ProgressLogger(log, 10000);
-        final List<String> sampleList = new ArrayList<String>();
-        INPUT = IOUtil.unrollFiles(INPUT, IOUtil.VCF_EXTENSIONS);
-        final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
-        final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
+        final List<String> sampleList = new ArrayList<>();
+        final List<Path> inputPaths = INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
+        final List<Path> unrolledPaths = IOUtil.unrollPaths(inputPaths, FileExtensions.VCF_LIST.toArray(new String[]{}));
+        final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<>(unrolledPaths.size());
+        final Collection<VCFHeader> headers = new HashSet<>(unrolledPaths.size());
         VariantContextComparator variantContextComparator = null;
         SAMSequenceDictionary sequenceDictionary = null;
 
-        if (SEQUENCE_DICTIONARY != null) {
-            sequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
-        }
+        if (SEQUENCE_DICTIONARY != null)
+            sequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY.toPath()).getFileHeader().getSequenceDictionary();
 
-        for (final File file : INPUT) {
-            IOUtil.assertFileIsReadable(file);
-            final VCFFileReader fileReader = new VCFFileReader(file, false);
+        for (final Path path : unrolledPaths) {
+            IOUtil.assertFileIsReadable(path);
+            final VCFFileReader fileReader = new VCFFileReader(path, false);
             final VCFHeader fileHeader = fileReader.getFileHeader();
             if (fileHeader.getContigLines().isEmpty()) {
                 if (sequenceDictionary == null) {
@@ -186,7 +194,7 @@ public class MergeVcfs extends CommandLineProgram {
             } else {
                 if (!variantContextComparator.isCompatible(fileHeader.getContigLines())) {
                     throw new IllegalArgumentException(
-                            "The contig entries in input file " + file.getAbsolutePath() + " are not compatible with the others.");
+                            "The contig entries in input path " + path.toAbsolutePath() + " are not compatible with the others.");
                 }
             }
 
@@ -196,8 +204,13 @@ public class MergeVcfs extends CommandLineProgram {
                 sampleList.addAll(fileHeader.getSampleNamesInOrder());
             } else {
                 if (!sampleList.equals(fileHeader.getSampleNamesInOrder())) {
-                    throw new IllegalArgumentException("Input file " + file.getAbsolutePath() + " has sample entries that don't match the other files.");
+                    throw new IllegalArgumentException("Input path " + path.toAbsolutePath() + " has sample entries that don't match the other files.");
                 }
+            }
+            
+            // add comments in the first header
+            if (headers.isEmpty()) {
+                COMMENT.forEach(C -> fileHeader.addMetaDataLine(new VCFHeaderLine("MergeVcfs.comment", C)));
             }
 
             headers.add(fileHeader);
@@ -221,7 +234,7 @@ public class MergeVcfs extends CommandLineProgram {
 
         writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));
 
-        final MergingIterator<VariantContext> mergingIterator = new MergingIterator<VariantContext>(variantContextComparator, iteratorCollection);
+        final MergingIterator<VariantContext> mergingIterator = new MergingIterator<>(variantContextComparator, iteratorCollection);
         while (mergingIterator.hasNext()) {
             final VariantContext context = mergingIterator.next();
             writer.add(context);

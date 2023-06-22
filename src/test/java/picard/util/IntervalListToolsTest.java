@@ -30,6 +30,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
@@ -40,16 +41,25 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by farjoun on 10/22/17.
  */
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
-    private final File TEST_DATA_DIR = new File("testdata/picard/util/");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/util/");
     private final File scatterable = new File(TEST_DATA_DIR, "scatterable.interval_list");
+    private final File scatterableStdin = new File(TEST_DATA_DIR, "scatterable_stdin");
     private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
     private final File largeScatterable = new File(TEST_DATA_DIR, "large_scatterable.interval_list");
+    private final File abutting = new File(TEST_DATA_DIR, "abutting.interval_list");
+    private final File abutting_combined = new File(TEST_DATA_DIR, "abutting_combined.interval_list");
+    private final File abutting_notcombined = new File(TEST_DATA_DIR, "abutting_notcombined.interval_list");
+    private static final List<File> LARGER_EXPECTED_WITH_REMAINDER_FILES = Arrays.asList(new File(TEST_DATA_DIR, "largeScattersWithRemainder").listFiles());
+    private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
+
 
     @Test
     public void testSecondInputValidation() {
@@ -93,19 +103,21 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @DataProvider
     public Iterator<Object[]> ActionsTest() {
-        return Arrays.stream(IntervalListTools.Action.values()).map(a -> new Object[]{a}).iterator();
+        final Stream stream1 = Arrays.stream(IntervalListTools.Action.values()).map(a -> new Object[]{a, scatterable});
+        final Stream stream2 = Arrays.stream(IntervalListTools.Action.values()).map(a -> new Object[]{a, scatterableStdin});
+        return Stream.concat(stream1, stream2).iterator();
     }
 
     // test that all actions work. but not test output at all.
     @Test(dataProvider = "ActionsTest")
-    public void testAllActions(final IntervalListTools.Action action) throws IOException {
+    public void testAllActions(final IntervalListTools.Action action, final File file) throws IOException {
         final File ilOut = File.createTempFile("IntervalListTools", "interval_list");
         ilOut.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + scatterable);
+        args.add("INPUT=" + file);
 
         if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
@@ -153,12 +165,12 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithInvertData")
     public void testActionsWithInvert(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, true, false);
+        final IntervalList il = tester(action, true, false, false, scatterable, secondInput);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
-        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, true, false), bases, "unexpected number of bases written to count_output file.");
-        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, true, false), intervals, "unexpected number of intervals written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, true, false, false, scatterable, secondInput), bases, "unexpected number of bases written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, true, false, false, scatterable, secondInput), intervals, "unexpected number of intervals written to count_output file.");
     }
 
     @DataProvider
@@ -175,31 +187,53 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithUniqueData")
     public void testActionsWithUnique(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, false, true);
+        final IntervalList il = tester(action, false, true, false, scatterable, secondInput);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
-        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, false, true), bases, "unexpected number of bases written to count_output file.");
-        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, false, true), intervals, "unexpected number of intervals written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, false, true, false, scatterable, secondInput), bases, "unexpected number of bases written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, false, true, false, scatterable, secondInput), intervals, "unexpected number of intervals written to count_output file.");
+    }
+
+    @DataProvider
+    public Object[][] actionAndTotalBasesWithDontMergeAbuttingData() {
+        return new Object[][]{
+                {IntervalListTools.Action.CONCAT, 8, 3},
+                {IntervalListTools.Action.UNION, 8, 3},
+                {IntervalListTools.Action.INTERSECT, 8, 2},
+                {IntervalListTools.Action.SUBTRACT, 0, 0},
+                {IntervalListTools.Action.SYMDIFF, 0, 0},
+                {IntervalListTools.Action.OVERLAPS, 8, 3}
+        };
+    }
+
+    @Test(dataProvider = "actionAndTotalBasesWithDontMergeAbuttingData")
+    public void testActionsWithDontMergeAbutting(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
+        final IntervalList il = tester(action, false, true, true, abutting, abutting);
+        Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
+        Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
+
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, false, true, true, abutting, abutting), bases, "unexpected number of bases written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, false, true, true, abutting, abutting), intervals, "unexpected number of intervals written to count_output file.");
     }
 
     private IntervalList tester(IntervalListTools.Action action) throws IOException {
-        return tester(action, false, false);
+        return tester(action, false, false, false, scatterable, secondInput);
     }
 
-    private IntervalList tester(IntervalListTools.Action action, boolean invert, boolean unique) throws IOException {
+    private IntervalList tester(IntervalListTools.Action action, boolean invert, boolean unique, boolean dont_merge_abutting, File input1, File input2) throws IOException {
         final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + scatterable);
+        args.add("INPUT=" + input1);
 
         if (action.takesSecondInput) {
-            args.add("SECOND_INPUT=" + secondInput);
+            args.add("SECOND_INPUT=" + input2);
         } else {
-            args.add("INPUT=" + secondInput);
+            args.add("INPUT=" + input2);
         }
 
         if (invert) {
@@ -208,6 +242,10 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         if (unique) {
             args.add("UNIQUE=true");
+        }
+
+        if (dont_merge_abutting) {
+            args.add("DONT_MERGE_ABUTTING=true");
         }
 
         args.add("OUTPUT=" + ilOut);
@@ -218,22 +256,22 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue) throws IOException {
-        return testerCountOutput(action, outputValue, false, false);
+        return testerCountOutput(action, outputValue, false, false, false, scatterable, secondInput);
     }
 
-    private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert, boolean unique) throws IOException {
+    private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert, boolean unique, boolean dont_merge_abutting, File input1, File input2) throws IOException {
         final File countOutput = File.createTempFile("IntervalListTools", "txt");
         countOutput.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + scatterable);
+        args.add("INPUT=" + input1);
 
         if (action.takesSecondInput) {
-            args.add("SECOND_INPUT=" + secondInput);
+            args.add("SECOND_INPUT=" + input2);
         } else {
-            args.add("INPUT=" + secondInput);
+            args.add("INPUT=" + input2);
         }
 
         if (invert) {
@@ -242,6 +280,10 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         if (unique) {
             args.add("UNIQUE=true");
+        }
+
+        if (dont_merge_abutting) {
+            args.add("DONT_MERGE_ABUTTING=true");
         }
 
         if (outputValue != null) {
@@ -256,10 +298,32 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         return reader.nextLong();
     }
 
+    /**
+     * These are split out separately and private because the treatment of remainders causes different behavior whether
+     * scatter count is specified (as similated here) versus whether scatter *content* is specified, as in in the IntervalListTools
+     * integration tests
+     * @return test cases with expected behavior for distributed remainder mode given a specified number of output lists
+     */
+    private static List<IntervalListScattererTest.Testcase> getRemainderTestcases() {
+        final List<IntervalListScattererTest.Testcase> testCases = new ArrayList<>();
+        testCases.add(new IntervalListScattererTest.Testcase(
+                IntervalListScattererTest.LARGER_INTERVAL_FILE, 67, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
+                LARGER_EXPECTED_WITH_REMAINDER_LISTS
+        ));
+
+        testCases.add(new IntervalListScattererTest.Testcase(
+                IntervalListScattererTest.LARGER_INTERVAL_FILE, 20, IntervalListScatterMode.INTERVAL_COUNT_WITH_DISTRIBUTED_REMAINDER,
+                IntervalListScattererTest.LARGER_NO_REMAINDER_EXPECTED_LISTS
+        ));
+        return testCases;
+    }
+
     // test scatter with different kinds of balancing.
     @DataProvider
     public static Iterator<Object[]> testScatterTestcases() {
-        return IntervalListScattererTest.testScatterTestcases();
+        final List<IntervalListScattererTest.Testcase> testcases = new ArrayList<>(IntervalListScattererTest.getScatterTestcases());
+        testcases.addAll(getRemainderTestcases());
+        return testcases.stream().map(tc -> new Object[]{tc}).iterator();
     }
 
     private final List<File> dirsToDelete = new ArrayList<>();
@@ -292,7 +356,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         args.add("SUBDIVISION_MODE=" + tc.mode);
 
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools_lists").toFile();
         dirsToDelete.add(ilOutDir);
 
         if (tc.scatterWidth == 1) {
@@ -333,7 +397,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         args.add("SUBDIVISION_MODE=" + tc.mode);
 
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools_lists").toFile();
         dirsToDelete.add(ilOutDir);
 
         if (tc.scatterWidth == 1) {
@@ -344,7 +408,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             args.add("OUTPUT=" + ilOutDir);
         }
 
-        args.add("SCATTER_CONTENT=" + tc.mode.make().listWeight(tc.source) / tc.expectedScatter.size());
+        args.add("SCATTER_CONTENT=" + (int)Math.round((double)tc.mode.make().listWeight(tc.source) / tc.expectedScatter.size()));
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -368,7 +432,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     @Test(timeOut = 40_000)
     public void testLargeScatters() throws IOException {
         final int scatterCount=1_000;
-        final File ilOutDir = IOUtil.createTempDir("IntervalListTools", "lists");
+        final File ilOutDir = IOUtil.createTempDir("IntervalListTools_lists").toFile();
         dirsToDelete.add(ilOutDir);
 
         //scatter
@@ -401,5 +465,31 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         final IntervalList original = IntervalList.fromFile(largeScatterable).uniqued();
 
         Assert.assertEquals(gather, original);
+    }
+
+    @DataProvider
+    public Object[][] combineAbuttingIntervals() {
+        return new Object[][] {
+                {false, abutting_combined},
+                {true, abutting_notcombined},
+        };
+    }
+
+    @Test(dataProvider = "combineAbuttingIntervals")
+    public void testCombineAbuttingIntervals(boolean dont_merge_abutting, File output_file) throws IOException {
+        // Test the default behavior of UNION, which is to combine abutting and overlapping intervals.
+        //gather
+        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
+        ilOut.deleteOnExit();
+        final List<String> args = new ArrayList<>();
+        args.add("INPUT=" + abutting);
+        args.add("OUTPUT=" + ilOut);
+        args.add("ACTION=UNION");
+        args.add("DONT_MERGE_ABUTTING="+dont_merge_abutting);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final IntervalList gather = IntervalList.fromFile(ilOut);
+        final IntervalList original = IntervalList.fromFile(output_file);
+
+        Assert.assertEquals(gather, original); // equal to expected output
     }
 }

@@ -2,6 +2,8 @@ package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.variant.variantcontext.VariantContext;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 import picard.vcf.GenotypeConcordanceStates.*;
 
 import java.util.Map;
@@ -9,6 +11,7 @@ import java.util.Map;
 /**
  * Class that holds metrics about the Genotype Concordance contingency tables.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class GenotypeConcordanceContingencyMetrics extends MetricBase {
     /**
      * Empty constructor - needed for unit tests

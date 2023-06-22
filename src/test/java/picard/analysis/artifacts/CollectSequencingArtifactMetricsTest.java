@@ -18,6 +18,7 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
     private static final File TEST_DIR = new File("testdata/picard/analysis/artifacts/CollectSequencingArtifactMetrics");
     private static final File REFERENCE = new File(TEST_DIR, "test.fasta");
     private static final File TEST_SAM = new File(TEST_DIR, "test.sam");
+    private static final File TEST_IUPAC = new File(TEST_DIR, "testWithIUPACBases.sam");
     private static final File DB_SNP = new File(TEST_DIR, "test.dbsnp.vcf");
     private static final File INTERVALS = new File(TEST_DIR, "test.interval_list");
     private static final File TEST_CASES = new File(TEST_DIR, "ExpectedMetricsOutput");
@@ -31,7 +32,7 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
 
     @BeforeTest
     public void setUp() throws IOException {
-        globalTempOutputDir = IOUtil.createTempDir("artifactMetrics.", ".tmp");
+        globalTempOutputDir = IOUtil.createTempDir("artifactMetrics.tmp").toFile();
     }
 
     @AfterTest
@@ -114,4 +115,18 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
         runAnalysis("unmapped_mate", "MINIMUM_INSERT_SIZE=0", "MAXIMUM_INSERT_SIZE=0");
     }
 
+    @Test
+    private void runIUPACCase(){
+        final File actual = new File(globalTempOutputDir, "IUPAC");
+
+        final Map<String, String> args = new HashMap<>();
+        args.put("INPUT", TEST_IUPAC.getAbsolutePath());
+        args.put("OUTPUT", actual.getAbsolutePath());
+        args.put("REFERENCE_SEQUENCE", REFERENCE.getAbsolutePath());
+        args.put("MINIMUM_INSERT_SIZE", "30"); // test data has this insert size
+        args.put("MAXIMUM_INSERT_SIZE", "30"); // test data has this insert size
+        args.put("CONTEXT_SIZE", "0"); // ignore context by default, to cut down on file size
+
+        Assert.assertEquals(runPicardCommandLine(args),0);
+    }
 }

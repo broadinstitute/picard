@@ -200,6 +200,7 @@ public class IlluminaManifest  {
         };
     }
 
+    @SuppressWarnings("removal")
     private void readHeader() throws IOException {
         final FileInputStream fileInputStream = new FileInputStream(getManifestFile());
 
@@ -247,7 +248,7 @@ public class IlluminaManifest  {
         }
         if (!columnNameToIndex.containsKey(REF_STRAND_HEADER_NAME)) {
             // Some Illumina manifests do not have ref_strand defined.  We will use the illumina strand instead.
-            log.warn("Illumina Manifest does not contain '" + REF_STRAND_HEADER_NAME + "' - we will use '" + ILLUMINA_STRAND_HEADER_NAME + "'");
+            log.warn("Illumina Manifest does not contain '" + REF_STRAND_HEADER_NAME + "' - we will attempt to calculate it");
         }
         assayHeaderNames = columns;
         assayHeaderNameToIndex = columnNameToIndex;

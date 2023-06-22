@@ -23,12 +23,15 @@
  */
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
  * program and usually stored in a file with the extension ".rna_metrics".
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class RnaSeqMetrics extends MultilevelMetrics {
     /** The total number of PF bases including non-aligned reads. */
     public long PF_BASES;
@@ -121,21 +124,25 @@ public class RnaSeqMetrics extends MultilevelMetrics {
     = CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific. */
     public double PCT_CORRECT_STRAND_READS;
 
-    /** The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts. Ideal value = 0. */
+    /** The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts
+     * that have a length greater than the END_BIAS_BASES parameter. Ideal value = 0. */
     public double MEDIAN_CV_COVERAGE;
 
     /**
-     * The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per
-     * transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.
+     * The median 5 prime bias of the 1000 most highly expressed transcripts that have a length greater than the END_BIAS_BASES parameter.
+     * The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most number of bases divided by the mean coverage
+     * of the whole transcript. The number of end-bases used is specified by the END_BIAS_BASES parameter.
      */
     public double MEDIAN_5PRIME_BIAS;
 
     /**
-     * The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per
-     * transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.
+     * The median 3 prime bias of the 1000 most highly expressed transcripts that have a length greater than the END_BIAS_BASES parameter,
+     * where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most number of bases, divided by the mean coverage
+     * of the whole transcript. The number of end-bases used is specified by the END_BIAS_BASES parameter.
      */
     public double MEDIAN_3PRIME_BIAS;
 
-    /** The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts. */
+    /** The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts that have a length greater
+     * than the END_BIAS_BASES parameter. The number of end-bases used is specified by the END_BIAS_BASES parameter. */
     public double MEDIAN_5PRIME_TO_3PRIME_BIAS;
 }

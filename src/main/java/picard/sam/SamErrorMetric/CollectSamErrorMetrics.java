@@ -25,12 +25,26 @@
 package picard.sam.SamErrorMetric;
 
 import com.google.common.annotations.VisibleForTesting;
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Locus;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.QualityUtil;
+import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.tribble.util.ParsingUtils;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -44,7 +58,15 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -148,7 +170,8 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             "avoid collecting data on these loci.")
     public String VCF;
 
-    @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will intersect inputs if multiple are given. ", optional = true)
+    @Argument(shortName = "L", doc = "Region(s) to limit analysis to. Supported formats are VCF or interval_list. Will *intersect* inputs if multiple are given. " +
+            "When this argument is supplied, the VCF provided must be *indexed*.", optional = true)
     public List<File> INTERVALS;
 
     @Argument(shortName = StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "Minimum mapping quality to include read.")
@@ -166,6 +189,9 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
     @Argument(shortName = "LH", doc = "Shortest homopolymer which is considered long.  Used by the BINNED_HOMOPOLYMER stratifier.", optional = true)
     public int LONG_HOMOPOLYMER = 6;
+
+    @Argument(shortName = "LBS", doc = "Size of location bins. Used by the FLOWCELL_X and FLOWCELL_Y stratifiers", optional = true)
+    public int LOCATION_BIN_SIZE = 2500;
 
     @Argument(shortName = "P", doc = "The probability of selecting a locus for analysis (for downsampling).", optional = true)
     public double PROBABILITY = 1;
@@ -280,7 +306,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
      */
     private void initializeVcfDataSource() throws IOException {
         if ( INTERVAL_ITERATOR ) {
-            vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), true);
+            vcfFileReader = new VCFFileReader(IOUtil.getPath(VCF), false);
             // Make sure we can query our file for interval mode:
             if (!vcfFileReader.isQueryable()) {
                 throw new PicardException("Cannot query VCF File!  VCF Files must be queryable!  Please index input VCF and re-run.");
@@ -288,7 +314,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         }
         else {
             vcfIterator = new PeekableIterator<>(
-                    VCF == null ? Collections.emptyIterator() : new VCFFileReader(IOUtil.getPath(VCF), true).iterator());
+                    VCF == null ? Collections.emptyIterator() : new VCFFileReader(IOUtil.getPath(VCF), false).iterator());
         }
     }
 
@@ -513,7 +539,11 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
 
         for (final ErrorMetric metric : locusAggregator.getMetrics()) {
             metric.calculateDerivedFields();
-            file.addMetric(metric);
+            // For simple error metrics. strata with 0 total bases above MIN_BASE_Q are not included in final output
+            final boolean isSimpleError = locusAggregator.getSuffix().startsWith("error");
+            if (!(metric.TOTAL_BASES == 0 && isSimpleError)){
+                file.addMetric(metric);
+            }
         }
 
         final String fileExtension = (FILE_EXTENSION == null) ? "" : FILE_EXTENSION;
@@ -591,7 +621,17 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
             return;
 
         for (final BaseErrorAggregation aggregation : aggregatorList) {
-            aggregation.addBase(rao, info);
+            final int mappingQuality = rao.getRecord().getMappingQuality();
+            if (mappingQuality >= MIN_MAPPING_Q) {
+                if (rao.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion) {
+                    aggregation.addBase(rao, info);
+                } else {
+                    final int baseQuality = rao.getRecord().getBaseQualities()[rao.getOffset()];
+                    if (baseQuality >= MIN_BASE_Q) {
+                        aggregation.addBase(rao, info);
+                    }
+                }
+            }
         }
     }
 
@@ -684,6 +724,7 @@ public class CollectSamErrorMetrics extends CommandLineProgram {
         Set<String> suffixes = new HashSet<>();
 
         ReadBaseStratification.setLongHomopolymer(LONG_HOMOPOLYMER);
+        ReadBaseStratification.setLocationBinSize(LOCATION_BIN_SIZE);
         for (final String directive : ERROR_METRICS) {
             final BaseErrorAggregation aggregator;
             aggregator = parseDirective(directive);

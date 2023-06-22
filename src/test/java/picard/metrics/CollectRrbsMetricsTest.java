@@ -36,6 +36,7 @@ import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,9 +51,7 @@ public class CollectRrbsMetricsTest extends CommandLineProgramTest {
 
     @BeforeTest
     private void setUp() throws Exception {
-        rootTestDir = File.createTempFile("crmt.", ".tmp");
-        Assert.assertTrue(rootTestDir.delete());
-        Assert.assertTrue(rootTestDir.mkdir());
+        rootTestDir = Files.createTempDirectory("crmt.tmp").toFile();
     }
 
     @AfterTest

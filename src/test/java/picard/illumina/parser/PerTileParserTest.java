@@ -15,6 +15,7 @@ import java.util.Set;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
 
+@SuppressWarnings("removal")
 public class PerTileParserTest {
 
     private static final Map<String, List<Integer>> FILE_TO_VALUE = new HashMap<String, List<Integer>>();

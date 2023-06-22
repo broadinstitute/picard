@@ -25,6 +25,9 @@
 
 package picard.sam.SamErrorMetric;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
+
 /** An error metric for the errors invovling bases in the overlapping region of a read-pair.
  * The resulting metric includes error rate information which can be assigned to the reading
  * of the molecular insert {@link #DISAGREES_WITH_REF_AND_MATE_ONLY_Q}, error rate which can be
@@ -33,6 +36,7 @@ package picard.sam.SamErrorMetric;
  * cannot be explained nicely {@link #THREE_WAYS_DISAGREEMENT_ONLY_Q}.
  *
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class OverlappingErrorMetric extends ErrorMetric {
 
     /** The number of bases for which an overlapping base from the mate read was found*/

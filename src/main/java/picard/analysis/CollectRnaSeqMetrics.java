@@ -132,6 +132,9 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
+    @Argument(doc="The distance into a transcript over which 5' and 3' bias is calculated.")
+    public int END_BIAS_BASES = RnaSeqMetricsCollector.defaultEndBiasBases;
+
     private RnaSeqMetricsCollector collector;
 
     /**
@@ -145,6 +148,11 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if ( RIBOSOMAL_INTERVALS == null && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
+
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+
         return super.customCommandLineValidation();
     }
 
@@ -163,7 +171,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE,
-                true);
+                true, END_BIAS_BASES);
 
         // If we're working with a single library, assign that library's name as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
@@ -194,7 +202,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if (CHART_OUTPUT != null && atLeastOneHistogram) {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/rnaSeqCoverage.R",
                                                                OUTPUT.getAbsolutePath(),
-                                                               CHART_OUTPUT.getAbsolutePath(),
+                                                               CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                                                                INPUT.getName(),
                                                                this.plotSubtitle);
 

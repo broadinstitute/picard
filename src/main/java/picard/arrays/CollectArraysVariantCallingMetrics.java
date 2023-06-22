@@ -1,6 +1,6 @@
 package picard.arrays;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
 import picard.arrays.illumina.ArraysControlInfo;
@@ -22,6 +22,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.pedigree.Sex;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.help.HelpConstants;
 import picard.vcf.processor.VariantProcessor;
 
 import java.io.File;
@@ -46,6 +47,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
                     "      INPUT=genotyping_arrays.vcf \\<br />" +
                     "      OUTPUT=outputBaseName" +
                     "</pre>";
+
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")
     public File INPUT;
@@ -164,6 +166,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
     }
 
 
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class ArraysVariantCallingSummaryMetrics extends MergeableMetricBase {
         /**
          * The total number of assays (SNP and indels) in the VCF
@@ -271,6 +274,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
 
     }
 
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class ArraysControlCodesSummaryMetrics extends MetricBase {
 
         /**
@@ -311,6 +315,7 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
 
     }
 
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class ArraysVariantCallingDetailMetrics extends CollectArraysVariantCallingMetrics.ArraysVariantCallingSummaryMetrics {
         /**
          * The chip well barcode of the Illumina array being assayed
@@ -359,6 +364,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
          */
         @NoMergingIsDerived
         public Boolean IS_ZCALLED;
+
+        /**
+         * The call rate as determined by Autocall/IAAP (and stored in the GTC File)
+         */
+        @MergeByAssertEquals
+        public Double GTC_CALL_RATE;
 
         /**
          * The sex, as determined by Autocall
@@ -437,6 +448,12 @@ public class CollectArraysVariantCallingMetrics extends CommandLineProgram {
          */
         @MergeByAssertEquals
         public String SCANNER_NAME;
+
+        /**
+         * The version of the pipeline used for this sample
+         */
+        @MergeByAssertEquals
+        public String PIPELINE_VERSION;
 
         /**
          * Hidden fields not propagated to the metrics file.

@@ -1,0 +1,12 @@
+##gff-version 3.1.25
+#this is a comment
+##sequence-region chr1 1 1000
+##sequence-region chr4 1 1000
+chr1	.	gene	150	250	.	+	.	ID=gene1
+chr1	.	gene	160	200	.	+	.	ID=gene2
+chr1	.	exon	170	190	.	+	.	Parent=gene2
+chr1	.	exon	175	180	.	+	.	Parent=gene1
+###
+chr1	.	gene	300	600	.	+	.	ID=gene3
+###
+chr4	.	gene	100	200	.	+	.	ID=gene4

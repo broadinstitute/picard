@@ -1,6 +1,8 @@
 package picard.analysis.artifacts;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
+import picard.util.help.HelpConstants;
 
 /**
  * Summary metrics produced by {@link CollectSequencingArtifactMetrics} as a roll up of the
@@ -9,6 +11,7 @@ import picard.analysis.MergeableMetricBase;
  * Errors are normalized to the lexically lower reference base and summarized together. E.g.
  * G>T is converted to C>A and merged with data from C>A for reporting.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class ErrorSummaryMetrics extends MergeableMetricBase {
     /** The reference base (or it's complement). */
     @MergeByAssertEquals public char REF_BASE;

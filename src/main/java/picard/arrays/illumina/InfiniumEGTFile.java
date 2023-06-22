@@ -39,11 +39,18 @@ import java.util.Map;
  * A cluster file contains information about the clustering information used in mapping red / green intensity information
  * to genotype calls
  */
-public class InfiniumEGTFile extends InfiniumDataFile {
+public class InfiniumEGTFile extends InfiniumDataFile implements AutoCloseable {
     public static final String EXTENSION = "egt";
 
     private static final int VALID_GENTRAIN_DATA_TYPE = 9;
     private static final int INVALID_FILE_VERSION = 2;
+
+    public String gencallVersion;
+    public String clusterVersion;
+    public String callVersion;
+    public String normalizationVersion;
+    public String dateCreated;
+    public boolean isWGT;
 
     public int[][] n;
     public float[][] meanR;
@@ -65,6 +72,11 @@ public class InfiniumEGTFile extends InfiniumDataFile {
     public InfiniumEGTFile(final File clusterFile) throws IOException {
         super(new DataInputStream(new FileInputStream(clusterFile)), false);
         parse();
+    }
+
+    @Override
+    public void close() throws IOException {
+        stream.close();
     }
 
     private void parse() throws IOException {
@@ -146,22 +158,20 @@ public class InfiniumEGTFile extends InfiniumDataFile {
 
     private void readHeaderData() throws IOException {
         setFileVersion(parseInt());
-        // skip gcVersion
-        skipString();
-        // skip clusterVersion
-        skipString();
-        // skip callVersion
-        skipString();
-        // skip normalizationVersion
-        skipString();
-        // skip dataCreated
-        skipString();
-        // skip isWGT
-        skipBoolean();
+        gencallVersion = parseString();
+        clusterVersion = parseString();
+        callVersion = parseString();
+        normalizationVersion = parseString();
+        dateCreated = parseString();
+        isWGT = parseByte() != '\0';
 
         if (getFileVersion() == INVALID_FILE_VERSION) {
             throw new IOException("Version '" + INVALID_FILE_VERSION + "' unsupported");
         }
         manifestName = parseString();
+    }
+
+    public String getManifestName() {
+        return manifestName;
     }
 }
