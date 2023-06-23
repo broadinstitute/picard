@@ -39,10 +39,12 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -179,7 +181,7 @@ public class FilterSamReads extends CommandLineProgram {
 
     @Argument(doc = "The SAM/BAM/CRAM file that will be filtered.",
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(doc = "Which filter to use.")
     public Filter FILTER = null;
@@ -187,12 +189,12 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM/BAM/CRAM file, when using FILTER=includeReadList or FILTER=excludeReadList.",
             optional = true,
             shortName = "RLF")
-    public File READ_LIST_FILE;
+    public PicardHtsPath READ_LIST_FILE;
 
    @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals",
             optional = true,
             shortName = "IL")
-    public File INTERVAL_LIST;
+    public PicardHtsPath INTERVAL_LIST;
 
     @Argument(doc = "The tag to select from input SAM/BAM",
             optional = true,
@@ -212,7 +214,7 @@ public class FilterSamReads extends CommandLineProgram {
 
     @Argument(doc = "SAM/BAM/CRAM file for resulting reads.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "JS",
             doc = "Filters the INPUT with a javascript expression using the java javascript-engine, when using FILTER=includeJavascript. "
@@ -222,7 +224,7 @@ public class FilterSamReads extends CommandLineProgram {
                     + " all the public members of SamRecord and SAMFileHeader are accessible. "
                     + "A record is accepted if the last value of the script evaluates to true.",
             optional = true)
-    public File JAVASCRIPT_FILE = null;
+    public File JAVASCRIPT_FILE = null; // tsato: update this too?
 
     /**
      * This method should be used only for testing needs
@@ -240,7 +242,7 @@ public class FilterSamReads extends CommandLineProgram {
     private void filterReads(final FilteringSamIterator filteringIterator) {
 
         // get OUTPUT header from INPUT and overwrite it if necessary
-        final SAMFileHeader fileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT);
+        final SAMFileHeader fileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT.toPath());
         final SAMFileHeader.SortOrder inputSortOrder = fileHeader.getSortOrder();
         if (SORT_ORDER != null) {
             fileHeader.setSortOrder(SORT_ORDER);
@@ -251,11 +253,11 @@ public class FilterSamReads extends CommandLineProgram {
         }
 
         final boolean presorted = inputSortOrder.equals(fileHeader.getSortOrder());
-        log.info("Filtering [presorted=" + presorted + "] " + INPUT.getName() + " -> OUTPUT=" +
-                OUTPUT.getName() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
+        log.info("Filtering [presorted=" + presorted + "] " + INPUT.getURIString() + " -> OUTPUT=" + // tsato: URI string the right thing?
+                OUTPUT.getURIString() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
 
-        // create OUTPUT file
-        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeWriter(fileHeader, presorted, OUTPUT, REFERENCE_SEQUENCE);
+        // create OUTPUT file // tsato: REFERENCE -> PicardHTSPath? Would have to update all of Picard really...
+        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeWriter(fileHeader, presorted, OUTPUT.toPath(), REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
 
@@ -276,18 +278,18 @@ public class FilterSamReads extends CommandLineProgram {
      * @param samOrBamFile The SAM/BAM/CRAM file for which we are going to write out a file of its
      *                     containing read names
      */
-    private void writeReadsFile(final File samOrBamFile) throws IOException {
-        final File readsFile =
-                new File(OUTPUT.getParentFile(), IOUtil.basename(samOrBamFile) + ".reads");
-        IOUtil.assertFileIsWritable(readsFile);
+    private void writeReadsFile(final Path samOrBamFile) throws IOException {
+        final PicardHtsPath readsFile =new PicardHtsPath(OUTPUT.getURIString() + ".reads"); // tsato: probably not exacdtly right
+                // new File(OUTPUT.getParentFile(), IOUtil.basename(samOrBamFile) + ".reads");
+        // IOUtil.assertFileIsWritable(readsFile); // tsato: what to do about it, probably can implement a method in HTSJDK
         try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samOrBamFile);
-             final BufferedWriter bw = IOUtil.openFileForBufferedWriting(readsFile, false)) {
+             final BufferedWriter bw = IOUtil.openFileForBufferedWriting(readsFile.toPath(), null)) { // tsato: what should theo OpenOption be?
 
             for (final SAMRecord rec : reader) {
                 bw.write(rec.toString() + "\n");
             }
         }
-        IOUtil.assertFileIsReadable(readsFile);
+        IOUtil.assertPathsAreReadable(Collections.singletonList(readsFile.toPath()));
     }
 
     private List<Interval> getIntervalList (final File intervalFile) throws IOException {
@@ -299,9 +301,9 @@ public class FilterSamReads extends CommandLineProgram {
     protected int doWork() {
 
         try {
-            IOUtil.assertFileIsReadable(INPUT);
-            IOUtil.assertFileIsWritable(OUTPUT);
-            if (WRITE_READS_FILES) writeReadsFile(INPUT);
+            IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(Collections.singletonList(INPUT)));
+            // IOUtil.assertFileIsWritable(OUTPUT);
+            if (WRITE_READS_FILES) writeReadsFile(INPUT.toPath());
 
             final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final FilteringSamIterator filteringIterator;
@@ -322,7 +324,7 @@ public class FilterSamReads extends CommandLineProgram {
                     break;
                 case includeReadList:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
-                            new ReadNameFilter(READ_LIST_FILE, true));
+                            new ReadNameFilter(READ_LIST_FILE, true)); // tsato: need to update htsjdk here...
                     break;
                 case excludeReadList:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
@@ -352,8 +354,8 @@ public class FilterSamReads extends CommandLineProgram {
 
             filterReads(filteringIterator);
 
-            IOUtil.assertFileIsReadable(OUTPUT);
-            if (WRITE_READS_FILES) writeReadsFile(OUTPUT);
+            IOUtil.assertFileIsReadable(OUTPUT.toPath());
+            if (WRITE_READS_FILES) writeReadsFile(OUTPUT.toPath());
             return 0;
 
         } catch (Exception e) {

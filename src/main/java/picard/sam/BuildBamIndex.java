@@ -24,10 +24,14 @@
 
 package picard.sam;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FileExtensions;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -71,9 +75,6 @@ public class BuildBamIndex extends CommandLineProgram {
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
                     "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
     public PicardHtsPath OUTPUT;
-
-    // The legacy behavior is to use the ".bam.bai"; change it to ".bai"
-    public boolean USE_SANE_EXTENSION = true;
 
     /**
      * Main method for the program.  Checks that all input files are present and
