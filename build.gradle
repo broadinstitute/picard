@@ -87,6 +87,7 @@ dependencies {
     compileOnly(googleNio)
 
     testImplementation 'org.testng:testng:6.14.3'
+    testImplementation(googleNio)
     implementation 'org.apache.commons:commons-lang3:3.6'
 }
 
@@ -221,10 +222,21 @@ tasks.withType(Test) {
     ]
 
     useTestNG {
-        if (OperatingSystem.current().isUnix()) {
-            excludeGroups "slow", "broken"
+        List excludes = ["slow", "broken"]
+        if( !OperatingSystem.current().isUnix() ) {
+            excludes << "unix"
+        }
+        String TEST_TYPE = "$System.env.TEST_TYPE"
+        if (TEST_TYPE == "cloud") {
+            // run only the cloud tests
+            includeGroups "cloud", "bucket"
+            excludeGroups(*excludes)
+        } else if (TEST_TYPE == "all") {
+            //include everything
+            excludeGroups(*excludes)
         } else {
-            excludeGroups "slow", "broken", "unix"
+            excludes.addAll("cloud", "bucket")
+            excludeGroups(*excludes);
         }
     }
 
