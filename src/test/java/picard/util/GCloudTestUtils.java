@@ -20,10 +20,10 @@ public final class GCloudTestUtils {
      * @return PICARD_REQUESTER_PAYS_BUCKET env. var if defined, {@value GCloudTestUtils#REQUESTER_PAYS_BUCKET_DEFAULT}.
      */
     public static String getRequesterPaysBucket() {
-        return getEnvironmentVariable("PICARD_REQUESTER_PAYS_BUCKET", REQUESTER_PAYS_BUCKET_DEFAULT);
+        return getSystemProperty("PICARD_REQUESTER_PAYS_BUCKET", REQUESTER_PAYS_BUCKET_DEFAULT);
     }
 
-    private static String getEnvironmentVariable(final String variableName, final String defaultValue) {
+    private static String getSystemProperty(final String variableName, final String defaultValue) {
         final String valueFromEnvironment = System.getProperty(variableName);
         return valueFromEnvironment == null || valueFromEnvironment.isEmpty()? defaultValue : valueFromEnvironment;
     }
@@ -34,7 +34,7 @@ public final class GCloudTestUtils {
      * @return PICARD_TEST_PROJECT env. var if defined or {@value #TEST_PROJECT_DEFAULT}
      */
     public static String getTestProject() {
-        return getEnvironmentVariable("PICARD_TEST_PROJECT", TEST_PROJECT_DEFAULT);
+        return getSystemProperty("PICARD_TEST_PROJECT", TEST_PROJECT_DEFAULT);
     }
 
     /**
@@ -44,7 +44,7 @@ public final class GCloudTestUtils {
      * @return PICARD_TEST_STAGING env. var if defined, or {@value #TEST_STAGING_DEFAULT}
      */
     public static String getTestStaging() {
-        return getEnvironmentVariable("PICARD_TEST_STAGING", TEST_STAGING_DEFAULT);
+        return getSystemProperty("PICARD_TEST_STAGING", TEST_STAGING_DEFAULT);
     }
 
     /**
@@ -55,7 +55,7 @@ public final class GCloudTestUtils {
      * @return PICARD_TEST_INPUTS env. var if defined or {@value #TEST_INPUTS_DEFAULT}.
      */
     public static String getTestInputPath() {
-        return getEnvironmentVariable("PICARD_TEST_INPUTS", TEST_INPUTS_DEFAULT);
+        return getSystemProperty("PICARD_TEST_INPUTS", TEST_INPUTS_DEFAULT);
     }
 
 }
