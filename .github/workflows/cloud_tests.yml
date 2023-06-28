@@ -38,9 +38,6 @@ jobs:
         experimental: [ false ]
       fail-fast: false
     continue-on-error: ${{ matrix.experimental }}
-    env:
-      TEST_TYPE: ${{ matrix.testType }}
-      SCALA_VERSION: ${{ matrix.scalaVersion }}
     name: Java ${{ matrix.Java }}, Barclay=${{ matrix.run_barclay_tests}} cloud tests
     steps:
       - uses: actions/checkout@v3
@@ -64,21 +61,19 @@ jobs:
         uses: google-github-actions/auth@v0
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-          project_id: ${{ env.HELLBENDER_TEST_PROJECT }}
+          project_id: ${{ env.PICARD_TEST_PROJECT }}
           create_credentials_file: true
-
-      - name: "export the credentials for GATK tests"
-        if: needs.check-secrets.outputs.google-credentials == 'true'
-        run: echo "HELLBENDER_JSON_SERVICE_ACCOUNT_KEY=${{ steps.auth.outputs.credentials_file_path }}" >> $GITHUB_ENV
 
       - name: 'Set up Cloud SDK'
         if: needs.check-secrets.outputs.google-credentials == 'true'
         uses: google-github-actions/setup-gcloud@v0
 
       - name: compile test code
+        if: needs.check-secrets.outputs.google-credentials == 'true'
         run: ./gradlew compileTestJava
 
       - name: Run tests
+        if: needs.check-secrets.outputs.google-credentials == 'true'
         env:
           TEST_TYPE: cloud
         run: |
@@ -89,3 +84,10 @@ jobs:
             echo "Running tests using the legacy Picard command line parser."
             ./gradlew jacocoTestReport
           fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloud-test-results-${{ matrix.Java }}-barclay-${{ matrix.run_barclay_tests}}
+          path: build/reports/tests
