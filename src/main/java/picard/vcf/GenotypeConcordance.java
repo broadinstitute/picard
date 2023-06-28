@@ -40,13 +40,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFConstants;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -497,9 +491,7 @@ public class GenotypeConcordance extends CommandLineProgram {
 
             // create the output header
             final List<String> sampleNames = Arrays.asList(OUTPUT_VCF_CALL_SAMPLE_NAME, OUTPUT_VCF_TRUTH_SAMPLE_NAME);
-            final Set<VCFHeaderLine> headerLines = new HashSet<>();
-            headerLines.addAll(callReader.getFileHeader().getMetaDataInInputOrder());
-            headerLines.addAll(truthReader.getFileHeader().getMetaDataInInputOrder());
+            final Set<VCFHeaderLine> headerLines = VCFHeaderMerger.getMergedHeaderLines(Arrays.asList(callReader.getFileHeader(), truthReader.getFileHeader()), true);
             headerLines.add(CONTINGENCY_STATE_HEADER_LINE);
             writer.writeHeader(new VCFHeader(headerLines, sampleNames));
             return Optional.of(writer);

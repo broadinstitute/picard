@@ -369,12 +369,11 @@ public class HaplotypeMap {
                 .build()) {
 
             final VCFHeader vcfHeader = new VCFHeader(
-                    VCFUtils.withUpdatedContigsAsLines(Collections.emptySet(), refFile, header.getSequenceDictionary(), false),
+                    VCFUtils.withUpdatedContigsAsLines(
+                            VCFHeader.makeHeaderVersionLineSet(VCFHeader.DEFAULT_VCF_VERSION),
+                            refFile, header.getSequenceDictionary(), false),
                     Collections.singleton(HET_GENOTYPE_FOR_PHASING));
 
-            VCFUtils.withUpdatedContigsAsLines(Collections.emptySet(), refFile, header.getSequenceDictionary(), false);
-
-            vcfHeader.addMetaDataLine(new VCFHeaderLine(VCFHeaderVersion.VCF4_2.getFormatString(), VCFHeaderVersion.VCF4_2.getVersionString()));
             vcfHeader.addMetaDataLine(new VCFInfoHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY, VCFHeaderLineCount.A, VCFHeaderLineType.Float, "Allele Frequency, for each ALT allele, in the same order as listed"));
             vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
             vcfHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.PHASE_SET_KEY, 1, VCFHeaderLineType.String, "Phase-set identifier for phased genotypes."));

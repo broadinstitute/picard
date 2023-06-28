@@ -95,7 +95,7 @@ public class FingerprintUtils {
                 .setReferenceDictionary(ref.getSequenceDictionary())
                 .setOutputFile(outputFile).build();
 
-        final Set<VCFHeaderLine> lines = new LinkedHashSet<>();
+        final Set<VCFHeaderLine> lines = VCFHeader.makeHeaderVersionLineSet(VCFHeader.DEFAULT_VCF_VERSION);
         lines.add(new VCFHeaderLine("reference", referenceSequenceFileName.getAbsolutePath()));
         lines.add(new VCFHeaderLine("source", source));
         lines.add(new VCFHeaderLine("fileDate", new Date().toString()));
