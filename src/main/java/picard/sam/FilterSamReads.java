@@ -44,6 +44,7 @@ import picard.nio.PicardHtsPath;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -189,7 +190,7 @@ public class FilterSamReads extends CommandLineProgram {
     @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM/BAM/CRAM file, when using FILTER=includeReadList or FILTER=excludeReadList.",
             optional = true,
             shortName = "RLF")
-    public PicardHtsPath READ_LIST_FILE;
+    public File READ_LIST_FILE;
 
    @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals",
             optional = true,
@@ -245,7 +246,7 @@ public class FilterSamReads extends CommandLineProgram {
         final SAMFileHeader fileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT.toPath());
         final SAMFileHeader.SortOrder inputSortOrder = fileHeader.getSortOrder();
         if (SORT_ORDER != null) {
-            fileHeader.setSortOrder(SORT_ORDER);
+            fileHeader.setSortOrder(SORT_ORDER); // tsato: why would one change the sort order?
         }
 
         if (FILTER == Filter.includePairedIntervals && fileHeader.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
@@ -255,10 +256,10 @@ public class FilterSamReads extends CommandLineProgram {
         final boolean presorted = inputSortOrder.equals(fileHeader.getSortOrder());
         log.info("Filtering [presorted=" + presorted + "] " + INPUT.getURIString() + " -> OUTPUT=" + // tsato: URI string the right thing?
                 OUTPUT.getURIString() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
-
+        // tsato: getURIString() or getRawInputString()
         // create OUTPUT file // tsato: REFERENCE -> PicardHTSPath? Would have to update all of Picard really...
         final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeWriter(fileHeader, presorted, OUTPUT.toPath(), REFERENCE_SEQUENCE);
-
+        // ^ makeWriter is deprecated with REFERENCE type being File. Will update when Chris's reference PR is merged
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
 
         while (filteringIterator.hasNext()) {
@@ -269,7 +270,7 @@ public class FilterSamReads extends CommandLineProgram {
 
         filteringIterator.close();
         outputWriter.close();
-        log.info(new DecimalFormat("#,###").format(progress.getCount()) + " SAMRecords written to " + OUTPUT.getName());
+        log.info(new DecimalFormat("#,###").format(progress.getCount()) + " SAMRecords written to " + OUTPUT.getRawInputString());
     }
 
     /**
@@ -292,29 +293,29 @@ public class FilterSamReads extends CommandLineProgram {
         IOUtil.assertPathsAreReadable(Collections.singletonList(readsFile.toPath()));
     }
 
-    private List<Interval> getIntervalList (final File intervalFile) throws IOException {
+    private List<Interval> getIntervalList(final Path intervalFile) throws IOException {
         IOUtil.assertFileIsReadable(intervalFile);
-        return IntervalList.fromFile(intervalFile).getIntervals();
+        return IntervalList.fromPath(intervalFile).getIntervals();
     }
 
     @Override
     protected int doWork() {
 
         try {
-            IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(Collections.singletonList(INPUT)));
+            IOUtil.assertFileIsReadable(INPUT.toPath());
             // IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT.toPath());
 
-            final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT.toPath());
             final FilteringSamIterator filteringIterator;
 
             // Used for exclude/include tag filter which expects a List<Object> input so casting here
             // This is done to get around poor constructors of TagFilter that should be addressed in
             // https://github.com/samtools/htsjdk/issues/1082
-            List<Object> tagList = (List) TAG_VALUE;
+            List<Object> tagList = (List) TAG_VALUE; // tsato: wtf is this?
 
             switch (FILTER) {
-                case includeAligned:
+                case includeAligned: // tsato: does this option assume that the reads are query-name sorted?
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
                             new AlignedFilter(true), true);
                     break;
@@ -338,7 +339,7 @@ public class FilterSamReads extends CommandLineProgram {
                     break;
                 case includePairedIntervals:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
-                            new IntervalKeepPairFilter(getIntervalList(INTERVAL_LIST)));
+                            new IntervalKeepPairFilter(getIntervalList(INTERVAL_LIST.toPath())));
                     break;
                 case includeTagValues:
                     filteringIterator = new FilteringSamIterator(samReader.iterator(),
@@ -359,10 +360,15 @@ public class FilterSamReads extends CommandLineProgram {
             return 0;
 
         } catch (Exception e) {
-            log.error(e, "Failed to filter " + INPUT.getName());
+            log.error(e, "Failed to filter " + INPUT.getRawInputString());
 
-            if (OUTPUT.exists() && !OUTPUT.delete()) {
-                log.warn("Failed to delete possibly incomplete output file:" + OUTPUT.getAbsolutePath());
+            if (Files.exists(OUTPUT.toPath())) {
+                try {
+                    Files.delete(OUTPUT.toPath());
+                } catch (IOException ex) {
+                    log.warn("Failed to delete possibly incomplete output file:" + OUTPUT.getRawInputString());
+                    // tsato: good enough to first order.
+                }
             }
 
             return 1;

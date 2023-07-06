@@ -348,7 +348,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
            final File inputSam = new File(samFilename);
            final FilterSamReads filterTest = new FilterSamReads();
            filterTest.INPUT = inputSam;
-           filterTest.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+           filterTest.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam"); // tsato: this needs to be updated with temporary file creation etc.
            filterTest.OUTPUT.deleteOnExit();
            filterTest.FILTER = includeReads ? FilterSamReads.Filter.includeTagValues : FilterSamReads.Filter.excludeTagValues;
            filterTest.TAG = tag;
