@@ -308,7 +308,7 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Argument(doc = "File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  " +
             "If this parameter is set, OUTPUT_VALUE must not be NONE.", optional = true)
-    public File COUNT_OUTPUT;
+    public PicardHtsPath COUNT_OUTPUT;
 
     enum Output {
         NONE {
@@ -395,10 +395,6 @@ public class IntervalListTools extends CommandLineProgram {
         // Check input
         IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(INPUT));
         IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(SECOND_INPUT));
-
-        if (COUNT_OUTPUT != null) {
-            IOUtil.assertFileIsWritable(COUNT_OUTPUT); // tsato: should I cloudify this too?
-        }
 
         // Read in the interval lists and apply any padding
         final IntervalList lists = openIntervalLists(INPUT, ACTION::reduceEach);
@@ -499,11 +495,11 @@ public class IntervalListTools extends CommandLineProgram {
 
         LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
-            try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
+            try (final PrintStream countStream = new PrintStream(Files.newOutputStream(COUNT_OUTPUT.toPath()))) { // tsato: why use a PrintStream here (vs what?)
                 OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
             }
             catch (final IOException e) {
-                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getAbsolutePath());
+                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getURIString());
             }
         } else {
             OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, System.out);
@@ -564,7 +560,7 @@ public class IntervalListTools extends CommandLineProgram {
     }
     /**
      * Method to scatter an interval list by locus.
-     * The scattered interval_list is organized as follows: if SCATTER_COUNT = 3, we will have
+     * The scattered interval_list will have the following format (when SCATTER_COUNT = 3)
      * - OUTPUT/temp_0001_of_3/scatter.interval_list
      * - OUTPUT/temp_0002_of_3/scatter.interval_list
      * - OUTPUT/temp_0003_of_3/scatter.interval_list (need to check)
@@ -573,7 +569,7 @@ public class IntervalListTools extends CommandLineProgram {
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
     private ScatterSummary writeScatterIntervals(final IntervalList list) {
-        ValidationUtils.validateArg(SCATTER_CONTENT > 0, "Scatter count should be a positive integer.");
+        ValidationUtils.validateArg(SCATTER_COUNT > 0, "Scatter count should be a positive integer.");
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
         final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
