@@ -486,7 +486,7 @@ public class IntervalListTools extends CommandLineProgram {
 
         LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
-            try (final PrintStream countStream = new PrintStream(Files.newOutputStream(COUNT_OUTPUT.toPath()))) { // tsato: why use a PrintStream here (vs what?)
+            try (final PrintStream countStream = new PrintStream(Files.newOutputStream(COUNT_OUTPUT.toPath()))) {
                 OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
             }
             catch (final IOException e) {
