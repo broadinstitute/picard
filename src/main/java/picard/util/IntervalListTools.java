@@ -461,15 +461,6 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         if (OUTPUT != null && SCATTER_COUNT > 1) {
-            // tsato: create the main output directory here, since assertDirectoryIsWritable checks if it exists
-            try {
-                // Running something like IOUtil.assertDirectoryIsWritable on outputDirectory returns an exception due to how google cloud
-                // handles directories, so we skip this check.
-                final Path outputDirectory = Files.createDirectories(OUTPUT.toPath());
-            } catch (IOException e){
-                throw new PicardException("Failed to create the output directory " + OUTPUT.toString(), e);
-            }
-
             final ScatterSummary scattered = writeScatterIntervals(outputIntervals);
             LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
             if (scattered.size != SCATTER_COUNT) {

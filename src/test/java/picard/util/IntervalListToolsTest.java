@@ -59,9 +59,7 @@ import java.util.stream.Stream;
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final String TEST_DATA_DIR = "testdata/picard/util/";
-    // tsato: place these files in an appropriate cloud bucket
-    // private static final String CLOUD_DATA_DIR = "gs://broad-dsde-methods-takuto/gatk/test/";
-    private static final String CLOUD_DATA_DIR = "gs://hellbender/test/resources/picard/intervals/"; // tsato: picard/utils might be better for consistency...
+    private static final String CLOUD_DATA_DIR = "gs://hellbender/test/resources/picard/intervals/";
     private final Path scatterable = Paths.get(TEST_DATA_DIR, "scatterable.interval_list");
     private final PicardHtsPath scatterableCloud = new PicardHtsPath(CLOUD_DATA_DIR + "scatterable.interval_list");
     private final Path scatterableStdin = Paths.get(TEST_DATA_DIR, "scatterable_stdin");
@@ -255,10 +253,10 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue) throws IOException {
         return testerCountOutput(action, outputValue, false, false, false, scatterable, secondInput, false);
     }
-    // tsato: it must be possible to combine this with tester...
+
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
                                    boolean unique, boolean dontMergeAbutting, Path input1, Path input2) throws IOException{
-        return testerCountOutput(action, IntervalListTools.Output.BASES, invert, unique, dontMergeAbutting, input1, input2, false);
+        return testerCountOutput(action, outputValue, invert, unique, dontMergeAbutting, input1, input2, false);
     }
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
                                    boolean unique, boolean dontMergeAbutting, Path input1, Path input2,
@@ -536,13 +534,13 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         final List<String> args = buildStandardTesterArguments(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterableCloud.toPath(), secondInputCloud.toPath());
         final int scatterCount = 3;
 
-        // tsato: Why not use Files.createTempDirectory()? "It throws an error when I try" is the short answer, although maybe I'm not using it right.
+        // Files.createTempDirectory() seems to throw an error when used with a gs:// path
         final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_DATA_DIR + "scatter_test/");
         GATKIOUtils.deleteOnExit(outputDir.toPath());
 
         args.add("SCATTER_COUNT=" + scatterCount);
         args.add("OUTPUT=" + outputDir.toPath().toUri());
-        Assert.assertEquals(runPicardCommandLine(args), 0); // tsato: why does this trigger defaulting to .interval_list (?)
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final String expectedOutputDir = getScatteredIntervalListLocally(scatterCount);
         try {
