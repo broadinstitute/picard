@@ -184,7 +184,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithInvertData")
     public void testActionsWithInvert(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, true, false, false, scatterable, secondInput, true);
+        final IntervalList il = tester(action, true, false, false, scatterable, secondInput, false);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
@@ -206,7 +206,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithUniqueData")
     public void testActionsWithUnique(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, false, true, false, scatterable, secondInput, true);
+        final IntervalList il = tester(action, false, true, false, scatterable, secondInput, false);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
@@ -228,7 +228,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithDontMergeAbuttingData")
     public void testActionsWithDontMergeAbutting(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, false, true, true, abutting, abutting, true);
+        final IntervalList il = tester(action, false, true, true, abutting, abutting, false);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
