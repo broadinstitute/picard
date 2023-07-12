@@ -59,8 +59,8 @@ import java.util.stream.Stream;
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final String TEST_DATA_DIR = "testdata/picard/util/";
-    private static final String CLOUD_DATA_DIR = GCloudTestUtils.getTestInputPath() + "/picard/intervals/";
-    private static final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging()+ "picard/";
+    private static final String CLOUD_DATA_DIR = GCloudTestUtils.getTestInputPath() + "picard/intervals/";
+    private static final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
     private final Path scatterable = Paths.get(TEST_DATA_DIR, "scatterable.interval_list");
     private final PicardHtsPath scatterableCloud = new PicardHtsPath(CLOUD_DATA_DIR + "scatterable.interval_list");
     private final Path scatterableStdin = Paths.get(TEST_DATA_DIR, "scatterable_stdin");
@@ -536,7 +536,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         final int scatterCount = 3;
 
         // Files.createTempDirectory() seems to throw an error when used with a gs:// path
-        final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_OUTPUT_DIR + "scatter_test/");
+        final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_OUTPUT_DIR + "scatter/");
         GATKIOUtils.deleteOnExit(outputDir.toPath());
 
         args.add("SCATTER_COUNT=" + scatterCount);
