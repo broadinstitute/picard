@@ -237,7 +237,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     private IntervalList tester(final IntervalListTools.Action action) {
-        return tester(action, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterable, secondInput, true);
+        return tester(action, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterable, secondInput, false);
     }
 
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
