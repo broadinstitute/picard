@@ -35,6 +35,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
 import picard.vcf.VcfTestUtils;
 
 import java.io.File;
@@ -347,7 +348,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
            // input as SAM file
            final File inputSam = new File(samFilename);
            final FilterSamReads filterTest = new FilterSamReads();
-           filterTest.INPUT = inputSam;
+           filterTest.INPUT = new PicardHtsPath(inputSam);
            filterTest.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam"); // tsato: this needs to be updated with temporary file creation etc.
            filterTest.OUTPUT.deleteOnExit();
            filterTest.FILTER = includeReads ? FilterSamReads.Filter.includeTagValues : FilterSamReads.Filter.excludeTagValues;
@@ -359,7 +360,7 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
            }
 
     private long getReadCount(FilterSamReads filterTest) throws Exception {
-        final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(filterTest.OUTPUT.toPath());
 
         long count = StreamSupport.stream(samReader.spliterator(), false)
                 .count();
