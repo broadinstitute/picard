@@ -59,7 +59,8 @@ import java.util.stream.Stream;
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final String TEST_DATA_DIR = "testdata/picard/util/";
-    private static final String CLOUD_DATA_DIR = "gs://hellbender/test/resources/picard/intervals/";
+    private static final String CLOUD_DATA_DIR = GCloudTestUtils.getTestInputPath() + "/picard/intervals/";
+    private static final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging()+ "picard/";
     private final Path scatterable = Paths.get(TEST_DATA_DIR, "scatterable.interval_list");
     private final PicardHtsPath scatterableCloud = new PicardHtsPath(CLOUD_DATA_DIR + "scatterable.interval_list");
     private final Path scatterableStdin = Paths.get(TEST_DATA_DIR, "scatterable_stdin");
@@ -94,7 +95,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(errors.length, 1);
     }
 
-    @Test
+    @Test()
     public void testCountOutputValidation() {
         final IntervalListTools intervalListTools = new IntervalListTools();
 
@@ -241,7 +242,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
                                 final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) {
-        final String outputDirFullName = cloudOutput ? CLOUD_DATA_DIR : "IntervalListTools";
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
         final String output = GATKBucketUtils.getTempFilePath(outputDirFullName, INTERVAL_LIST_EXTENSION);
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT=" + output);
@@ -261,7 +262,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
                                    boolean unique, boolean dontMergeAbutting, Path input1, Path input2,
                                    final boolean cloudOutput) throws IOException {
-        final String outputDirFullName = cloudOutput ? CLOUD_DATA_DIR : "IntervalListTools";
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
         final String countOutput = GATKBucketUtils.getTempFilePath(outputDirFullName, ".txt");
 
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
@@ -498,7 +499,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     // Check that we get the same output using the cloud (input/output) files as when we do everything locally.
-    @Test
+    @Test(groups = "cloud")
     public void testCloudInputAgainstLocalInput() {
         // expected = local input files
         final IntervalList expectedIntervals = tester(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterable, secondInput, false);
@@ -529,13 +530,13 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         }
     }
 
-    @Test
+    @Test(groups = "cloud")
     public void testScatterOutputInCloud() {
         final List<String> args = buildStandardTesterArguments(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterableCloud.toPath(), secondInputCloud.toPath());
         final int scatterCount = 3;
 
         // Files.createTempDirectory() seems to throw an error when used with a gs:// path
-        final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_DATA_DIR + "scatter_test/");
+        final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_OUTPUT_DIR + "scatter_test/");
         GATKIOUtils.deleteOnExit(outputDir.toPath());
 
         args.add("SCATTER_COUNT=" + scatterCount);
@@ -567,7 +568,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     /** Test {@link IntervalListTools.COUNT_OUTPUT} file in the cloud. Code copied from testActionsWithInvert **/
-    @Test(dataProvider = "actionAndTotalBasesWithInvertData")
+    @Test(dataProvider = "actionAndTotalBasesWithInvertData", groups = "cloud")
     public void testCountOutputInCloud(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
         final boolean cloudOutput = true;
         Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, true, false, false, scatterable, secondInput, cloudOutput), bases, "unexpected number of bases written to count_output file.");
