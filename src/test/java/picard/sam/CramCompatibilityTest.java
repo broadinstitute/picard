@@ -269,10 +269,10 @@ public class CramCompatibilityTest {
         program.instanceMain(args.toArray(new String[0]));
     }
 
-    static void assertCRAM(final File outputFile) {
-        Assert.assertTrue(outputFile.exists(), "Expected output file " + outputFile.getAbsolutePath() + " doesn't exist.");
-        try (InputStream in = new FileInputStream(outputFile)) {
-            Assert.assertTrue(SamStreams.isCRAMFile(new BufferedInputStream(in)), "File " + outputFile.getAbsolutePath() + " is not a CRAM.");
+    static void assertCRAM(final Path outputFile) {
+        Assert.assertTrue(Files.exists(outputFile), "Expected output file " + outputFile.toUri() + " doesn't exist.");
+        try (InputStream in = Files.newInputStream(outputFile)) {
+            Assert.assertTrue(SamStreams.isCRAMFile(new BufferedInputStream(in)), "File " + outputFile.toUri() + " is not a CRAM.");
         } catch (IOException e) {
             throw new RuntimeIOException(e);
         }
