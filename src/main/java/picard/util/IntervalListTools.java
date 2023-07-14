@@ -24,6 +24,7 @@
 
 package picard.util;
 
+import htsjdk.io.HtsPath;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.util.CollectionUtil;
@@ -486,12 +487,8 @@ public class IntervalListTools extends CommandLineProgram {
 
         LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
-            try (final PrintStream countStream = new PrintStream(Files.newOutputStream(COUNT_OUTPUT.toPath()))) {
-                OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
-            }
-            catch (final IOException e) {
-                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getURIString());
-            }
+            final PrintStream countStream = new PrintStream(COUNT_OUTPUT.getOutputStream());
+            OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
         } else {
             OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, System.out);
         }
@@ -560,7 +557,7 @@ public class IntervalListTools extends CommandLineProgram {
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
     private ScatterSummary writeScatterIntervals(final IntervalList list) {
-        ValidationUtils.validateArg(SCATTER_COUNT > 0, "Scatter count should be a positive integer.");
+        ValidationUtils.validateArg(SCATTER_COUNT > 0, "Scatter count should be a positive integer, but it was" + SCATTER_COUNT + ".");
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
         final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
@@ -613,7 +610,7 @@ public class IntervalListTools extends CommandLineProgram {
         protected abstract IntervalList getIntervalListInternal(final Path path, final boolean includeFiltered);
 
         // "getType" is perhaps a better name for this function
-        static IntervalListInputType forFile(final PicardHtsPath intervalListExtractable) {
+        static IntervalListInputType forFile(final HtsPath intervalListExtractable) {
             for (final IntervalListInputType intervalListInputType : IntervalListInputType.values()) {
                 for (final String s : intervalListInputType.applicableExtensions) {
                     if (intervalListExtractable.toPath().getFileName().endsWith(s)) {
@@ -625,7 +622,7 @@ public class IntervalListTools extends CommandLineProgram {
             return INTERVAL_LIST;
         }
 
-        public static IntervalList getIntervalList(final PicardHtsPath file, final boolean includeFiltered) {
+        public static IntervalList getIntervalList(final HtsPath file, final boolean includeFiltered) {
             return forFile(file).getIntervalListInternal(file.toPath(), includeFiltered);
         }
 
