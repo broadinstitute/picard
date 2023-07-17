@@ -487,8 +487,12 @@ public class IntervalListTools extends CommandLineProgram {
 
         LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
-            final PrintStream countStream = new PrintStream(COUNT_OUTPUT.getOutputStream());
-            OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
+            try (final PrintStream countStream = new PrintStream(Files.newOutputStream(COUNT_OUTPUT.toPath()))) {
+                OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
+            }
+            catch (final IOException e) {
+                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getURIString());
+            }
         } else {
             OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, System.out);
         }
