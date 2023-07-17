@@ -58,17 +58,6 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
 ensureBuildPrerequisites(buildPrerequisitesMessage)
 
 final htsjdkVersion = System.getProperty('htsjdk.version', '3.0.1')
-final googleNio = 'com.google.cloud:google-cloud-nio:0.123.25'
-
-configurations {
-    cloudConfiguration {
-        extendsFrom implementation
-        dependencies {
-            cloudConfiguration(googleNio)
-        }
-    }
-}
-
 dependencies {
     implementation('com.intel.gkl:gkl:0.8.8') {
         exclude module: 'htsjdk'
@@ -81,14 +70,10 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-api:2.17.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
     implementation 'org.openjdk.nashorn:nashorn-core:15.4'
-
-    //NOTE: this dependency spec causes doc gen to fail on FingerPrintChecker since doc gen is not
-    // a compile time task
-    compileOnly(googleNio)
+    implementation 'org.apache.commons:commons-lang3:3.6'
+    implementation 'com.google.cloud:google-cloud-nio:0.123.25'
 
     testImplementation 'org.testng:testng:6.14.3'
-    testImplementation(googleNio)
-    implementation 'org.apache.commons:commons-lang3:3.6'
 }
 
 configurations.all {
@@ -186,13 +171,6 @@ task currentJar(type: Copy){
 
 shadowJar {
     finalizedBy currentJar
-}
-
-
-task cloudJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)  {
-    configurations = [project.configurations.cloudConfiguration]
-    from project.sourceSets.main.output
-    archiveName 'picardcloud.jar'
 }
 
 // Run the tests using the legacy parser only. Assumes that test code is written using
