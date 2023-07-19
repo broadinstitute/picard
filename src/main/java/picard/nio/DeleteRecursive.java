@@ -58,7 +58,7 @@ class DeleteRecursivelyOnExitPathHook {
         Collections.reverse(toBeDeleted);
         for (Path path : toBeDeleted) {
             try {
-                GATKIOUtils.deleteRecursively(path); // tsato: can't I just call IOUtil.recursiveDelete?
+                GATKIOUtils.deleteRecursively(path);
             } catch (final Exception e) {
                 // do nothing if cannot be deleted, because it is a shutdown hook
                 LOG.debug(() -> "Could not recursively delete " + path.toString() + " during JVM shutdown because we encountered the following exception:", e);
