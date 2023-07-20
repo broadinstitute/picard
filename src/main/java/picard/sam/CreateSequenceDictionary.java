@@ -183,7 +183,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      */
     protected String[] customCommandLineValidation() {
         if (URI == null) {
-            URI = "file:" + referenceSequence.getReferenceFile().getAbsolutePath();
+            URI = "file:" + referenceSequence.getHtsPath().getURIString();
         }
         if (OUTPUT == null) {
             final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getHtsPath().toPath());
@@ -194,7 +194,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     // return a custom argument collection because this tool uses the argument name
-    // "REFERENCE" instead of "REFERENCE_SEQUENCE"
+    // "REFERENCE" instead of "REFERENCE_SEQUENCE" // tsato: can we starndardize this?
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new CreateSeqDictReferenceArgumentCollection();
@@ -202,11 +202,16 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     public static class CreateSeqDictReferenceArgumentCollection implements ReferenceArgumentCollection {
         @Argument(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
-        public File REFERENCE;
+        public PicardHtsPath REFERENCE;
+
+        @Override
+        public PicardHtsPath getHtsPath() {
+            return REFERENCE;
+        }
 
         @Override
         public File getReferenceFile() {
-            return REFERENCE;
+            return ReferenceArgumentCollection.getFileSafe(REFERENCE, logger);
         }
     }
 

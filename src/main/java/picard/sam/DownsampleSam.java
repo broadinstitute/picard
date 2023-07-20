@@ -47,7 +47,9 @@ import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
+import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -171,10 +173,10 @@ public class DownsampleSam extends CommandLineProgram {
             "      P=0.00001 \\\n" +
             "      ACCURACY=0.0000001\n";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output, downsampled, SAM, BAM or CRAM file to write.")
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
     public Strategy STRATEGY = Strategy.ConstantMemory;
@@ -210,8 +212,8 @@ public class DownsampleSam extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        // IOUtil.assertFileIsWritable(OUTPUT); // tsato: writability check has to go
 
         // Warn the user if they are running with P=1 or P=0 (which are legal, but odd)
         if (PROBABILITY == 1) {
@@ -228,7 +230,7 @@ public class DownsampleSam extends CommandLineProgram {
                     "Drawing a random seed because RANDOM_SEED was not set. Set RANDOM_SEED to %s to reproduce these results in the future.", RANDOM_SEED));
         }
 
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT));
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT.toPath()));
         final SAMFileHeader header = in.getFileHeader().clone();
 
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
@@ -266,7 +268,7 @@ public class DownsampleSam extends CommandLineProgram {
         final SAMProgramRecord pgRecord = getPGRecord(header);
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
-        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT, referenceSequence.getReferenceFile());
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getHtsPath().toPath());
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
@@ -296,13 +298,18 @@ public class DownsampleSam extends CommandLineProgram {
 
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
-        // Override to allow "R" to be hijacked for "RANDOM_SEED"
+        // Override to allow "R" to be hijacked for "RANDOM_SEED" (tsato: good call)
         return new ReferenceArgumentCollection() {
             @Argument(doc = "The reference sequence file.", optional=true, common=false)
-            public File REFERENCE_SEQUENCE;
+            public PicardHtsPath REFERENCE_SEQUENCE;
 
             @Override
-            public File getReferenceFile() {
+            public File getReferenceFile() { // tsato: this should be replaced by getHtsPath
+                return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
+            }
+
+            @Override
+            public PicardHtsPath getHtsPath() { // tsato: this should be replaced by getHtsPath
                 return REFERENCE_SEQUENCE;
             }
         };

@@ -38,10 +38,12 @@ import java.nio.file.Path;
 public class RequiredReferenceArgumentCollection implements ReferenceArgumentCollection {
     private final static Log log = Log.getInstance(RequiredReferenceArgumentCollection.class);
 
-    @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.", common = false)
-    public PicardHtsPath REFERENCE_SEQUENCE;
+    @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.")
+    public PicardHtsPath REFERENCE_SEQUENCE; // tsato: is the only reason why we instantiate so that
 
     /**
+     *
+     * To be called by legacy tools
      * @return The reference provided by the user as a File. May be null.
      */
     public File getReferenceFile() {

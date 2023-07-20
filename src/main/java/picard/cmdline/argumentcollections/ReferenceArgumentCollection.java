@@ -35,22 +35,30 @@ import picard.nio.PicardHtsPath;
  */
 public interface ReferenceArgumentCollection {
     /**
-     * @return The reference provided by the user, if any, or the default, if any, as a File. May be null.
+     *
+     * tsato: a better name would be getReferenceAsFile
+     * @return The reference provided by the user or the default as a File. May be null.
      */
-    File getReferenceFile();
+    File getReferenceFile(); // tsato: need to aggressively elimnate all code instances where this method is called
 
     /**
-     * @return The reference provided by the user, if any, or the default, if any, as an nio Path. May be null.
+     * @return The reference provided by the user or the default as an nio Path. May be null.
      */
-    default Path getReferencePath() { return getReferenceFile() == null ? null : getReferenceFile().toPath(); }
+    default Path getReferencePath(){
+        return getHtsPath().toPath(); // tsato: maybe we don't need this
+    }
 
     /**
+     * Tools should access reference file through this method
+     * tsato: do we need getReferencePath then?
+     * tsato: what if the reference is not required? i.e. in subclasses other than requiredreferenceArgument...
+     *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
      */
-    default PicardHtsPath getHtsPath() {
-        return getReferenceFile() == null ?
-                null :
-                new PicardHtsPath(getReferenceFile().getAbsolutePath()); } // tsato: this is the issue here...
+    default PicardHtsPath getHtsPath(){
+        // tsato: this is for compatibility with legacy code like CollectRRBSMetrics.
+        return new PicardHtsPath(getReferenceFile());
+    };
 
     /**
      * @return A "safe" way to obtain a File object for any reference path.
@@ -66,7 +74,7 @@ public interface ReferenceArgumentCollection {
             return null;
         } else if (picardPath.getScheme().equals(PicardHtsPath.FILE_SCHEME)) {
             // file on a local file system
-            return picardPath == null ? null : picardPath.toPath().toFile();
+            return picardPath.toPath().toFile();
         } else {
             log.warn(String.format(
                     "The reference specified by %s cannot be used as a local file object",
