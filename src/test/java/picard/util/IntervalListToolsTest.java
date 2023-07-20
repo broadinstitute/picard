@@ -24,17 +24,26 @@
 package picard.util;
 
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.GATKBucketUtils;
+import picard.nio.GATKIOUtils;
+import picard.nio.PicardHtsPath;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -49,17 +58,27 @@ import java.util.stream.Stream;
  */
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
-    private static final File TEST_DATA_DIR = new File("testdata/picard/util/");
-    private final File scatterable = new File(TEST_DATA_DIR, "scatterable.interval_list");
-    private final File scatterableStdin = new File(TEST_DATA_DIR, "scatterable_stdin");
-    private final File secondInput = new File(TEST_DATA_DIR, "secondInput.interval_list");
-    private final File largeScatterable = new File(TEST_DATA_DIR, "large_scatterable.interval_list");
-    private final File abutting = new File(TEST_DATA_DIR, "abutting.interval_list");
-    private final File abutting_combined = new File(TEST_DATA_DIR, "abutting_combined.interval_list");
-    private final File abutting_notcombined = new File(TEST_DATA_DIR, "abutting_notcombined.interval_list");
+    private static final String TEST_DATA_DIR = "testdata/picard/util/";
+    private static final String CLOUD_DATA_DIR = GCloudTestUtils.getTestInputPath() + "picard/intervals/";
+    private static final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
+    private final Path scatterable = Paths.get(TEST_DATA_DIR, "scatterable.interval_list");
+    private final PicardHtsPath scatterableCloud = new PicardHtsPath(CLOUD_DATA_DIR + "scatterable.interval_list");
+    private final Path scatterableStdin = Paths.get(TEST_DATA_DIR, "scatterable_stdin");
+    private final Path secondInput = Paths.get(TEST_DATA_DIR, "secondInput.interval_list");
+    private final PicardHtsPath secondInputCloud = new PicardHtsPath(CLOUD_DATA_DIR + "secondInput.interval_list");
+    private final Path largeScatterable = Paths.get(TEST_DATA_DIR, "large_scatterable.interval_list");
+    private final Path abutting = Paths.get(TEST_DATA_DIR, "abutting.interval_list");
+    private final Path abuttingCombined = Paths.get(TEST_DATA_DIR, "abutting_combined.interval_list");
+    private final Path abuttingNotCombined = Paths.get(TEST_DATA_DIR, "abutting_notcombined.interval_list");
     private static final List<File> LARGER_EXPECTED_WITH_REMAINDER_FILES = Arrays.asList(new File(TEST_DATA_DIR, "largeScattersWithRemainder").listFiles());
-    private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream().sorted().flatMap(l -> Arrays.asList(l.listFiles()).stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
-
+    private static final List<IntervalList> LARGER_EXPECTED_WITH_REMAINDER_LISTS = LARGER_EXPECTED_WITH_REMAINDER_FILES.stream()
+            .sorted().flatMap(l -> Arrays.asList(l.listFiles())
+                    .stream().map(f -> IntervalList.fromFile(f))).collect(Collectors.toList());
+    private static final boolean DEFAULT_INVERT_ARG = false;
+    private static final boolean DEFAULT_UNIQUE_ARG = false;
+    private static final IntervalListTools.Action DEFAULT_ACTION = IntervalListTools.Action.INTERSECT;
+    private static final boolean DEFAULT_DONT_MERGE_ABUTTING = false;
+    private static final String INTERVAL_LIST_EXTENSION = ".interval_list"; // Note that '.' is included
 
     @Test
     public void testSecondInputValidation() {
@@ -71,12 +90,12 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         errors = intervalListTools.customCommandLineValidation();
         Assert.assertNull(errors);
 
-        intervalListTools.SECOND_INPUT.add(new File("fakefile"));
+        intervalListTools.SECOND_INPUT.add(new PicardHtsPath("fakefile"));
         errors = intervalListTools.customCommandLineValidation();
         Assert.assertEquals(errors.length, 1);
     }
 
-    @Test
+    @Test()
     public void testCountOutputValidation() {
         final IntervalListTools intervalListTools = new IntervalListTools();
 
@@ -86,7 +105,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             String[] errors = intervalListTools.customCommandLineValidation();
             Assert.assertNull(errors);
 
-            intervalListTools.COUNT_OUTPUT = new File("fakefile");
+            intervalListTools.COUNT_OUTPUT = new PicardHtsPath("fakefile");
             errors = intervalListTools.customCommandLineValidation();
             if (output_value == IntervalListTools.Output.NONE) {
                 Assert.assertEquals(errors.length, 1);
@@ -110,14 +129,14 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     // test that all actions work. but not test output at all.
     @Test(dataProvider = "ActionsTest")
-    public void testAllActions(final IntervalListTools.Action action, final File file) throws IOException {
+    public void testAllActions(final IntervalListTools.Action action, final Path path) throws IOException {
         final File ilOut = File.createTempFile("IntervalListTools", "interval_list");
         ilOut.deleteOnExit();
 
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + file);
+        args.add("INPUT=" + path.toUri());
 
         if (action.takesSecondInput) {
             args.add("SECOND_INPUT=" + secondInput);
@@ -151,8 +170,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @DataProvider
     public Object[][] actionAndTotalBasesWithInvertData() {
-        final long totalBasesInDict = IntervalList.fromFile(secondInput).getHeader().getSequenceDictionary().getReferenceLength();
-        final int totalContigsInDict = IntervalList.fromFile(secondInput).getHeader().getSequenceDictionary().size();
+        final long totalBasesInDict = IntervalList.fromPath(secondInput).getHeader().getSequenceDictionary().getReferenceLength();
+        final int totalContigsInDict = IntervalList.fromPath(secondInput).getHeader().getSequenceDictionary().size();
         return new Object[][]{
                 {IntervalListTools.Action.CONCAT, totalBasesInDict - 201, 2 + totalContigsInDict},
                 {IntervalListTools.Action.UNION, totalBasesInDict - 201, 2 + totalContigsInDict},
@@ -165,7 +184,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithInvertData")
     public void testActionsWithInvert(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, true, false, false, scatterable, secondInput);
+        final IntervalList il = tester(action, true, false, false, scatterable, secondInput, false);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
@@ -187,7 +206,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithUniqueData")
     public void testActionsWithUnique(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, false, true, false, scatterable, secondInput);
+        final IntervalList il = tester(action, false, true, false, scatterable, secondInput, false);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
@@ -209,7 +228,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "actionAndTotalBasesWithDontMergeAbuttingData")
     public void testActionsWithDontMergeAbutting(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
-        final IntervalList il = tester(action, false, true, true, abutting, abutting);
+        final IntervalList il = tester(action, false, true, true, abutting, abutting, false);
         Assert.assertEquals(il.getBaseCount(), bases, "unexpected number of bases found.");
         Assert.assertEquals(il.getIntervals().size(), intervals, "unexpected number of intervals found.");
 
@@ -217,61 +236,56 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
         Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, false, true, true, abutting, abutting), intervals, "unexpected number of intervals written to count_output file.");
     }
 
-    private IntervalList tester(IntervalListTools.Action action) throws IOException {
-        return tester(action, false, false, false, scatterable, secondInput);
+    private IntervalList tester(final IntervalListTools.Action action) {
+        return tester(action, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterable, secondInput, false);
     }
 
-    private IntervalList tester(IntervalListTools.Action action, boolean invert, boolean unique, boolean dont_merge_abutting, File input1, File input2) throws IOException {
-        final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
-        ilOut.deleteOnExit();
-
-        final List<String> args = new ArrayList<>();
-
-        args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + input1);
-
-        if (action.takesSecondInput) {
-            args.add("SECOND_INPUT=" + input2);
-        } else {
-            args.add("INPUT=" + input2);
-        }
-
-        if (invert) {
-            args.add("INVERT=true");
-        }
-
-        if (unique) {
-            args.add("UNIQUE=true");
-        }
-
-        if (dont_merge_abutting) {
-            args.add("DONT_MERGE_ABUTTING=true");
-        }
-
-        args.add("OUTPUT=" + ilOut);
-
+    private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
+                                final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) {
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
+        final String output = GATKBucketUtils.getTempFilePath(outputDirFullName, INTERVAL_LIST_EXTENSION);
+        final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
+        args.add("OUTPUT=" + output);
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        return IntervalList.fromFile(ilOut);
+        return IntervalList.fromPath(GATKIOUtils.getPath(output));
     }
 
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue) throws IOException {
-        return testerCountOutput(action, outputValue, false, false, false, scatterable, secondInput);
+        return testerCountOutput(action, outputValue, false, false, false, scatterable, secondInput, false);
     }
 
-    private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert, boolean unique, boolean dont_merge_abutting, File input1, File input2) throws IOException {
-        final File countOutput = File.createTempFile("IntervalListTools", "txt");
-        countOutput.deleteOnExit();
+    private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
+                                   boolean unique, boolean dontMergeAbutting, Path input1, Path input2) throws IOException{
+        return testerCountOutput(action, outputValue, invert, unique, dontMergeAbutting, input1, input2, false);
+    }
+    private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
+                                   boolean unique, boolean dontMergeAbutting, Path input1, Path input2,
+                                   final boolean cloudOutput) throws IOException {
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
+        final String countOutput = GATKBucketUtils.getTempFilePath(outputDirFullName, ".txt");
 
+        final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
+        args.add("OUTPUT_VALUE=" + outputValue);
+        args.add("COUNT_OUTPUT=" + countOutput);
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final Scanner reader = new Scanner(GATKIOUtils.getPath(countOutput));
+        return reader.nextLong();
+    }
+
+    // The caller is responsible for supplying the output argument(s)
+    private List<String> buildStandardTesterArguments(final IntervalListTools.Action action, final boolean invert, final boolean unique,
+                                                      final boolean dontMergeAbutting, final Path input1, final Path input2){
         final List<String> args = new ArrayList<>();
 
         args.add("ACTION=" + action.toString());
-        args.add("INPUT=" + input1);
+        args.add("INPUT=" + input1.toUri());
 
         if (action.takesSecondInput) {
-            args.add("SECOND_INPUT=" + input2);
+            args.add("SECOND_INPUT=" + input2.toUri());
         } else {
-            args.add("INPUT=" + input2);
+            args.add("INPUT=" + input2.toUri()  );
         }
 
         if (invert) {
@@ -282,20 +296,11 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             args.add("UNIQUE=true");
         }
 
-        if (dont_merge_abutting) {
+        if (dontMergeAbutting) {
             args.add("DONT_MERGE_ABUTTING=true");
         }
 
-        if (outputValue != null) {
-            args.add("OUTPUT_VALUE=" + outputValue);
-        }
-
-        args.add("COUNT_OUTPUT=" + countOutput);
-
-        Assert.assertEquals(runPicardCommandLine(args), 0);
-
-        final Scanner reader = new Scanner(countOutput);
-        return reader.nextLong();
+        return args;
     }
 
     /**
@@ -340,7 +345,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     }
 
     @Test(dataProvider = "testScatterTestcases")
-    public void testScatter(final IntervalListScattererTest.Testcase tc) throws IOException {
+    public void testScatter(final IntervalListScattererTest.Testcase tc) {
 
         final IntervalListScatterer scatterer = tc.mode.make();
         final List<IntervalList> scatter = scatterer.scatter(tc.source, tc.scatterWidth);
@@ -462,7 +467,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
             Assert.assertEquals(runPicardCommandLine(args), 0);
         }
         final IntervalList gather = IntervalList.fromFile(ilOut);
-        final IntervalList original = IntervalList.fromFile(largeScatterable).uniqued();
+        final IntervalList original = IntervalList.fromPath(largeScatterable).uniqued();
 
         Assert.assertEquals(gather, original);
     }
@@ -470,26 +475,103 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     @DataProvider
     public Object[][] combineAbuttingIntervals() {
         return new Object[][] {
-                {false, abutting_combined},
-                {true, abutting_notcombined},
+                {false, abuttingCombined},
+                {true, abuttingNotCombined},
         };
     }
 
     @Test(dataProvider = "combineAbuttingIntervals")
-    public void testCombineAbuttingIntervals(boolean dont_merge_abutting, File output_file) throws IOException {
+    public void testCombineAbuttingIntervals(boolean dontMergeAbutting, Path outputPath) throws IOException {
         // Test the default behavior of UNION, which is to combine abutting and overlapping intervals.
         //gather
         final File ilOut = File.createTempFile("IntervalListTools", ".interval_list");
         ilOut.deleteOnExit();
         final List<String> args = new ArrayList<>();
-        args.add("INPUT=" + abutting);
+        args.add("INPUT=" + abutting.toUri());
         args.add("OUTPUT=" + ilOut);
         args.add("ACTION=UNION");
-        args.add("DONT_MERGE_ABUTTING="+dont_merge_abutting);
+        args.add("DONT_MERGE_ABUTTING="+dontMergeAbutting);
         Assert.assertEquals(runPicardCommandLine(args), 0);
         final IntervalList gather = IntervalList.fromFile(ilOut);
-        final IntervalList original = IntervalList.fromFile(output_file);
+        final IntervalList original = IntervalList.fromPath(outputPath);
 
         Assert.assertEquals(gather, original); // equal to expected output
+    }
+
+    // Check that we get the same output using the cloud (input/output) files as when we do everything locally.
+    @Test(groups = "cloud")
+    public void testCloudInputAgainstLocalInput() {
+        // expected = local input files
+        final IntervalList expectedIntervals = tester(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterable, secondInput, false);
+        for (boolean outputInCloud : Arrays.asList(true, false)) {
+            final IntervalList intervalListCloudInput = tester(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterableCloud.toPath(), secondInputCloud.toPath(), outputInCloud);
+
+            Assert.assertEquals(expectedIntervals.size(), intervalListCloudInput.size());
+
+            for (int i = 0; i < expectedIntervals.size(); i++) {
+                final Interval local = expectedIntervals.getIntervals().get(i);
+                final Interval cloud = intervalListCloudInput.getIntervals().get(i);
+                Assert.assertEquals(local, cloud);
+            }
+        }
+    }
+
+    // Scatter intervals and write output file in the local filesystem (vs cloud) to be used as the "expected" output
+    private String getScatteredIntervalListLocally(final int scatterCount) {
+        final List<String> args = buildStandardTesterArguments(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterableCloud.toPath(), secondInputCloud.toPath());
+        try {
+            final Path expectedOutput = Files.createTempDirectory("scatter_test");
+            args.add("SCATTER_COUNT=" + scatterCount);
+            args.add("OUTPUT=" + expectedOutput.toUri());
+            Assert.assertEquals(runPicardCommandLine(args), 0);
+            return expectedOutput.toUri().getPath();
+        } catch (IOException e){
+            throw new PicardException("Encountered an IO Exception while running IntevalListTools", e);
+        }
+    }
+
+    @Test(groups = "cloud")
+    public void testScatterOutputInCloud() {
+        final List<String> args = buildStandardTesterArguments(DEFAULT_ACTION, DEFAULT_INVERT_ARG, DEFAULT_UNIQUE_ARG, DEFAULT_DONT_MERGE_ABUTTING, scatterableCloud.toPath(), secondInputCloud.toPath());
+        final int scatterCount = 3;
+
+        // Files.createTempDirectory() seems to throw an error when used with a gs:// path
+        final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_OUTPUT_DIR + "scatter/");
+        GATKIOUtils.deleteOnExit(outputDir.toPath());
+
+        args.add("SCATTER_COUNT=" + scatterCount);
+        args.add("OUTPUT=" + outputDir.toPath().toUri());
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final String expectedOutputDir = getScatteredIntervalListLocally(scatterCount);
+        try {
+            Assert.assertEquals(Files.list(outputDir.toPath()).count(), scatterCount);
+            // All this is clunky because we create intermediate output directories e.g. temp_0001_of_3. Consider removing them.
+            final List<Path> outputPaths = new ArrayList<>(scatterCount);
+            for (int i = 1; i <= scatterCount; i++){
+                outputPaths.add(IntervalListTools.createSubDirectoryAndGetScatterFile(outputDir, scatterCount, new DecimalFormat("0000").format(i)));
+            }
+
+            final List<Path> expectedOutput = new ArrayList<>(scatterCount);
+            for (int i = 1; i <= scatterCount; i++){
+                expectedOutput.add(IntervalListTools.createSubDirectoryAndGetScatterFile(new PicardHtsPath(expectedOutputDir), scatterCount, new DecimalFormat("0000").format(i)));
+            }
+
+            for (int j = 0; j < scatterCount; j++){
+                final IntervalList output = IntervalList.fromPath(outputPaths.get(j));
+                final IntervalList expected = IntervalList.fromPath(expectedOutput.get(j));
+                Assert.assertEquals(output, expected);
+            }
+        } catch (IOException e){
+            throw new PicardException("Encountered an IOException", e);
+        }
+    }
+
+    /** Test {@link IntervalListTools.COUNT_OUTPUT} file in the cloud. Code copied from testActionsWithInvert **/
+    @Test(dataProvider = "actionAndTotalBasesWithInvertData", groups = "cloud")
+    public void testCountOutputInCloud(final IntervalListTools.Action action, final long bases, final int intervals) throws IOException {
+        final boolean cloudOutput = true;
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.BASES, true, false, false, scatterable, secondInput, cloudOutput), bases, "unexpected number of bases written to count_output file.");
+        Assert.assertEquals(testerCountOutput(action, IntervalListTools.Output.INTERVALS, true, false, false, scatterable, secondInput, cloudOutput), intervals, "unexpected number of intervals written to count_output file.");
     }
 }
