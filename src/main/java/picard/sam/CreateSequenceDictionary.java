@@ -27,13 +27,11 @@ import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.AsciiWriter;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.Md5CalculatingOutputStream;
-import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -43,6 +41,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReferenceProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.SequenceDictionaryUtils;
 
 import java.io.BufferedWriter;
@@ -50,6 +49,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -93,7 +95,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     @Argument(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "AS", doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
     public String GENOME_ASSEMBLY;
@@ -167,7 +169,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     private Iterable<SAMSequenceRecord> getSamSequenceRecordsIterable() {
         return () -> {
             final SequenceDictionaryUtils.SamSequenceRecordsIterator iterator =
-                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(REFERENCE_SEQUENCE,
+                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(referenceSequence.getHtsPath().toPath(), // tsato: confirm this is OK
                             TRUNCATE_NAMES_AT_WHITESPACE);
             iterator.setGenomeAssembly(GENOME_ASSEMBLY);
             iterator.setSpecies(SPECIES);
@@ -184,7 +186,8 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             URI = "file:" + referenceSequence.getReferenceFile().getAbsolutePath();
         }
         if (OUTPUT == null) {
-            OUTPUT = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getReferenceFile());
+            final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getHtsPath().toPath());
+            OUTPUT = new PicardHtsPath(outputPath.toString());
             logger.info("Output dictionary will be written in ", OUTPUT);
         }
         return super.customCommandLineValidation();
@@ -216,11 +219,13 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     protected int doWork() {
         int sequencesWritten = 0;
 
-        if (OUTPUT.exists()) {
-            throw new PicardException(OUTPUT.getAbsolutePath() +
+        if (false && Files.exists(OUTPUT.toPath())) { // tsato: this might be problematic, but skip this code path for now
+            throw new PicardException(OUTPUT.getURIString() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
-        IOUtil.assertFileIsWritable(OUTPUT);
+
+        // tsato: delete, or should I create a blank file?
+        // IOUtil.assertFileIsWritable(OUTPUT);
 
         // map for aliases mapping a contig to its aliases
         final Map<String, Set<String>> aliasesByContig = loadContigAliasesMap();
@@ -245,25 +250,26 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 }
             }
         } catch (IOException e) {
-            throw new PicardException("Can't write to or close output file " + OUTPUT.getAbsolutePath(), e);
-        } catch (IllegalArgumentException e) {
+            throw new PicardException("Can't write to or close output file " + OUTPUT.getURIString(), e);
+        } catch (IllegalArgumentException e) { // tsato: what throws an illegalargumentException?
             // in case of an unexpected error delete the file so that there isn't a
             // truncated result which might be valid yet wrong.
-            OUTPUT.delete();
+            // tsato: deal with this later
+            // Files.delete(OUTPUT.toPath());
             throw new PicardException("Unknown problem. Partial dictionary file was deleted.", e);
         }
 
         return 0;
     }
 
-    private BufferedWriter makeWriter() throws FileNotFoundException {
+    private BufferedWriter makeWriter() throws IOException {
         return new BufferedWriter(
                 new AsciiWriter(this.CREATE_MD5_FILE ?
                         new Md5CalculatingOutputStream(
-                                new FileOutputStream(OUTPUT, false),
-                                new File(OUTPUT.getAbsolutePath() + ".md5")
+                                Files.newOutputStream(OUTPUT.toPath(), StandardOpenOption.CREATE_NEW),
+                                new PicardHtsPath(OUTPUT.getURIString() + ".md5").toPath()
                         )
-                        : new FileOutputStream(OUTPUT)
+                        : Files.newOutputStream(OUTPUT.toPath(), StandardOpenOption.CREATE_NEW)
                 )
         );
     }

@@ -50,7 +50,7 @@ public interface ReferenceArgumentCollection {
     default PicardHtsPath getHtsPath() {
         return getReferenceFile() == null ?
                 null :
-                new PicardHtsPath(getReferenceFile().getAbsolutePath()); }
+                new PicardHtsPath(getReferenceFile().getAbsolutePath()); } // tsato: this is the issue here...
 
     /**
      * @return A "safe" way to obtain a File object for any reference path.

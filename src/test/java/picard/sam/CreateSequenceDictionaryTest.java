@@ -31,8 +31,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
+import picard.util.GCloudTestUtils;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -278,5 +281,21 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
         return tempDict.toPath();
+    }
+
+    @Test
+    public void testCloud() throws Exception {
+        final String HG19_MINI = GCloudTestUtils.getTestInputPath() + "picard/references/hg19mini.fasta";
+        // Ideal to copy the file over to staging and test
+        final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
+        final PicardHtsPath output = new PicardHtsPath(CLOUD_OUTPUT_DIR + "test.dict");
+        // final Path output2 = Files.createTempFile(Paths.get(CLOUD_OUTPUT_DIR) + "tmp", ".tmp");
+
+        final String[] argv = {
+                "REFERENCE=" + HG19_MINI,
+                "OUTPUT=" + output.getURIString(),
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        Files.delete(output.toPath());
     }
 }
