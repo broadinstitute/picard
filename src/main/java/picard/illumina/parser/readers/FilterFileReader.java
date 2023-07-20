@@ -100,7 +100,7 @@ public class FilterFileReader implements Iterator<Boolean> {
         } else {
             String hexVal = Integer.toHexString(value);
             hexVal = (hexVal.length() < 2 ? "0x0" : "0x") + hexVal;
-            throw new PicardException("Didn't recognized PF Byte (" + hexVal + ")" + " for element (" + currentCluster + ") in file(" + bbIterator.getFile().getAbsolutePath() + ")");
+            throw new PicardException("Didn't recognize PF Byte (" + hexVal + ")" + " for element (" + currentCluster + ") in file(" + bbIterator.getFile().getAbsolutePath() + ")");
         }
     }
 
