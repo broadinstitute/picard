@@ -284,20 +284,34 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         return tempDict.toPath();
     }
 
+    // A copy of gs://hellbender/test/resources/hg19mini.fasta in the picard directory, where the accompanying dictionary
+    // doesn't exist in the same directory.
+    final String HG19_MINI = GCloudTestUtils.getTestInputPath() + "picard/references/hg19mini.fasta";
+    final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
     @Test(groups = "cloud")
-    public void testCloud() throws Exception {
-        final String HG19_MINI = GCloudTestUtils.getTestInputPath() + "picard/references/hg19mini.fasta";
-        // Ideal to copy the file over to staging and test
-        final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
+    public void testCloud() {
         final String output = GATKBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR + "test", ".dict");
-        // final PicardHtsPath output2 = new PicardHtsPath(CLOUD_OUTPUT_DIR + "test.dict");
-        // final Path output2 = Files.createTempFile(Paths.get(CLOUD_OUTPUT_DIR) + "tmp", ".tmp");
 
         final String[] argv = {
                 "REFERENCE=" + HG19_MINI,
                 "OUTPUT=" + output,
         };
+
+        final String expectedOutputPath = GCloudTestUtils.getTestInputPath() + "hg19mini.dict";
         Assert.assertEquals(runPicardCommandLine(argv), 0);
-        int d = 3;
+        final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(new PicardHtsPath(expectedOutputPath).toPath());
+        final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(new PicardHtsPath(output).toPath());
+
+        // SAMSequenceRecord::equal is too stringent (we don't require UR of the two files to match), so check equality this way
+        Assert.assertEquals(actualDictionary.size(), expectedDictionary.size());
+
+        for (int i = 0; i < expectedDictionary.size(); i++){
+            final SAMSequenceRecord expectedRecord = expectedDictionary.getSequence(i);
+            final SAMSequenceRecord actualRecord = actualDictionary.getSequence(i);
+            Assert.assertEquals(actualRecord.getSequenceName(), expectedRecord.getSequenceName());
+            Assert.assertEquals(actualRecord.getSequenceLength(), expectedRecord.getSequenceLength());
+            Assert.assertEquals(actualRecord.getSequenceIndex(), expectedRecord.getSequenceIndex());
+            Assert.assertEquals(actualRecord.getAttribute("UR"), "gs://hellbender/test/resources/picard/references/hg19mini.fasta");
+        }
     }
 }

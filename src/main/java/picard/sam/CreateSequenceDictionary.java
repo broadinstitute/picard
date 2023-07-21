@@ -41,6 +41,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReferenceProgramGroup;
+import picard.nio.GATKBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.SequenceDictionaryUtils;
 
@@ -183,7 +184,11 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      */
     protected String[] customCommandLineValidation() {
         if (URI == null) {
-            URI = "file:" + referenceSequence.getHtsPath().getURIString();
+            if (GATKBucketUtils.isRemoteStorageUrl(referenceSequence.getHtsPath().getURIString())){
+                URI = referenceSequence.getHtsPath().getURIString();
+            } else {
+                URI = "file:" + referenceSequence.getHtsPath().getURIString();
+            }
         }
         if (OUTPUT == null) {
             final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getHtsPath().toPath());
@@ -224,7 +229,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     protected int doWork() {
         int sequencesWritten = 0;
 
-        if (false && Files.exists(OUTPUT.toPath())) { // tsato: this might be problematic, but skip this code path for now
+        if (Files.exists(OUTPUT.toPath())) { // tsato: this might be problematic, but skip this code path for now
             throw new PicardException(OUTPUT.getURIString() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
