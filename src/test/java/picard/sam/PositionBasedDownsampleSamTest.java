@@ -155,8 +155,8 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         Assert.assertEquals(validateSamFile.doWork(), 0);
 
         //make sure that the total number of record in the resulting file in in the ballpark:
-        TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
-        TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
+        TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
+        TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
     }
 
     

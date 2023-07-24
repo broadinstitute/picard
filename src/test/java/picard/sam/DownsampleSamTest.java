@@ -9,8 +9,11 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.GATKBucketUtils;
+import picard.nio.PicardHtsPath;
 import picard.sam.util.SamTestUtil;
 import htsjdk.samtools.DownsamplingIteratorFactory.Strategy;
+import picard.util.GCloudTestUtils;
 import picard.util.TestNGUtil;
 
 import java.io.File;
@@ -123,14 +126,14 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     // test removing some reads from a sparse, single tile bam
     @Test(dataProvider = "ValidArgumentsTestProvider")
     public void testDownsampleStrategies(final double fraction, final Strategy strategy, final Integer seed) throws IOException {
-            testDownsampleWorker(tempSamFile, fraction, strategy.name(), seed);
+            testDownsampleWorker(new PicardHtsPath(tempSamFile), fraction, strategy.name(), seed);
     }
 
-    private File testDownsampleWorker(final File samFile, final double fraction, final String strategy, final Integer seed) throws IOException {
-
+    // tsato: add 'final PicardHtsPath outputFile' as argument
+    private File testDownsampleWorker(final PicardHtsPath samFile,  final double fraction, final String strategy, final Integer seed) throws IOException {
         final File downsampled = File.createTempFile("DownsampleSam", ".bam", tempDir);
         final String[] args = new String[]{
-                "INPUT=" + samFile.getAbsolutePath(),
+                "INPUT=" + samFile.getURIString(),
                 "OUTPUT=" + downsampled.getAbsolutePath(),
                 "PROBABILITY=" + fraction,
                 "STRATEGY=" + strategy,
@@ -150,8 +153,8 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         // make sure that the total number of record in the resulting file in in the ballpark:
         // don't run this when the seed is null since that is non-deterministic and might (unlikely) fail to hit the bounds.
         if (seed!=null) {
-            TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
-            TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
+            TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
+            TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
         }
         return downsampled;
     }
@@ -199,15 +202,24 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @Test(dataProvider = "RepeatedDownsamplingProvider")
     public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds) throws IOException {
         File input = tempSamFile;
-        final long nReadsOriginal = SamTestUtil.countSamTotalRecord(input);
+        final long nReadsOriginal = SamTestUtil.countSamTotalRecord(input.toPath());
         double totalFraction = 1;
         for (int i = 0 ; i < strategies.size(); i++) {
-            input = testDownsampleWorker(input, 0.5, strategies.get(i).toString(), seeds.get(i));
+            input = testDownsampleWorker(new PicardHtsPath(input), 0.5, strategies.get(i).toString(), seeds.get(i));
             totalFraction *= 0.5;
 
-            final long nReadsNow = SamTestUtil.countSamTotalRecord(input);
+            final long nReadsNow = SamTestUtil.countSamTotalRecord(input.toPath());
             Assert.assertTrue(nReadsNow > 0.8 * totalFraction * nReadsOriginal);
             Assert.assertTrue(nReadsNow < 1.2 * totalFraction * nReadsOriginal);
         }
+    }
+
+    final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
+
+    @Test(groups = "cloud")
+    public void testCloud() throws IOException {
+        final String output = GATKBucketUtils.getTempFilePath("downsample", "sam");
+        final File output2 = testDownsampleWorker(NA12878_MINI, 0.1, ConstantMemory.toString(), 42);
+        final int d = 3;
     }
 }

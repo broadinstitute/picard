@@ -53,7 +53,7 @@ public class RequiredReferenceArgumentCollection implements ReferenceArgumentCol
     /**
      * @return The reference provided by the user as an nio Path. May be null.
      */
-    @Override
+    @Override // tsato: maybe we should keep REFERENCE_SEQUENCE as file...and return picard
     public Path getReferencePath() { return REFERENCE_SEQUENCE == null ? null: REFERENCE_SEQUENCE.toPath(); }
 
     /**
