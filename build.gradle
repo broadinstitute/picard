@@ -65,7 +65,7 @@ dependencies {
         exclude module: 'htsjdk'
     }
 
-    implementation 'com.google.guava:guava:32.1-jre'
+    implementation 'com.google.guava:guava:32.1.1-jre'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation 'com.github.samtools:htsjdk:' + htsjdkVersion
