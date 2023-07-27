@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,21 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -128,12 +120,13 @@
       "type": "File",
       "required": "no",
       "fulltext": "",
-      "defaultValue": "/Users/louisb/Workspace/picard/.",
+      "defaultValue": "/Users/kshakir/src/picard/.",
       "minValue": "NA",
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -267,6 +267,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -299,12 +300,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "Command-line program to split a SAM/BAM/CRAM file into separate files based on\n library name.\n\n \u003cp\u003e This tool takes a SAM or BAM file and separates all the reads\n into one SAM or BAM file per library name. Reads that do not have\n a read group specified or whose read group does not have a library name\n are written to a file called \u0027unknown.\u0027 The format (SAM or BAM) of the\n output files matches that of the input file.\u003c/p\u003e\n\n \u003ch3\u003eInputs\u003c/h3\u003e\n \u003cul\u003e\n     \u003cli\u003e The BAM or SAM file to be split \u003c/li\u003e\n     \u003cli\u003e The directory where the library SAM or BAM files should be written \u003c/li\u003e\n \u003c/ul\u003e\n\n \u003ch3\u003eOutput/h3\u003e\n \u003cul\u003e\n     \u003cli\u003e One SAM or BAM file per library name  \u003c/li\u003e\n \u003c/ul\u003e\n\n \u003cp\u003e\n \u003ch4\u003eUsage example: \u003c/h4\u003e\n \u003cpre\u003e\n     java -jar picard.jar SplitSamByLibrary \\\n          I\u003dinput_reads.bam \\\n          O\u003d/output/directory/\n \u003c/pre\u003e\n \u003c/p\u003e",
+  "description": "Command-line program to split a SAM/BAM/CRAM file into separate files based on\n library name.\n\n \u003cp\u003e This tool takes a SAM or BAM file and separates all the reads\n into one SAM or BAM file per library name. Reads that do not have\n a read group specified or whose read group does not have a library name\n are written to a file called \u0027unknown.\u0027 The format (SAM or BAM) of the\n output files matches that of the input file.\u003c/p\u003e\n\n \u003ch3\u003eInputs\u003c/h3\u003e\n \u003cul\u003e\n     \u003cli\u003e The BAM or SAM file to be split \u003c/li\u003e\n     \u003cli\u003e The directory where the library SAM or BAM files should be written \u003c/li\u003e\n \u003c/ul\u003e\n\n \u003ch3\u003eOutput/h3\u003e\n \u003cul\u003e\n     \u003cli\u003e One SAM or BAM file per library name  \u003c/li\u003e\n \u003c/ul\u003e\n\n \u003cp\u003e\n \u003ch4\u003eUsage example: \u003c/h4\u003e\n \u003cpre\u003e\n     java -jar picard.jar SplitSamByLibrary \\\n          I\u003dinput_reads.bam \\\n          O\u003d/output/directory/\n \u003c/pre\u003e\n \u003c/p\u003e\n@author ktibbett@broadinstitute.org",
   "name": "SplitSamByLibrary",
   "group": "Read Data Manipulation",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

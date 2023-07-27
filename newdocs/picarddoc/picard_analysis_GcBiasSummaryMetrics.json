@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "High level metrics that capture how biased the coverage in a certain lane is.",
+  "description": "High level metrics that capture how biased the coverage in a certain lane is.\n@author Tim Fennell",
   "name": "GcBiasSummaryMetrics",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

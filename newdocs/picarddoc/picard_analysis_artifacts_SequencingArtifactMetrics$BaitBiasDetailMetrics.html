@@ -623,52 +623,51 @@
 					</tr>
 					<tr>
 						<td>LIBRARY<br />
-						<td>The name of the library being assayed. </td>
+						<td>The name of the library being assayed.</td>
 					</tr>
 					<tr>
 						<td>REF_BASE<br />
-						<td>The (upper-case) original base on the reference strand. </td>
+						<td>The (upper-case) original base on the reference strand.</td>
 					</tr>
 					<tr>
 						<td>ALT_BASE<br />
-						<td>The (upper-case) alternative base that is called as a result of DNA damage. </td>
+						<td>The (upper-case) alternative base that is called as a result of DNA damage.</td>
 					</tr>
 					<tr>
 						<td>CONTEXT<br />
-						<td>The sequence context to which the analysis is constrained. </td>
+						<td>The sequence context to which the analysis is constrained.</td>
 					</tr>
 					<tr>
 						<td>FWD_CXT_REF_BASES<br />
-						<td>The number of REF_BASE:REF_BASE alignments at sites with the given reference context. </td>
+						<td>The number of REF_BASE:REF_BASE alignments at sites with the given reference context.</td>
 					</tr>
 					<tr>
 						<td>FWD_CXT_ALT_BASES<br />
-						<td>The number of REF_BASE:ALT_BASE alignments at sites with the given reference context. </td>
+						<td>The number of REF_BASE:ALT_BASE alignments at sites with the given reference context.</td>
 					</tr>
 					<tr>
 						<td>REV_CXT_REF_BASES<br />
-						<td>The number of ~REF_BASE:~REF_BASE alignments at sites complementary to the given reference context. </td>
+						<td>The number of ~REF_BASE:~REF_BASE alignments at sites complementary to the given reference context.</td>
 					</tr>
 					<tr>
 						<td>REV_CXT_ALT_BASES<br />
-						<td>The number of ~REF_BASE:~ALT_BASE alignments at sites complementary to the given reference context. </td>
+						<td>The number of ~REF_BASE:~ALT_BASE alignments at sites complementary to the given reference context.</td>
 					</tr>
 					<tr>
 						<td>FWD_ERROR_RATE<br />
-						<td>The substitution rate of REF_BASE:ALT_BASE, calculated as max(1e-10, FWD_CXT_ALT_BASES / (FWD_CXT_ALT_BASES + FWD_CXT_REF_BASES)). </td>
+						<td>The substitution rate of REF_BASE:ALT_BASE, calculated as max(1e-10, FWD_CXT_ALT_BASES / (FWD_CXT_ALT_BASES + FWD_CXT_REF_BASES)).</td>
 					</tr>
 					<tr>
 						<td>REV_ERROR_RATE<br />
-						<td>The substitution rate of ~REF_BASE:~ALT_BASE, calculated as max(1e-10, REV_CXT_ALT_BASES / (REV_CXT_ALT_BASES + REV_CXT_REF_BASES)). </td>
+						<td>The substitution rate of ~REF_BASE:~ALT_BASE, calculated as max(1e-10, REV_CXT_ALT_BASES / (REV_CXT_ALT_BASES + REV_CXT_REF_BASES)).</td>
 					</tr>
 					<tr>
 						<td>ERROR_RATE<br />
-						<td> The bait bias error rate, calculated as max(1e-10, FWD_ERROR_RATE - REV_ERROR_RATE).
-</td>
+						<td>The bait bias error rate, calculated as max(1e-10, FWD_ERROR_RATE - REV_ERROR_RATE).</td>
 					</tr>
 					<tr>
 						<td>QSCORE<br />
-						<td>The Phred-scaled quality score of the artifact, calculated as -10 * log10(ERROR_RATE). </td>
+						<td>The Phred-scaled quality score of the artifact, calculated as -10 * log10(ERROR_RATE).</td>
 					</tr>
 					</tbody>
 				</table>
@@ -682,7 +681,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

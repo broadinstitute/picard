@@ -620,10 +620,9 @@
 					</thead>
 					<tr>
 						<td>BARCODE<br />
-						<td> The barcode (from the set of expected barcodes) for which the following metrics apply.
+						<td>The barcode (from the set of expected barcodes) for which the following metrics apply.
  Note that the "symbolic" barcode of NNNNNN is used to report metrics for all reads that
- do not match a barcode.
-</td>
+ do not match a barcode.</td>
 					</tr>
 					<tr>
 						<td>BARCODE_WITHOUT_DELIMITER<br />
@@ -631,78 +630,65 @@
 					</tr>
 					<tr>
 						<td>BARCODE_NAME<br />
-						<td> The barcode name.
-</td>
+						<td>The barcode name.</td>
 					</tr>
 					<tr>
 						<td>LIBRARY_NAME<br />
-						<td> The name of the library
-</td>
+						<td>The name of the library</td>
 					</tr>
 					<tr>
 						<td>READS<br />
-						<td> The total number of reads matching the barcode.
-</td>
+						<td>The total number of reads matching the barcode.</td>
 					</tr>
 					<tr>
 						<td>PF_READS<br />
-						<td> The number of PF reads matching this barcode (always less than or equal to READS).
-</td>
+						<td>The number of PF reads matching this barcode (always less than or equal to READS).</td>
 					</tr>
 					<tr>
 						<td>PERFECT_MATCHES<br />
-						<td> The number of all reads matching this barcode that matched with 0 errors or no-calls.
-</td>
+						<td>The number of all reads matching this barcode that matched with 0 errors or no-calls.</td>
 					</tr>
 					<tr>
 						<td>PF_PERFECT_MATCHES<br />
-						<td> The number of PF reads matching this barcode that matched with 0 errors or no-calls.
-</td>
+						<td>The number of PF reads matching this barcode that matched with 0 errors or no-calls.</td>
 					</tr>
 					<tr>
 						<td>ONE_MISMATCH_MATCHES<br />
-						<td> The number of all reads matching this barcode that matched with 1 error or no-call.
-</td>
+						<td>The number of all reads matching this barcode that matched with 1 error or no-call.</td>
 					</tr>
 					<tr>
 						<td>PF_ONE_MISMATCH_MATCHES<br />
-						<td> The number of PF reads matching this barcode that matched with 1 error or no-call.
-</td>
+						<td>The number of PF reads matching this barcode that matched with 1 error or no-call.</td>
 					</tr>
 					<tr>
 						<td>PCT_MATCHES<br />
-						<td> The fraction of all reads in the lane that matched to this barcode.
-</td>
+						<td>The fraction of all reads in the lane that matched to this barcode.</td>
 					</tr>
 					<tr>
 						<td>RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT<br />
-						<td> The rate of all reads matching this barcode to all reads matching the most prevalent barcode. For the
+						<td>The rate of all reads matching this barcode to all reads matching the most prevalent barcode. For the
  most prevalent barcode this will be 1, for all others it will be less than 1 (except for the possible
  exception of when there are more orphan reads than for any other barcode, in which case the value
  may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
- in representation between barcodes.
-</td>
+ in representation between barcodes.</td>
 					</tr>
 					<tr>
 						<td>PF_PCT_MATCHES<br />
-						<td> The fraction of PF reads in the lane that matched to this barcode.
-</td>
+						<td>The fraction of PF reads in the lane that matched to this barcode.</td>
 					</tr>
 					<tr>
 						<td>PF_RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT<br />
-						<td> The rate of PF reads matching this barcode to PF reads matching the most prevalent barcode. For the
+						<td>The rate of PF reads matching this barcode to PF reads matching the most prevalent barcode. For the
  most prevalent barcode this will be 1, for all others it will be less than 1 (except for the possible
  exception of when there are more orphan reads than for any other barcode, in which case the value
  may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
- in representation of PF reads between barcodes.
-</td>
+ in representation of PF reads between barcodes.</td>
 					</tr>
 					<tr>
 						<td>PF_NORMALIZED_MATCHES<br />
-						<td> The "normalized" matches to each barcode. This is calculated as the number of pf reads matching
+						<td>The "normalized" matches to each barcode. This is calculated as the number of pf reads matching
  this barcode over the sum of all pf reads matching any barcode (excluding orphans). If all barcodes
- are represented equally this will be 1.
-</td>
+ are represented equally this will be 1.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -716,7 +702,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

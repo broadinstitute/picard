@@ -691,6 +691,14 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<td>display the help message</td>
 				</tr>
 				<tr>
+					<td><a href="#--LINK_LOCS">--LINK_LOCS</a><br />
+								&nbsp;<em>-X</em>
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>A flag to create symlinks to the loc file for the X Ten for each tile. @deprecated It is no longer necessary to create locs file symlinks.</td>
+				</tr>
+				<tr>
 					<td><a href="#--TILE_NUMBERS">--TILE_NUMBERS</a><br />
 								&nbsp;<em>-T</em>
 					</td>
@@ -728,13 +736,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -804,17 +805,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>display hidden arguments</td>
-				</tr>
-			<tr>
-				<th colspan="4" id="row-divider">Deprecated Arguments</th>
-			</tr>
-				<tr>
-					<td><a href="#--LINK_LOCS">--LINK_LOCS</a><br />
-								&nbsp;<em>-X</em>
-					</td>
-					<!--<td>Boolean</td> -->
-					<td>false</td>
-					<td>A flag to create symlinks to the loc file for the X Ten for each tile. @deprecated It is no longer necessary to create locs file symlinks.</td>
 				</tr>
 					</tbody>
 				</table>
@@ -924,18 +914,6 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
 			 / <small>-h</small>
 		</h3>
@@ -966,7 +944,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
 		</h3>
 		<p class="args">
 			<b>A flag to create symlinks to the loc file for the X Ten for each tile. @deprecated It is no longer necessary to create locs file symlinks.</b><br />
-			
+			It is no longer necessary to create locs file symlinks.
 		</p>
 		<p>
 		<span class="label label-info ">Boolean</span>
@@ -1159,7 +1137,7 @@ The skipped cycles would NOT be included in an output SAM/BAM file or in read gr
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

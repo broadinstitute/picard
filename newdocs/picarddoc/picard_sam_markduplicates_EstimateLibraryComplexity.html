@@ -623,6 +623,7 @@
  reads one further filter is applied on the data.  After examining all reads a Histogram is built of
  [#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are
  then removed from the Histogram as outliers before library size is estimated.</p>
+@author Tim Fennell
 
 
 				<h3>EstimateLibraryComplexity specific arguments</h3>
@@ -789,17 +790,10 @@
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
-					<td>4052935</td>
+					<td>9118826</td>
 					<td>When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.</td>
 				</tr>
 				<tr>
@@ -932,18 +926,6 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
 			 / <small>-h</small>
 		</h3>
@@ -1034,7 +1016,7 @@
 		</p>
 		<p>
 		<span class="label label-info ">Integer</span>
-			&nbsp;<span class="label">4052935</span>
+			&nbsp;<span class="label">9118826</span>
 			&nbsp;<span class="label label-warning">[ [ -∞</span>
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
 		</p>
@@ -1285,7 +1267,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

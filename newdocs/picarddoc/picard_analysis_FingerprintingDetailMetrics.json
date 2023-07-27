@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "Detailed metrics about an individual SNP/Haplotype comparison within a fingerprint comparison.",
+  "description": "Detailed metrics about an individual SNP/Haplotype comparison within a fingerprint comparison.\n@author Tim Fennell",
   "name": "FingerprintingDetailMetrics",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

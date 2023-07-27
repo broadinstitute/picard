@@ -619,49 +619,48 @@
 					</thead>
 					<tr>
 						<td>SAMPLE_ALIAS<br />
-						<td>The name of the sample being assayed. </td>
+						<td>The name of the sample being assayed.</td>
 					</tr>
 					<tr>
 						<td>LIBRARY<br />
-						<td>The name of the library being assayed. </td>
+						<td>The name of the library being assayed.</td>
 					</tr>
 					<tr>
 						<td>REF_BASE<br />
-						<td>The (upper-case) original base on the reference strand. </td>
+						<td>The (upper-case) original base on the reference strand.</td>
 					</tr>
 					<tr>
 						<td>ALT_BASE<br />
-						<td>The (upper-case) alternative base that is called as a result of DNA damage. </td>
+						<td>The (upper-case) alternative base that is called as a result of DNA damage.</td>
 					</tr>
 					<tr>
 						<td>CONTEXT<br />
-						<td>The sequence context to which the analysis is constrained. </td>
+						<td>The sequence context to which the analysis is constrained.</td>
 					</tr>
 					<tr>
 						<td>PRO_REF_BASES<br />
-						<td>The number of REF_BASE:REF_BASE alignments having a read number and orientation that supports the presence of this artifact. </td>
+						<td>The number of REF_BASE:REF_BASE alignments having a read number and orientation that supports the presence of this artifact.</td>
 					</tr>
 					<tr>
 						<td>PRO_ALT_BASES<br />
-						<td>The number of REF_BASE:ALT_BASE alignments having a read number and orientation that supports the presence of this artifact. </td>
+						<td>The number of REF_BASE:ALT_BASE alignments having a read number and orientation that supports the presence of this artifact.</td>
 					</tr>
 					<tr>
 						<td>CON_REF_BASES<br />
-						<td>The number of REF_BASE:REF_BASE alignments having a read number and orientation that refutes the presence of this artifact. </td>
+						<td>The number of REF_BASE:REF_BASE alignments having a read number and orientation that refutes the presence of this artifact.</td>
 					</tr>
 					<tr>
 						<td>CON_ALT_BASES<br />
-						<td>The number of REF_BASE:ALT_BASE alignments having a read number and orientation that refutes the presence of this artifact. </td>
+						<td>The number of REF_BASE:ALT_BASE alignments having a read number and orientation that refutes the presence of this artifact.</td>
 					</tr>
 					<tr>
 						<td>ERROR_RATE<br />
-						<td> The estimated error rate due to this artifact.
- Calculated as max(1e-10, (PRO_ALT_BASES - CON_ALT_BASES) / (PRO_ALT_BASES + PRO_REF_BASES + CON_ALT_BASES + CON_REF_BASES)).
-</td>
+						<td>The estimated error rate due to this artifact.
+ Calculated as max(1e-10, (PRO_ALT_BASES - CON_ALT_BASES) / (PRO_ALT_BASES + PRO_REF_BASES + CON_ALT_BASES + CON_REF_BASES)).</td>
 					</tr>
 					<tr>
 						<td>QSCORE<br />
-						<td>The Phred-scaled quality score of the artifact, calculated as -10 * log10(ERROR_RATE). </td>
+						<td>The Phred-scaled quality score of the artifact, calculated as -10 * log10(ERROR_RATE).</td>
 					</tr>
 					</tbody>
 				</table>
@@ -675,7 +674,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

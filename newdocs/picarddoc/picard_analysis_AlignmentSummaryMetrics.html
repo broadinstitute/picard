@@ -621,197 +621,167 @@
 					</thead>
 					<tr>
 						<td>CATEGORY<br />
-						<td> One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
+						<td>One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
  first read in a paired run, SECOND_OF_PAIR when the metrics are for only the second read
  in a paired run or PAIR when the metrics are aggregated for both first and second reads
- in a pair.
-</td>
+ in a pair.</td>
 					</tr>
 					<tr>
 						<td>TOTAL_READS<br />
-						<td> The total number of reads including all PF and non-PF reads. When CATEGORY equals PAIR
- this value will be 2x the number of clusters.
-</td>
+						<td>The total number of reads including all PF and non-PF reads. When CATEGORY equals PAIR
+ this value will be 2x the number of clusters.</td>
 					</tr>
 					<tr>
 						<td>PF_READS<br />
-						<td> The number of PF reads where PF is defined as passing Illumina's filter.
-</td>
+						<td>The number of PF reads where PF is defined as passing Illumina's filter.</td>
 					</tr>
 					<tr>
 						<td>PCT_PF_READS<br />
-						<td> The fraction of reads that are PF (PF_READS / TOTAL_READS)
-</td>
+						<td>The fraction of reads that are PF (PF_READS / TOTAL_READS)</td>
 					</tr>
 					<tr>
 						<td>PF_NOISE_READS<br />
-						<td> The number of PF reads that are marked as noise reads.  A noise read is one which is composed
+						<td>The number of PF reads that are marked as noise reads.  A noise read is one which is composed
  entirely of A bases and/or N bases. These reads are marked as they are usually artifactual and
- are of no use in downstream analysis.
-</td>
+ are of no use in downstream analysis.</td>
 					</tr>
 					<tr>
 						<td>PF_READS_ALIGNED<br />
-						<td> The number of PF reads that were aligned to the reference sequence. This includes reads that
- aligned with low quality (i.e. their alignments are ambiguous).
-</td>
+						<td>The number of PF reads that were aligned to the reference sequence. This includes reads that
+ aligned with low quality (i.e. their alignments are ambiguous).</td>
 					</tr>
 					<tr>
 						<td>PCT_PF_READS_ALIGNED<br />
-						<td> The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS
-</td>
+						<td>The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS</td>
 					</tr>
 					<tr>
 						<td>PF_ALIGNED_BASES<br />
-						<td> The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.
-</td>
+						<td>The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.</td>
 					</tr>
 					<tr>
 						<td>PF_HQ_ALIGNED_READS<br />
-						<td> The number of PF reads that were aligned to the reference sequence with a mapping quality of
+						<td>The number of PF reads that were aligned to the reference sequence with a mapping quality of
  Q20 or higher signifying that the aligner estimates a 1/100 (or smaller) chance that the
- alignment is wrong.
-</td>
+ alignment is wrong.</td>
 					</tr>
 					<tr>
 						<td>PF_HQ_ALIGNED_BASES<br />
-						<td> The number of bases aligned to the reference sequence in reads that were mapped at high
+						<td>The number of bases aligned to the reference sequence in reads that were mapped at high
  quality.  Will usually approximate PF_HQ_ALIGNED_READS * READ_LENGTH but may differ when
- either mixed read lengths are present or many reads are aligned with gaps.
-</td>
+ either mixed read lengths are present or many reads are aligned with gaps.</td>
 					</tr>
 					<tr>
 						<td>PF_HQ_ALIGNED_Q20_BASES<br />
-						<td> The subset of PF_HQ_ALIGNED_BASES where the base call quality was Q20 or higher.
-</td>
+						<td>The subset of PF_HQ_ALIGNED_BASES where the base call quality was Q20 or higher.</td>
 					</tr>
 					<tr>
 						<td>PF_HQ_MEDIAN_MISMATCHES<br />
-						<td> The median number of mismatches versus the reference sequence in reads that were aligned
- to the reference at high quality (i.e. PF_HQ_ALIGNED READS).
-</td>
+						<td>The median number of mismatches versus the reference sequence in reads that were aligned
+ to the reference at high quality (i.e. PF_HQ_ALIGNED READS).</td>
 					</tr>
 					<tr>
 						<td>PF_MISMATCH_RATE<br />
-						<td> The rate of bases mismatching the reference for all bases aligned to the reference sequence.
-</td>
+						<td>The rate of bases mismatching the reference for all bases aligned to the reference sequence.</td>
 					</tr>
 					<tr>
 						<td>PF_HQ_ERROR_RATE<br />
-						<td> The fraction of bases that mismatch the reference in PF HQ aligned reads.
-</td>
+						<td>The fraction of bases that mismatch the reference in PF HQ aligned reads.</td>
 					</tr>
 					<tr>
 						<td>PF_INDEL_RATE<br />
-						<td> The number of insertion and deletion events per 100 aligned bases.  Uses the number of events
- as the numerator, not the number of inserted or deleted bases.
-</td>
+						<td>The number of insertion and deletion events per 100 aligned bases.  Uses the number of events
+ as the numerator, not the number of inserted or deleted bases.</td>
 					</tr>
 					<tr>
 						<td>MEAN_READ_LENGTH<br />
-						<td> The mean read length of the set of reads examined.  When looking at the data for a single lane with
+						<td>The mean read length of the set of reads examined.  When looking at the data for a single lane with
  equal length reads this number is just the read length.  When looking at data for merged lanes with
  differing read lengths this is the mean read length of all reads. Computed using all read lengths
- including clipped bases.
-</td>
+ including clipped bases.</td>
 					</tr>
 					<tr>
 						<td>SD_READ_LENGTH<br />
-						<td>The standard deviation of the read lengths. Computed using all read lengths including clipped bases. </td>
+						<td>The standard deviation of the read lengths. Computed using all read lengths including clipped bases.</td>
 					</tr>
 					<tr>
 						<td>MEDIAN_READ_LENGTH<br />
-						<td> The median read length of the set of reads examined.  When looking at the data for a single lane with
+						<td>The median read length of the set of reads examined.  When looking at the data for a single lane with
  equal length reads this number is just the read length.  When looking at data for merged lanes with
  differing read lengths this is the median read length of all reads. Computed using all bases in reads,
- including clipped bases.
-</td>
+ including clipped bases.</td>
 					</tr>
 					<tr>
 						<td>MAD_READ_LENGTH<br />
-						<td> The median absolute deviation of the distribution of all read lengths.  If the distribution is
+						<td>The median absolute deviation of the distribution of all read lengths.  If the distribution is
  essentially normal then the standard deviation can be estimated as ~1.4826 * MAD. Computed using all
- read lengths including clipped bases.
-</td>
+ read lengths including clipped bases.</td>
 					</tr>
 					<tr>
 						<td>MIN_READ_LENGTH<br />
-						<td>The minimum read length. Computed using all read lengths including clipped bases. </td>
+						<td>The minimum read length. Computed using all read lengths including clipped bases.</td>
 					</tr>
 					<tr>
 						<td>MAX_READ_LENGTH<br />
-						<td>The maximum read length. Computed using all read lengths including clipped bases. </td>
+						<td>The maximum read length. Computed using all read lengths including clipped bases.</td>
 					</tr>
 					<tr>
 						<td>MEAN_ALIGNED_READ_LENGTH<br />
-						<td> The mean aligned read length of the set of reads examined.  When looking at the data for a single lane with
+						<td>The mean aligned read length of the set of reads examined.  When looking at the data for a single lane with
  equal length reads this number is just the read length.  When looking at data for merged lanes with
- differing read lengths this is the mean read length of all reads. Clipped bases are not counted.
-</td>
+ differing read lengths this is the mean read length of all reads. Clipped bases are not counted.</td>
 					</tr>
 					<tr>
 						<td>READS_ALIGNED_IN_PAIRS<br />
-						<td> The number of aligned reads whose mate pair was also aligned to the reference.
-</td>
+						<td>The number of aligned reads whose mate pair was also aligned to the reference.</td>
 					</tr>
 					<tr>
 						<td>PCT_READS_ALIGNED_IN_PAIRS<br />
-						<td> The fraction of aligned reads whose mate pair was also aligned to the reference.
- READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED
-</td>
+						<td>The fraction of aligned reads whose mate pair was also aligned to the reference.
+ READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED</td>
 					</tr>
 					<tr>
 						<td>PF_READS_IMPROPER_PAIRS<br />
-						<td> The number of (primary) aligned reads that are **not** "properly" aligned in pairs (as per SAM flag 0x2).
-</td>
+						<td>The number of (primary) aligned reads that are **not** "properly" aligned in pairs (as per SAM flag 0x2).</td>
 					</tr>
 					<tr>
 						<td>PCT_PF_READS_IMPROPER_PAIRS<br />
-						<td> The fraction of (primary) reads that are *not* "properly" aligned in pairs (as per SAM flag 0x2).
- PF_READS_IMPROPER_PAIRS / PF_READS_ALIGNED
-</td>
+						<td>The fraction of (primary) reads that are *not* "properly" aligned in pairs (as per SAM flag 0x2).
+ PF_READS_IMPROPER_PAIRS / PF_READS_ALIGNED</td>
 					</tr>
 					<tr>
 						<td>BAD_CYCLES<br />
-						<td> The number of instrument cycles in which 80% or more of base calls were no-calls.
-</td>
+						<td>The number of instrument cycles in which 80% or more of base calls were no-calls.</td>
 					</tr>
 					<tr>
 						<td>STRAND_BALANCE<br />
-						<td> The number of PF reads aligned to the positive strand of the genome divided by the number of
- PF reads aligned to the genome.
-</td>
+						<td>The number of PF reads aligned to the positive strand of the genome divided by the number of
+ PF reads aligned to the genome.</td>
 					</tr>
 					<tr>
 						<td>PCT_CHIMERAS<br />
-						<td> The fraction of reads that map outside of a maximum insert size (usually 100kb) or that have
- the two ends mapping to different chromosomes.
-</td>
+						<td>The fraction of reads that map outside of a maximum insert size (usually 100kb) or that have
+ the two ends mapping to different chromosomes.</td>
 					</tr>
 					<tr>
 						<td>PCT_ADAPTER<br />
-						<td> The fraction of PF reads that are unaligned or aligned with MQ0 and match to a known adapter sequence right from the
- start of the read (indication of adapter-dimer pairs).
-</td>
+						<td>The fraction of PF reads that are unaligned or aligned with MQ0 and match to a known adapter sequence right from the
+ start of the read (indication of adapter-dimer pairs).</td>
 					</tr>
 					<tr>
 						<td>PCT_SOFTCLIP<br />
-						<td> the fraction of PF bases that are on (primary) aligned reads and are soft-clipped, as a fraction of the
- PF_ALIGNED_BASES (even though these are not aligned!)
-</td>
+						<td>the fraction of PF bases that are on (primary) aligned reads and are soft-clipped, as a fraction of the
+ PF_ALIGNED_BASES (even though these are not aligned!)</td>
 					</tr>
 					<tr>
 						<td>PCT_HARDCLIP<br />
-						<td> The fraction of PF bases that are (on primary, aligned reads and) hard-clipped, as a fraction of the
- PF_ALIGNED_BASES (even though these are not aligned!)
-</td>
+						<td>The fraction of PF bases that are (on primary, aligned reads and) hard-clipped, as a fraction of the
+ PF_ALIGNED_BASES (even though these are not aligned!)</td>
 					</tr>
 					<tr>
 						<td>AVG_POS_3PRIME_SOFTCLIP_LENGTH<br />
-						<td> The average length of the soft-clipped bases at the 3' end of reads. This could be used as an estimate for
+						<td>The average length of the soft-clipped bases at the 3' end of reads. This could be used as an estimate for
  the amount by which the insert-size must be increased in order to obtain a significant reduction in bases
- lost due to reading off the end of the insert.
-</td>
+ lost due to reading off the end of the insert.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -825,7 +795,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

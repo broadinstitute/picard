@@ -611,6 +611,7 @@
  CollectInsertSizeMetrics program and usually written to a file with the extension
  ".insert_size_metrics".  In addition the insert size distribution is plotted to
  a file with the extension ".insert_size_Histogram.pdf".
+@author Doug Voet (dvoet at broadinstitute dot org)
 
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -622,94 +623,90 @@
 					</thead>
 					<tr>
 						<td>MEDIAN_INSERT_SIZE<br />
-						<td>The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome. </td>
+						<td>The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome.</td>
 					</tr>
 					<tr>
 						<td>MODE_INSERT_SIZE<br />
-						<td>The MODE insert size of all paired end reads where both ends mapped to the same chromosome. </td>
+						<td>The MODE insert size of all paired end reads where both ends mapped to the same chromosome.</td>
 					</tr>
 					<tr>
 						<td>MEDIAN_ABSOLUTE_DEVIATION<br />
-						<td> The median absolute deviation of the distribution.  If the distribution is essentially normal then
- the standard deviation can be estimated as ~1.4826 * MAD.
-</td>
+						<td>The median absolute deviation of the distribution.  If the distribution is essentially normal then
+ the standard deviation can be estimated as ~1.4826 * MAD.</td>
 					</tr>
 					<tr>
 						<td>MIN_INSERT_SIZE<br />
-						<td>The minimum measured insert size.  This is usually 1 and not very useful as it is likely artifactual. </td>
+						<td>The minimum measured insert size.  This is usually 1 and not very useful as it is likely artifactual.</td>
 					</tr>
 					<tr>
 						<td>MAX_INSERT_SIZE<br />
-						<td> The maximum measure insert size by alignment. This is usually very high representing either an artifact
- or possibly the presence of a structural re-arrangement.
-</td>
+						<td>The maximum measure insert size by alignment. This is usually very high representing either an artifact
+ or possibly the presence of a structural re-arrangement.</td>
 					</tr>
 					<tr>
 						<td>MEAN_INSERT_SIZE<br />
-						<td> The mean insert size of the "core" of the distribution. Artefactual outliers in the distribution often
+						<td>The mean insert size of the "core" of the distribution. Artefactual outliers in the distribution often
  cause calculation of nonsensical mean and stdev values.  To avoid this the distribution is first trimmed
  to a "core" distribution of +/- N median absolute deviations around the median insert size. By default
- N=10, but this is configurable.
-</td>
+ N=10, but this is configurable.</td>
 					</tr>
 					<tr>
 						<td>STANDARD_DEVIATION<br />
-						<td>Standard deviation of insert sizes over the "core" of the distribution. </td>
+						<td>Standard deviation of insert sizes over the "core" of the distribution.</td>
 					</tr>
 					<tr>
 						<td>READ_PAIRS<br />
-						<td>The total number of read pairs that were examined in the entire distribution. </td>
+						<td>The total number of read pairs that were examined in the entire distribution.</td>
 					</tr>
 					<tr>
 						<td>PAIR_ORIENTATION<br />
-						<td>The pair orientation of the reads in this data category. </td>
+						<td>The pair orientation of the reads in this data category.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_10_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 10% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 10% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_20_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 20% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 20% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_30_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 30% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 30% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_40_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 40% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 40% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_50_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 50% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 50% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_60_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 60% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 60% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_70_PERCENT<br />
-						<td> The "width" of the bins, centered around the median, that encompass 70% of all read pairs.
+						<td>The "width" of the bins, centered around the median, that encompass 70% of all read pairs.
  This metric divided by 2 should approximate the standard deviation when the insert size
- distribution is a normal distribution.
-</td>
+ distribution is a normal distribution.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_80_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 80% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 80% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_90_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 90% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 90% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_95_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 95% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 95% of all read pairs.</td>
 					</tr>
 					<tr>
 						<td>WIDTH_OF_99_PERCENT<br />
-						<td>The "width" of the bins, centered around the median, that encompass 100% of all read pairs. </td>
+						<td>The "width" of the bins, centered around the median, that encompass 100% of all read pairs.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -723,7 +720,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

@@ -649,7 +649,7 @@ java -jar picard.jar DownsampleSam \
  will contain approximately <code>PROBABILITY * (input reads)</code>, however for very small
  probabilities this may not be the case.
 
- A number of different downsampling strategies are supported using the #STRATEGY option:
+ A number of different downsampling strategies are supported using the {@link #STRATEGY} option:
  <dl>
  <dt>ConstantMemory</dt>
  <dd>
@@ -676,7 +676,7 @@ java -jar picard.jar DownsampleSam \
  </dd>
  </dl>
 
- The number of records written can be output to a QualityYieldMetrics metrics file via the #METRICS_FILE.
+ The number of records written can be output to a {@link QualityYieldMetrics} metrics file via the {@link #METRICS_FILE}.
 
  <h3>Usage examples:</h3>
  <h4>Downsample file, keeping about 10% of the reads</h4>
@@ -706,6 +706,7 @@ java -jar picard.jar DownsampleSam \
        P=0.00001 \
        ACCURACY=0.0000001
  </pre>
+@author Tim Fennell
 
 
 				<h3>DownsampleSam specific arguments</h3>
@@ -833,13 +834,6 @@ java -jar picard.jar DownsampleSam \
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -970,18 +964,6 @@ java -jar picard.jar DownsampleSam \
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1240,7 +1222,7 @@ java -jar picard.jar DownsampleSam \
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

@@ -609,38 +609,39 @@
 		<hr>
 		<h2>Overview</h2>
 		Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
- experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters
+ experiments, same implementation as {@link CollectWgsMetrics}, with different defaults: lacks baseQ and mappingQ filters
  and has much higher coverage cap.
 
  This tool computes metrics that are useful for evaluating coverage and performance
  of whole genome sequencing experiments. These metrics include the percentages of reads that pass
  minimal base- and mapping- quality filters as well as coverage (read-depth) levels.
- <br /><br />
+ <br/><br/>
  The histogram output is optional and for a given run, displays two separate outputs on the y-axis while using a single set
  of values for the x-axis.  Specifically, the first column in the histogram table (x-axis) is labeled 'coverage' and
  represents different possible coverage depths.  However, it also represents the range of values for the base quality scores
  and thus should probably be labeled 'sequence depth and base quality scores'. The second and third columns (y-axes)
  correspond to the numbers of bases at a specific sequence depth 'count' and the numbers of bases at a particular base
  quality score 'baseq_count' respectively.
- <br /><br />
- Although similar to the CollectWgsMetrics tool, the default thresholds for CollectRawWgsMetrics are less stringent.
+ <br/><br/>
+ Although similar to the {@link CollectWgsMetrics} tool, the default thresholds for CollectRawWgsMetrics are less stringent.
  For example, the CollectRawWgsMetrics have base and mapping quality score thresholds set to '3' and '0' respectively,
- while the CollectWgsMetrics tool has the default threshold values set to '20' (at time of writing).  Nevertheless, both
+ while the {@link CollectWgsMetrics} tool has the default threshold values set to '20' (at time of writing).  Nevertheless, both
  tools enable the user to input specific threshold values.
  <p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>
  <h4>Usage example:</h4>
  <pre>
- java -jar picard.jar CollectRawWgsMetrics \\<br />
-      I=input.bam \\<br />
-      O=output_raw_wgs_metrics.txt \\<br />
-      R=reference.fasta \\<br />
+ java -jar picard.jar CollectRawWgsMetrics \\<br/>
+      I=input.bam \\<br/>
+      O=output_raw_wgs_metrics.txt \\<br/>
+      R=reference.fasta \\<br/>
       INCLUDE_BQ_HISTOGRAM=true
  </pre>
- <hr />
+ <hr/>
  Please see
  <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>
  the WgsMetrics documentation</a> for detailed explanations of the output metrics.
- <hr />
+ <hr/>
+@author farjoun
 
 
 				<h3>CollectRawWgsMetrics specific arguments</h3>
@@ -825,13 +826,6 @@
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
@@ -984,18 +978,6 @@
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1324,7 +1306,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

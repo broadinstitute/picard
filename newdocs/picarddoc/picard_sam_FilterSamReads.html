@@ -636,7 +636,7 @@ Takes a SAM/BAM/CRAM file and subsets it by either excluding or only including c
  </pre>
  <h4>Filter reads having a (2-base or more) soft clip on the beginning of the read:</h4>
  <pre>
- cat <<EOF > script.js
+ cat <<EOF> script.js
  // reads having a soft clip larger than 2 bases in start of read
  function accept(rec) {
      if (rec.getReadUnmappedFlag()) return false;
@@ -802,13 +802,6 @@ Takes a SAM/BAM/CRAM file and subsets it by either excluding or only including c
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
@@ -965,18 +958,6 @@ Takes a SAM/BAM/CRAM file and subsets it by either excluding or only including c
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">Filter</span>
 			&nbsp;<span class="label">null</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1274,7 +1255,7 @@ Takes a SAM/BAM/CRAM file and subsets it by either excluding or only including c
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

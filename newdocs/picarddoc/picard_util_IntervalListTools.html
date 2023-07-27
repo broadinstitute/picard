@@ -651,20 +651,20 @@ chr2	100	100	+	interval with exactly one base
 			</h3>
 		<hr>
 		<h2>Overview</h2>
-		Performs various IntervalList manipulations.
+		Performs various {@link IntervalList} manipulations.
  <p>
  <h3>Summary</h3>
  This tool offers multiple interval list file manipulation capabilities, including: sorting,
  merging, subtracting, padding, and other set-theoretic operations. The default action
- is to merge and sort the intervals provided in the #INPUTs. Other options, e.g. interval subtraction, are
+ is to merge and sort the intervals provided in the {@link #INPUT}s. Other options, e.g. interval subtraction, are
  controlled by the arguments.
- <br />
- Both IntervalList and VCF files are accepted as input. IntervalList should be denoted with the extension
- htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION, while a VCF must have one of htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION, htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION,
- htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION. When VCF file is used as input, each variant is translated into an using its reference allele or the END
+ <br/>
+ Both {@link IntervalList} and VCF files are accepted as input. {@link IntervalList} should be denoted with the extension
+ {@value htsjdk.samtools.util.IOUtil#INTERVAL_LIST_FILE_EXTENSION}, while a VCF must have one of {@value htsjdk.samtools.util.IOUtil#VCF_FILE_EXTENSION}, {@value htsjdk.samtools.util.IOUtil#COMPRESSED_VCF_FILE_EXTENSION},
+ {@value htsjdk.samtools.util.IOUtil#BCF_FILE_EXTENSION}. When VCF file is used as input, each variant is translated into an using its reference allele or the END
  INFO annotation (if present) to determine the extent of the interval.
  <p>
- IntervalListTools can also "scatter" the resulting interval-list into many interval-files. This can be useful
+ {@link IntervalListTools} can also "scatter" the resulting interval-list into many interval-files. This can be useful
  for creating multiple interval lists for scattering an analysis over.
  <p>
  <h3>Details</h3>
@@ -733,6 +733,7 @@ chr2	100	100	+	interval with exactly one base
        SI=input3.interval_list \\
        O=new.interval_list
  </pre>
+@author Tim Fennell
 
 
 				<h3>IntervalListTools specific arguments</h3>
@@ -753,7 +754,7 @@ chr2	100	100	+	interval with exactly one base
 					<td><a href="#--INPUT">--INPUT</a><br />
 								&nbsp;<em>-I</em>
 					</td>
-					<!--<td>List[File]</td> -->
+					<!--<td>List[PicardHtsPath]</td> -->
 					<td>[]</td>
 					<td>One or more interval lists. If multiple interval lists are provided the output is theresult of merging the inputs. Supported formats are interval_list and VCF.If file extension is unrecognized, assumes file is interval_listFor standard input (stdin), write /dev/stdin as the input file</td>
 				</tr>
@@ -792,7 +793,7 @@ chr2	100	100	+	interval with exactly one base
 				<tr>
 					<td><a href="#--COUNT_OUTPUT">--COUNT_OUTPUT</a><br />
 					</td>
-					<!--<td>File</td> -->
+					<!--<td>PicardHtsPath</td> -->
 					<td>null</td>
 					<td>File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  If this parameter is set, OUTPUT_VALUE must not be NONE.</td>
 				</tr>
@@ -829,7 +830,7 @@ chr2	100	100	+	interval with exactly one base
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
 								&nbsp;<em>-O</em>
 					</td>
-					<!--<td>File</td> -->
+					<!--<td>PicardHtsPath</td> -->
 					<td>null</td>
 					<td>The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1).</td>
 				</tr>
@@ -865,7 +866,7 @@ chr2	100	100	+	interval with exactly one base
 					<td><a href="#--SECOND_INPUT">--SECOND_INPUT</a><br />
 								&nbsp;<em>-SI</em>
 					</td>
-					<!--<td>List[File]</td> -->
+					<!--<td>List[PicardHtsPath]</td> -->
 					<td>[]</td>
 					<td>Second set of intervals for SUBTRACT and DIFFERENCE operations.</td>
 				</tr>
@@ -921,13 +922,6 @@ chr2	100	100	+	interval with exactly one base
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -1093,7 +1087,7 @@ chr2	100	100	+	interval with exactly one base
 			
 		</p>
 		<p>
-		<span class="label label-info ">File</span>
+		<span class="label label-info ">PicardHtsPath</span>
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -1133,18 +1127,6 @@ chr2	100	100	+	interval with exactly one base
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
 			 / <small>-h</small>
 		</h3>
@@ -1178,7 +1160,7 @@ chr2	100	100	+	interval with exactly one base
 		</p>
 		<p>
 				<span class="badge badge-important">R</span>
-		<span class="label label-info ">List[File]</span>
+		<span class="label label-info ">List[PicardHtsPath]</span>
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -1216,7 +1198,7 @@ chr2	100	100	+	interval with exactly one base
 			
 		</p>
 		<p>
-		<span class="label label-info ">File</span>
+		<span class="label label-info ">PicardHtsPath</span>
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -1315,7 +1297,7 @@ chr2	100	100	+	interval with exactly one base
 			
 		</p>
 		<p>
-		<span class="label label-info ">List[File]</span>
+		<span class="label label-info ">List[PicardHtsPath]</span>
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
@@ -1487,7 +1469,7 @@ chr2	100	100	+	interval with exactly one base
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

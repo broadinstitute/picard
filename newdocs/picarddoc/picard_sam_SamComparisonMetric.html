@@ -619,69 +619,58 @@
 					</thead>
 					<tr>
 						<td>LEFT_FILE<br />
-						<td> Left file used in comparison
-</td>
+						<td>Left file used in comparison</td>
 					</tr>
 					<tr>
 						<td>RIGHT_FILE<br />
-						<td> Right file used in comparison
-</td>
+						<td>Right file used in comparison</td>
 					</tr>
 					<tr>
 						<td>MAPPINGS_MATCH<br />
-						<td> The number of primary records for which mappings match in files.  If running in strict alignment mode, this counts only records
+						<td>The number of primary records for which mappings match in files.  If running in strict alignment mode, this counts only records
  which are mapped in both files with the same alignment start positions and strands.  If running with LENIENT_LOW_MQ_ALIGNMENT=true, then
  all records which are mapped in both files with mapping quality at most equal to LOW_MQ_THRESHOLD are counted as matching. If
- running with LENIENT_255_MQ_ALIGNMENT=true, all records which are mapped in both files with mapping quality 255 are counted as matches.
-</td>
+ running with LENIENT_255_MQ_ALIGNMENT=true, all records which are mapped in both files with mapping quality 255 are counted as matches.</td>
 					</tr>
 					<tr>
 						<td>MAPPINGS_DIFFER<br />
-						<td> The number of primary records which are mapped in both files but do not meet criteria to be counted in MAPPINGS_MATCH.
-</td>
+						<td>The number of primary records which are mapped in both files but do not meet criteria to be counted in MAPPINGS_MATCH.</td>
 					</tr>
 					<tr>
 						<td>UNMAPPED_BOTH<br />
-						<td> The number of primary records which are not mapped in either file.
-</td>
+						<td>The number of primary records which are not mapped in either file.</td>
 					</tr>
 					<tr>
 						<td>UNMAPPED_LEFT<br />
-						<td> The number of primary records which are mapped in right file and found but not mapped in left file
-</td>
+						<td>The number of primary records which are mapped in right file and found but not mapped in left file</td>
 					</tr>
 					<tr>
 						<td>UNMAPPED_RIGHT<br />
-						<td> The number of primary records which are mapped in left file and found but not mapped in right file
-</td>
+						<td>The number of primary records which are mapped in left file and found but not mapped in right file</td>
 					</tr>
 					<tr>
 						<td>MISSING_LEFT<br />
-						<td> The number of primary records which are found in right file but not found in left file
-</td>
+						<td>The number of primary records which are found in right file but not found in left file</td>
 					</tr>
 					<tr>
 						<td>MISSING_RIGHT<br />
-						<td> The number of primary records which are found in left file but not found in right file
-</td>
+						<td>The number of primary records which are found in left file but not found in right file</td>
 					</tr>
 					<tr>
 						<td>DUPLICATE_MARKINGS_DIFFER<br />
-						<td> The number of primary records for which duplicate markings are different.  If running in strict duplicate
+						<td>The number of primary records for which duplicate markings are different.  If running in strict duplicate
  marking mode, any primary alignment which is marked as a duplicate in one file but not in the other will
  be counted.  If running with LENIENT_DUP=true, we allow for swaps between duplicate and non-duplicate fragments
  in the same duplicate set to reduce the number of fragments with different duplicate marking.  Note that this
  metric is counted on a per read basis, so a paired end fragment which differs in duplicate marking between the two
- files will increment this metric by 2.
-</td>
+ files will increment this metric by 2.</td>
 					</tr>
 					<tr>
 						<td>ARE_EQUAL<br />
-						<td> Whether or not to consider the two input files equal.  The two input files are considered equal iff
+						<td>Whether or not to consider the two input files equal.  The two input files are considered equal iff
  MAPPINGS_DIFFER == UNMAPPED_LEFT == UNMAPPED_RIGHT == MISSING_LEFT == MISSING_RIGHT == DUPLICATE_MARKINGS_DIFFER == 0 &&
  the headers have been compared to be equal.  Note that the header comparison result can be dependent on whether
- the tool is run with LENIENT_HEADER true or false.
-</td>
+ the tool is run with LENIENT_HEADER true or false.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -695,7 +684,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,21 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -284,6 +286,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -299,6 +302,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -314,6 +318,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -329,6 +334,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -344,6 +350,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -359,6 +366,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -374,6 +382,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -389,6 +398,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -404,6 +414,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -419,6 +430,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -434,6 +446,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -462,6 +475,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -494,12 +508,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing\n experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters\n and has much higher coverage cap.\n\n This tool computes metrics that are useful for evaluating coverage and performance\n of whole genome sequencing experiments. These metrics include the percentages of reads that pass\n minimal base- and mapping- quality filters as well as coverage (read-depth) levels.\n \u003cbr /\u003e\u003cbr /\u003e\n The histogram output is optional and for a given run, displays two separate outputs on the y-axis while using a single set\n of values for the x-axis.  Specifically, the first column in the histogram table (x-axis) is labeled \u0027coverage\u0027 and\n represents different possible coverage depths.  However, it also represents the range of values for the base quality scores\n and thus should probably be labeled \u0027sequence depth and base quality scores\u0027. The second and third columns (y-axes)\n correspond to the numbers of bases at a specific sequence depth \u0027count\u0027 and the numbers of bases at a particular base\n quality score \u0027baseq_count\u0027 respectively.\n \u003cbr /\u003e\u003cbr /\u003e\n Although similar to the CollectWgsMetrics tool, the default thresholds for CollectRawWgsMetrics are less stringent.\n For example, the CollectRawWgsMetrics have base and mapping quality score thresholds set to \u00273\u0027 and \u00270\u0027 respectively,\n while the CollectWgsMetrics tool has the default threshold values set to \u002720\u0027 (at time of writing).  Nevertheless, both\n tools enable the user to input specific threshold values.\n \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar CollectRawWgsMetrics \\\\\u003cbr /\u003e\n      I\u003dinput.bam \\\\\u003cbr /\u003e\n      O\u003doutput_raw_wgs_metrics.txt \\\\\u003cbr /\u003e\n      R\u003dreference.fasta \\\\\u003cbr /\u003e\n      INCLUDE_BQ_HISTOGRAM\u003dtrue\n \u003c/pre\u003e\n \u003chr /\u003e\n Please see\n \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics\u0027\u003e\n the WgsMetrics documentation\u003c/a\u003e for detailed explanations of the output metrics.\n \u003chr /\u003e",
+  "description": "Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing\n experiments, same implementation as {@link CollectWgsMetrics}, with different defaults: lacks baseQ and mappingQ filters\n and has much higher coverage cap.\n\n This tool computes metrics that are useful for evaluating coverage and performance\n of whole genome sequencing experiments. These metrics include the percentages of reads that pass\n minimal base- and mapping- quality filters as well as coverage (read-depth) levels.\n \u003cbr/\u003e\u003cbr/\u003e\n The histogram output is optional and for a given run, displays two separate outputs on the y-axis while using a single set\n of values for the x-axis.  Specifically, the first column in the histogram table (x-axis) is labeled \u0027coverage\u0027 and\n represents different possible coverage depths.  However, it also represents the range of values for the base quality scores\n and thus should probably be labeled \u0027sequence depth and base quality scores\u0027. The second and third columns (y-axes)\n correspond to the numbers of bases at a specific sequence depth \u0027count\u0027 and the numbers of bases at a particular base\n quality score \u0027baseq_count\u0027 respectively.\n \u003cbr/\u003e\u003cbr/\u003e\n Although similar to the {@link CollectWgsMetrics} tool, the default thresholds for CollectRawWgsMetrics are less stringent.\n For example, the CollectRawWgsMetrics have base and mapping quality score thresholds set to \u00273\u0027 and \u00270\u0027 respectively,\n while the {@link CollectWgsMetrics} tool has the default threshold values set to \u002720\u0027 (at time of writing).  Nevertheless, both\n tools enable the user to input specific threshold values.\n \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar CollectRawWgsMetrics \\\\\u003cbr/\u003e\n      I\u003dinput.bam \\\\\u003cbr/\u003e\n      O\u003doutput_raw_wgs_metrics.txt \\\\\u003cbr/\u003e\n      R\u003dreference.fasta \\\\\u003cbr/\u003e\n      INCLUDE_BQ_HISTOGRAM\u003dtrue\n \u003c/pre\u003e\n \u003chr/\u003e\n Please see\n \u003ca href\u003d\u0027https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics\u0027\u003e\n the WgsMetrics documentation\u003c/a\u003e for detailed explanations of the output metrics.\n \u003chr/\u003e\n@author farjoun",
   "name": "CollectRawWgsMetrics",
   "group": "Diagnostics and Quality Control",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "A class to store information relevant for biological rate estimation",
+  "description": "A class to store information relevant for biological rate estimation\n@author Yossi Farjoun",
   "name": "IndependentReplicateMetric",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

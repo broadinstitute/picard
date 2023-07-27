@@ -660,6 +660,13 @@
 					<td>Ignore any differences between the two metric file's histograms (useful if using the 'METRIC_ALLOWABLE_RELATIVE_CHANGE')</td>
 				</tr>
 				<tr>
+					<td><a href="#--KEY">--KEY</a><br />
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>Columns to use as keys for matching metrics rows that should agree.  If not specified, it is assumed that rows should be in the same order.</td>
+				</tr>
+				<tr>
 					<td><a href="#--METRIC_ALLOWABLE_RELATIVE_CHANGE">--METRIC_ALLOWABLE_RELATIVE_CHANGE</a><br />
 								&nbsp;<em>-MARC</em>
 					</td>
@@ -668,12 +675,20 @@
 					<td>Metric Allowable Relative Change. A colon separate pair of metric name and an absolute relative change.  For any metric specified here,  when the values are compared between the two files, the program will allow that much relative change between the  two values.</td>
 				</tr>
 				<tr>
+					<td><a href="#--METRICS_NOT_REQUIRED">--METRICS_NOT_REQUIRED</a><br />
+								&nbsp;<em>-MNR</em>
+					</td>
+					<!--<td>List[String]</td> -->
+					<td>[]</td>
+					<td>Metrics which are not required.  Any metrics specified here may be missing from either of the files in the comparison, and this will not affect the result of the comparison.  If metrics specified here are included in both files, their results will not be compared (they will be treated as METRICS_TO_IGNORE.</td>
+				</tr>
+				<tr>
 					<td><a href="#--METRICS_TO_IGNORE">--METRICS_TO_IGNORE</a><br />
 								&nbsp;<em>-MI</em>
 					</td>
 					<!--<td>List[String]</td> -->
 					<td>[]</td>
-					<td>Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.</td>
+					<td>Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.  Note that while the values of these metrics are not compared, if they are missing from either file that will be considered a difference.  Use METRICS_NOT_REQUIRED to specify metrics which can be missing from either file without being considered a difference.</td>
 				</tr>
 				<tr>
 					<td><a href="#--OUTPUT">--OUTPUT</a><br />
@@ -682,6 +697,13 @@
 					<!--<td>File</td> -->
 					<td>null</td>
 					<td>Output file to write comparison results to.</td>
+				</tr>
+				<tr>
+					<td><a href="#--OUTPUT_TABLE">--OUTPUT_TABLE</a><br />
+					</td>
+					<!--<td>File</td> -->
+					<td>null</td>
+					<td>Output file to write table of differences to.</td>
 				</tr>
 				<tr>
 					<td><a href="#--version">--version</a><br />
@@ -713,13 +735,6 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -846,18 +861,6 @@
 			&nbsp;<span class="label">false</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
 			 / <small>-h</small>
 		</h3>
@@ -895,6 +898,18 @@
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--KEY">--KEY </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Columns to use as keys for matching metrics rows that should agree.  If not specified, it is assumed that rows should be in the same order.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM </a>
 			 / <small>NA</small>
 		</h3>
@@ -921,11 +936,23 @@
 			&nbsp;<span class="label">[]</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--METRICS_NOT_REQUIRED">--METRICS_NOT_REQUIRED </a>
+			 / <small>-MNR</small>
+		</h3>
+		<p class="args">
+			<b>Metrics which are not required.  Any metrics specified here may be missing from either of the files in the comparison, and this will not affect the result of the comparison.  If metrics specified here are included in both files, their results will not be compared (they will be treated as METRICS_TO_IGNORE.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">List[String]</span>
+			&nbsp;<span class="label">[]</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--METRICS_TO_IGNORE">--METRICS_TO_IGNORE </a>
 			 / <small>-MI</small>
 		</h3>
 		<p class="args">
-			<b>Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.</b><br />
+			<b>Metrics to ignore. Any metrics specified here will be excluded from comparison by the tool.  Note that while the values of these metrics are not compared, if they are missing from either file that will be considered a difference.  Use METRICS_NOT_REQUIRED to specify metrics which can be missing from either file without being considered a difference.</b><br />
 			
 		</p>
 		<p>
@@ -938,6 +965,18 @@
 		</h3>
 		<p class="args">
 			<b>Output file to write comparison results to.</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">File</span>
+			&nbsp;<span class="label">null</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--OUTPUT_TABLE">--OUTPUT_TABLE </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Output file to write table of differences to.</b><br />
 			
 		</p>
 		<p>
@@ -1086,7 +1125,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

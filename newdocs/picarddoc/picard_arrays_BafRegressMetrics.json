@@ -5,5 +5,6 @@
   "name": "BafRegressMetrics",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

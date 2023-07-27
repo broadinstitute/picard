@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "A metric class to hold the result of ClusterCrosscheckMetrics fingerprints.",
+  "description": "A metric class to hold the result of {@link ClusterCrosscheckMetrics} fingerprints.\n@author Yossi Farjoun",
   "name": "ClusteredCrosscheckMetric",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

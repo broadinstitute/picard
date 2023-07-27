@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "The following sequences can be found in\n        https://support.illumina.com/content/dam/illumina-support/documents/documentation/chemistry_documentation/experiment-design/illumina-adapter-sequences_1000000002694-01.pdf\n        and are protected by the following copyright notice:\n\n        Oligonucleotide sequences (c) 2016 Illumina, Inc. All rights reserved. Derivative works created by\n        Illumina customers are authorized for use with Illumina instruments and products only. All other\n        uses are strictly prohibited.",
@@ -66,6 +67,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -81,6 +83,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -96,6 +99,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -111,6 +115,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "Put barcodes only into the records that were not assigned to any declared barcode.",
@@ -139,6 +144,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -154,6 +160,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -169,6 +176,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -184,6 +192,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -199,6 +208,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -214,6 +224,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -229,6 +240,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "Hamming distance: The n-th base in the read is compared against the n-th base in the barcode. Unequal bases and low quality bases are considered mismatches. No-call read-bases are not considered mismatches. ",
@@ -257,6 +269,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -272,21 +285,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -302,6 +301,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -317,6 +317,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -332,6 +333,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -347,6 +349,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -362,6 +365,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -377,6 +381,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -392,6 +397,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -407,6 +413,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -422,6 +429,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -437,6 +445,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -452,6 +461,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -467,6 +477,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -482,6 +493,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -497,6 +509,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -512,6 +525,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -527,6 +541,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -542,6 +557,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -557,6 +573,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -572,6 +589,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -587,6 +605,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -602,6 +621,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -617,6 +637,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -632,6 +653,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -647,6 +669,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -662,6 +685,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -677,6 +701,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -692,6 +717,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -707,6 +733,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -722,6 +749,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -737,6 +765,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -752,6 +781,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -767,6 +797,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -782,6 +813,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -797,6 +829,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -812,6 +845,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -827,6 +861,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -842,6 +877,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -857,6 +893,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -872,6 +909,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -887,6 +925,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -902,6 +941,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -930,6 +970,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -962,12 +1003,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into\n SAM, BAM or CRAM file format.\n \u003cp/\u003e\n In this application, barcode data is read from Illumina data file groups, each of which is associated with a tile.\n Each tile may contain data for any number of barcodes, and a single barcode\u0027s data may span multiple tiles.  Once the\n barcode data is collected from files, each barcode\u0027s data is written to its own SAM/BAM/CRAM.  The barcode data must be\n written in order; this means that barcode data from each tile is sorted before it is written to file, and that if a\n barcode\u0027s data does span multiple tiles, data collected from each tile must be written in the order of the tiles\n themselves.\n \u003cp/\u003e\n This class employs a number of private subclasses to achieve this goal.  The TileReadAggregator controls the flow\n of operation.  It is fed a number of Tiles which it uses to spawn TileReaders.  TileReaders are responsible for\n reading Illumina data for their respective tiles from disk, and as they collect that data, it is fed back into the\n TileReadAggregator.  When a TileReader completes a tile, it notifies the TileReadAggregator, which reviews what was\n read and conditionally queues its writing to disk, baring in mind the requirements of write-order described in the\n previous paragraph.  As writes complete, the TileReadAggregator re-evaluates the state of reads/writes and may queue\n more writes.  When all barcodes for all tiles have been written, the TileReadAggregator shuts down.\n \u003cp/\u003e\n The TileReadAggregator controls task execution using a specialized ThreadPoolExecutor.  It accepts special Runnables\n of type PriorityRunnable which allow a priority to be assigned to the runnable.  When the ThreadPoolExecutor is\n assigning threads, it gives priority to those PriorityRunnables with higher priority values.  In this application,\n TileReaders are assigned lowest priority, and write tasks are assigned high priority.  It is designed in this fashion\n to minimize the amount of time data must remain in memory (write the data as soon as possible, then discard it from\n memory) while maximizing CPU usage.",
+  "description": "IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into\n SAM, BAM or CRAM file format.\n \u003cp/\u003e\n In this application, barcode data is read from Illumina data file groups, each of which is associated with a tile.\n Each tile may contain data for any number of barcodes, and a single barcode\u0027s data may span multiple tiles.  Once the\n barcode data is collected from files, each barcode\u0027s data is written to its own SAM/BAM/CRAM.  The barcode data must be\n written in order; this means that barcode data from each tile is sorted before it is written to file, and that if a\n barcode\u0027s data does span multiple tiles, data collected from each tile must be written in the order of the tiles\n themselves.\n \u003cp/\u003e\n This class employs a number of private subclasses to achieve this goal.  The TileReadAggregator controls the flow\n of operation.  It is fed a number of Tiles which it uses to spawn TileReaders.  TileReaders are responsible for\n reading Illumina data for their respective tiles from disk, and as they collect that data, it is fed back into the\n TileReadAggregator.  When a TileReader completes a tile, it notifies the TileReadAggregator, which reviews what was\n read and conditionally queues its writing to disk, baring in mind the requirements of write-order described in the\n previous paragraph.  As writes complete, the TileReadAggregator re-evaluates the state of reads/writes and may queue\n more writes.  When all barcodes for all tiles have been written, the TileReadAggregator shuts down.\n \u003cp/\u003e\n The TileReadAggregator controls task execution using a specialized ThreadPoolExecutor.  It accepts special Runnables\n of type PriorityRunnable which allow a priority to be assigned to the runnable.  When the ThreadPoolExecutor is\n assigning threads, it gives priority to those PriorityRunnables with higher priority values.  In this application,\n TileReaders are assigned lowest priority, and write tasks are assigned high priority.  It is designed in this fashion\n to minimize the amount of time data must remain in memory (write the data as soon as possible, then discard it from\n memory) while maximizing CPU usage.\n@author jburke@broadinstitute.org\n@author mccowan@broadinstitute.org",
   "name": "IlluminaBasecallsToSam",
   "group": "Base Calling",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

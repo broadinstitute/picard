@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "Class that holds detail metrics about Genotype Concordance",
+  "description": "Class that holds detail metrics about Genotype Concordance\n@author George Grant",
   "name": "GenotypeConcordanceDetailMetrics",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

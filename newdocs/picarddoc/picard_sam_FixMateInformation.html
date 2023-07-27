@@ -620,8 +620,8 @@ The program should run with fairly limited memory unless there are many mate pai
 		<h2>Overview</h2>
 		<h3>Summary</h3>
  This tool ensures that all mate-pair information is in sync between each read
- and its mate pair.  If no #OUTPUT file is supplied then the output is written to a temporary file
- and then copied over the #INPUT file (with the original placed in a .old file.)
+ and its mate pair.  If no {@link #OUTPUT} file is supplied then the output is written to a temporary file
+ and then copied over the {@link #INPUT} file (with the original placed in a .old file.)
  Reads marked with the secondary alignment flag are written to the output file unchanged.
  However, <b>supplementary</b> reads are corrected so that they point to the primary,
  non-supplemental mate record.
@@ -636,6 +636,7 @@ The program should run with fairly limited memory unless there are many mate pai
  <h3>Caveats</h3>
  The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart
  from each other in the file, as it keeps track of the unmatched mates
+@author Tim Fennell
 
 
 				<h3>FixMateInformation specific arguments</h3>
@@ -747,13 +748,6 @@ The program should run with fairly limited memory unless there are many mate pai
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -902,18 +896,6 @@ The program should run with fairly limited memory unless there are many mate pai
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1147,7 +1129,7 @@ The program should run with fairly limited memory unless there are many mate pai
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

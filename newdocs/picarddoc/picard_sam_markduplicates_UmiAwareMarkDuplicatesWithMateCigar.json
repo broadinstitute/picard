@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -94,7 +98,8 @@
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "deprecated",
+      "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -110,6 +115,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -125,6 +131,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -140,6 +147,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -155,6 +163,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -170,6 +179,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -185,6 +195,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -200,6 +211,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -215,6 +227,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -243,6 +256,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -258,6 +272,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -273,6 +288,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -288,6 +304,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -303,21 +320,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -333,6 +336,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -348,6 +352,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -363,6 +368,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -378,6 +384,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -393,6 +400,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -408,6 +416,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -423,6 +432,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -438,6 +448,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -453,6 +464,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -468,6 +480,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -483,6 +496,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -498,6 +512,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -513,6 +528,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -528,6 +544,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -543,6 +560,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -558,6 +576,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -573,6 +592,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -588,6 +608,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -603,6 +624,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -618,6 +640,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -633,6 +656,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -648,6 +672,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -663,6 +688,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -678,6 +704,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -693,6 +720,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -708,6 +736,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -736,6 +765,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -751,6 +781,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -766,6 +797,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -781,6 +813,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -796,6 +829,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -811,6 +845,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -826,6 +861,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -841,6 +877,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -856,6 +893,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -884,6 +922,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -916,12 +955,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003cp\u003eThis tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are\n defined as originating from a single fragment of DNA. It is based on the MarkDuplicatesWithMateCigar tool, with added logic\n to leverage Unique Molecular Identifier (UMI) information.\u003c/p\u003e\n\n \u003cp\u003eIt makes use of the fact that duplicate sets with UMIs can be broken up into subsets based on\n information contained in the UMI.  In addition to assuming that all members of a duplicate set must have the same start and end position, it imposes that\n they must also have sufficiently similar UMIs. In this context, \u0027sufficiently similar\u0027 is parameterized by the command line\n argument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the same\n original molecule. This logic allows for sequencing errors in UMIs.\u003c/p\u003e\n \u003cp\u003e If UMIs contain dashes, the dashes will be ignored. If UMIs contain Ns, these UMIs will not contribute to UMI metrics\n associated with each record. If the MAX_EDIT_DISTANCE_TO_JOIN allows, UMIs with Ns will be included in the duplicate set and\n the UMI metrics associated with each duplicate set. Ns are counted as an edit distance from other bases {ATCG}, but are not\n considered different from each other.\u003c/p\u003e\n \u003cp\u003eThis tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or\n MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.\u003c/p\u003e\n\n \u003cp\u003eNote also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.\n This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips\n (ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. \u003c/p\u003e\n\n \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n\n java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\\\\u003cbr /\u003e\n      I\u003dinput.bam \\\\\u003cbr /\u003e\n      O\u003doutput.bam \\\\\u003cbr /\u003e\n      M\u003doutput_duplicate_metrics.txt \\\\\u003cbr /\u003e\n      UMI_METRICS\u003doutput_umi_metrics.txt\n \u003c/pre\u003e\n \u003chr /\u003e",
+  "description": "\u003cp\u003eThis tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are\n defined as originating from a single fragment of DNA. It is based on the {@link MarkDuplicatesWithMateCigar} tool, with added logic\n to leverage Unique Molecular Identifier (UMI) information.\u003c/p\u003e\n\n \u003cp\u003eIt makes use of the fact that duplicate sets with UMIs can be broken up into subsets based on\n information contained in the UMI.  In addition to assuming that all members of a duplicate set must have the same start and end position, it imposes that\n they must also have sufficiently similar UMIs. In this context, \u0027sufficiently similar\u0027 is parameterized by the command line\n argument MAX_EDIT_DISTANCE_TO_JOIN, which sets the edit distance between UMIs that will be considered to be part of the same\n original molecule. This logic allows for sequencing errors in UMIs.\u003c/p\u003e\n \u003cp\u003e If UMIs contain dashes, the dashes will be ignored. If UMIs contain Ns, these UMIs will not contribute to UMI metrics\n associated with each record. If the MAX_EDIT_DISTANCE_TO_JOIN allows, UMIs with Ns will be included in the duplicate set and\n the UMI metrics associated with each duplicate set. Ns are counted as an edit distance from other bases {ATCG}, but are not\n considered different from each other.\u003c/p\u003e\n \u003cp\u003eThis tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see {@link MarkDuplicates} or\n {@link MarkDuplicatesWithMateCigar}. Mixed data (where some reads have UMIs and others do not) is not supported.\u003c/p\u003e\n\n \u003cp\u003eNote also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.\n This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips\n (ex. skipping introns) in the alignment records would force making that window very large, thus exhausting memory. \u003c/p\u003e\n\n \u003cp\u003eNote: Metrics labeled as percentages are actually expressed as fractions!\u003c/p\u003e\n \u003ch4\u003eUsage example:\u003c/h4\u003e\n \u003cpre\u003e\n\n java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\\\\u003cbr/\u003e\n      I\u003dinput.bam \\\\\u003cbr/\u003e\n      O\u003doutput.bam \\\\\u003cbr/\u003e\n      M\u003doutput_duplicate_metrics.txt \\\\\u003cbr/\u003e\n      UMI_METRICS\u003doutput_umi_metrics.txt\n \u003c/pre\u003e\n \u003chr/\u003e\n@author fleharty",
   "name": "UmiAwareMarkDuplicatesWithMateCigar",
   "group": "Read Data Manipulation",
   "beta": false,
-  "experimental": true
+  "experimental": true,
+  "deprecated": false
 }

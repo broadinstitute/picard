@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "Holds summary statistics from RRBS processing QC",
+  "description": "Holds summary statistics from RRBS processing QC\n@author jgentry",
   "name": "RrbsSummaryMetrics",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

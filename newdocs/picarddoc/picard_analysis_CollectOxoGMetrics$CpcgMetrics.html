@@ -619,93 +619,89 @@
 					</thead>
 					<tr>
 						<td>SAMPLE_ALIAS<br />
-						<td>The name of the sample being assayed. </td>
+						<td>The name of the sample being assayed.</td>
 					</tr>
 					<tr>
 						<td>LIBRARY<br />
-						<td>The name of the library being assayed. </td>
+						<td>The name of the library being assayed.</td>
 					</tr>
 					<tr>
 						<td>CONTEXT<br />
-						<td>The sequence context being reported on. </td>
+						<td>The sequence context being reported on.</td>
 					</tr>
 					<tr>
 						<td>TOTAL_SITES<br />
-						<td>The total number of sites that had at least one base covering them. </td>
+						<td>The total number of sites that had at least one base covering them.</td>
 					</tr>
 					<tr>
 						<td>TOTAL_BASES<br />
-						<td>The total number of basecalls observed at all sites. </td>
+						<td>The total number of basecalls observed at all sites.</td>
 					</tr>
 					<tr>
 						<td>REF_NONOXO_BASES<br />
-						<td>The number of reference alleles observed as C in read 1 and G in read 2. </td>
+						<td>The number of reference alleles observed as C in read 1 and G in read 2.</td>
 					</tr>
 					<tr>
 						<td>REF_OXO_BASES<br />
-						<td>The number of reference alleles observed as G in read 1 and C in read 2. </td>
+						<td>The number of reference alleles observed as G in read 1 and C in read 2.</td>
 					</tr>
 					<tr>
 						<td>REF_TOTAL_BASES<br />
-						<td>The total number of reference alleles observed </td>
+						<td>The total number of reference alleles observed</td>
 					</tr>
 					<tr>
 						<td>ALT_NONOXO_BASES<br />
-						<td> The count of observed A basecalls at C reference positions and T basecalls
+						<td>The count of observed A basecalls at C reference positions and T basecalls
  at G reference bases that are correlated to instrument read number in a way
- that rules out oxidation as the cause
-</td>
+ that rules out oxidation as the cause</td>
 					</tr>
 					<tr>
 						<td>ALT_OXO_BASES<br />
-						<td> The count of observed A basecalls at C reference positions and T basecalls
+						<td>The count of observed A basecalls at C reference positions and T basecalls
  at G reference bases that are correlated to instrument read number in a way
- that is consistent with oxidative damage.
-</td>
+ that is consistent with oxidative damage.</td>
 					</tr>
 					<tr>
 						<td>OXIDATION_ERROR_RATE<br />
-						<td>The oxo error rate, calculated as max(ALT_OXO_BASES - ALT_NONOXO_BASES, 1) / TOTAL_BASES </td>
+						<td>The oxo error rate, calculated as max(ALT_OXO_BASES - ALT_NONOXO_BASES, 1) / TOTAL_BASES</td>
 					</tr>
 					<tr>
 						<td>OXIDATION_Q<br />
-						<td>-10 * log10(OXIDATION_ERROR_RATE) </td>
+						<td>-10 * log10(OXIDATION_ERROR_RATE)</td>
 					</tr>
 					<tr>
 						<td>C_REF_REF_BASES<br />
-						<td>The number of ref basecalls observed at sites where the genome reference == C. </td>
+						<td>The number of ref basecalls observed at sites where the genome reference == C.</td>
 					</tr>
 					<tr>
 						<td>G_REF_REF_BASES<br />
-						<td>The number of ref basecalls observed at sites where the genome reference == G. </td>
+						<td>The number of ref basecalls observed at sites where the genome reference == G.</td>
 					</tr>
 					<tr>
 						<td>C_REF_ALT_BASES<br />
-						<td>The number of alt (A/T) basecalls observed at sites where the genome reference == C. </td>
+						<td>The number of alt (A/T) basecalls observed at sites where the genome reference == C.</td>
 					</tr>
 					<tr>
 						<td>G_REF_ALT_BASES<br />
-						<td>The number of alt (A/T) basecalls observed at sites where the genome reference == G. </td>
+						<td>The number of alt (A/T) basecalls observed at sites where the genome reference == G.</td>
 					</tr>
 					<tr>
 						<td>C_REF_OXO_ERROR_RATE<br />
-						<td> The rate at which C>A and G>T substitutions are observed at C reference sites above the expected rate if there
- were no bias between sites with a C reference base vs. a G reference base.
-</td>
+						<td>The rate at which C>A and G>T substitutions are observed at C reference sites above the expected rate if there
+ were no bias between sites with a C reference base vs. a G reference base.</td>
 					</tr>
 					<tr>
 						<td>C_REF_OXO_Q<br />
-						<td>C_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score. </td>
+						<td>C_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score.</td>
 					</tr>
 					<tr>
 						<td>G_REF_OXO_ERROR_RATE<br />
-						<td> The rate at which C>A and G>T substitutions are observed at G reference sites above the expected rate if there
- were no bias between sites with a C reference base vs. a G reference base.
-</td>
+						<td>The rate at which C>A and G>T substitutions are observed at G reference sites above the expected rate if there
+ were no bias between sites with a C reference base vs. a G reference base.</td>
 					</tr>
 					<tr>
 						<td>G_REF_OXO_Q<br />
-						<td>G_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score. </td>
+						<td>G_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -719,7 +715,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

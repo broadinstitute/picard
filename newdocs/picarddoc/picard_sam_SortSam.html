@@ -618,7 +618,7 @@
  Alignments within these subgroups are secondarily sorted using the left-most mapping position of the read (POS).
  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p> For queryname-sorted alignments, the tool
  orders records deterministically by queryname field followed by record strand orientation flag, primary record flag, and secondary
- alignment flag. (See htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)} for details).
+ alignment flag. (See {@link htsjdk.samtools.SAMRecordQueryNameComparator#compare(SAMRecord, SAMRecord)}} for details).
  This ordering may change in the future.
 
  <h3> Inputs</h3>
@@ -635,6 +635,7 @@
      OUTPUT=sorted.bam \
      SORT_ORDER=coordinate
  </pre>
+@author alecw@broadinstitute.org
 
 
 				<h3>SortSam specific arguments</h3>
@@ -723,13 +724,6 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -854,18 +848,6 @@
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1085,7 +1067,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

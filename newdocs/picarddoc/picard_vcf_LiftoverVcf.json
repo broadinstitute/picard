@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,21 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -284,6 +286,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -299,6 +302,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -314,6 +318,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -329,6 +334,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -344,6 +350,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -359,6 +366,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -374,6 +382,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -402,6 +411,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -434,6 +444,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -449,6 +460,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -464,6 +476,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -479,12 +492,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Tool for \"lifting over\" a VCF from one genome build to another, producing a properly headered,\n sorted and indexed VCF in one go.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n This tool adjusts the coordinates of variants within a VCF file to match a new reference. The\n output file will be sorted and indexed using the target reference build. To be clear, #REFERENCE_SEQUENCE should be the\n \u003cem\u003etarget\u003c/em\u003e reference build (that is, the \"new\" one). The tool is based on the \u003ca href\u003d\"http://genome.ucsc.edu/cgi-bin/hgLiftOver\"\u003eUCSC LiftOver tool\u003c/a\u003e\n and uses a UCSC chain file to guide its operation. \u003cbr /\u003e\n\n For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed,\n and, in the case that the reference and alternate alleles of a SNP have been swapped in the new genome build, it will\n adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.\n \u003cbr /\u003e\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar LiftoverVcf \\\\\n     I\u003dinput.vcf \\\\\n     O\u003dlifted_over.vcf \\\\\n     CHAIN\u003db37tohg38.chain \\\\\n     REJECT\u003drejected_variants.vcf \\\\\n     R\u003dreference_sequence.fasta\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n \u003ch4\u003eRejected Records\u003c/h4\u003e\n Records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the\n source and target reference genomes.  Rejected records will be emitted to the #REJECT file using the source\n genome build coordinates. The reason for the rejection will be stated in the FILTER field, and more detail may be placed\n in the INFO field.\n \u003ch4\u003eMemory Use\u003c/h4\u003e\n LiftOverVcf sorts the output using a htsjdk.samtools.util.SortingCollection which relies on #MAX_RECORDS_IN_RAM\n to specify how many (vcf) records to hold in memory before \"spilling\" to disk. The default value is reasonable when sorting SAM files,\n but not for VCFs as there is no good default due to the dependence on the number of samples and amount of information in the INFO and FORMAT\n fields. Consider lowering to 100,000 or even less if you have many genotypes.",
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Tool for \"lifting over\" a VCF from one genome build to another, producing a properly headered,\n sorted and indexed VCF in one go.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n This tool adjusts the coordinates of variants within a VCF file to match a new reference. The\n output file will be sorted and indexed using the target reference build. To be clear, {@link #REFERENCE_SEQUENCE} should be the\n \u003cem\u003etarget\u003c/em\u003e reference build (that is, the \"new\" one). The tool is based on the \u003ca href\u003d\"http://genome.ucsc.edu/cgi-bin/hgLiftOver\"\u003eUCSC LiftOver tool\u003c/a\u003e\n and uses a UCSC chain file to guide its operation. \u003cbr/\u003e\n\n For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed,\n and, in the case that the reference and alternate alleles of a SNP have been swapped in the new genome build, it will\n adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.\n \u003cbr/\u003e\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar LiftoverVcf \\\\\n     I\u003dinput.vcf \\\\\n     O\u003dlifted_over.vcf \\\\\n     CHAIN\u003db37tohg38.chain \\\\\n     REJECT\u003drejected_variants.vcf \\\\\n     R\u003dreference_sequence.fasta\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n \u003ch4\u003eRejected Records\u003c/h4\u003e\n Records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the\n source and target reference genomes.  Rejected records will be emitted to the {@link #REJECT} file using the source\n genome build coordinates. The reason for the rejection will be stated in the FILTER field, and more detail may be placed\n in the INFO field.\n \u003ch4\u003eMemory Use\u003c/h4\u003e\n LiftOverVcf sorts the output using a {@link htsjdk.samtools.util.SortingCollection} which relies on {@link #MAX_RECORDS_IN_RAM}\n to specify how many (vcf) records to hold in memory before \"spilling\" to disk. The default value is reasonable when sorting SAM files,\n but not for VCFs as there is no good default due to the dependence on the number of samples and amount of information in the INFO and FORMAT\n fields. Consider lowering to 100,000 or even less if you have many genotypes.\n@author Tim Fennell",
   "name": "LiftoverVcf",
   "group": "Variant Manipulation",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

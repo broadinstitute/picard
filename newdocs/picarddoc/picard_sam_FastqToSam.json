@@ -14,6 +14,23 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
+      "options": []
+    },
+    {
+      "summary": "Allow empty input fastq",
+      "name": "--ALLOW_EMPTY_FASTQ",
+      "synonyms": "NA",
+      "type": "Boolean",
+      "required": "no",
+      "fulltext": "",
+      "defaultValue": "false",
+      "minValue": "NA",
+      "maxValue": "NA",
+      "minRecValue": "NA",
+      "maxRecValue": "NA",
+      "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,21 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +286,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -284,6 +302,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -299,6 +318,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -314,6 +334,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -329,6 +350,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -357,6 +379,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -372,6 +395,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -387,6 +411,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -402,6 +427,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -417,6 +443,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -432,6 +459,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -447,6 +475,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -462,6 +491,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -497,7 +527,8 @@
       "maxValue": "NA",
       "minRecValue": "NA",
       "maxRecValue": "NA",
-      "kind": "deprecated",
+      "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -513,6 +544,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -528,6 +560,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -543,10 +576,11 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
-      "summary": "Use sequential fastq files with the suffix \u003cprefix\u003e_###.fastq or \u003cprefix\u003e_###.fastq.gz.The files should be named:\n    \u003cprefix\u003e_001.\u003cextension\u003e, \u003cprefix\u003e_002.\u003cextension\u003e, ..., \u003cprefix\u003e_XYZ.\u003cextension\u003e\n The base files should be:\n    \u003cprefix\u003e_001.\u003cextension\u003e\n An example would be:\n    RUNNAME_S8_L005_R1_001.fastq\n    RUNNAME_S8_L005_R1_002.fastq\n    RUNNAME_S8_L005_R1_003.fastq\n    RUNNAME_S8_L005_R1_004.fastq\nRUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.",
+      "summary": "Use sequential fastq files with the suffix \u003cprefix\u003e_###.fastq[.gz]. The files should be named:\n    \u003cprefix\u003e_001.\u003cextension\u003e, \u003cprefix\u003e_002.\u003cextension\u003e, ..., \u003cprefix\u003e_XYZ.\u003cextension\u003e\nUse the *first* file for the --FASTQ argument, e.g., --FASTQ \u003cprefix\u003e_001.\u003cextension\u003e.\nIf paired end, use the *first* read2 file for the --FASTQ2 argument, e.g., \u003cR2_prefix\u003e_001.\u003cextension\u003e.\nExample: combine and convert 4 single end fastqs with filenames:\n    RUNNAME_S8_L005_R1_001.fastq\n    RUNNAME_S8_L005_R1_002.fastq\n    RUNNAME_S8_L005_R1_003.fastq\n    RUNNAME_S8_L005_R1_004.fastq\nRun command with --FASTQ RUNNAME_S8_L005_R1_001.fastq --USE_SEQUENTIAL_FASTQS true",
       "name": "--USE_SEQUENTIAL_FASTQS",
       "synonyms": "NA",
       "type": "boolean",
@@ -558,6 +592,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -573,6 +608,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -601,6 +637,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -633,6 +670,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
@@ -640,5 +678,6 @@
   "name": "FastqToSam",
   "group": "Read Data Manipulation",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

@@ -652,7 +652,7 @@ Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) app
  as the \"truth\" (aka standard, or reference) and the other as the \"call\" that is being evaluated for accuracy. The
  Comparison can be restricted to a confidence interval which is typically used in order to enable proper assessment of
  False Positives and the False-Positive Rate (FPR).
- <br />
+ <br/>
  <h3>Usage example</h3>
  <h4>Compare two VCFs within a confidence region</h4>
  <pre>
@@ -672,15 +672,15 @@ Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) app
  SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes
   of variants are not included.
  <ul>
- <li>GenotypeConcordanceContingencyMetrics enumerate the constituents of each contingent in a callset including true-positive
+ <li>{@link GenotypeConcordanceContingencyMetrics} enumerate the constituents of each contingent in a callset including true-positive
  (TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls.</li>
- <li>GenotypeConcordanceDetailMetrics include the numbers of SNPs and INDELs for each contingent genotype as well as the
+ <li>{@link GenotypeConcordanceDetailMetrics} include the numbers of SNPs and INDELs for each contingent genotype as well as the
  number of validated genotypes.</li>
- <li>GenotypeConcordanceSummaryMetrics provide specific details for the variant caller performance on a callset including
+ <li>{@link GenotypeConcordanceSummaryMetrics} provide specific details for the variant caller performance on a callset including
  values for sensitivity, specificity, and positive predictive values.</li>
  </ul>
- <br />
- <br />
+ <br/>
+ <br/>
  Useful definitions applicable to alleles and genotypes:
  <ul>
  <li>Truthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validated
@@ -696,6 +696,8 @@ Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) app
  <li>The concordance state will be stored in the CONC_ST tag in the INFO field</li>
  <li>The truth sample name will be \"truth\" and call sample name will be \"call\"</li>
  </ul>
+@author Tim Fennell
+@author George Grant
 
 
 				<h3>GenotypeConcordance specific arguments</h3>
@@ -866,13 +868,6 @@ Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) app
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
@@ -1020,18 +1015,6 @@ Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) app
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1351,7 +1334,7 @@ Validated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) app
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

@@ -608,8 +608,8 @@
 		<hr>
 		<h2>Overview</h2>
 		Class for holding metrics on a single fingerprint.
- Note: this is distinct from FingerprintingDetailMetrics and
- FingerprintingSummaryMetrics in that it is calculated on a single fingerprint,
+ Note: this is distinct from {@link FingerprintingDetailMetrics} and
+ {@link FingerprintingSummaryMetrics} in that it is calculated on a single fingerprint,
  and attempts to describe how likely that fingerprint is to have arisen from an actual sample
  as opposed to having artifacts such as contamination, or strong bias towards homozygous genotypes.
 
@@ -630,23 +630,23 @@
 					</thead>
 					<tr>
 						<td>SAMPLE_ALIAS<br />
-						<td>The Sample alias taken from RG header or #CHROME line </td>
+						<td>The Sample alias taken from RG header or #CHROME line</td>
 					</tr>
 					<tr>
 						<td>SOURCE<br />
-						<td>The originating file (if available) for this fingerprint </td>
+						<td>The originating file (if available) for this fingerprint</td>
 					</tr>
 					<tr>
 						<td>INFO<br />
-						<td>Additional information about the fingerprint </td>
+						<td>Additional information about the fingerprint</td>
 					</tr>
 					<tr>
 						<td>HAPLOTYPES<br />
-						<td>Number of haplotypes examined </td>
+						<td>Number of haplotypes examined</td>
 					</tr>
 					<tr>
 						<td>HAPLOTYPES_WITH_EVIDENCE<br />
-						<td>Number of haplotypes that had evidence in the source file </td>
+						<td>Number of haplotypes that had evidence in the source file</td>
 					</tr>
 					<tr>
 						<td>DEFINITE_GENOTYPES<br />
@@ -670,11 +670,11 @@
 					</tr>
 					<tr>
 						<td>EXPECTED_HOM_ALLELE1<br />
-						<td>Expected number of  major allele homozygous calls </td>
+						<td>Expected number of  major allele homozygous calls</td>
 					</tr>
 					<tr>
 						<td>EXPECTED_HOM_ALLELE2<br />
-						<td>Expected number of major allele homozygous calls </td>
+						<td>Expected number of major allele homozygous calls</td>
 					</tr>
 					<tr>
 						<td>EXPECTED_HET<br />
@@ -682,7 +682,7 @@
 					</tr>
 					<tr>
 						<td>CHI_SQUARED_PVALUE<br />
-						<td>The Chi-squared pvalue of the observed counts vector relative to the expected counts, (3x2 table) </td>
+						<td>The Chi-squared pvalue of the observed counts vector relative to the expected counts, (3x2 table)</td>
 					</tr>
 					<tr>
 						<td>LOG10_CHI_SQUARED_PVALUE<br />
@@ -694,31 +694,31 @@
 					</tr>
 					<tr>
 						<td>HET_CHI_SQUARED_PVALUE<br />
-						<td>The Chi-squared pvalue for the number of HETs and HOMs relative to the expected counts (2x2 table) </td>
+						<td>The Chi-squared pvalue for the number of HETs and HOMs relative to the expected counts (2x2 table)</td>
 					</tr>
 					<tr>
 						<td>LOG10_HET_CHI_SQUARED_PVALUE<br />
-						<td>The log10 of the Chi-squared pvalue for the number of HETs and HOMs </td>
+						<td>The log10 of the Chi-squared pvalue for the number of HETs and HOMs</td>
 					</tr>
 					<tr>
 						<td>HET_CROSS_ENTROPY_LOD<br />
-						<td>The categorical cross entropy of the counts of HETs and HOMs relative to the expected counts (big is bad) </td>
+						<td>The categorical cross entropy of the counts of HETs and HOMs relative to the expected counts (big is bad)</td>
 					</tr>
 					<tr>
 						<td>HOM_CHI_SQUARED_PVALUE<br />
-						<td>The Chi-squared pvalue for {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} relative to the expected counts (2x2 table) </td>
+						<td>The Chi-squared pvalue for {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} relative to the expected counts (2x2 table)</td>
 					</tr>
 					<tr>
 						<td>LOG10_HOM_CHI_SQUARED_PVALUE<br />
-						<td>The log10 of the Chi-squared pvalue for {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} </td>
+						<td>The log10 of the Chi-squared pvalue for {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2}</td>
 					</tr>
 					<tr>
 						<td>HOM_CROSS_ENTROPY_LOD<br />
-						<td>The categorical cross entropy of {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} relative to the expected counts (big is bad) </td>
+						<td>The categorical cross entropy of {@link #NUM_HOM_ALLELE1} and {@link #NUM_HOM_ALLELE2} relative to the expected counts (big is bad)</td>
 					</tr>
 					<tr>
 						<td>LOD_SELF_CHECK<br />
-						<td>The fingerprinting LOD score this sample gets when compared to itself (big is good) </td>
+						<td>The fingerprinting LOD score this sample gets when compared to itself (big is good)</td>
 					</tr>
 					<tr>
 						<td>DISCRIMINATORY_POWER<br />
@@ -737,7 +737,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

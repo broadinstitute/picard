@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": [
         {
           "summary": "Output aligned reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)",
@@ -110,21 +115,6 @@
       ]
     },
     {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
-      "options": []
-    },
-    {
       "summary": "display the help message",
       "name": "--help",
       "synonyms": "-h",
@@ -137,6 +127,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -152,6 +143,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -167,6 +159,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -182,6 +175,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -197,6 +191,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -212,6 +207,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -227,6 +223,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -242,6 +239,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -257,6 +255,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -272,6 +271,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -287,6 +287,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -323,6 +324,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -338,6 +340,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -353,6 +356,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -368,6 +372,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -383,6 +388,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -398,6 +404,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -426,6 +433,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -458,6 +466,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -473,12 +482,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Subsets a SAM file by either selecting or excluding certain reads\n \u003cp\u003e\n \u003ch3\u003eDetails\u003c/h3\u003e\n Subsets a SAM or BAM file by either excluding or selecting reads as specified by FILTER.\n Other parameters influence the behavior of the FILTER algorithm as described below.\n \u003cp\u003e\n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003eFilter by queryname:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar FilterSamReads \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       READ_LIST_FILE\u003dread_names.txt \\\n       FILTER\u003dincludeReadList\n \u003c/pre\u003e\n \u003ch4\u003eFilter by interval:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar FilterSamReads \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       INTERVAL_LIST\u003dregions.interval_list \\\n       FILTER\u003dincludePairedIntervals\n \u003c/pre\u003e\n \u003ch4\u003eFilter reads having a (2-base or more) soft clip on the beginning of the read:\u003c/h4\u003e\n \u003cpre\u003e\n cat \u003c\u003cEOF \u003e script.js\n // reads having a soft clip larger than 2 bases in start of read\n function accept(rec) {\n     if (rec.getReadUnmappedFlag()) return false;\n     var cigar \u003d rec.getCigar();\n     if (cigar \u003d\u003d null) return false;\n     var ce \u003d cigar.getCigarElement(0);\n     return ce.getOperator().name() \u003d\u003d \"S\" \u0026\u0026 ce.length() \u003e 2;\n }\n\n accept(record);\n EOF\n\n java -jar picard.jar FilterSamReads \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       JAVASCRIPT_FILE\u003dscript.js \\\n       FILTER\u003dincludeJavascript\n \u003c/pre\u003e",
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Subsets a SAM file by either selecting or excluding certain reads\n \u003cp\u003e\n \u003ch3\u003eDetails\u003c/h3\u003e\n Subsets a SAM or BAM file by either excluding or selecting reads as specified by FILTER.\n Other parameters influence the behavior of the FILTER algorithm as described below.\n \u003cp\u003e\n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003eFilter by queryname:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar FilterSamReads \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       READ_LIST_FILE\u003dread_names.txt \\\n       FILTER\u003dincludeReadList\n \u003c/pre\u003e\n \u003ch4\u003eFilter by interval:\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar FilterSamReads \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       INTERVAL_LIST\u003dregions.interval_list \\\n       FILTER\u003dincludePairedIntervals\n \u003c/pre\u003e\n \u003ch4\u003eFilter reads having a (2-base or more) soft clip on the beginning of the read:\u003c/h4\u003e\n \u003cpre\u003e\n cat \u003c\u003cEOF\u003e script.js\n // reads having a soft clip larger than 2 bases in start of read\n function accept(rec) {\n     if (rec.getReadUnmappedFlag()) return false;\n     var cigar \u003d rec.getCigar();\n     if (cigar \u003d\u003d null) return false;\n     var ce \u003d cigar.getCigarElement(0);\n     return ce.getOperator().name() \u003d\u003d \"S\" \u0026\u0026 ce.length() \u003e 2;\n }\n\n accept(record);\n EOF\n\n java -jar picard.jar FilterSamReads \\\n       I\u003dinput.bam \\\n       O\u003doutput.bam \\\n       JAVASCRIPT_FILE\u003dscript.js \\\n       FILTER\u003dincludeJavascript\n \u003c/pre\u003e",
   "name": "FilterSamReads",
   "group": "Read Data Manipulation",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,21 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -282,6 +283,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -314,12 +316,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Clusters the results from a CrosscheckFingerprints run according to the LOD score. The resulting metric file\n can be used to assist diagnosing results from CrosscheckFingerprints. It clusters the connectivity graph between the\n different groups. Two groups are connected if they have a LOD score greater than the #LOD_THRESHOLD.\n \u003cbr/\u003e\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n The results of running CrosscheckFingerprints can be difficult to analyze, especially when many groups are\n related (meaning LOD greater than #LOD_THRESHOLD) in non-transitive manner (A is related to B, B is related to C,\n but A doesn\u0027t seem to be related to C.) ClusterCrosscheckMetrics clusters the metrics from CrosscheckFingerprints\n so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would\n end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters\n do not get high LOD scores when compared to each other.\n \u003cbr/\u003e\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar ClusterCrosscheckMetrics \\\n              INPUT\u003dsample.crosscheck_metrics \\\n              LOD_THRESHOLD\u003d3 \\\n              OUTPUT\u003dsample.clustered.crosscheck_metrics\n \u003c/pre\u003e\n\n The resulting file, consists of the ClusteredCrosscheckMetric class and contains the original crosscheck metric\n values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes\n the ClusteredCrosscheckMetric#CLUSTER identifier and the size of the cluster (in ClusteredCrosscheckMetric#CLUSTER_SIZE.)\n Groups that do not have high LOD scores with any other group (including itself!) will not be included in the metric file.\n Note that cross-group comparisons are not included in the metric file.",
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Clusters the results from a {@link CrosscheckFingerprints} run according to the LOD score. The resulting metric file\n can be used to assist diagnosing results from {@link CrosscheckFingerprints}. It clusters the connectivity graph between the\n different groups. Two groups are connected if they have a LOD score greater than the {@link #LOD_THRESHOLD}.\n \u003cbr/\u003e\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n The results of running {@link CrosscheckFingerprints} can be difficult to analyze, especially when many groups are\n related (meaning LOD greater than {@link #LOD_THRESHOLD}) in non-transitive manner (A is related to B, B is related to C,\n but A doesn\u0027t seem to be related to C.) {@link ClusterCrosscheckMetrics} clusters the metrics from {@link CrosscheckFingerprints}\n so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would\n end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters\n do not get high LOD scores when compared to each other.\n \u003cbr/\u003e\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar ClusterCrosscheckMetrics \\\n              INPUT\u003dsample.crosscheck_metrics \\\n              LOD_THRESHOLD\u003d3 \\\n              OUTPUT\u003dsample.clustered.crosscheck_metrics\n \u003c/pre\u003e\n\n The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and contains the original crosscheck metric\n values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes\n the {@link ClusteredCrosscheckMetric#CLUSTER} identifier and the size of the cluster (in {@link ClusteredCrosscheckMetric#CLUSTER_SIZE}.)\n Groups that do not have high LOD scores with any other group (including itself!) will not be included in the metric file.\n Note that cross-group comparisons are not included in the metric file.\n@author Yossi Farjoun",
   "name": "ClusterCrosscheckMetrics",
   "group": "Diagnostics and Quality Control",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

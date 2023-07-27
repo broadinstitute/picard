@@ -1,9 +1,10 @@
 {
   "summary": "Metrics",
   "arguments": [],
-  "description": "Summary fingerprinting metrics and statistics about the comparison of the sequence data\n from a single read group (lane or index within a lane) vs. a set of known genotypes for\n the expected sample.",
+  "description": "Summary fingerprinting metrics and statistics about the comparison of the sequence data\n from a single read group (lane or index within a lane) vs. a set of known genotypes for\n the expected sample.\n@author Tim Fennell",
   "name": "FingerprintingSummaryMetrics",
   "group": "Metrics",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

@@ -717,6 +717,13 @@
 					<td>Allow (and ignore) empty lines</td>
 				</tr>
 				<tr>
+					<td><a href="#--ALLOW_EMPTY_FASTQ">--ALLOW_EMPTY_FASTQ</a><br />
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Allow empty input fastq</td>
+				</tr>
+				<tr>
 					<td><a href="#--arguments_file">--arguments_file</a><br />
 					</td>
 					<!--<td>List[File]</td> -->
@@ -858,20 +865,27 @@
 					<td>The sort order for the output BAM/SAM/CRAM file.</td>
 				</tr>
 				<tr>
+					<td><a href="#--STRIP_UNPAIRED_MATE_NUMBER">--STRIP_UNPAIRED_MATE_NUMBER</a><br />
+					</td>
+					<!--<td>Boolean</td> -->
+					<td>false</td>
+					<td>Deprecated (No longer used). If true and this is an unpaired fastq any occurrence of '/1' or '/2' will be removed from the end of a read name.</td>
+				</tr>
+				<tr>
 					<td><a href="#--USE_SEQUENTIAL_FASTQS">--USE_SEQUENTIAL_FASTQS</a><br />
 					</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
-					<td>Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz.The files should be named:
+					<td>Use sequential fastq files with the suffix <prefix>_###.fastq[.gz]. The files should be named:
     <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>
- The base files should be:
-    <prefix>_001.<extension>
- An example would be:
+Use the *first* file for the --FASTQ argument, e.g., --FASTQ <prefix>_001.<extension>.
+If paired end, use the *first* read2 file for the --FASTQ2 argument, e.g., <R2_prefix>_001.<extension>.
+Example: combine and convert 4 single end fastqs with filenames:
     RUNNAME_S8_L005_R1_001.fastq
     RUNNAME_S8_L005_R1_002.fastq
     RUNNAME_S8_L005_R1_003.fastq
     RUNNAME_S8_L005_R1_004.fastq
-RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
+Run command with --FASTQ RUNNAME_S8_L005_R1_001.fastq --USE_SEQUENTIAL_FASTQS true</td>
 				</tr>
 				<tr>
 					<td><a href="#--version">--version</a><br />
@@ -903,13 +917,6 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -980,16 +987,6 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 					<td>false</td>
 					<td>display hidden arguments</td>
 				</tr>
-			<tr>
-				<th colspan="4" id="row-divider">Deprecated Arguments</th>
-			</tr>
-				<tr>
-					<td><a href="#--STRIP_UNPAIRED_MATE_NUMBER">--STRIP_UNPAIRED_MATE_NUMBER</a><br />
-					</td>
-					<!--<td>Boolean</td> -->
-					<td>false</td>
-					<td>Deprecated (No longer used). If true and this is an unpaired fastq any occurrence of '/1' or '/2' will be removed from the end of a read name.</td>
-				</tr>
 					</tbody>
 				</table>
 
@@ -1001,6 +998,18 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 		</h3>
 		<p class="args">
 			<b>Allow (and ignore) empty lines</b><br />
+			
+		</p>
+		<p>
+		<span class="label label-info ">Boolean</span>
+			&nbsp;<span class="label">false</span>
+		</p>
+		<hr style="border-bottom: dotted 1px #C0C0C0;" />
+		<h3><a name="--ALLOW_EMPTY_FASTQ">--ALLOW_EMPTY_FASTQ </a>
+			 / <small>NA</small>
+		</h3>
+		<p class="args">
+			<b>Allow empty input fastq</b><br />
 			
 		</p>
 		<p>
@@ -1105,18 +1114,6 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 		<p>
 		<span class="label label-info ">PicardHtsPath</span>
 			&nbsp;<span class="label">null</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1445,16 +1442,16 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</td>
 			 / <small>NA</small>
 		</h3>
 		<p class="args">
-			<b>Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz.The files should be named:
+			<b>Use sequential fastq files with the suffix <prefix>_###.fastq[.gz]. The files should be named:
     <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>
- The base files should be:
-    <prefix>_001.<extension>
- An example would be:
+Use the *first* file for the --FASTQ argument, e.g., --FASTQ <prefix>_001.<extension>.
+If paired end, use the *first* read2 file for the --FASTQ2 argument, e.g., <R2_prefix>_001.<extension>.
+Example: combine and convert 4 single end fastqs with filenames:
     RUNNAME_S8_L005_R1_001.fastq
     RUNNAME_S8_L005_R1_002.fastq
     RUNNAME_S8_L005_R1_003.fastq
     RUNNAME_S8_L005_R1_004.fastq
-RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</b><br />
+Run command with --FASTQ RUNNAME_S8_L005_R1_001.fastq --USE_SEQUENTIAL_FASTQS true</b><br />
 			
 		</p>
 		<p>
@@ -1531,7 +1528,7 @@ RUNNAME_S8_L005_R1_001.fastq should be provided as FASTQ.</b><br />
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

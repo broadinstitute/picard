@@ -608,6 +608,7 @@
 		<hr>
 		<h2>Overview</h2>
 		A class to store information relevant for biological rate estimation
+@author Yossi Farjoun
 
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -619,148 +620,119 @@
 					</thead>
 					<tr>
 						<td>nSites<br />
-						<td> The count of sites used.
-</td>
+						<td>The count of sites used.</td>
 					</tr>
 					<tr>
 						<td>nThreeAllelesSites<br />
-						<td> The count of sites in which a third allele was found.
-</td>
+						<td>The count of sites in which a third allele was found.</td>
 					</tr>
 					<tr>
 						<td>nTotalReads<br />
-						<td> The total number of reads over the het sites.
-</td>
+						<td>The total number of reads over the het sites.</td>
 					</tr>
 					<tr>
 						<td>nDuplicateSets<br />
-						<td> The number of duplicate sets examined.
-</td>
+						<td>The number of duplicate sets examined.</td>
 					</tr>
 					<tr>
 						<td>nExactlyTriple<br />
-						<td> The number of sets of size exactly 3 found.
-</td>
+						<td>The number of sets of size exactly 3 found.</td>
 					</tr>
 					<tr>
 						<td>nExactlyDouble<br />
-						<td> The number of sets of size exactly 2 found.
-</td>
+						<td>The number of sets of size exactly 2 found.</td>
 					</tr>
 					<tr>
 						<td>nReadsInBigSets<br />
-						<td> The number of reads in duplicate of sizes greater than 3.
-</td>
+						<td>The number of reads in duplicate of sizes greater than 3.</td>
 					</tr>
 					<tr>
 						<td>nDifferentAllelesBiDups<br />
-						<td> The number of doubletons where the two reads had different bases in the locus.
-</td>
+						<td>The number of doubletons where the two reads had different bases in the locus.</td>
 					</tr>
 					<tr>
 						<td>nReferenceAllelesBiDups<br />
-						<td> The number of doubletons where the two reads matched the reference.
-</td>
+						<td>The number of doubletons where the two reads matched the reference.</td>
 					</tr>
 					<tr>
 						<td>nAlternateAllelesBiDups<br />
-						<td> The number of doubletons where the two reads matched the alternate.
-</td>
+						<td>The number of doubletons where the two reads matched the alternate.</td>
 					</tr>
 					<tr>
 						<td>nDifferentAllelesTriDups<br />
-						<td> The number of tripletons where at least one of the reads didn't match either allele of the het site.
-</td>
+						<td>The number of tripletons where at least one of the reads didn't match either allele of the het site.</td>
 					</tr>
 					<tr>
 						<td>nMismatchingAllelesBiDups<br />
-						<td> The number of tripletons where the two reads had different bases in the locus.
-</td>
+						<td>The number of tripletons where the two reads had different bases in the locus.</td>
 					</tr>
 					<tr>
 						<td>nReferenceAllelesTriDups<br />
-						<td> The number of tripletons where the two reads matched the reference.
-</td>
+						<td>The number of tripletons where the two reads matched the reference.</td>
 					</tr>
 					<tr>
 						<td>nAlternateAllelesTriDups<br />
-						<td> The number of tripletons where the two reads matched the alternate.
-</td>
+						<td>The number of tripletons where the two reads matched the alternate.</td>
 					</tr>
 					<tr>
 						<td>nMismatchingAllelesTriDups<br />
-						<td> The number of tripletons where at least one of the reads didn't match either allele of the het site.
-</td>
+						<td>The number of tripletons where at least one of the reads didn't match either allele of the het site.</td>
 					</tr>
 					<tr>
 						<td>nReferenceReads<br />
-						<td> The number of reference alleles in the reads.
-</td>
+						<td>The number of reference alleles in the reads.</td>
 					</tr>
 					<tr>
 						<td>nAlternateReads<br />
-						<td> The number of alternate alleles in the reads.
-</td>
+						<td>The number of alternate alleles in the reads.</td>
 					</tr>
 					<tr>
 						<td>nMismatchingUMIsInDiffBiDups<br />
-						<td> The number of UMIs that are different within Bi-sets that come from different alleles.
-</td>
+						<td>The number of UMIs that are different within Bi-sets that come from different alleles.</td>
 					</tr>
 					<tr>
 						<td>nMatchingUMIsInDiffBiDups<br />
-						<td> The number of UMIs that are match within Bi-sets that come from different alleles.
-</td>
+						<td>The number of UMIs that are match within Bi-sets that come from different alleles.</td>
 					</tr>
 					<tr>
 						<td>nMismatchingUMIsInSameBiDups<br />
-						<td> The number of UMIs that are different within Bi-sets that come from the same alleles.
-</td>
+						<td>The number of UMIs that are different within Bi-sets that come from the same alleles.</td>
 					</tr>
 					<tr>
 						<td>nMatchingUMIsInSameBiDups<br />
-						<td> The number of UMIs that are match within Bi-sets that come from the same alleles.
-</td>
+						<td>The number of UMIs that are match within Bi-sets that come from the same alleles.</td>
 					</tr>
 					<tr>
 						<td>nMismatchingUMIsInCoOrientedBiDups<br />
-						<td> The number of bi-sets with mismatching UMIs and same orientation.
-</td>
+						<td>The number of bi-sets with mismatching UMIs and same orientation.</td>
 					</tr>
 					<tr>
 						<td>nMismatchingUMIsInContraOrientedBiDups<br />
-						<td> The number of bi-sets with mismatching UMIs and opposite orientation.
-</td>
+						<td>The number of bi-sets with mismatching UMIs and opposite orientation.</td>
 					</tr>
 					<tr>
 						<td>nBadBarcodes<br />
-						<td> The number of sets where the UMIs had poor quality bases and were not used for any comparisons.
-</td>
+						<td>The number of sets where the UMIs had poor quality bases and were not used for any comparisons.</td>
 					</tr>
 					<tr>
 						<td>nGoodBarcodes<br />
-						<td> the number of sets where the UMIs had good quality bases and were used for any comparisons.
-</td>
+						<td>the number of sets where the UMIs had good quality bases and were used for any comparisons.</td>
 					</tr>
 					<tr>
 						<td>biSiteHeterogeneityRate<br />
-						<td> the rate of heterogeneity within doubleton sets.
-</td>
+						<td>the rate of heterogeneity within doubleton sets.</td>
 					</tr>
 					<tr>
 						<td>triSiteHeterogeneityRate<br />
-						<td> the rate of heterogeneity within tripleton sets
-</td>
+						<td>the rate of heterogeneity within tripleton sets</td>
 					</tr>
 					<tr>
 						<td>biSiteHomogeneityRate<br />
-						<td> the rate of homogeneity within doubleton sets.
-</td>
+						<td>the rate of homogeneity within doubleton sets.</td>
 					</tr>
 					<tr>
 						<td>triSiteHomogeneityRate<br />
-						<td> the rate of homogeneity within tripleton sets.
-</td>
+						<td>the rate of homogeneity within tripleton sets.</td>
 					</tr>
 					<tr>
 						<td>independentReplicationRateFromBiDups<br />
@@ -768,33 +740,28 @@
 					</tr>
 					<tr>
 						<td>independentReplicationRateFromTriDups<br />
-						<td> The biological duplication rate (as a fraction of the duplicates sets)
- calculated from tripleton sets.
-</td>
+						<td>The biological duplication rate (as a fraction of the duplicates sets)
+ calculated from tripleton sets.</td>
 					</tr>
 					<tr>
 						<td>pSameUmiInIndependentBiDup<br />
-						<td> When the alleles are different, we know that this is a biological duplication, thus we expect nearly all
- the UMIs to be different (allowing for equality due to chance). So we expect this to be near 1.
-</td>
+						<td>When the alleles are different, we know that this is a biological duplication, thus we expect nearly all
+ the UMIs to be different (allowing for equality due to chance). So we expect this to be near 1.</td>
 					</tr>
 					<tr>
 						<td>pSameAlleleWhenMismatchingUmi<br />
-						<td> When the UMIs mismatch, we expect about the same number of different alleles as the same
- (assuming that different UMI implies biological duplicate) thus, this value should be near 0.5
-</td>
+						<td>When the UMIs mismatch, we expect about the same number of different alleles as the same
+ (assuming that different UMI implies biological duplicate) thus, this value should be near 0.5</td>
 					</tr>
 					<tr>
 						<td>independentReplicationRateFromUmi<br />
-						<td> Given the UMIs one can estimate the rate of biological duplication directly, as this would be the
+						<td>Given the UMIs one can estimate the rate of biological duplication directly, as this would be the
  rate of having different UMIs in all duplicate sets. This is only a good estimate if the assumptions hold,
- for example if pSameUmiInIndependentBiDup is near 1.
-</td>
+ for example if pSameUmiInIndependentBiDup is near 1.</td>
 					</tr>
 					<tr>
 						<td>replicationRateFromReplicateSets<br />
-						<td> An estimate of the duplication rate that is based on the duplicate sets we observed.
-</td>
+						<td>An estimate of the duplication rate that is based on the duplicate sets we observed.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -808,7 +775,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

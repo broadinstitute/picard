@@ -630,13 +630,13 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 		<hr>
 		<h2>Overview</h2>
 		<h3>Summary</h3>
- Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the
+ Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with {@link DownsampleSam}, all the
  reads with the same queryname are either kept or dropped as a unit.
  <br/>
 
  <h3>Details</h3>
  The downsampling is <b>not</b> random (and there is no random seed). It is deterministically determined by the position
- of each read within its tile. Specifically, it draws an ellipse that covers a #FRACTION of the total tile's
+ of each read within its tile. Specifically, it draws an ellipse that covers a {@link #FRACTION} of the total tile's
  area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads
  with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the
  same for all of them. The main concern of this downsampling method is that due to "optical duplicates" downsampling
@@ -646,7 +646,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 
  By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two
  to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See
- ReadNameParser#DEFAULT_READ_NAME_REGEX for more detail. The program traverses the #INPUT twice: first
+ {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice: first
  to find out the size of each of the tiles, and next to perform the downsampling.
 
  Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated
@@ -665,16 +665,16 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
  This method is <b>technology and read-name dependent</b>. If the read-names do not have coordinate information
  embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines).
  this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider
- modifying #READ_NAME_REGEX in other cases.
+ modifying {@link #READ_NAME_REGEX} in other cases.
  </li>
  <li>
  The code has been designed to simulate, as accurately as possible, sequencing less, <b>not</b> for getting an exact
- downsampled fraction (Use DownsampleSam for that.) In particular, since the reads may be distributed non-evenly
+ downsampled fraction (Use {@link DownsampleSam} for that.) In particular, since the reads may be distributed non-evenly
  within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument
- #FRACTION.
+ {@link #FRACTION}.
  </li>
  <li>
- Consider running MarkDuplicates after downsampling in order to "expose" the duplicates whose representative has
+ Consider running {@link MarkDuplicates} after downsampling in order to "expose" the duplicates whose representative has
  been downsampled away.
  </li>
  <li>
@@ -685,6 +685,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
  and aborts whenever it finds such a PG record in its input.
  </li>
  </ol>
+@author Yossi Farjoun
 
 
 				<h3>PositionBasedDownsampleSam specific arguments</h3>
@@ -801,13 +802,6 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -957,18 +951,6 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
 				<span class="badge badge-important">R</span>
 		<span class="label label-info ">Double</span>
 			&nbsp;<span class="label">null</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1200,7 +1182,7 @@ Note 4:The downsampling assumes a uniform distribution of reads in the flowcell.
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

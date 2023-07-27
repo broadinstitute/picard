@@ -622,15 +622,15 @@ The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and 
 		<hr>
 		<h2>Overview</h2>
 		<h3>Summary</h3>
- Clusters the results from a CrosscheckFingerprints run according to the LOD score. The resulting metric file
- can be used to assist diagnosing results from CrosscheckFingerprints. It clusters the connectivity graph between the
- different groups. Two groups are connected if they have a LOD score greater than the #LOD_THRESHOLD.
+ Clusters the results from a {@link CrosscheckFingerprints} run according to the LOD score. The resulting metric file
+ can be used to assist diagnosing results from {@link CrosscheckFingerprints}. It clusters the connectivity graph between the
+ different groups. Two groups are connected if they have a LOD score greater than the {@link #LOD_THRESHOLD}.
  <br/>
 
  <h3>Details</h3>
- The results of running CrosscheckFingerprints can be difficult to analyze, especially when many groups are
- related (meaning LOD greater than #LOD_THRESHOLD) in non-transitive manner (A is related to B, B is related to C,
- but A doesn't seem to be related to C.) ClusterCrosscheckMetrics clusters the metrics from CrosscheckFingerprints
+ The results of running {@link CrosscheckFingerprints} can be difficult to analyze, especially when many groups are
+ related (meaning LOD greater than {@link #LOD_THRESHOLD}) in non-transitive manner (A is related to B, B is related to C,
+ but A doesn't seem to be related to C.) {@link ClusterCrosscheckMetrics} clusters the metrics from {@link CrosscheckFingerprints}
  so that all the groups in a cluster are related to each other either directly, or indirectly (thus A, B and C would
  end up in one cluster.) Two samples can only be in two different clusters if all the samples from these two clusters
  do not get high LOD scores when compared to each other.
@@ -643,11 +643,12 @@ The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and 
               OUTPUT=sample.clustered.crosscheck_metrics
  </pre>
 
- The resulting file, consists of the ClusteredCrosscheckMetric class and contains the original crosscheck metric
+ The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and contains the original crosscheck metric
  values, for groups that end-up in the same clusters (regardless of LOD score of each comparison). In addition it notes
- the ClusteredCrosscheckMetric#CLUSTER identifier and the size of the cluster (in ClusteredCrosscheckMetric#CLUSTER_SIZE.)
+ the {@link ClusteredCrosscheckMetric#CLUSTER} identifier and the size of the cluster (in {@link ClusteredCrosscheckMetric#CLUSTER_SIZE}.)
  Groups that do not have high LOD scores with any other group (including itself!) will not be included in the metric file.
  Note that cross-group comparisons are not included in the metric file.
+@author Yossi Farjoun
 
 
 				<h3>ClusterCrosscheckMetrics specific arguments</h3>
@@ -736,13 +737,6 @@ The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and 
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -867,18 +861,6 @@ The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and 
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1087,7 +1069,7 @@ The resulting file, consists of the {@link ClusteredCrosscheckMetric} class and 
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

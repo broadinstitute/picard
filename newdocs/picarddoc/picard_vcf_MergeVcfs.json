@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,21 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -297,6 +299,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -329,12 +332,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "Combines multiple variant files into a single variant file.\n\n \u003ch3\u003eInputs\u003c/h3\u003e\n  \u003cul\u003e\n      \u003cli\u003eOne or more input file in VCF format (can be gzipped, i.e. ending in \".vcf.gz\", or binary compressed, i.e. ending in \".bcf\").\u003c/li\u003e\n      \u003cli\u003eOptionally a sequence dictionary file (typically name ending in .dict) if the input VCF does not contain a\n          complete contig list and if the output index is to be created (true by default).\u003c/li\u003e\n  \u003c/ul\u003e\n  \u003cp\u003e\n  The input variant data must adhere to the following rules:\n     \u003cul\u003e\n         \u003cli\u003eIf there are samples, those must be the same across all input files.\u003c/li\u003e\n         \u003cli\u003eInput file headers must be contain compatible declarations for common annotations (INFO, FORMAT fields) and filters.\u003c/li\u003e\n         \u003cli\u003eInput files variant records must be sorted by their contig and position following the sequence dictionary provided\n         or the header contig list.\u003c/li\u003e\n     \u003c/ul\u003e\n \u003c/p\u003e\n \u003cp\u003e\n     You can either directly specify the list of files by specifying \u003ccode\u003eINPUT\u003c/code\u003e multiple times, or provide a list\n     in a file with name ending in \".list\" to \u003ccode\u003eINPUT\u003c/code\u003e.\n \u003c/p\u003e\n\n \u003ch3\u003eOutputs\u003c/h3\u003e\n A VCF sorted (i) according to the dictionary and (ii) by coordiante. \n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003eExample 1:\u003c/h4\u003e\n     We combine several variant files in different formats, where at least one of them contains the contig list in its header.\n \u003cpre\u003e\n     java -jar picard.jar MergeVcfs \\\n          I\u003dinput_variants.01.vcf \\\n          I\u003dinput_variants.02.vcf.gz \\\n          O\u003doutput_variants.vcf.gz\n \u003c/pre\u003e\n \u003ch4\u003eExample 2:\u003c/h4\u003e\n      Similar to example 1 but we use an input list file to specify the input files:\n \u003cpre\u003e\n     java -jar picard.jar MergeVcfs \\\n          I\u003dinput_variant_files.list \\\n          O\u003doutput_variants.vcf.gz\n \u003c/pre\u003e",
+  "description": "Combines multiple variant files into a single variant file.\n\n \u003ch3\u003eInputs\u003c/h3\u003e\n  \u003cul\u003e\n      \u003cli\u003eOne or more input file in VCF format (can be gzipped, i.e. ending in \".vcf.gz\", or binary compressed, i.e. ending in \".bcf\").\u003c/li\u003e\n      \u003cli\u003eOptionally a sequence dictionary file (typically name ending in .dict) if the input VCF does not contain a\n          complete contig list and if the output index is to be created (true by default).\u003c/li\u003e\n  \u003c/ul\u003e\n  \u003cp\u003e\n  The input variant data must adhere to the following rules:\n     \u003cul\u003e\n         \u003cli\u003eIf there are samples, those must be the same across all input files.\u003c/li\u003e\n         \u003cli\u003eInput file headers must be contain compatible declarations for common annotations (INFO, FORMAT fields) and filters.\u003c/li\u003e\n         \u003cli\u003eInput files variant records must be sorted by their contig and position following the sequence dictionary provided\n         or the header contig list.\u003c/li\u003e\n     \u003c/ul\u003e\n \u003c/p\u003e\n \u003cp\u003e\n     You can either directly specify the list of files by specifying \u003ccode\u003eINPUT\u003c/code\u003e multiple times, or provide a list\n     in a file with name ending in \".list\" to \u003ccode\u003eINPUT\u003c/code\u003e.\n \u003c/p\u003e\n\n \u003ch3\u003eOutputs\u003c/h3\u003e\n A VCF sorted (i) according to the dictionary and (ii) by coordiante. \n \u003ch3\u003eUsage examples\u003c/h3\u003e\n \u003ch4\u003eExample 1:\u003c/h4\u003e\n     We combine several variant files in different formats, where at least one of them contains the contig list in its header.\n \u003cpre\u003e\n     java -jar picard.jar MergeVcfs \\\n          I\u003dinput_variants.01.vcf \\\n          I\u003dinput_variants.02.vcf.gz \\\n          O\u003doutput_variants.vcf.gz\n \u003c/pre\u003e\n \u003ch4\u003eExample 2:\u003c/h4\u003e\n      Similar to example 1 but we use an input list file to specify the input files:\n \u003cpre\u003e\n     java -jar picard.jar MergeVcfs \\\n          I\u003dinput_variant_files.list \\\n          O\u003doutput_variants.vcf.gz\n \u003c/pre\u003e\n@since 1.0.1",
   "name": "MergeVcfs",
   "group": "Variant Manipulation",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

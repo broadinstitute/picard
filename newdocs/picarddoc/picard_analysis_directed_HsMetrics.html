@@ -625,6 +625,7 @@
      reaching various coverage levels, and the percentage of bases excluded by various filters. These metrics are computed
      using the strictest subset of the data, after all filters have been applied.</li>
  </ul>
+@author Tim Fennell
 
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -636,101 +637,95 @@
 					</thead>
 					<tr>
 						<td>BAIT_SET<br />
-						<td>The name of the bait set used in the hybrid selection. </td>
+						<td>The name of the bait set used in the hybrid selection.</td>
 					</tr>
 					<tr>
 						<td>BAIT_TERRITORY<br />
-						<td>The number of bases which are localized to one or more baits. </td>
+						<td>The number of bases which are localized to one or more baits.</td>
 					</tr>
 					<tr>
 						<td>BAIT_DESIGN_EFFICIENCY<br />
-						<td>The ratio of TARGET_TERRITORY/BAIT_TERRITORY.  A value of 1 indicates a perfect design efficiency, while a valud of 0.5 indicates that half of bases within the bait region are not within the target region. </td>
+						<td>The ratio of TARGET_TERRITORY/BAIT_TERRITORY.  A value of 1 indicates a perfect design efficiency, while a valud of 0.5 indicates that half of bases within the bait region are not within the target region.</td>
 					</tr>
 					<tr>
 						<td>ON_BAIT_BASES<br />
-						<td>The number of PF_BASES_ALIGNED that are mapped to the baited regions of the genome. </td>
+						<td>The number of PF_BASES_ALIGNED that are mapped to the baited regions of the genome.</td>
 					</tr>
 					<tr>
 						<td>NEAR_BAIT_BASES<br />
-						<td>The number of PF_BASES_ALIGNED that are mapped to within a fixed interval containing a baited region, but not within the baited section per se. </td>
+						<td>The number of PF_BASES_ALIGNED that are mapped to within a fixed interval containing a baited region, but not within the baited section per se.</td>
 					</tr>
 					<tr>
 						<td>OFF_BAIT_BASES<br />
-						<td>The number of PF_BASES_ALIGNED that are mapped away from any baited region. </td>
+						<td>The number of PF_BASES_ALIGNED that are mapped away from any baited region.</td>
 					</tr>
 					<tr>
 						<td>PCT_SELECTED_BASES<br />
-						<td>The fraction of PF_BASES_ALIGNED located on or near a baited region (ON_BAIT_BASES + NEAR_BAIT_BASES)/PF_BASES_ALIGNED. </td>
+						<td>The fraction of PF_BASES_ALIGNED located on or near a baited region (ON_BAIT_BASES + NEAR_BAIT_BASES)/PF_BASES_ALIGNED.</td>
 					</tr>
 					<tr>
 						<td>PCT_OFF_BAIT<br />
-						<td>The fraction of PF_BASES_ALIGNED that are mapped away from any baited region, OFF_BAIT_BASES/PF_BASES_ALIGNED.  </td>
+						<td>The fraction of PF_BASES_ALIGNED that are mapped away from any baited region, OFF_BAIT_BASES/PF_BASES_ALIGNED.</td>
 					</tr>
 					<tr>
 						<td>ON_BAIT_VS_SELECTED<br />
-						<td>The fraction of bases on or near baits that are covered by baits, ON_BAIT_BASES/(ON_BAIT_BASES + NEAR_BAIT_BASES). </td>
+						<td>The fraction of bases on or near baits that are covered by baits, ON_BAIT_BASES/(ON_BAIT_BASES + NEAR_BAIT_BASES).</td>
 					</tr>
 					<tr>
 						<td>MEAN_BAIT_COVERAGE<br />
-						<td>The mean coverage of all baits in the experiment. </td>
+						<td>The mean coverage of all baits in the experiment.</td>
 					</tr>
 					<tr>
 						<td>PCT_USABLE_BASES_ON_BAIT<br />
-						<td>The number of aligned, de-duped, on-bait bases out of the PF bases available. </td>
+						<td>The number of aligned, de-duped, on-bait bases out of the PF bases available.</td>
 					</tr>
 					<tr>
 						<td>PCT_USABLE_BASES_ON_TARGET<br />
-						<td>The number of aligned, de-duped, on-target bases out of all of the PF bases available. </td>
+						<td>The number of aligned, de-duped, on-target bases out of all of the PF bases available.</td>
 					</tr>
 					<tr>
 						<td>FOLD_ENRICHMENT<br />
-						<td>The fold by which the baited region has been amplified above genomic background. </td>
+						<td>The fold by which the baited region has been amplified above genomic background.</td>
 					</tr>
 					<tr>
 						<td>HS_LIBRARY_SIZE<br />
-						<td>The estimated number of unique molecules in the selected part of the library. </td>
+						<td>The estimated number of unique molecules in the selected part of the library.</td>
 					</tr>
 					<tr>
 						<td>HS_PENALTY_10X<br />
-						<td> The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
+						<td>The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
  should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.
-</td>
+ 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.</td>
 					</tr>
 					<tr>
 						<td>HS_PENALTY_20X<br />
-						<td> The "hybrid selection penalty" incurred to get 80% of target bases to 20X. This metric
+						<td>The "hybrid selection penalty" incurred to get 80% of target bases to 20X. This metric
  should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.
-</td>
+ 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.</td>
 					</tr>
 					<tr>
 						<td>HS_PENALTY_30X<br />
-						<td> The "hybrid selection penalty" incurred to get 80% of target bases to 30X. This metric
+						<td>The "hybrid selection penalty" incurred to get 80% of target bases to 30X. This metric
  should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.
-</td>
+ 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.</td>
 					</tr>
 					<tr>
 						<td>HS_PENALTY_40X<br />
-						<td> The "hybrid selection penalty" incurred to get 80% of target bases to 40X. This metric
+						<td>The "hybrid selection penalty" incurred to get 80% of target bases to 40X. This metric
  should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.
-</td>
+ 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.</td>
 					</tr>
 					<tr>
 						<td>HS_PENALTY_50X<br />
-						<td> The "hybrid selection penalty" incurred to get 80% of target bases to 50X. This metric
+						<td>The "hybrid selection penalty" incurred to get 80% of target bases to 50X. This metric
  should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.
-</td>
+ 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.</td>
 					</tr>
 					<tr>
 						<td>HS_PENALTY_100X<br />
-						<td> The "hybrid selection penalty" incurred to get 80% of target bases to 100X. This metric
+						<td>The "hybrid selection penalty" incurred to get 80% of target bases to 100X. This metric
  should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.
-</td>
+ 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -744,7 +739,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

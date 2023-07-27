@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,21 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -284,6 +286,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -299,6 +302,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -314,6 +318,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -342,6 +347,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -374,12 +380,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with DownsampleSam, all the\n reads with the same queryname are either kept or dropped as a unit.\n \u003cbr/\u003e\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n The downsampling is \u003cb\u003enot\u003c/b\u003e random (and there is no random seed). It is deterministically determined by the position\n of each read within its tile. Specifically, it draws an ellipse that covers a #FRACTION of the total tile\u0027s\n area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads\n with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the\n same for all of them. The main concern of this downsampling method is that due to \"optical duplicates\" downsampling\n randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library\n size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except\n for reads near the boundary of the circle) optical duplicates are kept or dropped as a group.\n\n By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two\n to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See\n ReadNameParser#DEFAULT_READ_NAME_REGEX for more detail. The program traverses the #INPUT twice: first\n to find out the size of each of the tiles, and next to perform the downsampling.\n\n Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated\n after downsampling. Thus, the default setting also removes the duplicate information.\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar PositionBasedDownsampleSam \\\n       I\u003dinput.bam \\\n       O\u003ddownsampled.bam \\\n       FRACTION\u003d0.1\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n \u003col\u003e\n \u003cli\u003e\n This method is \u003cb\u003etechnology and read-name dependent\u003c/b\u003e. If the read-names do not have coordinate information\n embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines).\n this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider\n modifying #READ_NAME_REGEX in other cases.\n \u003c/li\u003e\n \u003cli\u003e\n The code has been designed to simulate, as accurately as possible, sequencing less, \u003cb\u003enot\u003c/b\u003e for getting an exact\n downsampled fraction (Use DownsampleSam for that.) In particular, since the reads may be distributed non-evenly\n within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument\n #FRACTION.\n \u003c/li\u003e\n \u003cli\u003e\n Consider running MarkDuplicates after downsampling in order to \"expose\" the duplicates whose representative has\n been downsampled away.\n \u003c/li\u003e\n \u003cli\u003e\n The downsampling assumes a uniform distribution of reads in the flowcell.\n Input already downsampled with PositionBasedDownsampleSam violates this assumption.\n To guard against such input,\n PositionBasedDownsampleSam always places a PG record in the header of its output,\n and aborts whenever it finds such a PG record in its input.\n \u003c/li\u003e\n \u003c/ol\u003e",
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Class to downsample a SAM/BAM file based on the position of the read in a flowcell. As with {@link DownsampleSam}, all the\n reads with the same queryname are either kept or dropped as a unit.\n \u003cbr/\u003e\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n The downsampling is \u003cb\u003enot\u003c/b\u003e random (and there is no random seed). It is deterministically determined by the position\n of each read within its tile. Specifically, it draws an ellipse that covers a {@link #FRACTION} of the total tile\u0027s\n area and of all the edges of the tile. It uses this area to determine whether to keep or drop the record. Since reads\n with the same name have the same position (mates, secondary and supplemental alignments), the decision will be the\n same for all of them. The main concern of this downsampling method is that due to \"optical duplicates\" downsampling\n randomly can create a result that has a different optical duplicate rate, and therefore a different estimated library\n size (when running MarkDuplicates). This method keeps (physically) close read together, so that (except\n for reads near the boundary of the circle) optical duplicates are kept or dropped as a group.\n\n By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two\n to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See\n {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice: first\n to find out the size of each of the tiles, and next to perform the downsampling.\n\n Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated\n after downsampling. Thus, the default setting also removes the duplicate information.\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n java -jar picard.jar PositionBasedDownsampleSam \\\n       I\u003dinput.bam \\\n       O\u003ddownsampled.bam \\\n       FRACTION\u003d0.1\n \u003c/pre\u003e\n \u003ch3\u003eCaveats\u003c/h3\u003e\n \u003col\u003e\n \u003cli\u003e\n This method is \u003cb\u003etechnology and read-name dependent\u003c/b\u003e. If the read-names do not have coordinate information\n embedded in them, or if your BAM contains reads from multiple technologies (flowcell versions, sequencing machines).\n this will not work properly. It has been designed to work with Illumina technology and reads-names. Consider\n modifying {@link #READ_NAME_REGEX} in other cases.\n \u003c/li\u003e\n \u003cli\u003e\n The code has been designed to simulate, as accurately as possible, sequencing less, \u003cb\u003enot\u003c/b\u003e for getting an exact\n downsampled fraction (Use {@link DownsampleSam} for that.) In particular, since the reads may be distributed non-evenly\n within the lanes/tiles, the resulting downsampling percentage will not be accurately determined by the input argument\n {@link #FRACTION}.\n \u003c/li\u003e\n \u003cli\u003e\n Consider running {@link MarkDuplicates} after downsampling in order to \"expose\" the duplicates whose representative has\n been downsampled away.\n \u003c/li\u003e\n \u003cli\u003e\n The downsampling assumes a uniform distribution of reads in the flowcell.\n Input already downsampled with PositionBasedDownsampleSam violates this assumption.\n To guard against such input,\n PositionBasedDownsampleSam always places a PG record in the header of its output,\n and aborts whenever it finds such a PG record in its input.\n \u003c/li\u003e\n \u003c/ol\u003e\n@author Yossi Farjoun",
   "name": "PositionBasedDownsampleSam",
   "group": "Read Data Manipulation",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

@@ -631,10 +631,10 @@ For more information about read-groups, see the <a href='https://www.broadinstit
  <h3>Summary</h3>
  Many tools (Picard and GATK for example) require or assume the presence of at least one <code>RG</code> tag, defining a "read-group"
  to which each read can be assigned (as specified in the <code>RG</code> tag in the SAM record).
- This tool enables the user to assign all the reads in the #INPUT to a single new read-group.
+ This tool enables the user to assign all the reads in the {@link #INPUT} to a single new read-group.
  For more information about read-groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>
  GATK Dictionary entry.</a>
- <br />
+ <br/>
  This tool accepts as INPUT BAM and SAM files or URLs from the
  <a href="http://ga4gh.org/#/documentation">Global Alliance for Genomics and Health (GA4GH)</a>.
  <h3>Usage example:</h3>
@@ -650,11 +650,12 @@ For more information about read-groups, see the <a href='https://www.broadinstit
  </pre>
  <h3>Caveats</h3>
  The value of the tags must adhere (according to the <a href="https://samtools.github.io/hts-specs/SAMv1.pdf">SAM-spec</a>)
- with the regex <pre>#READGROUP_ID_REGEX</pre> (one or more characters from the ASCII range 32 through 126). In
+ with the regex <pre>{@value #READGROUP_ID_REGEX}</pre> (one or more characters from the ASCII range 32 through 126). In
  particular <code>&lt;Space&gt;</code> is the only non-printing character allowed.
  <br/>
- The program enables only the wholesale assignment of all the reads in the #INPUT to a single read-group. If your file
+ The program enables only the wholesale assignment of all the reads in the {@link #INPUT} to a single read-group. If your file
  already has reads assigned to multiple read-groups, the original <code>RG</code> value will be lost.
+@author mdepristo
 
 
 				<h3>AddOrReplaceReadGroups specific arguments</h3>
@@ -849,13 +850,6 @@ For more information about read-groups, see the <a href='https://www.broadinstit
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
@@ -978,18 +972,6 @@ For more information about read-groups, see the <a href='https://www.broadinstit
 		<p>
 		<span class="label label-info ">boolean</span>
 			&nbsp;<span class="label">false</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1372,7 +1354,7 @@ For more information about read-groups, see the <a href='https://www.broadinstit
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

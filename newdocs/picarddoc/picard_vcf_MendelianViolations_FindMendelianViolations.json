@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,21 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -104,6 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -284,6 +286,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -299,6 +302,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -314,6 +318,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -329,6 +334,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -344,6 +350,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -359,6 +366,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -374,6 +382,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -389,6 +398,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -417,6 +427,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -432,6 +443,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -464,12 +476,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Finds mendelian violations (MVs) of all types within a VCF.\n \u003ch3\u003eDetail\u003c/h3\u003e\n Takes in VCF or BCF and a pedigree file and looks for high confidence calls where the genotype of the offspring\n is incompatible with the genotypes of the parents.  \u003cbr/\u003e\n Key features:\n \u003col\u003e\n \u003cli\u003e\n Checks for regular MVs in diploid regions and invalid transmissions in haploid regions (using the declared gender\n of the offspring in the pedigree file to determine how to deal with the male and female chromosomes.)\n \u003c/li\u003e\n \u003cli\u003e\n Outputs metrics about the different kinds of MVs found\n \u003c/li\u003e\n \u003cli\u003e\n Can output a per-trio VCF with violations; INFO field will indicate the type of violation in the MV field\n \u003c/li\u003e\n \u003c/ol\u003e\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar FindMendelianViolations\\\\\n          I\u003dinput.vcf \\\\\n          TRIO\u003dpedigree.fam \\\\\n          O\u003dreport.mendelian_violation_metrics \\\\\n          MIN_DP\u003d20\n \u003c/pre\u003e\n \u003ch3\u003eCaveates\u003c/h3\u003e\n \u003ch4\u003eAssumptions\u003c/h4\u003e\n The tool assumes the existence of FORMAT fields AD, DP, GT, GQ, and PL.\n \u003ch4\u003eIgnored Variants\u003c/h4\u003e\n This tool ignores variants that are:\n \u003cul\u003e\n \u003cli\u003eNot SNPs\u003c/li\u003e\n \u003cli\u003eFiltered\u003c/li\u003e\n \u003cli\u003eMultiallelic (i.e., trio has more than 2 alleles)\u003c/li\u003e\n \u003cli\u003eWithin the #SKIP_CHROMS contigs\u003c/li\u003e\n \u003c/ul\u003e\n \u003ch4\u003ePseudoAutosomal Region\u003c/h4\u003e\n This tool assumes that variants in the PAR will be mapped onto the female chromosome, and will treat variants in\n that region as as autosomal. The mapping to female requires that the PAR in the male chromosome be masked so that\n the aligner maps reads to single contig. This is normally done for the public releases of the human reference.\n The tool has default values for PAR that are sensible for humans on either build b37 or hg38.",
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Finds mendelian violations (MVs) of all types within a VCF.\n \u003ch3\u003eDetail\u003c/h3\u003e\n Takes in VCF or BCF and a pedigree file and looks for high confidence calls where the genotype of the offspring\n is incompatible with the genotypes of the parents.  \u003cbr/\u003e\n Key features:\n \u003col\u003e\n \u003cli\u003e\n Checks for regular MVs in diploid regions and invalid transmissions in haploid regions (using the declared gender\n of the offspring in the pedigree file to determine how to deal with the male and female chromosomes.)\n \u003c/li\u003e\n \u003cli\u003e\n Outputs metrics about the different kinds of MVs found\n \u003c/li\u003e\n \u003cli\u003e\n Can output a per-trio VCF with violations; INFO field will indicate the type of violation in the MV field\n \u003c/li\u003e\n \u003c/ol\u003e\n\n \u003ch3\u003eExample\u003c/h3\u003e\n \u003cpre\u003e\n     java -jar picard.jar FindMendelianViolations\\\\\n          I\u003dinput.vcf \\\\\n          TRIO\u003dpedigree.fam \\\\\n          O\u003dreport.mendelian_violation_metrics \\\\\n          MIN_DP\u003d20\n \u003c/pre\u003e\n \u003ch3\u003eCaveates\u003c/h3\u003e\n \u003ch4\u003eAssumptions\u003c/h4\u003e\n The tool assumes the existence of FORMAT fields AD, DP, GT, GQ, and PL.\n \u003ch4\u003eIgnored Variants\u003c/h4\u003e\n This tool ignores variants that are:\n \u003cul\u003e\n \u003cli\u003eNot SNPs\u003c/li\u003e\n \u003cli\u003eFiltered\u003c/li\u003e\n \u003cli\u003eMultiallelic (i.e., trio has more than 2 alleles)\u003c/li\u003e\n \u003cli\u003eWithin the {@link #SKIP_CHROMS} contigs\u003c/li\u003e\n \u003c/ul\u003e\n \u003ch4\u003ePseudoAutosomal Region\u003c/h4\u003e\n This tool assumes that variants in the PAR will be mapped onto the female chromosome, and will treat variants in\n that region as as autosomal. The mapping to female requires that the PAR in the male chromosome be masked so that\n the aligner maps reads to single contig. This is normally done for the public releases of the human reference.\n The tool has default values for PAR that are sensible for humans on either build b37 or hg38.\n@author Tim Fennell",
   "name": "FindMendelianViolations",
   "group": "Variant Evaluation and Refinement",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

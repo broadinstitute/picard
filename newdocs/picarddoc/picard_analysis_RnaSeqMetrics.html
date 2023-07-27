@@ -620,136 +620,127 @@
 					</thead>
 					<tr>
 						<td>PF_BASES<br />
-						<td>The total number of PF bases including non-aligned reads. </td>
+						<td>The total number of PF bases including non-aligned reads.</td>
 					</tr>
 					<tr>
 						<td>PF_ALIGNED_BASES<br />
-						<td> The total number of aligned PF bases.  Non-primary alignments are not counted. Bases in aligned reads that
- do not correspond to reference (e.g. soft clips, insertions) are not counted.
-</td>
+						<td>The total number of aligned PF bases.  Non-primary alignments are not counted. Bases in aligned reads that
+ do not correspond to reference (e.g. soft clips, insertions) are not counted.</td>
 					</tr>
 					<tr>
 						<td>RIBOSOMAL_BASES<br />
-						<td>Number of bases in primary alignments that align to ribosomal sequence. </td>
+						<td>Number of bases in primary alignments that align to ribosomal sequence.</td>
 					</tr>
 					<tr>
 						<td>CODING_BASES<br />
-						<td>Number of bases in primary alignments that align to a non-UTR coding base for some gene, and not ribosomal sequence. </td>
+						<td>Number of bases in primary alignments that align to a non-UTR coding base for some gene, and not ribosomal sequence.</td>
 					</tr>
 					<tr>
 						<td>UTR_BASES<br />
-						<td>Number of bases in primary alignments that align to a UTR base for some gene, and not a coding base. </td>
+						<td>Number of bases in primary alignments that align to a UTR base for some gene, and not a coding base.</td>
 					</tr>
 					<tr>
 						<td>INTRONIC_BASES<br />
-						<td>Number of bases in primary alignments that align to an intronic base for some gene, and not a coding or UTR base. </td>
+						<td>Number of bases in primary alignments that align to an intronic base for some gene, and not a coding or UTR base.</td>
 					</tr>
 					<tr>
 						<td>INTERGENIC_BASES<br />
-						<td>Number of bases in primary alignments that do not align to any gene. </td>
+						<td>Number of bases in primary alignments that do not align to any gene.</td>
 					</tr>
 					<tr>
 						<td>IGNORED_READS<br />
-						<td> Number of primary alignments that are mapped to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
+						<td>Number of primary alignments that are mapped to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
  counted in PF_ALIGNED_BASES, CORRECT_STRAND_READS, INCORRECT_STRAND_READS, or any of the base-counting metrics.
- These reads are counted in PF_BASES.
-</td>
+ These reads are counted in PF_BASES.</td>
 					</tr>
 					<tr>
 						<td>CORRECT_STRAND_READS<br />
-						<td>Number of aligned reads that are mapped to the correct strand.  0 if library is not strand-specific. </td>
+						<td>Number of aligned reads that are mapped to the correct strand.  0 if library is not strand-specific.</td>
 					</tr>
 					<tr>
 						<td>INCORRECT_STRAND_READS<br />
-						<td>Number of aligned reads that are mapped to the incorrect strand.  0 if library is not strand-specific. </td>
+						<td>Number of aligned reads that are mapped to the incorrect strand.  0 if library is not strand-specific.</td>
 					</tr>
 					<tr>
 						<td>NUM_R1_TRANSCRIPT_STRAND_READS<br />
 						<td>The number of reads that support the model where R1 is on the strand of transcription and R2 is on the
- opposite strand.
-</td>
+ opposite strand.</td>
 					</tr>
 					<tr>
 						<td>NUM_R2_TRANSCRIPT_STRAND_READS<br />
-						<td> The fraction of reads that support the model where R2 is on the strand of transcription and R1 is on the opposite
- strand.
-</td>
+						<td>The fraction of reads that support the model where R2 is on the strand of transcription and R1 is on the opposite
+ strand.</td>
 					</tr>
 					<tr>
 						<td>NUM_UNEXPLAINED_READS<br />
-						<td> The fraction of reads for which the transcription strand model could not be inferred.
-</td>
+						<td>The fraction of reads for which the transcription strand model could not be inferred.</td>
 					</tr>
 					<tr>
 						<td>PCT_R1_TRANSCRIPT_STRAND_READS<br />
 						<td>The fraction of reads that support the model where R1 is on the strand of transcription and R2 is on the
  opposite strand.  For unpaired reads, it is the fraction of reads that are on the transcription strand (out of all
- the reads).
-</td>
+ the reads).</td>
 					</tr>
 					<tr>
 						<td>PCT_R2_TRANSCRIPT_STRAND_READS<br />
-						<td> The fraction of reads that support the model where R2 is on the strand of transcription and R1 is on the opposite
+						<td>The fraction of reads that support the model where R2 is on the strand of transcription and R1 is on the opposite
  strand.  For unpaired reads, it is the fraction of reads that are on opposite strand than that of the the
- transcription strand (out of all the reads).
-</td>
+ transcription strand (out of all the reads).</td>
 					</tr>
 					<tr>
 						<td>PCT_RIBOSOMAL_BASES<br />
-						<td>Fraction of PF_ALIGNED_BASES that mapped to regions encoding ribosomal RNA, RIBOSOMAL_BASES/PF_ALIGNED_BASES </td>
+						<td>Fraction of PF_ALIGNED_BASES that mapped to regions encoding ribosomal RNA, RIBOSOMAL_BASES/PF_ALIGNED_BASES</td>
 					</tr>
 					<tr>
 						<td>PCT_CODING_BASES<br />
-						<td>Fraction of PF_ALIGNED_BASES that mapped to protein coding regions of genes, CODING_BASES/PF_ALIGNED_BASES </td>
+						<td>Fraction of PF_ALIGNED_BASES that mapped to protein coding regions of genes, CODING_BASES/PF_ALIGNED_BASES</td>
 					</tr>
 					<tr>
 						<td>PCT_UTR_BASES<br />
-						<td>Fraction of PF_ALIGNED_BASES that mapped to untranslated regions (UTR) of genes, UTR_BASES/PF_ALIGNED_BASES </td>
+						<td>Fraction of PF_ALIGNED_BASES that mapped to untranslated regions (UTR) of genes, UTR_BASES/PF_ALIGNED_BASES</td>
 					</tr>
 					<tr>
 						<td>PCT_INTRONIC_BASES<br />
-						<td>Fraction of PF_ALIGNED_BASES that correspond to gene introns, INTRONIC_BASES/PF_ALIGNED_BASES </td>
+						<td>Fraction of PF_ALIGNED_BASES that correspond to gene introns, INTRONIC_BASES/PF_ALIGNED_BASES</td>
 					</tr>
 					<tr>
 						<td>PCT_INTERGENIC_BASES<br />
-						<td>Fraction of PF_ALIGNED_BASES that mapped to intergenic regions of genomic DNA, INTERGENIC_BASES/PF_ALIGNED_BASES </td>
+						<td>Fraction of PF_ALIGNED_BASES that mapped to intergenic regions of genomic DNA, INTERGENIC_BASES/PF_ALIGNED_BASES</td>
 					</tr>
 					<tr>
 						<td>PCT_MRNA_BASES<br />
-						<td>Sum of bases mapped to regions corresponding to UTRs and coding regions of mRNA transcripts, PCT_UTR_BASES + PCT_CODING_BASES </td>
+						<td>Sum of bases mapped to regions corresponding to UTRs and coding regions of mRNA transcripts, PCT_UTR_BASES + PCT_CODING_BASES</td>
 					</tr>
 					<tr>
 						<td>PCT_USABLE_BASES<br />
-						<td>The fraction of bases mapping to mRNA divided by the total number of PF bases, (CODING_BASES + UTR_BASES)/PF_BASES. </td>
+						<td>The fraction of bases mapping to mRNA divided by the total number of PF bases, (CODING_BASES + UTR_BASES)/PF_BASES.</td>
 					</tr>
 					<tr>
 						<td>PCT_CORRECT_STRAND_READS<br />
 						<td>Fraction of reads corresponding to mRNA transcripts which map to the correct strand of a reference genome
-    = CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific. </td>
+    = CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.</td>
 					</tr>
 					<tr>
 						<td>MEDIAN_CV_COVERAGE<br />
 						<td>The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts
- that have a length greater than the END_BIAS_BASES parameter. Ideal value = 0. </td>
+ that have a length greater than the END_BIAS_BASES parameter. Ideal value = 0.</td>
 					</tr>
 					<tr>
 						<td>MEDIAN_5PRIME_BIAS<br />
-						<td> The median 5 prime bias of the 1000 most highly expressed transcripts that have a length greater than the END_BIAS_BASES parameter.
+						<td>The median 5 prime bias of the 1000 most highly expressed transcripts that have a length greater than the END_BIAS_BASES parameter.
  The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most number of bases divided by the mean coverage
- of the whole transcript. The number of end-bases used is specified by the END_BIAS_BASES parameter.
-</td>
+ of the whole transcript. The number of end-bases used is specified by the END_BIAS_BASES parameter.</td>
 					</tr>
 					<tr>
 						<td>MEDIAN_3PRIME_BIAS<br />
-						<td> The median 3 prime bias of the 1000 most highly expressed transcripts that have a length greater than the END_BIAS_BASES parameter,
+						<td>The median 3 prime bias of the 1000 most highly expressed transcripts that have a length greater than the END_BIAS_BASES parameter,
  where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most number of bases, divided by the mean coverage
- of the whole transcript. The number of end-bases used is specified by the END_BIAS_BASES parameter.
-</td>
+ of the whole transcript. The number of end-bases used is specified by the END_BIAS_BASES parameter.</td>
 					</tr>
 					<tr>
 						<td>MEDIAN_5PRIME_TO_3PRIME_BIAS<br />
 						<td>The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts that have a length greater
- than the END_BIAS_BASES parameter. The number of end-bases used is specified by the END_BIAS_BASES parameter. </td>
+ than the END_BIAS_BASES parameter. The number of end-bases used is specified by the END_BIAS_BASES parameter.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -763,7 +754,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

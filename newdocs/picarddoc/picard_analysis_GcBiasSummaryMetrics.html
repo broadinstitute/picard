@@ -608,6 +608,7 @@
 		<hr>
 		<h2>Overview</h2>
 		High level metrics that capture how biased the coverage in a certain lane is.
+@author Tim Fennell
 
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -623,56 +624,49 @@
 					</tr>
 					<tr>
 						<td>READS_USED<br />
-						<td>This option is used to mark including or excluding duplicates. </td>
+						<td>This option is used to mark including or excluding duplicates.</td>
 					</tr>
 					<tr>
 						<td>WINDOW_SIZE<br />
-						<td>The window size on the genome used to calculate the GC of the sequence. </td>
+						<td>The window size on the genome used to calculate the GC of the sequence.</td>
 					</tr>
 					<tr>
 						<td>TOTAL_CLUSTERS<br />
-						<td>The total number of clusters that were seen in the gc bias calculation. </td>
+						<td>The total number of clusters that were seen in the gc bias calculation.</td>
 					</tr>
 					<tr>
 						<td>ALIGNED_READS<br />
-						<td>The total number of aligned reads used to compute the gc bias metrics. </td>
+						<td>The total number of aligned reads used to compute the gc bias metrics.</td>
 					</tr>
 					<tr>
 						<td>AT_DROPOUT<br />
-						<td> Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
- (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].
-</td>
+						<td>Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
+ (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].</td>
 					</tr>
 					<tr>
 						<td>GC_DROPOUT<br />
-						<td> Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
- (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].
-</td>
+						<td>Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
+ (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].</td>
 					</tr>
 					<tr>
 						<td>GC_NC_0_19<br />
-						<td> Normalized coverage over quintile of GC content ranging from 0 - 19.
-</td>
+						<td>Normalized coverage over quintile of GC content ranging from 0 - 19.</td>
 					</tr>
 					<tr>
 						<td>GC_NC_20_39<br />
-						<td> Normalized coverage over each quintile of GC content ranging from 20 - 39.
-</td>
+						<td>Normalized coverage over each quintile of GC content ranging from 20 - 39.</td>
 					</tr>
 					<tr>
 						<td>GC_NC_40_59<br />
-						<td> Normalized coverage over each quintile of GC content ranging from 40 - 59.
-</td>
+						<td>Normalized coverage over each quintile of GC content ranging from 40 - 59.</td>
 					</tr>
 					<tr>
 						<td>GC_NC_60_79<br />
-						<td> Normalized coverage over each quintile of GC content ranging from 60 - 79.
-</td>
+						<td>Normalized coverage over each quintile of GC content ranging from 60 - 79.</td>
 					</tr>
 					<tr>
 						<td>GC_NC_80_100<br />
-						<td> Normalized coverage over each quintile of GC content ranging from 80 - 100.
-</td>
+						<td>Normalized coverage over each quintile of GC content ranging from 80 - 100.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -686,7 +680,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

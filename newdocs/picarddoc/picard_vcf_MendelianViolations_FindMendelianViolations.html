@@ -666,13 +666,14 @@ This tool assumes that variants in the PAR will be mapped onto the female chromo
  <li>Not SNPs</li>
  <li>Filtered</li>
  <li>Multiallelic (i.e., trio has more than 2 alleles)</li>
- <li>Within the #SKIP_CHROMS contigs</li>
+ <li>Within the {@link #SKIP_CHROMS} contigs</li>
  </ul>
  <h4>PseudoAutosomal Region</h4>
  This tool assumes that variants in the PAR will be mapped onto the female chromosome, and will treat variants in
  that region as as autosomal. The mapping to female requires that the PAR in the male chromosome be masked so that
  the aligner maps reads to single contig. This is normally done for the public releases of the human reference.
  The tool has default values for PAR that are sensible for humans on either build b37 or hg38.
+@author Tim Fennell
 
 
 				<h3>FindMendelianViolations specific arguments</h3>
@@ -837,13 +838,6 @@ This tool assumes that variants in the PAR will be mapped onto the female chromo
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
@@ -978,18 +972,6 @@ This tool assumes that variants in the PAR will be mapped onto the female chromo
 		<p>
 		<span class="label label-info ">Set[String]</span>
 			&nbsp;<span class="label">[chrX, X]</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1314,7 +1296,7 @@ This tool assumes that variants in the PAR will be mapped onto the female chromo
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

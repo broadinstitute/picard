@@ -609,7 +609,7 @@
 		<hr>
 		<h2>Overview</h2>
 		<p>This tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are
- defined as originating from a single fragment of DNA. It is based on the MarkDuplicatesWithMateCigar tool, with added logic
+ defined as originating from a single fragment of DNA. It is based on the {@link MarkDuplicatesWithMateCigar} tool, with added logic
  to leverage Unique Molecular Identifier (UMI) information.</p>
 
  <p>It makes use of the fact that duplicate sets with UMIs can be broken up into subsets based on
@@ -621,8 +621,8 @@
  associated with each record. If the MAX_EDIT_DISTANCE_TO_JOIN allows, UMIs with Ns will be included in the duplicate set and
  the UMI metrics associated with each duplicate set. Ns are counted as an edit distance from other bases {ATCG}, but are not
  considered different from each other.</p>
- <p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see MarkDuplicates or
- MarkDuplicatesWithMateCigar. Mixed data (where some reads have UMIs and others do not) is not supported.</p>
+ <p>This tool is NOT intended to be used on data without UMIs; for marking duplicates in non-UMI data, see {@link MarkDuplicates} or
+ {@link MarkDuplicatesWithMateCigar}. Mixed data (where some reads have UMIs and others do not) is not supported.</p>
 
  <p>Note also that this tool will not work with alignments that have large gaps or deletions, such as those from RNA-seq data.
  This is due to the need to buffer small genomic windows to ensure integrity of the duplicate marking, while large skips
@@ -632,13 +632,14 @@
  <h4>Usage example:</h4>
  <pre>
 
- java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\<br />
-      I=input.bam \\<br />
-      O=output.bam \\<br />
-      M=output_duplicate_metrics.txt \\<br />
+ java -jar picard.jar UmiAwareMarkDuplicatesWithMateCigar \\<br/>
+      I=input.bam \\<br/>
+      O=output.bam \\<br/>
+      M=output_duplicate_metrics.txt \\<br/>
       UMI_METRICS=output_umi_metrics.txt
  </pre>
- <hr />
+ <hr/>
+@author fleharty
 
 
 				<h3>UmiAwareMarkDuplicatesWithMateCigar specific arguments</h3>
@@ -711,6 +712,14 @@
 					<!--<td>SortOrder</td> -->
 					<td>null</td>
 					<td>If not null, assume that the input file has this order even if the header says otherwise.</td>
+				</tr>
+				<tr>
+					<td><a href="#--ASSUME_SORTED">--ASSUME_SORTED</a><br />
+								&nbsp;<em>-AS</em>
+					</td>
+					<!--<td>boolean</td> -->
+					<td>false</td>
+					<td>If true, assume that the input file is coordinate sorted even if the header says otherwise. Deprecated, used ASSUME_SORT_ORDER=coordinate instead.</td>
 				</tr>
 				<tr>
 					<td><a href="#--BARCODE_TAG">--BARCODE_TAG</a><br />
@@ -991,13 +1000,6 @@
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
 				</tr>
 				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
-				</tr>
-				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
 					</td>
 					<!--<td>Integer</td> -->
@@ -1065,17 +1067,6 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>display hidden arguments</td>
-				</tr>
-			<tr>
-				<th colspan="4" id="row-divider">Deprecated Arguments</th>
-			</tr>
-				<tr>
-					<td><a href="#--ASSUME_SORTED">--ASSUME_SORTED</a><br />
-								&nbsp;<em>-AS</em>
-					</td>
-					<!--<td>boolean</td> -->
-					<td>false</td>
-					<td>If true, assume that the input file is coordinate sorted even if the header says otherwise. Deprecated, used ASSUME_SORT_ORDER=coordinate instead.</td>
 				</tr>
 					</tbody>
 				</table>
@@ -1331,18 +1322,6 @@
 			&nbsp;<span class="label">0</span>
 			&nbsp;<span class="label label-warning">[ [ -∞</span>
 			&nbsp;<span class="label label-warning">∞ ] ]</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--help">--help </a>
@@ -1854,7 +1833,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

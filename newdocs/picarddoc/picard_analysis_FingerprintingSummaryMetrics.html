@@ -610,6 +610,7 @@
 		Summary fingerprinting metrics and statistics about the comparison of the sequence data
  from a single read group (lane or index within a lane) vs. a set of known genotypes for
  the expected sample.
+@author Tim Fennell
 
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -621,55 +622,53 @@
 					</thead>
 					<tr>
 						<td>READ_GROUP<br />
-						<td>The read group from which sequence data was drawn for comparison. </td>
+						<td>The read group from which sequence data was drawn for comparison.</td>
 					</tr>
 					<tr>
 						<td>SAMPLE<br />
-						<td>The sample whose known genotypes the sequence data was compared to. </td>
+						<td>The sample whose known genotypes the sequence data was compared to.</td>
 					</tr>
 					<tr>
 						<td>LL_EXPECTED_SAMPLE<br />
-						<td>The Log Likelihood of the sequence data given the expected sample's genotypes. </td>
+						<td>The Log Likelihood of the sequence data given the expected sample's genotypes.</td>
 					</tr>
 					<tr>
 						<td>LL_RANDOM_SAMPLE<br />
-						<td>The Log Likelihood of the sequence data given a random sample from the human population. </td>
+						<td>The Log Likelihood of the sequence data given a random sample from the human population.</td>
 					</tr>
 					<tr>
 						<td>LOD_EXPECTED_SAMPLE<br />
-						<td> The LOD for Expected Sample vs. Random Sample.  A positive LOD indicates that the sequence data
+						<td>The LOD for Expected Sample vs. Random Sample.  A positive LOD indicates that the sequence data
  is more likely to come from the expected sample vs. a random sample from the population, by LOD logs.
  I.e. a value of 6 indicates that the sequence data is 1,000,000 more likely to come from the expected
  sample than from a random sample.  A negative LOD indicates the reverse - that the sequence data is more
- likely to come from a random sample than from the expected sample.
-</td>
+ likely to come from a random sample than from the expected sample.</td>
 					</tr>
 					<tr>
 						<td>HAPLOTYPES_WITH_GENOTYPES<br />
-						<td>The number of haplotypes that had expected genotypes to compare to. </td>
+						<td>The number of haplotypes that had expected genotypes to compare to.</td>
 					</tr>
 					<tr>
 						<td>HAPLOTYPES_CONFIDENTLY_CHECKED<br />
-						<td> The subset of genotyped haplotypes for which there was sufficient sequence data to
+						<td>The subset of genotyped haplotypes for which there was sufficient sequence data to
  confidently genotype the haplotype. Note: all haplotypes with sequence coverage contribute to the
- LOD score, even if they cannot be "confidently checked" individually.
- </td>
+ LOD score, even if they cannot be "confidently checked" individually.</td>
 					</tr>
 					<tr>
 						<td>HAPLOTYPES_CONFIDENTLY_MATCHING<br />
-						<td>The subset of confidently checked haplotypes that match the expected genotypes. </td>
+						<td>The subset of confidently checked haplotypes that match the expected genotypes.</td>
 					</tr>
 					<tr>
 						<td>HET_AS_HOM<br />
-						<td>num of hets, observed as homs with LOD > threshold </td>
+						<td>num of hets, observed as homs with LOD > threshold</td>
 					</tr>
 					<tr>
 						<td>HOM_AS_HET<br />
-						<td>num of homs, observed as hets with LOD > threshold </td>
+						<td>num of homs, observed as hets with LOD > threshold</td>
 					</tr>
 					<tr>
 						<td>HOM_AS_OTHER_HOM<br />
-						<td>num of homs, observed as other homs with LOD > threshold </td>
+						<td>num of homs, observed as other homs with LOD > threshold</td>
 					</tr>
 					</tbody>
 				</table>
@@ -683,7 +682,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

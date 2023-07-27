@@ -14,6 +14,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -29,6 +30,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -44,6 +46,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -59,6 +62,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -74,6 +78,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -89,21 +94,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
-      "options": []
-    },
-    {
-      "summary": "Google Genomics API client_secrets.json file path.",
-      "name": "--GA4GH_CLIENT_SECRETS",
-      "synonyms": "NA",
-      "type": "String",
-      "required": "no",
-      "fulltext": "",
-      "defaultValue": "client_secrets.json",
-      "minValue": "NA",
-      "maxValue": "NA",
-      "minRecValue": "NA",
-      "maxRecValue": "NA",
-      "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -119,6 +110,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -134,6 +126,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -149,6 +142,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -164,6 +158,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -179,6 +174,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -194,6 +190,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -209,6 +206,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -224,6 +222,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -239,6 +238,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -254,6 +254,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -269,6 +270,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -284,6 +286,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -299,6 +302,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -314,6 +318,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "advanced",
+      "deprecated": false,
       "options": []
     },
     {
@@ -329,6 +334,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -344,6 +350,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -359,6 +366,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "required",
+      "deprecated": false,
       "options": []
     },
     {
@@ -374,6 +382,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -389,6 +398,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": []
     },
     {
@@ -404,6 +414,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     },
     {
@@ -419,6 +430,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -447,6 +459,7 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "common",
+      "deprecated": false,
       "options": [
         {
           "summary": "",
@@ -479,12 +492,14 @@
       "minRecValue": "NA",
       "maxRecValue": "NA",
       "kind": "optional",
+      "deprecated": false,
       "options": []
     }
   ],
-  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Calculates the concordance between genotype data of one sample in each of two VCFs - one being considered the truth (or reference)\n the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Satistics\n are reported in three different files.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n This tool evaluates the concordance between genotype calls for a sample in different callsets where one is being considered\n as the \\\"truth\\\" (aka standard, or reference) and the other as the \\\"call\\\" that is being evaluated for accuracy. The\n Comparison can be restricted to a confidence interval which is typically used in order to enable proper assessment of\n False Positives and the False-Positive Rate (FPR).\n \u003cbr /\u003e\n \u003ch3\u003eUsage example\u003c/h3\u003e\n \u003ch4\u003eCompare two VCFs within a confidence region\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar GenotypeConcordance \\\\\n       CALL_VCF\u003dinput.vcf \\\\\n       CALL_SAMPLE\u003dsample_name \\\\\n       O\u003dgc_concordance.vcf \\\\\n       TRUTH_VCF\u003dtruth_set.vcf \\\\\n       TRUTH_SAMPLE\u003dsample_in_truth \\\\\n       INTERVALS\u003dconfident.interval_list \\\\\n       MISSING_SITES_HOM_REF \u003d true\n \u003c/pre\u003e\n\n \u003ch3\u003eOutput Metrics:\u003c/h3\u003e\n Output metrics consists of GenotypeConcordanceContingencyMetrics, GenotypeConcordanceSummaryMetrics, and\n GenotypeConcordanceDetailMetrics.  For each set of metrics, the data is broken into separate sections for\n SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes\n  of variants are not included.\n \u003cul\u003e\n \u003cli\u003eGenotypeConcordanceContingencyMetrics enumerate the constituents of each contingent in a callset including true-positive\n (TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls.\u003c/li\u003e\n \u003cli\u003eGenotypeConcordanceDetailMetrics include the numbers of SNPs and INDELs for each contingent genotype as well as the\n number of validated genotypes.\u003c/li\u003e\n \u003cli\u003eGenotypeConcordanceSummaryMetrics provide specific details for the variant caller performance on a callset including\n values for sensitivity, specificity, and positive predictive values.\u003c/li\u003e\n \u003c/ul\u003e\n \u003cbr /\u003e\n \u003cbr /\u003e\n Useful definitions applicable to alleles and genotypes:\n \u003cul\u003e\n \u003cli\u003eTruthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validated\n with multiple technologies e.g. Genome In A Bottle Consortium (GIAB) (https://sites.stanford.edu/abms/giab)\u003c/li\u003e\n \u003cli\u003eTP - True-positives are variant sites that match against the truth-set\u003c/li\u003e\n \u003cli\u003eFP - False-positives are reference sites miscalled as variant\u003c/li\u003e\n \u003cli\u003eFN - False-negatives are variant sites miscalled as reference\u003c/li\u003e\n \u003cli\u003eTN - True-negatives are correctly called as reference\u003c/li\u003e\n \u003cli\u003eValidated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set\u003c/li\u003e\n \u003c/ul\u003e\n \u003ch3\u003eVCF Output:\u003c/h3\u003e\n \u003cul\u003e\n \u003cli\u003eThe concordance state will be stored in the CONC_ST tag in the INFO field\u003c/li\u003e\n \u003cli\u003eThe truth sample name will be \\\"truth\\\" and call sample name will be \\\"call\\\"\u003c/li\u003e\n \u003c/ul\u003e",
+  "description": "\u003ch3\u003eSummary\u003c/h3\u003e\n Calculates the concordance between genotype data of one sample in each of two VCFs - one being considered the truth (or reference)\n the other being the call.  The concordance is broken into separate results sections for SNPs and indels.  Satistics\n are reported in three different files.\n\n \u003ch3\u003eDetails\u003c/h3\u003e\n This tool evaluates the concordance between genotype calls for a sample in different callsets where one is being considered\n as the \\\"truth\\\" (aka standard, or reference) and the other as the \\\"call\\\" that is being evaluated for accuracy. The\n Comparison can be restricted to a confidence interval which is typically used in order to enable proper assessment of\n False Positives and the False-Positive Rate (FPR).\n \u003cbr/\u003e\n \u003ch3\u003eUsage example\u003c/h3\u003e\n \u003ch4\u003eCompare two VCFs within a confidence region\u003c/h4\u003e\n \u003cpre\u003e\n java -jar picard.jar GenotypeConcordance \\\\\n       CALL_VCF\u003dinput.vcf \\\\\n       CALL_SAMPLE\u003dsample_name \\\\\n       O\u003dgc_concordance.vcf \\\\\n       TRUTH_VCF\u003dtruth_set.vcf \\\\\n       TRUTH_SAMPLE\u003dsample_in_truth \\\\\n       INTERVALS\u003dconfident.interval_list \\\\\n       MISSING_SITES_HOM_REF \u003d true\n \u003c/pre\u003e\n\n \u003ch3\u003eOutput Metrics:\u003c/h3\u003e\n Output metrics consists of GenotypeConcordanceContingencyMetrics, GenotypeConcordanceSummaryMetrics, and\n GenotypeConcordanceDetailMetrics.  For each set of metrics, the data is broken into separate sections for\n SNPs and INDELs.  Note that only SNP and INDEL variants are considered, MNP, Symbolic, and Mixed classes\n  of variants are not included.\n \u003cul\u003e\n \u003cli\u003e{@link GenotypeConcordanceContingencyMetrics} enumerate the constituents of each contingent in a callset including true-positive\n (TP), true-negative (TN), false-positive (FP), and false-negative (FN) calls.\u003c/li\u003e\n \u003cli\u003e{@link GenotypeConcordanceDetailMetrics} include the numbers of SNPs and INDELs for each contingent genotype as well as the\n number of validated genotypes.\u003c/li\u003e\n \u003cli\u003e{@link GenotypeConcordanceSummaryMetrics} provide specific details for the variant caller performance on a callset including\n values for sensitivity, specificity, and positive predictive values.\u003c/li\u003e\n \u003c/ul\u003e\n \u003cbr/\u003e\n \u003cbr/\u003e\n Useful definitions applicable to alleles and genotypes:\n \u003cul\u003e\n \u003cli\u003eTruthset - A callset (typically in VCF format) containing variant calls and genotypes that have been cross-validated\n with multiple technologies e.g. Genome In A Bottle Consortium (GIAB) (https://sites.stanford.edu/abms/giab)\u003c/li\u003e\n \u003cli\u003eTP - True-positives are variant sites that match against the truth-set\u003c/li\u003e\n \u003cli\u003eFP - False-positives are reference sites miscalled as variant\u003c/li\u003e\n \u003cli\u003eFN - False-negatives are variant sites miscalled as reference\u003c/li\u003e\n \u003cli\u003eTN - True-negatives are correctly called as reference\u003c/li\u003e\n \u003cli\u003eValidated genotypes - are TP sites where the exact genotype (HET or HOM-VAR) appears in the truth-set\u003c/li\u003e\n \u003c/ul\u003e\n \u003ch3\u003eVCF Output:\u003c/h3\u003e\n \u003cul\u003e\n \u003cli\u003eThe concordance state will be stored in the CONC_ST tag in the INFO field\u003c/li\u003e\n \u003cli\u003eThe truth sample name will be \\\"truth\\\" and call sample name will be \\\"call\\\"\u003c/li\u003e\n \u003c/ul\u003e\n@author Tim Fennell\n@author George Grant",
   "name": "GenotypeConcordance",
   "group": "Variant Evaluation and Refinement",
   "beta": false,
-  "experimental": false
+  "experimental": false,
+  "deprecated": false
 }

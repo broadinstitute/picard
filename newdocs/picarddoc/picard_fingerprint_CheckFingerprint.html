@@ -636,12 +636,12 @@
  <li>A detail metrics file that contains an individual SNP/Haplotype comparison within a fingerprint comparison.
  </li>
  </ol>
- The metrics files fill the fields of the classes FingerprintingSummaryMetrics and
- FingerprintingDetailMetrics.
+ The metrics files fill the fields of the classes {@link FingerprintingSummaryMetrics} and
+ {@link FingerprintingDetailMetrics}.
  The output files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.
  Alternatively the OUTPUT option may be used instead to give the base of the two output
- files, with the summary metrics having a file extension #FINGERPRINT_SUMMARY_FILE_SUFFIX,
- and the detail metrics having a file extension #FINGERPRINT_DETAIL_FILE_SUFFIX.
+ files, with the summary metrics having a file extension {@value #FINGERPRINT_SUMMARY_FILE_SUFFIX},
+ and the detail metrics having a file extension {@value #FINGERPRINT_DETAIL_FILE_SUFFIX}.
  <br/>
  <h3>Example comparing a bam against known genotypes:</h3>
  <pre>
@@ -654,19 +654,20 @@
  <br/>
  <h3>Detailed Explanation</h3>
  <p>
- This tool calculates a single number that reports the LOD score for identity check between the #INPUT
- and the #GENOTYPES. A positive value indicates that the data seems to have come from the same individual
+ This tool calculates a single number that reports the LOD score for identity check between the {@link #INPUT}
+ and the {@link #GENOTYPES}. A positive value indicates that the data seems to have come from the same individual
  or, in other words the identity checks out. The scale is logarithmic (base 10), so a LOD of 6 indicates
  that it is 1,000,000 more likely that the data matches the genotypes than not. A negative value indicates
  that the data do not match. A score that is near zero is inconclusive and can result from low coverage
  or non-informative genotypes.
  <p>
- The identity check makes use of haplotype blocks defined in the #HAPLOTYPE_MAP file to enable it to have higher
+ The identity check makes use of haplotype blocks defined in the {@link #HAPLOTYPE_MAP} file to enable it to have higher
  statistical power for detecting identity or swap by aggregating data from several SNPs in the haplotype block. This
  enables an identity check of samples with very low coverage (e.g. ~1x mean coverage).
  <p>
  When provided a VCF, the identity check looks at the PL, GL and GT fields (in that order) and uses the first one that
  it finds.
+@author Tim Fennell
 
 
 				<h3>CheckFingerprint specific arguments</h3>
@@ -721,7 +722,7 @@
 					</td>
 					<!--<td>String</td> -->
 					<td>null</td>
-					<td>The base prefix of output files to write.  The summary metrics will have the file extension 'fingerprinting_summary_metrics' and the detail metrics will have the extension 'fingerprinting_detail_metrics'.</td>
+					<td>The base prefix of output files to write.  The summary metrics will have the file extension '.fingerprinting_summary_metrics' and the detail metrics will have the extension '.fingerprinting_detail_metrics'.</td>
 				</tr>
 				<tr>
 					<td><a href="#--SUMMARY_OUTPUT">--SUMMARY_OUTPUT</a><br />
@@ -824,13 +825,6 @@
 					<!--<td>boolean</td> -->
 					<td>false</td>
 					<td>Whether to create an MD5 digest for any BAM or FASTQ files created.  </td>
-				</tr>
-				<tr>
-					<td><a href="#--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS</a><br />
-					</td>
-					<!--<td>String</td> -->
-					<td>client_secrets.json</td>
-					<td>Google Genomics API client_secrets.json file path.</td>
 				</tr>
 				<tr>
 					<td><a href="#--MAX_RECORDS_IN_RAM">--MAX_RECORDS_IN_RAM</a><br />
@@ -1011,18 +1005,6 @@
 			&nbsp;<span class="label">null</span>
 		</p>
 		<hr style="border-bottom: dotted 1px #C0C0C0;" />
-		<h3><a name="--GA4GH_CLIENT_SECRETS">--GA4GH_CLIENT_SECRETS </a>
-			 / <small>NA</small>
-		</h3>
-		<p class="args">
-			<b>Google Genomics API client_secrets.json file path.</b><br />
-			
-		</p>
-		<p>
-		<span class="label label-info ">String</span>
-			&nbsp;<span class="label">client_secrets.json</span>
-		</p>
-		<hr style="border-bottom: dotted 1px #C0C0C0;" />
 		<h3><a name="--GENOTYPE_LOD_THRESHOLD">--GENOTYPE_LOD_THRESHOLD </a>
 			 / <small>-LOD</small>
 		</h3>
@@ -1130,7 +1112,7 @@
 			 / <small>-O</small>
 		</h3>
 		<p class="args">
-			<b>The base prefix of output files to write.  The summary metrics will have the file extension 'fingerprinting_summary_metrics' and the detail metrics will have the extension 'fingerprinting_detail_metrics'.</b><br />
+			<b>The base prefix of output files to write.  The summary metrics will have the file extension '.fingerprinting_summary_metrics' and the detail metrics will have the extension '.fingerprinting_detail_metrics'.</b><br />
 			
 		</p>
 			<p><b>Exclusion:</b> This argument cannot be used at the same time as <code>SUMMARY_OUTPUT, DETAIL_OUTPUT</code>.</p>
@@ -1295,7 +1277,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>

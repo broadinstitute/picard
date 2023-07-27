@@ -609,6 +609,7 @@
 		<h2>Overview</h2>
 		Class that holds detailed metrics about reads that fall within windows of a certain
  GC bin on the reference genome.
+@author Tim Fennell
 
 				<p>This table summarizes the values that are specific to this metric.</p>
 				<table class="table table-striped table-bordered table-condensed">
@@ -624,38 +625,36 @@
 					</tr>
 					<tr>
 						<td>READS_USED<br />
-						<td>This option is used to mark including or excluding duplicates. </td>
+						<td>This option is used to mark including or excluding duplicates.</td>
 					</tr>
 					<tr>
 						<td>GC<br />
-						<td>The G+C content of the reference sequence represented by this bin. Values are from 0% to 100% </td>
+						<td>The G+C content of the reference sequence represented by this bin. Values are from 0% to 100%</td>
 					</tr>
 					<tr>
 						<td>WINDOWS<br />
-						<td>The number of windows on the reference genome that have this G+C content. </td>
+						<td>The number of windows on the reference genome that have this G+C content.</td>
 					</tr>
 					<tr>
 						<td>READ_STARTS<br />
-						<td>The number of reads whose start position is at the start of a window of this GC. </td>
+						<td>The number of reads whose start position is at the start of a window of this GC.</td>
 					</tr>
 					<tr>
 						<td>MEAN_BASE_QUALITY<br />
-						<td>The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC. </td>
+						<td>The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC.</td>
 					</tr>
 					<tr>
 						<td>NORMALIZED_COVERAGE<br />
-						<td> The ratio of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
+						<td>The ratio of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
  1 represents mean coverage, a number less than one represents lower than mean coverage (e.g. 0.5
  means half as much coverage as average) while a number greater than one represents higher than
- mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).
-</td>
+ mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).</td>
 					</tr>
 					<tr>
 						<td>ERROR_BAR_WIDTH<br />
-						<td> The radius of error bars in this bin based on the number of observations made. For example if
+						<td>The radius of error bars in this bin based on the number of observations made. For example if
  the normalized coverage is 0.75 and the error bar width is 0.1 then the error bars would be
- drawn from 0.65 to 0.85. 
-</td>
+ drawn from 0.65 to 0.85.</td>
 					</tr>
 					</tbody>
 				</table>
@@ -669,7 +668,7 @@
         	<a href="http://gatkforums.broadinstitute.org/">Support Forum</a>
         </p>
 
-        <p class="version">Picard version 2.27.5-SNAPSHOT built at 06-44-2022 06:44:58.
+        <p class="version">Picard version 3.0.0-17-g83b016e7f-SNAPSHOT built at 27-38-2023 01:38:22.
         </p>
 
 	</div>
