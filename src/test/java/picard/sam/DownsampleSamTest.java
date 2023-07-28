@@ -143,7 +143,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
         Optional<PicardHtsPath> referenceFile = Optional.of(new PicardHtsPath(" gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta"));
         if (referenceFile.isPresent()){
-            args.add("REFERENCE_SEQUENCE2=" + referenceFile.get().getURIString());
+            args.add("REFERENCE_SEQUENCE=" + referenceFile.get().getURIString());
         }
 
         // make sure results is successful
