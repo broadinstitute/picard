@@ -230,7 +230,7 @@ public class DownsampleSam extends CommandLineProgram {
                     "Drawing a random seed because RANDOM_SEED was not set. Set RANDOM_SEED to %s to reproduce these results in the future.", RANDOM_SEED));
         }
 
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(INPUT.toPath()));
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getHtsPath().toPath()).open(SamInputResource.of(INPUT.toPath()));
         final SAMFileHeader header = in.getFileHeader().clone();
 
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
@@ -268,7 +268,8 @@ public class DownsampleSam extends CommandLineProgram {
         final SAMProgramRecord pgRecord = getPGRecord(header);
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
-        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getHtsPath().toPath());
+        // tsato...hmm....was I not right to set REFERENCE_SEQUENCE TO be PicardHtsPath?
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), REFERENCE_SEQUENCE);
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
@@ -301,7 +302,7 @@ public class DownsampleSam extends CommandLineProgram {
         // Override to allow "R" to be hijacked for "RANDOM_SEED" (tsato: good call)
         return new ReferenceArgumentCollection() {
             @Argument(doc = "The reference sequence file.", optional=true, common=false)
-            public PicardHtsPath REFERENCE_SEQUENCE;
+            public PicardHtsPath REFERENCE_SEQUENCE; // tsato: how will this affect....File REFERENCE_SEQUENCE with default, system.property() etc....
 
             @Override
             public File getReferenceFile() { // tsato: this should be replaced by getHtsPath
@@ -310,7 +311,7 @@ public class DownsampleSam extends CommandLineProgram {
 
             @Override
             public PicardHtsPath getHtsPath() { // tsato: this should be replaced by getHtsPath
-                return REFERENCE_SEQUENCE;
+                return this.REFERENCE_SEQUENCE;
             }
         };
     }

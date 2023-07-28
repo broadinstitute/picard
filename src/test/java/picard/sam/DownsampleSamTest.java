@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import static htsjdk.samtools.DownsamplingIteratorFactory.Strategy.Chained;
@@ -132,14 +133,18 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     // tsato: add 'final PicardHtsPath outputFile' as argument
     private File testDownsampleWorker(final PicardHtsPath samFile,  final double fraction, final String strategy, final Integer seed) throws IOException {
         final File downsampled = File.createTempFile("DownsampleSam", ".bam", tempDir);
-        final String[] args = new String[]{
+        final List<String> args = new ArrayList<>(Arrays.asList(
                 "INPUT=" + samFile.getURIString(),
                 "OUTPUT=" + downsampled.getAbsolutePath(),
                 "PROBABILITY=" + fraction,
                 "STRATEGY=" + strategy,
                 "RANDOM_SEED=" + ((seed==null)?"null":seed.toString()),
-                "CREATE_INDEX=true"
-        };
+                "CREATE_INDEX=true"));
+
+        Optional<PicardHtsPath> referenceFile = Optional.of(new PicardHtsPath(" gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta"));
+        if (referenceFile.isPresent()){
+            args.add("REFERENCE_SEQUENCE2=" + referenceFile.get().getURIString());
+        }
 
         // make sure results is successful
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -220,6 +225,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     public void testCloud() throws IOException {
         final String output = GATKBucketUtils.getTempFilePath("downsample", "sam");
         final File output2 = testDownsampleWorker(NA12878_MINI, 0.1, ConstantMemory.toString(), 42);
+        final File output3 = testDownsampleWorker(NA12878_MINI, 0.1, ConstantMemory.toString(), 42);
         final int d = 3;
     }
 }

@@ -293,7 +293,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         final String output = GATKBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR + "test", ".dict");
 
         final String[] argv = {
-                "REFERENCE=" + HG19_MINI,
+                "REFERENCE=" + HG19_MINI, // tsato: vs REFERENCE_SEQ?
                 "OUTPUT=" + output,
         };
 

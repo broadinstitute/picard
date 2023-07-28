@@ -56,8 +56,10 @@ public interface ReferenceArgumentCollection {
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
      */
     default PicardHtsPath getHtsPath(){
-        // tsato: this is for compatibility with legacy code like CollectRRBSMetrics.
-        return new PicardHtsPath(getReferenceFile());
+        // tsato: this is for compatibility with legacy code like CollectRRBSMetrics
+        // tsato: nightmarish to figure out when this should return null or not...but I think this will work
+        // at least with downsampleSam....getReferenceFile accesses REFERENCE_FILE...in CommandLineProgram vs subclass of this class...
+        return getReferenceFile() == null ? null : new PicardHtsPath(getReferenceFile());
     };
 
     /**
