@@ -99,22 +99,6 @@ group = 'com.github.broadinstitute'
 
 defaultTasks 'all'
 
-distZip {
-    dependsOn 'currentJar'
-}
-
-distTar {
-    dependsOn 'currentJar'
-}
-
-startScripts {
-    dependsOn 'currentJar'
-}
-
-startShadowScripts {
-    dependsOn 'currentJar'
-}
-
 task all(dependsOn: ['jar', 'distZip', 'javadoc', 'shadowJar', 'currentJar', 'picardDoc'])
 
 // Source file names for the picard command line properties file. We select and include only one of
@@ -415,4 +399,13 @@ gitPublish {
 
 gitPublishCopy {
     dependsOn 'updateGhPages', 'copyJavadoc', 'copyPicardDoc'
+}
+
+// For Gradle 8 explicitly add 'currentJar' as a dependency of the following tasks.
+// For more information, please refer to
+// https://docs.gradle.org/8.2.1/userguide/validation_problems.html#implicit_dependency in the Gradle documentation.
+['distZip', 'distTar', 'startScripts', 'startShadowScripts', 'generateMetadataFileForPicardPublication'].each {
+    tasks.named(it).configure {
+        dependsOn 'currentJar'
+    }
 }
