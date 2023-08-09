@@ -204,14 +204,11 @@ public abstract class CommandLineProgram {
             final String info    = String.format(message, this.getClass().getSimpleName(), syntax);
             Log.getInstance(this.getClass()).info(info);
         }
+
         if (!parseArgs(actualArgs)) {
             return 1;
         }
-
-        // Provide one temp directory if the caller didn't
-        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>();
-        if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
-
+        
         // Build the default headers
         final Date startDate = new Date();
         this.defaultHeaders.add(new StringHeader(commandLine));
@@ -237,15 +234,6 @@ public abstract class CommandLineProgram {
         final boolean defaultMD5Creation = SAMFileWriterFactory.getDefaultCreateMd5File();
         if (CREATE_MD5_FILE) {
             SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
-        }
-
-        for (final File f : TMP_DIR) {
-            // Intentionally not checking the return values, because it may be that the program does not
-            // need a tmp_dir. If this fails, the problem will be discovered downstream.
-            if (!f.exists()) f.mkdirs();
-            f.setReadable(true, false);
-            f.setWritable(true, false);
-            System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
         }
 
         if (!USE_JDK_DEFLATER) {
@@ -346,6 +334,19 @@ public abstract class CommandLineProgram {
             return false;
         }
         REFERENCE_SEQUENCE = referenceSequence.getReferenceFile();
+
+        // Provide one temp directory if the caller didn't
+        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>();
+        if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
+
+        for (final File f : TMP_DIR) {
+            // Intentionally not checking the return values, because it may be that the program does not
+            // need a tmp_dir. If this fails, the problem will be discovered downstream.
+            if (!f.exists()) f.mkdirs();
+            f.setReadable(true, false);
+            f.setWritable(true, false);
+            System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
+        }
 
         final String[] customErrorMessages = customCommandLineValidation();
         if (customErrorMessages != null) {
