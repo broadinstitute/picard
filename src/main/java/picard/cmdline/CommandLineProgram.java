@@ -341,7 +341,7 @@ public abstract class CommandLineProgram {
         // R script into the tmp directory, which used to be the system default before this change.
 
         // Provide one temp directory if the caller didn't
-        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>(); // This like looks redundant due to defaults
+        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>(); // This line looks redundant due to defaults
         if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
 
         for (final File f : TMP_DIR) {
