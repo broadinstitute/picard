@@ -17,6 +17,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
 import picard.sam.util.SamTestUtil;
 import picard.util.TestNGUtil;
 
@@ -115,7 +116,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
     public void TestBuilder() {
         final ValidateSamFile validateSamFile = new ValidateSamFile();
 
-        validateSamFile.INPUT = tempSamFile;
+        validateSamFile.INPUT = new PicardHtsPath(tempSamFile);
         Assert.assertEquals(validateSamFile.doWork(), 0);
     }
 
@@ -151,7 +152,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         // make sure that the resulting BAM is valid.
         final ValidateSamFile validateSamFile = new ValidateSamFile();
 
-        validateSamFile.INPUT = downsampled;
+        validateSamFile.INPUT = new PicardHtsPath(downsampled);
         Assert.assertEquals(validateSamFile.doWork(), 0);
 
         //make sure that the total number of record in the resulting file in in the ballpark:

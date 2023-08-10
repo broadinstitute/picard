@@ -33,6 +33,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.PicardCommandLine;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -194,7 +195,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         final String args[] = { "INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath() };
         runPicardCommandLine(args);
         final ValidateSamFile validator = new ValidateSamFile();
-        validator.INPUT = output;
+        validator.INPUT = new PicardHtsPath(output);
         validator.VALIDATION_STRINGENCY = ValidationStringency.STRICT;
         validator.MODE = ValidateSamFile.Mode.VERBOSE;
         final int result = validator.doWork();

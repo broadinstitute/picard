@@ -42,6 +42,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetrics;
 import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
@@ -51,7 +52,10 @@ import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.nio.PicardHtsPath;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashSet;
@@ -196,7 +200,7 @@ public class DownsampleSam extends CommandLineProgram {
     public double ACCURACY = 0.0001;
 
     @Argument(shortName = "M", doc = "The metrics file (of type QualityYieldMetrics) which will contain information about the downsampled file.", optional=true)
-    public File METRICS_FILE;
+    public PicardHtsPath METRICS_FILE; // tsato: make cloud
 
     private final Log log = Log.getInstance(DownsampleSam.class);
 
@@ -269,7 +273,7 @@ public class DownsampleSam extends CommandLineProgram {
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
         // tsato...hmm....was I not right to set REFERENCE_SEQUENCE TO be PicardHtsPath?
-        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), REFERENCE_SEQUENCE);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getHtsPath().toPath());
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
@@ -291,7 +295,13 @@ public class DownsampleSam extends CommandLineProgram {
             final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
             metricsCollector.finish();
             metricsCollector.addMetricsToFile(metricsFile);
-            metricsFile.write(METRICS_FILE);
+            try {
+                final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath());
+                metricsFile.write(writer);
+            } catch (IOException e) {
+                throw new PicardException("Encountered an error writing the metrics file: " + METRICS_FILE.getURIString());
+            }
+            ; // tsato; need to update HtsJdk...unless I can create a writer...
         }
 
         return 0;

@@ -66,7 +66,7 @@ public class AddCommentsToBam extends CommandLineProgram {
             samFileHeader.addComment(comment);
         }
 
-        BamFileIoUtils.reheaderBamFile(samFileHeader, INPUT, OUTPUT, CREATE_MD5_FILE, CREATE_INDEX);
+        BamFileIoUtils.reheaderBamFile(samFileHeader, INPUT, OUTPUT, CREATE_MD5_FILE, CREATE_INDEX); // tsato: probably should have kept the old File version for compatibility in htsjdk
 
         return 0;
     }

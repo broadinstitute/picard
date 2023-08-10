@@ -30,6 +30,7 @@ import htsjdk.samtools.SamReaderFactory;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 import picard.sam.util.SamComparison;
 
 import java.io.File;
@@ -76,7 +77,7 @@ public class SamFormatConverterTest {
         output.deleteOnExit();
         SamFormatConverter.convert(inputFile, output, ESSENTIALLY_EMPTY_REFERENCE_TO_USE_WITH_UNMAPPED_CRAM, Defaults.CREATE_INDEX);
 
-        validateSamFile.INPUT = output;
+        validateSamFile.INPUT = new PicardHtsPath(output);
         assertEquals(validateSamFile.doWork(), 0);
         final SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().referenceSequence(ESSENTIALLY_EMPTY_REFERENCE_TO_USE_WITH_UNMAPPED_CRAM);
         try (final SamReader samReader1 = samReaderFactory.open(output);
