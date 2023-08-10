@@ -335,8 +335,13 @@ public abstract class CommandLineProgram {
         }
         REFERENCE_SEQUENCE = referenceSequence.getReferenceFile();
 
+        // The TMP_DIR setting section below was moved from instanceMain() to here due to timing issues
+        // related to checking whether R is installed. Certain programs, such as CollectInsertSizeMetrics
+        // override the customCommandLineValidation() with a call to RExecutor, which in turn writes an
+        // R script into the tmp directory, which used to be the system default before this change.
+
         // Provide one temp directory if the caller didn't
-        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>();
+        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>(); // This like looks redundant due to defaults
         if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
 
         for (final File f : TMP_DIR) {
