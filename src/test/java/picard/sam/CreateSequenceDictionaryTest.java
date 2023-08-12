@@ -36,7 +36,6 @@ import picard.nio.PicardHtsPath;
 import picard.util.GCloudTestUtils;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -284,8 +283,9 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         return tempDict.toPath();
     }
 
-    // A copy of gs://hellbender/test/resources/hg19mini.fasta in the picard directory, where the accompanying dictionary
-    // doesn't exist in the same directory.
+    // This is a copy of gs://hellbender/test/resources/hg19mini.fasta. Using the original file in the original location is
+    // undesirable because an accompanying dictionary already exists in the same directory. So we copied it to picard/references
+    // where the dictionary does not exist.
     final String HG19_MINI = GCloudTestUtils.getTestInputPath() + "picard/references/hg19mini.fasta";
     final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
     @Test(groups = "cloud")
@@ -297,17 +297,21 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 "OUTPUT=" + output,
         };
 
-        final String expectedOutputPath = GCloudTestUtils.getTestInputPath() + "hg19mini.dict";
+        // This is the existing dictionary in gs://hellbender/test/resources/
+        final String expectedOutputPath = GCloudTestUtils.TEST_INPUTS_DEFAULT + "hg19mini.dict";
         Assert.assertEquals(runPicardCommandLine(argv), 0);
         final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(new PicardHtsPath(expectedOutputPath).toPath());
         final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(new PicardHtsPath(output).toPath());
 
-        // SAMSequenceRecord::equal is too stringent (we don't require UR of the two files to match), so check equality this way
-        Assert.assertEquals(actualDictionary.size(), expectedDictionary.size());
+        assertDictionariesEqual(actualDictionary, expectedDictionary);
+    }
 
-        for (int i = 0; i < expectedDictionary.size(); i++){
-            final SAMSequenceRecord expectedRecord = expectedDictionary.getSequence(i);
-            final SAMSequenceRecord actualRecord = actualDictionary.getSequence(i);
+    // SAMSequenceRecord::equal is too strict (we don't require UR of the two files to match), so check equality this way
+    private void assertDictionariesEqual(final SAMSequenceDictionary dict1, final SAMSequenceDictionary dict2){
+        Assert.assertEquals(dict1.size(), dict2.size());
+        for (int i = 0; i < dict2.size(); i++){
+            final SAMSequenceRecord expectedRecord = dict2.getSequence(i);
+            final SAMSequenceRecord actualRecord = dict1.getSequence(i);
             Assert.assertEquals(actualRecord.getSequenceName(), expectedRecord.getSequenceName());
             Assert.assertEquals(actualRecord.getSequenceLength(), expectedRecord.getSequenceLength());
             Assert.assertEquals(actualRecord.getSequenceIndex(), expectedRecord.getSequenceIndex());

@@ -11,7 +11,7 @@ public final class GCloudTestUtils {
     public static final String TEST_INPUTS_DEFAULT = "gs://hellbender/test/resources/";
     public static final String TEST_STAGING_DEFAULT = "gs://hellbender-test-logs/staging/";
     public static final String TEST_PROJECT_DEFAULT = "broad-dsde-dev";
-
+    public static final String TEST_OUTPUT_DEFAULT = TEST_STAGING_DEFAULT + "picard/";
 
     /**
      * A publicly readable GCS bucket set as requester pays, this should not be owned by the same project that is set

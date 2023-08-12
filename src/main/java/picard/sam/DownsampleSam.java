@@ -297,11 +297,13 @@ public class DownsampleSam extends CommandLineProgram {
             metricsCollector.addMetricsToFile(metricsFile);
             try {
                 final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath());
-                metricsFile.write(writer);
+                metricsFile.write(writer); // tsato; need to update HtsJdk...unless I can create a writer...
+                writer.close(); // tsato: cloud file is not generated unless the writer is closed; shouldn't that be done in MetricsFile::write()?
+                int d = 3;
             } catch (IOException e) {
                 throw new PicardException("Encountered an error writing the metrics file: " + METRICS_FILE.getURIString());
             }
-            ; // tsato; need to update HtsJdk...unless I can create a writer...
+
         }
 
         return 0;

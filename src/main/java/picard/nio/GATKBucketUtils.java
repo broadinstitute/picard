@@ -43,7 +43,10 @@ public class GATKBucketUtils {
      */
     public static String getTempFilePath(String prefix, String extension){
         if (isGcsUrl(prefix) || (isHadoopUrl(prefix))){
-            final String path = randomRemotePath(prefix, "", extension);
+            if (!extension.startsWith(".")) {
+                extension = "." + extension;
+            }
+            final String path = randomRemotePath(prefix, "", extension); // tsato: need to standardize whether to add . or not
             GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path));
             // Mark auxiliary files to be deleted
             GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path + FileExtensions.TRIBBLE_INDEX));

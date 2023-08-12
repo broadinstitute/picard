@@ -1,13 +1,16 @@
 package picard.sam;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.analysis.CollectQualityYieldMetrics;
 import picard.cmdline.CommandLineProgramTest;
 import picard.nio.GATKBucketUtils;
 import picard.nio.PicardHtsPath;
@@ -20,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -172,6 +176,15 @@ public class DownsampleSamTest extends CommandLineProgramTest {
             TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
             TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
         }
+
+        if (metricsFile.isPresent()){
+            final MetricsFile<CollectQualityYieldMetrics.QualityYieldMetrics, Integer> metrics = new MetricsFile<>();
+            final Reader metricReader = IOUtil.openFileForBufferedReading(metricsFile.get().toPath());
+            metrics.read(metricReader);
+            CloserUtil.close(metricReader);
+            Assert.assertEquals(metrics.getMetrics().get(0).READ_LENGTH, 101);
+        }
+
         return downsampled;
     }
 
@@ -233,21 +246,29 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
     final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
     final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+    final int DEFAULT_RANDOM_SEED = 42;
 
     @Test(groups = "cloud")
     public void testCloud() throws IOException {
-        // tsato: these are not actually in the cloud...
-        final String bamOutputInCloud = GATKBucketUtils.getTempFilePath("downsample", "bam");
-        final String metricsFileInCloud = GATKBucketUtils.getTempFilePath("metrics", "txt");
+        // Local test files for testing, to delete before merge
+//        final String bamOutput = GATKBucketUtils.getTempFilePath("downsample", "bam");
+//        final String metricsOutput = GATKBucketUtils.getTempFilePath("metrics", "txt");
 
+        // Actual cloud test files
+        final String bamOutput = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
+        final String metricsOutput = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", "txt");
 
         // Test bam (input/output)
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), 42);
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(bamOutputInCloud)), Optional.empty());
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(bamOutputInCloud)), Optional.of(new PicardHtsPath(metricsFileInCloud)));
+        if (false){ // tsato: don't reuse output file....
+            testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED);
+            testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, Optional.of(new PicardHtsPath(bamOutput)), Optional.empty());
+        }
+        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, Optional.of(new PicardHtsPath(bamOutput)), Optional.of(new PicardHtsPath(metricsOutput)));
         int d = 3;
+
         // Test cram (input/output). Temporarily turned off as we investigate why it hangs
-        if (false){
+        boolean testCram = false;
+        if (testCram){
             final String cramOutputInCloud = GATKBucketUtils.getTempFilePath("downsample", "cram");
             testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty());
             testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty());
