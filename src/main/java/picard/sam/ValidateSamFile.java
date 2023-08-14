@@ -24,6 +24,7 @@
 
 package picard.sam;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
