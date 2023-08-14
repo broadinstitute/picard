@@ -200,7 +200,7 @@ public class DownsampleSam extends CommandLineProgram {
     public double ACCURACY = 0.0001;
 
     @Argument(shortName = "M", doc = "The metrics file (of type QualityYieldMetrics) which will contain information about the downsampled file.", optional=true)
-    public PicardHtsPath METRICS_FILE; // tsato: make cloud
+    public PicardHtsPath METRICS_FILE;
 
     private final Log log = Log.getInstance(DownsampleSam.class);
 
@@ -217,7 +217,9 @@ public class DownsampleSam extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT.toPath());
-        // IOUtil.assertFileIsWritable(OUTPUT); // tsato: writability check has to go
+        if (OUTPUT.getScheme().equals(PicardHtsPath.FILE_SCHEME)){
+            IOUtil.assertFileIsWritable(OUTPUT.toPath().toFile());
+        }
 
         // Warn the user if they are running with P=1 or P=0 (which are legal, but odd)
         if (PROBABILITY == 1) {
@@ -234,7 +236,7 @@ public class DownsampleSam extends CommandLineProgram {
                     "Drawing a random seed because RANDOM_SEED was not set. Set RANDOM_SEED to %s to reproduce these results in the future.", RANDOM_SEED));
         }
 
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getHtsPath().toPath()).open(SamInputResource.of(INPUT.toPath()));
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).open(SamInputResource.of(INPUT.toPath()));
         final SAMFileHeader header = in.getFileHeader().clone();
 
         if (STRATEGY == Strategy.ConstantMemory || STRATEGY == Strategy.Chained) {
@@ -273,7 +275,7 @@ public class DownsampleSam extends CommandLineProgram {
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
 
-        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getHtsPath().toPath());
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getReferencePath());
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);
         final QualityYieldMetricsCollector metricsCollector = new QualityYieldMetricsCollector(true, false, false);
@@ -297,9 +299,8 @@ public class DownsampleSam extends CommandLineProgram {
             metricsCollector.addMetricsToFile(metricsFile);
             try {
                 final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath());
-                metricsFile.write(writer); // tsato; need to update HtsJdk...unless I can create a writer...
+                metricsFile.write(writer);
                 writer.close(); // tsato: cloud file is not generated unless the writer is closed; shouldn't that be done in MetricsFile::write()?
-                int d = 3;
             } catch (IOException e) {
                 throw new PicardException("Encountered an error writing the metrics file: " + METRICS_FILE.getURIString());
             }
@@ -311,13 +312,13 @@ public class DownsampleSam extends CommandLineProgram {
 
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
-        // Override to allow "R" to be hijacked for "RANDOM_SEED" (tsato: good call)
+        // Override to allow "R" to be hijacked for "RANDOM_SEED"
         return new ReferenceArgumentCollection() {
             @Argument(doc = "The reference sequence file.", optional=true, common=false)
-            public PicardHtsPath REFERENCE_SEQUENCE; // tsato: how will this affect....File REFERENCE_SEQUENCE with default, system.property() etc....
+            public PicardHtsPath REFERENCE_SEQUENCE;
 
             @Override
-            public File getReferenceFile() { // tsato: this should be replaced by getHtsPath
+            public File getReferenceFile() {
                 return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
             }
 

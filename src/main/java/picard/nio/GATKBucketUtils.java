@@ -46,7 +46,7 @@ public class GATKBucketUtils {
             if (!extension.startsWith(".")) {
                 extension = "." + extension;
             }
-            final String path = randomRemotePath(prefix, "", extension); // tsato: need to standardize whether to add . or not
+            final String path = randomRemotePath(prefix, "", extension);
             GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path));
             // Mark auxiliary files to be deleted
             GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path + FileExtensions.TRIBBLE_INDEX));

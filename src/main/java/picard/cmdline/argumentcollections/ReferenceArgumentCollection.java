@@ -38,27 +38,31 @@ public interface ReferenceArgumentCollection {
      *
      * @return The reference provided by the user or the default as a File. May be null.
      */
-    File getReferenceFile(); // tsato: need to track all places where this method is called and switch to getHtsPath()
+    File getReferenceFile(); // tsato: TODO: update tools that call this method to use getHtsPath()
 
     /**
+     * This method first checks if the PicardHtsPath is null, thereby avoiding NPE that results from getHtsPath.toPath().
+     * Use this method for methods that expect the Path to be null when the reference is absent e.g. SamReaderFactory.referenceSequence().
+     *
      * @return The reference provided by the user or the default as an nio Path. May be null.
      */
     default Path getReferencePath(){
-        return getHtsPath().toPath();
+        return getHtsPath() == null ? null : getHtsPath().toPath();
     }
 
     /**
-     * Tools should access the reference file through this method
-     * tsato: what if the reference is not required? i.e. in subclasses other than requiredReferenceArgument...
+     * This default implementation is here to support tools that have yet to be upgraded to support cloud reference files.
+     * (The alternative is to make it abstract, which necessitates we update all the classes that implement this interface with
+     * an implementation like what we have below).
+     *
+     * The cloud-reference-enabled tools should override this method e.g. return REFERENCE_SEQUENCE cf. DownsampleSam.
+     * Once all the relevant subclasses have been updated, we plan to make this abstract.
      *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
      */
     default PicardHtsPath getHtsPath(){
-        // tsato: this is for compatibility with legacy code like CollectRRBSMetrics
-        // tsato: nightmarish to figure out when this should return null or not...but I think this will work
-        // at least with downsampleSam....getReferenceFile accesses REFERENCE_FILE...in CommandLineProgram vs subclass of this class...
         return getReferenceFile() == null ? null : new PicardHtsPath(getReferenceFile());
-    }; // tsato: what if the file is in cloud...referenceFile is a File in the cloud? should it be a string?
+    }
 
     /**
      * @return A "safe" way to obtain a File object for any reference path.

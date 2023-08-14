@@ -59,7 +59,7 @@ public class SequenceDictionaryUtils {
 
     static public class SamSequenceRecordsIterator implements Iterator<SAMSequenceRecord> {
         final private boolean truncateNamesAtWhitespace;
-        final private ReferenceSequenceFile refSeqFile; // tsato: uh oh
+        final private ReferenceSequenceFile refSeqFile;
         private String genomeAssembly;
         private String uri;
 

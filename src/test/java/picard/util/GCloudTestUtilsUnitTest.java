@@ -34,6 +34,4 @@ public class GCloudTestUtilsUnitTest {
         Assert.assertFalse(Files.exists(txtUpload));
         Assert.assertFalse(Files.exists(uploadDir));
     }
-
-
 }

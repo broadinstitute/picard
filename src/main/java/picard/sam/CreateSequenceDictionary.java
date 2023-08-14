@@ -170,7 +170,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     private Iterable<SAMSequenceRecord> getSamSequenceRecordsIterable() {
         return () -> {
             final SequenceDictionaryUtils.SamSequenceRecordsIterator iterator =
-                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(referenceSequence.getHtsPath().toPath(), // tsato: confirm this is OK
+                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(referenceSequence.getHtsPath().toPath(),
                             TRUNCATE_NAMES_AT_WHITESPACE);
             iterator.setGenomeAssembly(GENOME_ASSEMBLY);
             iterator.setSpecies(SPECIES);
@@ -199,7 +199,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     // return a custom argument collection because this tool uses the argument name
-    // "REFERENCE" instead of "REFERENCE_SEQUENCE" // tsato: can we starndardize this?
+    // "REFERENCE" instead of "REFERENCE_SEQUENCE" // tsato: why? should we standardize between REFERENCE and REFERENCE_SEQUENCE, or support both?
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new CreateSeqDictReferenceArgumentCollection();
@@ -229,13 +229,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     protected int doWork() {
         int sequencesWritten = 0;
 
-        if (Files.exists(OUTPUT.toPath())) { // tsato: this might be problematic, but skip this code path for now
+        if (Files.exists(OUTPUT.toPath())) {
             throw new PicardException(OUTPUT.getURIString() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
 
-        // tsato: delete, or should I create a blank file?
-        // IOUtil.assertFileIsWritable(OUTPUT);
+        // We can check for writability provided the file is in a local filesystem and not in gcloud
+        if (OUTPUT.getScheme().equals(PicardHtsPath.FILE_SCHEME)){
+            IOUtil.assertFileIsWritable(OUTPUT.toPath().toFile());
+        }
 
         // map for aliases mapping a contig to its aliases
         final Map<String, Set<String>> aliasesByContig = loadContigAliasesMap();
@@ -261,11 +263,16 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             }
         } catch (IOException e) {
             throw new PicardException("Can't write to or close output file " + OUTPUT.getURIString(), e);
-        } catch (IllegalArgumentException e) { // tsato: what throws an illegalargumentException?
+        } catch (IllegalArgumentException e) {
             // in case of an unexpected error delete the file so that there isn't a
             // truncated result which might be valid yet wrong.
-            // tsato: deal with this later
-            // Files.delete(OUTPUT.toPath());
+            if (Files.exists(OUTPUT.toPath())){
+                try {
+                    Files.delete(OUTPUT.toPath());
+                } catch (IOException e2) {
+                    throw new PicardException("Unknown problem encountered, and failed to delete the incomplete output.", e2);
+                }
+            }
             throw new PicardException("Unknown problem. Partial dictionary file was deleted.", e);
         }
 
