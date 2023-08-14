@@ -39,6 +39,9 @@ import java.nio.file.Path;
 public class OptionalReferenceArgumentCollection implements ReferenceArgumentCollection {
     private final static Log log = Log.getInstance(OptionalReferenceArgumentCollection.class);
 
+    /**
+     * Explain why we need this...which collides with
+     */
     @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.", common = true, optional = true)
     public PicardHtsPath REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA == null ? null : new PicardHtsPath(Defaults.REFERENCE_FASTA.getAbsolutePath());
 

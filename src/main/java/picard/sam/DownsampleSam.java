@@ -272,7 +272,7 @@ public class DownsampleSam extends CommandLineProgram {
         final SAMProgramRecord pgRecord = getPGRecord(header);
         pgRecord.setAttribute(RANDOM_SEED_TAG, RANDOM_SEED.toString());
         header.addProgramRecord(pgRecord);
-        // tsato...hmm....was I not right to set REFERENCE_SEQUENCE TO be PicardHtsPath?
+
         final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT.toPath(), referenceSequence.getHtsPath().toPath());
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
         final DownsamplingIterator iterator = DownsamplingIteratorFactory.make(in, STRATEGY, PROBABILITY, ACCURACY, RANDOM_SEED);

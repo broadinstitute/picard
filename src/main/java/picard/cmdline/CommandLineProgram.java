@@ -131,7 +131,6 @@ public abstract class CommandLineProgram {
     // This is retained for compatibility with existing code that depends on accessing it, and is populated
     // after argument parsing using the value established by the user in the referenceSequence argument collection.
     protected File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
-    // tsato: how is this variable populated...interesting, this is done after argumnet parsing...hmmm.
 
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
                 "It is unlikely these will ever need to be accessed by the command line program")

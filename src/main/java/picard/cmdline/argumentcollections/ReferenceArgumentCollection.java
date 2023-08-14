@@ -38,7 +38,7 @@ public interface ReferenceArgumentCollection {
      *
      * @return The reference provided by the user or the default as a File. May be null.
      */
-    File getReferenceFile(); // tsato: need to track all code instances where this method is called and switch to getHtsPath()
+    File getReferenceFile(); // tsato: need to track all places where this method is called and switch to getHtsPath()
 
     /**
      * @return The reference provided by the user or the default as an nio Path. May be null.
@@ -49,7 +49,7 @@ public interface ReferenceArgumentCollection {
 
     /**
      * Tools should access the reference file through this method
-     * tsato: what if the reference is not required? i.e. in subclasses other than requiredreferenceArgument...
+     * tsato: what if the reference is not required? i.e. in subclasses other than requiredReferenceArgument...
      *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
      */
@@ -58,7 +58,7 @@ public interface ReferenceArgumentCollection {
         // tsato: nightmarish to figure out when this should return null or not...but I think this will work
         // at least with downsampleSam....getReferenceFile accesses REFERENCE_FILE...in CommandLineProgram vs subclass of this class...
         return getReferenceFile() == null ? null : new PicardHtsPath(getReferenceFile());
-    };
+    }; // tsato: what if the file is in cloud...referenceFile is a File in the cloud? should it be a string?
 
     /**
      * @return A "safe" way to obtain a File object for any reference path.
