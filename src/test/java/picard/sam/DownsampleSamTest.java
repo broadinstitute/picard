@@ -135,12 +135,13 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     }
 
     private PicardHtsPath testDownsampleWorker(final PicardHtsPath samFile,  final double fraction, final String strategy, final Integer seed) throws IOException {
-        return testDownsampleWorker(samFile, fraction, strategy, seed, Optional.empty(), Optional.empty());
+        return testDownsampleWorker(samFile, fraction, strategy, seed, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
         // tsato: add 'final PicardHtsPath outputFile' as argument
     private PicardHtsPath testDownsampleWorker(final PicardHtsPath samFile,  final double fraction, final String strategy, final Integer seed,
-                                      final Optional<PicardHtsPath> outputFile, final Optional<PicardHtsPath> metricsFile) throws IOException {
+                                               final Optional<PicardHtsPath> outputFile, final Optional<PicardHtsPath> metricsFile,
+                                               final Optional<PicardHtsPath> referenceFile) throws IOException {
         final PicardHtsPath downsampled = outputFile.isEmpty() ? new PicardHtsPath(File.createTempFile("DownsampleSam", ".bam", tempDir)) : outputFile.get();
 
         final List<String> args = new ArrayList<>(Arrays.asList(
@@ -151,7 +152,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
                 "RANDOM_SEED=" + ((seed==null)?"null":seed.toString()),
                 "CREATE_INDEX=true"));
         // consider detecting leading/trailing spaces...
-        Optional<PicardHtsPath> referenceFile = Optional.of(new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta"));
 
         if (referenceFile.isPresent()){
             args.add("REFERENCE_SEQUENCE=" + referenceFile.get().getURIString());
@@ -244,9 +244,11 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         }
     }
 
-    final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
-    final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+    private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
+    private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
     final int DEFAULT_RANDOM_SEED = 42;
+    private static final PicardHtsPath HG19_REFERENCE = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
+
 
     @Test(groups = "cloud")
     public void testCloud() throws IOException {
@@ -254,24 +256,25 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 //        final String bamOutput = GATKBucketUtils.getTempFilePath("downsample", "bam");
 //        final String metricsOutput = GATKBucketUtils.getTempFilePath("metrics", "txt");
 
-        // Actual cloud test files
-        final String bamOutput = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
-        final String metricsOutput = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", "txt");
-
         // Test bam (input/output)
-        if (false){ // tsato: don't reuse output file....
-            testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED);
-            testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, Optional.of(new PicardHtsPath(bamOutput)), Optional.empty());
-        }
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, Optional.of(new PicardHtsPath(bamOutput)), Optional.of(new PicardHtsPath(metricsOutput)));
-        int d = 3;
+        // Local output
+        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED);
+        // Output is in the cloud
+        final String bamOutput1 = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
+        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED,
+                Optional.of(new PicardHtsPath(bamOutput1)), Optional.empty(), Optional.empty());
+
+        // Test generating a metrics file in the cloud
+        final String metricsOutput = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", "txt");
+        final String bamOutput2 = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
+        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED,
+                Optional.of(new PicardHtsPath(bamOutput2)), Optional.of(new PicardHtsPath(metricsOutput)), Optional.empty());
 
         // Test cram (input/output). Temporarily turned off as we investigate why it hangs
         boolean testCram = false;
         if (testCram){
             final String cramOutputInCloud = GATKBucketUtils.getTempFilePath("downsample", "cram");
-            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty());
-            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty());
+            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty(), Optional.of(HG19_REFERENCE));
         }
 
 

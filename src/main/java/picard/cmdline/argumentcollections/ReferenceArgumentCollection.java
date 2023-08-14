@@ -36,21 +36,19 @@ import picard.nio.PicardHtsPath;
 public interface ReferenceArgumentCollection {
     /**
      *
-     * tsato: a better name would be getReferenceAsFile
      * @return The reference provided by the user or the default as a File. May be null.
      */
-    File getReferenceFile(); // tsato: need to aggressively elimnate all code instances where this method is called
+    File getReferenceFile(); // tsato: need to track all code instances where this method is called and switch to getHtsPath()
 
     /**
      * @return The reference provided by the user or the default as an nio Path. May be null.
      */
     default Path getReferencePath(){
-        return getHtsPath().toPath(); // tsato: maybe we don't need this
+        return getHtsPath().toPath();
     }
 
     /**
-     * Tools should access reference file through this method
-     * tsato: do we need getReferencePath then?
+     * Tools should access the reference file through this method
      * tsato: what if the reference is not required? i.e. in subclasses other than requiredreferenceArgument...
      *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
