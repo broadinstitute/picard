@@ -38,11 +38,11 @@ public interface ReferenceArgumentCollection {
      *
      * @return The reference provided by the user or the default as a File. May be null.
      */
-    File getReferenceFile(); // tsato: TODO: update tools that call this method to use getHtsPath()
+    File getReferenceFile(); // tsato: update tools that call this method to convert File to PicardHtsPath and use getHtsPath()
 
     /**
      * This method first checks if the PicardHtsPath is null, thereby avoiding NPE that results from getHtsPath.toPath().
-     * Use this method for methods that expect the Path to be null when the reference is absent e.g. SamReaderFactory.referenceSequence().
+     * Use this for providing input to methods that expect the Path to be null when the reference is absent e.g. SamReaderFactory.referenceSequence().
      *
      * @return The reference provided by the user or the default as an nio Path. May be null.
      */
@@ -51,11 +51,11 @@ public interface ReferenceArgumentCollection {
     }
 
     /**
-     * This default implementation is here to support tools that have yet to be upgraded to support cloud reference files.
+     * This default implementation is here to support tools that have not been upgraded to support cloud reference files.
      * (The alternative is to make it abstract, which necessitates we update all the classes that implement this interface with
      * an implementation like what we have below).
      *
-     * The cloud-reference-enabled tools should override this method e.g. return REFERENCE_SEQUENCE cf. DownsampleSam.
+     * The cloud-reference-enabled tools should override this method e.g. return REFERENCE_SEQUENCE (see DownsampleSam::makeReferenceArgumentCollection)
      * Once all the relevant subclasses have been updated, we plan to make this abstract.
      *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.

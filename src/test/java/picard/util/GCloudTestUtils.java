@@ -8,7 +8,7 @@ public final class GCloudTestUtils {
      */
     public static final String REQUESTER_PAYS_BUCKET_DEFAULT = "gs://hellbender-requester-pays-test/";
 
-    public static final String TEST_INPUTS_DEFAULT = "gs://hellbender/test/resources/";
+    public static final String TEST_INPUTS_DEFAULT = "gs://hellbender/test/resources/"; // chris: turn these to PicardHtsPath
     public static final String TEST_STAGING_DEFAULT = "gs://hellbender-test-logs/staging/";
     public static final String TEST_PROJECT_DEFAULT = "broad-dsde-dev";
     public static final String TEST_OUTPUT_DEFAULT = TEST_STAGING_DEFAULT + "picard/";

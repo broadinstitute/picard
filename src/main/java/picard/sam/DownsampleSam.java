@@ -48,7 +48,6 @@ import picard.analysis.CollectQualityYieldMetrics.QualityYieldMetricsCollector;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
-import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.nio.PicardHtsPath;
 
@@ -297,10 +296,8 @@ public class DownsampleSam extends CommandLineProgram {
             final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
             metricsCollector.finish();
             metricsCollector.addMetricsToFile(metricsFile);
-            try {
-                final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath());
+            try (final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath())){
                 metricsFile.write(writer);
-                writer.close(); // tsato: cloud file is not generated unless the writer is closed; shouldn't that be done in MetricsFile::write()?
             } catch (IOException e) {
                 throw new PicardException("Encountered an error writing the metrics file: " + METRICS_FILE.getURIString());
             }
@@ -314,7 +311,7 @@ public class DownsampleSam extends CommandLineProgram {
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         // Override to allow "R" to be hijacked for "RANDOM_SEED"
         return new ReferenceArgumentCollection() {
-            @Argument(doc = "The reference sequence file.", optional=true, common=false)
+            @Argument(doc = "The reference sequence file.", optional=true)
             public PicardHtsPath REFERENCE_SEQUENCE;
 
             @Override
@@ -323,8 +320,8 @@ public class DownsampleSam extends CommandLineProgram {
             }
 
             @Override
-            public PicardHtsPath getHtsPath() { // tsato: this should be replaced by getHtsPath
-                return this.REFERENCE_SEQUENCE;
+            public PicardHtsPath getHtsPath() {
+                return REFERENCE_SEQUENCE;
             }
         };
     }

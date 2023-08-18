@@ -30,6 +30,7 @@ import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -118,5 +119,27 @@ public class PicardHtsPath extends HtsPath {
     public static List<Path> toPaths(final Collection<PicardHtsPath> picardHtsPaths){
         Objects.requireNonNull(picardHtsPaths);
         return picardHtsPaths.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * Take an existing PicardHtsPath object and return a new object with an
+     *
+     * For example:
+     *     - test_na12878.bam -> test_na12878.bai
+     *     - test_na12878.bam -> test_na12878.bam.md5
+     *
+     * @param path
+     * @param append
+     * @param newExtension
+     * @return a new PicardHtsPath object pointed to a file with
+     */
+    public static PicardHtsPath replaceExtension(final PicardHtsPath path, final boolean append, final String newExtension){
+        if (append){
+            return new PicardHtsPath(path.getURIString() + newExtension);
+        } else {
+            URI uri = path.getURI();
+
+        }
     }
 }

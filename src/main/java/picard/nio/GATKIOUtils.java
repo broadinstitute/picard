@@ -90,17 +90,12 @@ public class GATKIOUtils {
      *
      * This will also mark the corresponding Tribble/Tabix/BAM indices matching the temp file for deletion.
      * @param name Prefix of the file; {@link File#createTempFile(String, String, File)} requires that this be >= 3 characters
-     * @param extension Extension to concat to the end of the file name.
+     * @param extension Extension to concat to the end of the file name e.g. ".txt"
      * @param targetDir Directory in which to create the temp file. If null, the default temp directory is used.
      * @return A file in the temporary directory starting with name, ending with extension, which will be deleted after the program exits.
      */
     public static File createTempFileInDirectory(final String name, String extension, final File targetDir) {
         try {
-
-            if (!extension.startsWith(".")) {
-                extension = "." + extension;
-            }
-
             final File file = File.createTempFile(name, extension, targetDir);
             file.deleteOnExit();
 

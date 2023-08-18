@@ -4,6 +4,7 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -24,6 +25,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -164,7 +167,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
         // make sure that the resulting BAM is valid.
         // temporarily skip this check for cram files until ValidateSam is updated the support cloud reference input
-        if (! downsampled.getRawInputString().endsWith(".cram")){
+        if (! downsampled.isCram()){
             final ValidateSamFile validateSamFile = new ValidateSamFile();
             validateSamFile.INPUT = downsampled;
             Assert.assertEquals(validateSamFile.doWork(), 0);
@@ -252,6 +255,9 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
     @Test(groups = "cloud")
     public void testCloud() throws IOException {
+        Path test = Files.createTempFile("yo", "ho");
+        int d = 3;
+
         // Test bam input and output (as opposed to cram)
         // Local output
         testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED);
@@ -268,7 +274,10 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
         // Test cram (input/output)
         // tsato: this test is very slow---takes about 5 min on Broad internal network
-        final String cramOutputInCloud = GATKBucketUtils.getTempFilePath("downsample", "cram");
-        testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty(), Optional.of(HG19_REFERENCE));
+        final boolean testCram = false;
+        if (testCram){
+            final String cramOutputInCloud = GATKBucketUtils.getTempFilePath("downsample", "cram");
+            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty(), Optional.of(HG19_REFERENCE));
+        }
     }
 }

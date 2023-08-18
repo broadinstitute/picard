@@ -39,7 +39,7 @@ public class RequiredReferenceArgumentCollection implements ReferenceArgumentCol
     private final static Log log = Log.getInstance(RequiredReferenceArgumentCollection.class);
 
     @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.")
-    public PicardHtsPath REFERENCE_SEQUENCE; // tsato: is the only reason why we instantiate so that
+    public PicardHtsPath REFERENCE_SEQUENCE;
 
     /**
      *

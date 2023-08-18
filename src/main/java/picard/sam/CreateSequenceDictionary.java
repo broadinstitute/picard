@@ -170,7 +170,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     private Iterable<SAMSequenceRecord> getSamSequenceRecordsIterable() {
         return () -> {
             final SequenceDictionaryUtils.SamSequenceRecordsIterator iterator =
-                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(referenceSequence.getHtsPath().toPath(),
+                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(referenceSequence.getReferencePath(),
                             TRUNCATE_NAMES_AT_WHITESPACE);
             iterator.setGenomeAssembly(GENOME_ASSEMBLY);
             iterator.setSpecies(SPECIES);
@@ -184,11 +184,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      */
     protected String[] customCommandLineValidation() {
         if (URI == null) {
-            if (GATKBucketUtils.isRemoteStorageUrl(referenceSequence.getHtsPath().getURIString())){
-                URI = referenceSequence.getHtsPath().getURIString();
-            } else {
-                URI = "file:" + referenceSequence.getHtsPath().getURIString();
-            }
+            URI = referenceSequence.getHtsPath().getURIString();
         }
         if (OUTPUT == null) {
             final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getHtsPath().toPath());
@@ -199,7 +195,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     }
 
     // return a custom argument collection because this tool uses the argument name
-    // "REFERENCE" instead of "REFERENCE_SEQUENCE" // tsato: why? should we standardize between REFERENCE and REFERENCE_SEQUENCE, or support both?
+    // "REFERENCE" instead of "REFERENCE_SEQUENCE"
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new CreateSeqDictReferenceArgumentCollection();
@@ -207,7 +203,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     public static class CreateSeqDictReferenceArgumentCollection implements ReferenceArgumentCollection {
         @Argument(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
-        public PicardHtsPath REFERENCE;
+        public PicardHtsPath REFERENCE; //
 
         @Override
         public PicardHtsPath getHtsPath() {

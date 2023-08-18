@@ -18,7 +18,7 @@ public class GATKBucketUtils {
     public static final String HTTP_FILESYSTEM_PROVIDER_SCHEME = "http";
     public static final String HTTPS_FILESYSTEM_PROVIDER_SCHEME = "https";
 
-
+    // chris: should be able to get rid of these '://' Instead, compare getScheme()
     public static final String GCS_PREFIX = "gs://";
     public static final String HTTP_PREFIX = "http://";
     public static final String HTTPS_PREFIX = "https://";
@@ -37,15 +37,13 @@ public class GATKBucketUtils {
      * @param prefix a prefix for the file name
      *               for remote paths this should be a valid URI to root the temporary file in (e.g. gs://hellbender/staging/)
      *               there is no guarantee that this will be used as the root of the tmp file name, a local prefix may be placed in the tmp folder for example
-     * @param extension and extension for the temporary file path, the resulting path will end in this
+     * @param extension and extension for the temporary file path, the resulting path will end in this. It should include the period
+     *                  e.g. ".txt" extension of "txt" results in a filename "prefixtxt" without a period.
      * @return a path to use as a temporary file, on remote file systems which don't support an atomic tmp file reservation a path is chosen with a long randomized name
      *
      */
     public static String getTempFilePath(String prefix, String extension){
         if (isGcsUrl(prefix) || (isHadoopUrl(prefix))){
-            if (!extension.startsWith(".")) {
-                extension = "." + extension;
-            }
             final String path = randomRemotePath(prefix, "", extension);
             GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path));
             // Mark auxiliary files to be deleted
@@ -86,7 +84,7 @@ public class GATKBucketUtils {
      * on Spark because using the fat, shaded jar breaks the registration of the GCS FilesystemProvider.
      * To transform other types of string URLs into Paths, use IOUtils.getPath instead.
      */
-    public static java.nio.file.Path getPathOnGcs(String gcsUrl) {
+    public static Path getPathOnGcs(String gcsUrl) {
         // use a split limit of -1 to preserve empty split tokens, especially trailing slashes on directory names
         final String[] split = gcsUrl.split("/", -1);
         final String BUCKET = split[2];
@@ -98,10 +96,11 @@ public class GATKBucketUtils {
      * @param path path to inspect
      * @return true if this path represents a gcs location
      */
-    public static boolean isGcsUrl(final String path) {
+    // TODO: to be deleted. Or, since using it as part of makeTempFile is defensible; just make private for now
+    private static boolean isGcsUrl(final String path) {
         GATKUtils.nonNull(path);
-        return path.startsWith(GCS_PREFIX);
-    }
+        return path.startsWith(GCS_PREFIX); // tsato: red flag
+    } // tsato: should be a method in PicardHtsPath
 
     /**
      *
@@ -128,7 +127,7 @@ public class GATKBucketUtils {
      * @param path path to inspect
      * @return true if this {@code Path} represents a remote storage system which may benefit from prefetching (gcs or http(s))
      */
-    public static boolean isEligibleForPrefetching(final java.nio.file.Path path) {
+    public static boolean isEligibleForPrefetching(final Path path) {
         GATKUtils.nonNull(path);
         return isEligibleForPrefetching(path.toUri().getScheme());
     }
