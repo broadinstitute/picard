@@ -328,11 +328,14 @@ public class FastqToSam extends CommandLineProgram {
         final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(header, false, OUTPUT, REFERENCE_SEQUENCE);
 
         final FastqReader reader1 = fileToFastqReader(FASTQ.toPath());
+        final boolean pipedInput = !Files.isRegularFile(FASTQ.toPath());
         if (reader1.hasNext()) {
-            // Set the quality format
-            QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader1,
-                    (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
-                    QUALITY_FORMAT);
+            if (!pipedInput) {
+                // Set the quality format
+                QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader1,
+                        (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
+                        QUALITY_FORMAT);
+            }
         } else {
             if (ALLOW_EMPTY_FASTQ) {
                 LOG.warn("Input FASTQ is empty, will write out SAM/BAM file with no reads.");
@@ -360,9 +363,14 @@ public class FastqToSam extends CommandLineProgram {
             }
         }
         else {
-            readers1.add(fileToFastqReader(FASTQ.toPath()));
-            if (FASTQ2 != null) {
-                readers2.add(fileToFastqReader(FASTQ2.toPath()));
+            if (pipedInput) {
+                // use the already opened reader if input is STDIN or a named pipe
+                readers1.add(reader1);
+            } else {
+                readers1.add(fileToFastqReader(FASTQ.toPath()));
+                if (FASTQ2 != null) {
+                    readers2.add(fileToFastqReader(FASTQ2.toPath()));
+                }
             }
         }
 
@@ -582,6 +590,7 @@ public class FastqToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (MIN_Q < 0) return new String[]{"MIN_Q must be >= 0"};
         if (MAX_Q > SAMUtils.MAX_PHRED_SCORE) return new String[]{"MAX_Q must be <= " + SAMUtils.MAX_PHRED_SCORE};
+        if (!Files.isRegularFile(FASTQ.toPath()) && QUALITY_FORMAT == null) return new String[]{"QUALITY_FORMAT must be specified when input is not a regular file"};
         return null;
     }
 }
