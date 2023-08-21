@@ -82,7 +82,7 @@ import java.util.List;
  * </p>
  * <p>
  *     By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly
- *     using the <code>QUALITY_FORMAT</code> argument.
+ *     using the <code>QUALITY_FORMAT</code> argument, and must do so if input is not from a regular file.
  * </p>
  * <h3>Output</h3>
  * A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.
@@ -132,7 +132,7 @@ public class FastqToSam extends CommandLineProgram {
         "<p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name " +
         "(see USE_SEQUENCIAL_FASTQ for details below).</p>" +
         "<p>By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly " +
-        "using the QUALITY_FORMAT argument.</p>" +
+        "using the QUALITY_FORMAT argument, and must do so if input is not from a regular file.</p>" +
         "<h3>Output</h3>" +
         "<p>A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.</p>" +
         "<h3>Usage examples</h3>" +
@@ -176,7 +176,8 @@ public class FastqToSam extends CommandLineProgram {
 
     @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
             "Either Solexa (phred scaling + 66), Illumina (phred scaling + 64) or Standard (phred scaling + 33).  " +
-            "If this value is not specified, the quality format will be detected automatically.", optional = true)
+            "If input is from a regular file and this value is not specified, the quality format will be detected automatically. " +
+            "If input is from STDIN or a named pipe, this value is required.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
     @Argument(doc="Output BAM/SAM/CRAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
