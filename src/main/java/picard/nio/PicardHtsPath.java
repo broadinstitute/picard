@@ -30,7 +30,9 @@ import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -81,6 +83,21 @@ public class PicardHtsPath extends HtsPath {
     public static List<PicardHtsPath> fromPaths(Collection<String> paths) {
         Objects.requireNonNull(paths);
         return paths.stream().map(PicardHtsPath::new).collect(Collectors.toList());
+    }
+
+    /**
+     * Test if the URI of this object is something other than a regular file, directory, or
+     * symbolic link.
+     * 
+     * @return {@code true} if it's a device, socket or named pipe
+     * @throws RuntimeException if an I/O error occurs when creating the file system
+     */
+    public boolean isOther() {
+        try {
+            return Files.readAttributes(IOUtil.getPath(super.getURIString()), BasicFileAttributes.class).isOther();
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
     }
 
     /**

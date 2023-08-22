@@ -186,33 +186,34 @@ public class FastqToSamTest extends CommandLineProgramTest {
         ByteArrayOutputStream stderrStream = new ByteArrayOutputStream();
         PrintStream newStderr = new PrintStream(stderrStream);
         PrintStream oldStderr = System.err;
-        System.setErr(newStderr);
-
-        final File tmpFile = File.createTempFile("empty", ".sam");
-
-        final String[] args = {
-                "FASTQ=/dev/stdin",
-                "SAMPLE_NAME=sample001",
-                "OUTPUT=" + tmpFile
-        };
-
-        Assert.assertEquals(runPicardCommandLine(args), 1);
-        System.setErr(oldStderr);
-        Assert.assertTrue(stderrStream.toString().endsWith("QUALITY_FORMAT must be specified when input is not a regular file\n"));
+        try {
+            System.setErr(newStderr);
+            final File tmpFile = File.createTempFile("empty", ".sam");
+            final String[] args = {
+                    "FASTQ=/dev/stdin",
+                    "SAMPLE_NAME=sample001",
+                    "OUTPUT=" + tmpFile
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+        } finally {
+            System.setErr(oldStderr);
+        }
+        Assert.assertTrue(stderrStream.toString().endsWith("QUALITY_FORMAT must be specified when FASTQ is not a regular file\n"));
     }
 
     @Test
     public void testStreamInput() throws IOException {
         final File output = newTempSamFile("stdin");
+        String fastq = """
+                       @ERR194147.10008417/1
+                       ATTTAATTAAGAAAATGTAAACTAAATGACAGTAGACAGACAAGTATGCCTTTGC
+                       +
+                       ???????????????????????????????????????????????????????
+                       """;        
         String[] command = {
                 "/bin/bash",
                 "-c",
-                "echo -ne '" +
-                "@ERR194147.10008417/1\\n" +
-                "ATTTAATTAAGAAAATGTAAACTAAATGACAGTAGACAGACAAGTATGCCTTTGC\\n" +
-                "+\\n" +
-                "???????????????????????????????????????????????????????\\n'" +
-                "|" +
+                "echo -n '" + fastq + "'|" +
                 "java -classpath " +
                         CLASSPATH +
                         "picard.cmdline.PicardCommandLine " +
@@ -231,15 +232,11 @@ public class FastqToSamTest extends CommandLineProgramTest {
         } catch (Exception e) {
             Assert.fail("Failed to pipe data from stdin to FastqToSam", e);
         }
-        final SamReader samReader = SamReaderFactory.makeDefault().open(output);
-        final SAMRecordIterator iterator = samReader.iterator();
-        int actualCount = 0;
-        while (iterator.hasNext()) {
-            iterator.next();
-            actualCount++;
+
+        try(final SamReader samReader = SamReaderFactory.makeDefault().open(output)) {
+            long actualCount = samReader.iterator().stream().count();
+            Assert.assertEquals(actualCount, 1);
         }
-        samReader.close();
-        Assert.assertEquals(actualCount, 1);
     }
 
     private File convertFile(final String filename, final FastqQualityFormat version) throws IOException {
