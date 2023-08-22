@@ -49,6 +49,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 
 import java.io.BufferedWriter;
@@ -216,7 +217,7 @@ public class DownsampleSam extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT.toPath());
-        if (OUTPUT.getScheme().equals(PicardHtsPath.FILE_SCHEME)){
+        if (OUTPUT.getScheme().equals(PicardBucketUtils.FILE_SCHEME)){
             IOUtil.assertFileIsWritable(OUTPUT.toPath().toFile());
         }
 

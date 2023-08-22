@@ -41,6 +41,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReferenceProgramGroup;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.SequenceDictionaryUtils;
 
@@ -200,7 +201,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     public static class CreateSeqDictReferenceArgumentCollection implements ReferenceArgumentCollection {
         @Argument(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
-        public PicardHtsPath REFERENCE; //
+        public PicardHtsPath REFERENCE;
 
         @Override
         public PicardHtsPath getHtsPath() {
@@ -228,7 +229,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         }
 
         // We can check for writability provided the file is in a local filesystem and not in gcloud
-        if (OUTPUT.getScheme().equals(PicardHtsPath.FILE_SCHEME)){
+        if (OUTPUT.getScheme().equals(PicardBucketUtils.FILE_SCHEME)){
             IOUtil.assertFileIsWritable(OUTPUT.toPath().toFile());
         }
 

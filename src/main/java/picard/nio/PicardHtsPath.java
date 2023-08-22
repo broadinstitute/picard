@@ -42,8 +42,6 @@ import java.util.stream.Collectors;
  * A Subclass of {@link HtsPath} with conversion to {@link Path} making use of {@link IOUtil}
  */
 public class PicardHtsPath extends HtsPath {
-    public final static String FILE_SCHEME = "file";
-
     /**
      * Create a PicardHtsPath from a raw input path string.
      * <p>
@@ -123,18 +121,14 @@ public class PicardHtsPath extends HtsPath {
     }
 
     /**
-     *
      * Instead of a static method in PicardHtsPath, it could very well be a static method in PicardIOUtils.
      *
-     * Actually---is resolve the name for this? Nope, resolve is for (parent-path)/(relative-path)
-     * Take an existing PicardHtsPath object and return a new object with an
+     * Examples:
+     *     - test_na12878.bam -> test_na12878.bai (append = false)
+     *     - test_na12878.bam -> test_na12878.bam.md5 (append = true)
      *
-     * For example:
-     *     - test_na12878.bam -> test_na12878.bai
-     *     - test_na12878.bam -> test_na12878.bam.md5
-     *
-     * @param path
-     * @param append
+     * @param path the original path
+     * @param append whether to append (true) or replace (false) the new extension
      * @param newExtension the extension including the dot e.g. ".txt"
      * @return a new PicardHtsPath object pointed to a file with
      */

@@ -14,7 +14,6 @@ public class PicardBucketUtilsTest {
 
         Assert.assertTrue(cloudPath.hasExtension(".txt"));
         Assert.assertTrue(localPath.hasExtension(".txt"));
-
     }
 
 }

@@ -28,6 +28,7 @@ import java.io.File;
 import java.nio.file.Path;
 
 import htsjdk.samtools.util.Log;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 
 /**
@@ -76,7 +77,7 @@ public interface ReferenceArgumentCollection {
     static File getFileSafe(final PicardHtsPath picardPath, final Log log) {
         if (picardPath == null) {
             return null;
-        } else if (picardPath.getScheme().equals(PicardHtsPath.FILE_SCHEME)) {
+        } else if (picardPath.getScheme().equals(PicardBucketUtils.FILE_SCHEME)) {
             // file on a local file system
             return picardPath.toPath().toFile();
         } else {

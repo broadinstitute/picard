@@ -12,8 +12,7 @@ import java.util.UUID;
 
 
 /**
- * Copied from BucketUtils.java in GATK
- * To be replaced once the original GATK BucketUtils.java is ported to htsjdk
+ * Derived from BucketUtils.java in GATK
  */
 public class PicardBucketUtils {
     // In GATK these are accessed as e.g. GoogleCloudStorageFileSystem.SCHEME
@@ -21,22 +20,21 @@ public class PicardBucketUtils {
     public static final String HTTP_FILESYSTEM_PROVIDER_SCHEME = "http";
     public static final String HTTPS_FILESYSTEM_PROVIDER_SCHEME = "https";
     public static final String HDFS_SCHEME = "hdfs";
+    public final static String FILE_SCHEME = "file";
 
-
-    // chris: should be able to get rid of these '://' Instead, compare getScheme()
+    // To the extent possible, avoid converting e.g. a PicardHtsPath to a string and calling beginsWith() against these
+    // string variables. Instead, work directly with PicardHtsPath/HtsPath using e.g. PicardHtsPath::getScheme()
     private static final String GCS_PREFIX = "gs://";
-    private static final String HTTP_PREFIX = "http://";
-    private static final String HTTPS_PREFIX = "https://";
     private static final String HDFS_PREFIX = HDFS_SCHEME + "://";
 
     // slashes omitted since hdfs paths seem to only have 1 slash which would be weirder to include than no slashes
-    public static final String FILE_PREFIX = "file:";
-
     private PicardBucketUtils(){} //private so that no one will instantiate this class
 
     /**
      * Get a temporary file path based on the prefix and extension provided.
-     * This file (and possible indexes associated with it) will be scheduled for deletion on shutdown
+     * This file (and possible indexes associated with it) will be scheduled for deletion on shutdown.
+     *
+     * As this is an "initial" path operation, it is OK to take for the prefix and extension variables to be strings.
      *
      * @param prefix a prefix for the file name
      *               for remote paths this should be a valid URI to root the temporary file in (e.g. gs://hellbender/staging/)
@@ -52,7 +50,7 @@ public class PicardBucketUtils {
             final PicardHtsPath path = PicardHtsPath.fromPath(randomRemotePath(prefix, "", extension));
             PicardIOUtils.deleteOnExit(path.toPath());
             // Mark auxiliary files to be deleted
-            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TRIBBLE_INDEX, true).toPath()); // tsato: check append or not
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TRIBBLE_INDEX, true).toPath());
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TABIX_INDEX, true).toPath());
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.BAI_INDEX, true).toPath()); // e.g. file.bam.bai
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, ".md5", true).toPath());
@@ -88,7 +86,7 @@ public class PicardBucketUtils {
      * on Spark because using the fat, shaded jar breaks the registration of the GCS FilesystemProvider.
      * To transform other types of string URLs into Paths, use IOUtils.getPath instead.
      */
-    public static CloudStoragePath getPathOnGcs(String gcsUrl) { // tsato: return cloud storage path?
+    public static CloudStoragePath getPathOnGcs(String gcsUrl) {
         // use a split limit of -1 to preserve empty split tokens, especially trailing slashes on directory names
         final String[] split = gcsUrl.split("/", -1);
         final String BUCKET = split[2];
@@ -97,14 +95,16 @@ public class PicardBucketUtils {
     }
 
     /**
+     * Note: to the extent possible, avoid working directly with string paths and
+     * use the same method that takes in a PicardHtsPath.
+     *
      * @param path path to inspect
      * @return true if this path represents a gcs location
      */
-    // TODO: to be deleted. Or, since using it as part of makeTempFile is defensible; just make private for now
     private static boolean isGcsUrl(final String path) {
         GATKUtils.nonNull(path);
-        return path.startsWith(GCS_PREFIX); // tsato: red flag
-    } // tsato: should be a method in PicardHtsPath
+        return path.startsWith(GCS_PREFIX);
+    }
 
     /**
      *
