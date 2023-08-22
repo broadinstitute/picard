@@ -11,11 +11,14 @@ import java.net.URI;
 import java.nio.file.*;
 import java.util.HashMap;
 
-public class GATKIOUtils {
+/**
+ * Ported from GATKIOUtils.java
+ */
+public class PicardIOUtils {
     /**
      * Schedule a file or directory to be deleted on JVM shutdown.
      *
-     * This calls {@link GATKIOUtils#deleteRecursively(Path)} on {@code fileToDelete }as a shutdown hook.
+     * This calls {@link PicardIOUtils#deleteRecursively(Path)} on {@code fileToDelete }as a shutdown hook.
      * @param fileToDelete file or directory to be deleted recursively at JVM shutdown.
      */
     public static void deleteOnExit(final Path fileToDelete){
@@ -23,6 +26,9 @@ public class GATKIOUtils {
     }
 
     /**
+     *
+     * tsato: this sounds like exactly the job of PicardHtsPath()---remove this method?
+     *
      * Converts the given URI to a {@link Path} object. If the filesystem cannot be found in the usual way, then attempt
      * to load the filesystem provider using the thread context classloader. This is needed when the filesystem
      * provider is loaded using a URL classloader (e.g. in spark-submit).
@@ -31,7 +37,7 @@ public class GATKIOUtils {
      *
      * @param uriString the URI to convert.
      * @return the resulting {@code Path}
-     * @throws UserException if an I/O error occurs when creating the file system
+     * @throws PicardException if an I/O error occurs when creating the file system
      */
     public static Path getPath(String uriString) {
         GATKUtils.nonNull(uriString);
@@ -45,7 +51,7 @@ public class GATKIOUtils {
         try {
             // special case GCS, in case the filesystem provider wasn't installed properly but is available.
             if (CloudStorageFileSystem.URI_SCHEME.equals(uri.getScheme())) {
-                return GATKBucketUtils.getPathOnGcs(uriString);
+                return PicardBucketUtils.getPathOnGcs(uriString);
             }
             // Paths.get(String) assumes the default file system
             // Paths.get(URI) uses the scheme

@@ -1,9 +1,12 @@
 package picard.nio;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
+import com.google.cloud.storage.contrib.nio.CloudStoragePath;
 import htsjdk.samtools.util.FileExtensions;
+import org.apache.commons.io.FilenameUtils;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -12,23 +15,24 @@ import java.util.UUID;
  * Copied from BucketUtils.java in GATK
  * To be replaced once the original GATK BucketUtils.java is ported to htsjdk
  */
-public class GATKBucketUtils {
+public class PicardBucketUtils {
     // In GATK these are accessed as e.g. GoogleCloudStorageFileSystem.SCHEME
     public static final String GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME = "gs";
     public static final String HTTP_FILESYSTEM_PROVIDER_SCHEME = "http";
     public static final String HTTPS_FILESYSTEM_PROVIDER_SCHEME = "https";
+    public static final String HDFS_SCHEME = "hdfs";
+
 
     // chris: should be able to get rid of these '://' Instead, compare getScheme()
-    public static final String GCS_PREFIX = "gs://";
-    public static final String HTTP_PREFIX = "http://";
-    public static final String HTTPS_PREFIX = "https://";
-    public static final String HDFS_SCHEME = "hdfs";
-    public static final String HDFS_PREFIX = HDFS_SCHEME + "://";
+    private static final String GCS_PREFIX = "gs://";
+    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
+    private static final String HDFS_PREFIX = HDFS_SCHEME + "://";
 
     // slashes omitted since hdfs paths seem to only have 1 slash which would be weirder to include than no slashes
     public static final String FILE_PREFIX = "file:";
 
-    private GATKBucketUtils(){} //private so that no one will instantiate this class
+    private PicardBucketUtils(){} //private so that no one will instantiate this class
 
     /**
      * Get a temporary file path based on the prefix and extension provided.
@@ -42,19 +46,20 @@ public class GATKBucketUtils {
      * @return a path to use as a temporary file, on remote file systems which don't support an atomic tmp file reservation a path is chosen with a long randomized name
      *
      */
-    public static String getTempFilePath(String prefix, String extension){
+    public static PicardHtsPath getTempFilePath(String prefix, String extension){
         if (isGcsUrl(prefix) || (isHadoopUrl(prefix))){
-            final String path = randomRemotePath(prefix, "", extension);
-            GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path));
+            // tsato: should we convert to PicardHtsPath or stay in Path...
+            final PicardHtsPath path = PicardHtsPath.fromPath(randomRemotePath(prefix, "", extension));
+            PicardIOUtils.deleteOnExit(path.toPath());
             // Mark auxiliary files to be deleted
-            GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path + FileExtensions.TRIBBLE_INDEX));
-            GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path + FileExtensions.TABIX_INDEX));
-            GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path + ".bai"));
-            GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path + ".md5"));
-            GATKIOUtils.deleteOnExit(GATKIOUtils.getPath(path.replaceAll(extension + "$", ".bai"))); //if path ends with extension, replace it with .bai
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TRIBBLE_INDEX, true).toPath()); // tsato: check append or not
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TABIX_INDEX, true).toPath());
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.BAI_INDEX, true).toPath()); // e.g. file.bam.bai
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, ".md5", true).toPath());
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.BAI_INDEX, false).toPath()); // e.g. file.bai
             return path;
         } else {
-            return GATKIOUtils.createTempFile(prefix, extension).getAbsolutePath();
+            return new PicardHtsPath(PicardIOUtils.createTempFile(prefix, extension));
         }
     }
 
@@ -67,13 +72,12 @@ public class GATKBucketUtils {
      * @param prefix The beginning of the file name
      * @param suffix The end of the file name, e.g. ".tmp"
      */
-    private static String randomRemotePath(String stagingLocation, String prefix, String suffix) {
+    private static Path randomRemotePath(String stagingLocation, String prefix, String suffix) {
         if (isGcsUrl(stagingLocation)) {
             // Go through URI because Path.toString isn't guaranteed to include the "gs://" prefix.
-            return getPathOnGcs(stagingLocation).resolve(prefix + UUID.randomUUID() + suffix).toUri().toString();
-       // Disable support for Hadoop in Picard
-       //  } else if (isHadoopUrl(stagingLocation)) {
-       //     return new Path(stagingLocation, prefix + UUID.randomUUID() + suffix).toString();
+            return getPathOnGcs(stagingLocation).resolve(prefix + UUID.randomUUID() + suffix);
+        } else if (isHadoopUrl(stagingLocation)) {
+            return Paths.get(stagingLocation, prefix + UUID.randomUUID() + suffix);
         } else {
             throw new IllegalArgumentException("Staging location is not remote: " + stagingLocation);
         }
@@ -84,7 +88,7 @@ public class GATKBucketUtils {
      * on Spark because using the fat, shaded jar breaks the registration of the GCS FilesystemProvider.
      * To transform other types of string URLs into Paths, use IOUtils.getPath instead.
      */
-    public static Path getPathOnGcs(String gcsUrl) {
+    public static CloudStoragePath getPathOnGcs(String gcsUrl) { // tsato: return cloud storage path?
         // use a split limit of -1 to preserve empty split tokens, especially trailing slashes on directory names
         final String[] split = gcsUrl.split("/", -1);
         final String BUCKET = split[2];
@@ -104,7 +108,6 @@ public class GATKBucketUtils {
 
     /**
      *
-     * The GATK code modified to use PicardHTSPath rather than GATKPath
      * Return true if this {@code PicardHTSPath} represents a gcs URI.
      * @param pathSpec specifier to inspect
      * @return true if this {@code PicardHTSPath} represents a gcs URI.
@@ -140,23 +143,9 @@ public class GATKBucketUtils {
     }
 
     /**
-     * @return true if the given path is an http or https Url.
-     */
-    public static boolean isHttpUrl(String path){
-        return path.startsWith(HTTP_PREFIX) || path.startsWith(HTTPS_PREFIX);
-    }
-
-    /**
      * Returns true if the given path is a HDFS (Hadoop filesystem) URL.
      */
-    public static boolean isHadoopUrl(String path) {
+    private static boolean isHadoopUrl(String path) {
         return path.startsWith(HDFS_PREFIX);
-    }
-
-    /**
-     * Returns true if the given path is a GCS, HDFS (Hadoop filesystem), or Http(s) URL.
-     */
-    public static boolean isRemoteStorageUrl(String path) {
-        return isGcsUrl(path) || isHadoopUrl(path) || isHttpUrl(path);
     }
 }

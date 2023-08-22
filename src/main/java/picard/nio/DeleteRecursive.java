@@ -9,7 +9,7 @@ import java.util.LinkedHashSet;
 
 /**
  *
- * Copied from GATK; to be removed once the original GATK code is ported to htsjdk
+ * Adapted from GATK.
  *
  * Class to hold a set of {@link Path} to be delete on the JVM exit through a shutdown hook.
  *
@@ -58,7 +58,7 @@ class DeleteRecursivelyOnExitPathHook {
         Collections.reverse(toBeDeleted);
         for (Path path : toBeDeleted) {
             try {
-                GATKIOUtils.deleteRecursively(path);
+                PicardIOUtils.deleteRecursively(path);
             } catch (final Exception e) {
                 // do nothing if cannot be deleted, because it is a shutdown hook
                 LOG.debug(() -> "Could not recursively delete " + path.toString() + " during JVM shutdown because we encountered the following exception:", e);

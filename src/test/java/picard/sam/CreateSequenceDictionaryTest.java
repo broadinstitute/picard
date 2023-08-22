@@ -25,14 +25,13 @@ package picard.sam;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
-import picard.nio.GATKBucketUtils;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.GCloudTestUtils;
 
@@ -303,21 +302,20 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
 
     @Test(groups = "cloud", dataProvider = "cloudTestData")
     public void testCloud(final PicardHtsPath inputReference) {
-        final String output = GATKBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR.getURIString() + "test", ".dict");
+        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR.getURIString() + "test", ".dict");
 
         final String[] argv = {
                 "REFERENCE=" + inputReference.getURI(),
                 "OUTPUT=" + output,
         };
 
-        // This is the existing dictionary in gs://hellbender/test/resources/
-        final String expectedOutputPath = GCloudTestUtils.TEST_INPUTS_DEFAULT + "hg19mini.dict"; // tsato: code smell
+        // This is the "original" dictionary that lives in gs://hellbender/test/resources/
+        final PicardHtsPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "hg19mini.dict"); // tsato: code smell
         Assert.assertEquals(runPicardCommandLine(argv), 0);
-        final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(new PicardHtsPath(expectedOutputPath).toPath());
-        final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(new PicardHtsPath(output).toPath());
+        final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(expectedOutputPath.toPath());
+        final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(output.toPath());
 
         assertDictionariesEqual(actualDictionary, expectedDictionary);
-        int d = 3;
         // Check the URI_TAG separately
         Assert.assertEquals(actualDictionary.getSequence(0).getAttribute(SAMSequenceRecord.URI_TAG), inputReference.getURIString()); // "gs://hellbender/test/resources/picard/references/hg19mini.fasta"
     }

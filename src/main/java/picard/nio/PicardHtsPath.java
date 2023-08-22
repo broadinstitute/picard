@@ -27,6 +27,7 @@ package picard.nio;
 import htsjdk.io.HtsPath;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.RuntimeIOException;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,6 +124,9 @@ public class PicardHtsPath extends HtsPath {
 
     /**
      *
+     * Instead of a static method in PicardHtsPath, it could very well be a static method in PicardIOUtils.
+     *
+     * Actually---is resolve the name for this? Nope, resolve is for (parent-path)/(relative-path)
      * Take an existing PicardHtsPath object and return a new object with an
      *
      * For example:
@@ -131,15 +135,21 @@ public class PicardHtsPath extends HtsPath {
      *
      * @param path
      * @param append
-     * @param newExtension
+     * @param newExtension the extension including the dot e.g. ".txt"
      * @return a new PicardHtsPath object pointed to a file with
      */
-    public static PicardHtsPath replaceExtension(final PicardHtsPath path, final boolean append, final String newExtension){
+    public static PicardHtsPath replaceExtension(final PicardHtsPath path, final String newExtension, final boolean append){
         if (append){
             return new PicardHtsPath(path.getURIString() + newExtension);
         } else {
-            URI uri = path.getURI();
-
+            return new PicardHtsPath(FilenameUtils.removeExtension(path.getURI().toString() + newExtension));
         }
+    }
+
+    /**
+     * Wrapper method for Path.resolve()
+     */
+    public static PicardHtsPath resolve(final PicardHtsPath absPath, final String relativePath){
+        return PicardHtsPath.fromPath(absPath.toPath().resolve(relativePath));
     }
 }

@@ -4,7 +4,6 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -13,7 +12,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.analysis.CollectQualityYieldMetrics;
 import picard.cmdline.CommandLineProgramTest;
-import picard.nio.GATKBucketUtils;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.sam.util.SamTestUtil;
 import htsjdk.samtools.DownsamplingIteratorFactory.Strategy;
@@ -255,29 +254,26 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
     @Test(groups = "cloud")
     public void testCloud() throws IOException {
-        Path test = Files.createTempFile("yo", "ho");
-        int d = 3;
-
         // Test bam input and output (as opposed to cram)
         // Local output
         testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED);
         // Output in the cloud
-        final String bamOutput1 = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
+        final PicardHtsPath bamOutput1 = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
         testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED,
-                Optional.of(new PicardHtsPath(bamOutput1)), Optional.empty(), Optional.empty());
+                Optional.of(bamOutput1), Optional.empty(), Optional.empty());
 
         // Test generating a metrics file in the cloud
-        final String metricsOutput = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", "txt");
-        final String bamOutput2 = GATKBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
+        final PicardHtsPath metricsOutput = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", "txt");
+        final PicardHtsPath bamOutput2 = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
         testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED,
-                Optional.of(new PicardHtsPath(bamOutput2)), Optional.of(new PicardHtsPath(metricsOutput)), Optional.empty());
+                Optional.of(bamOutput2), Optional.of(metricsOutput), Optional.empty());
 
         // Test cram (input/output)
         // tsato: this test is very slow---takes about 5 min on Broad internal network
         final boolean testCram = false;
         if (testCram){
-            final String cramOutputInCloud = GATKBucketUtils.getTempFilePath("downsample", "cram");
-            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(new PicardHtsPath(cramOutputInCloud)), Optional.empty(), Optional.of(HG19_REFERENCE));
+            final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", "cram");
+            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(HG19_REFERENCE));
         }
     }
 }
