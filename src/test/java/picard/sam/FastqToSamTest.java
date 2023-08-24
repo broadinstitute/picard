@@ -198,7 +198,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
         } finally {
             System.setErr(oldStderr);
         }
-        Assert.assertTrue(stderrStream.toString().endsWith("QUALITY_FORMAT must be specified when FASTQ is not a regular file\n"));
+        Assert.assertTrue(stderrStream.toString().endsWith("QUALITY_FORMAT must be specified when either of FASTQ or FASTQ2 is not a regular file\n"));
     }
 
     @Test

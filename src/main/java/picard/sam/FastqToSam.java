@@ -81,10 +81,7 @@ import picard.nio.PicardHtsPath;
  * </p>
  * <p>
  *     By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly
- *     using the <code>QUALITY_FORMAT</code> argument, and must do so if <code>FASTQ</code> is not a regular file (e.g. stdin).
- * </p>
- * <p>
- *     <code>FASTQ2</code> input is not supported when <code>FASTQ</code> is not a regular file: you may consider using upstream tools to merge multiple inputs into a single input stream.
+ *     using the <code>QUALITY_FORMAT</code> argument, and must do so if inputs are not a regular file (e.g. stdin).
  * </p>
  * <h3>Output</h3>
  * A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.
@@ -134,9 +131,7 @@ public class FastqToSam extends CommandLineProgram {
         "<p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name " +
         "(see USE_SEQUENTIAL_FASTQ for details below).</p>" +
         "<p>By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly " +
-        "using the QUALITY_FORMAT argument, and must do so if FASTQ is not a regular file (e.g. stdin).</p>" +
-        "<p>FASTQ2 input is not supported when FASTQ is not a regular file: you may consider using " +
-        "upstream tools to merge multiple inputs into a single input stream.</p>" +
+        "using the QUALITY_FORMAT argument, and must do so if inputs are not a regular file (e.g. stdin).</p>" +
         "<h3>Output</h3>" +
         "<p>A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.</p>" +
         "<h3>Usage examples</h3>" +
@@ -181,7 +176,7 @@ public class FastqToSam extends CommandLineProgram {
     @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
             "Either Solexa (phred scaling + 66), Illumina (phred scaling + 64) or Standard (phred scaling + 33).  " +
             "If input is from a regular file and this value is not specified, the quality format will be detected automatically. " +
-            "If input is from STDIN or a named pipe, this value is required.", optional = true)
+            "If input is not from a regular file, this value is required.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
     @Argument(doc="Output BAM/SAM/CRAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
@@ -244,6 +239,7 @@ public class FastqToSam extends CommandLineProgram {
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
+    // tested for and set in customCommandLineValidation 
     private Boolean regularFileInput;
 
     /**
@@ -369,14 +365,10 @@ public class FastqToSam extends CommandLineProgram {
             }
         }
         else {
-            if (!regularFileInput) {
-                // use the already opened reader if input is STDIN or a named pipe
-                readers1.add(reader1);
-            } else {
-                readers1.add(fileToFastqReader(FASTQ.toPath()));
-                if (FASTQ2 != null) {
-                    readers2.add(fileToFastqReader(FASTQ2.toPath()));
-                }
+            // use the already opened reader1 if input is STDIN or a named pipe
+            readers1.add(regularFileInput ? fileToFastqReader(FASTQ.toPath()) : reader1);
+            if (FASTQ2 != null) {
+                readers2.add(fileToFastqReader(FASTQ2.toPath()));
             }
         }
 
@@ -596,9 +588,11 @@ public class FastqToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (MIN_Q < 0) return new String[]{"MIN_Q must be >= 0"};
         if (MAX_Q > SAMUtils.MAX_PHRED_SCORE) return new String[]{"MAX_Q must be <= " + SAMUtils.MAX_PHRED_SCORE};
-        regularFileInput = !FASTQ.isOther();
-        if (!regularFileInput && QUALITY_FORMAT == null) return new String[]{"QUALITY_FORMAT must be specified when FASTQ is not a regular file"};
-        if (!regularFileInput && FASTQ2 != null) return new String[]{"FASTQ2 input is not supported when FASTQ is not a regular file"};
+        regularFileInput = !PicardHtsPath.isOther(FASTQ) && (FASTQ2 == null || !PicardHtsPath.isOther(FASTQ2));
+        if (QUALITY_FORMAT == null && !regularFileInput) {
+            return new String[]{"QUALITY_FORMAT must be specified when either of FASTQ or FASTQ2 is not a regular file"};
+        }
         return null;
     }
+
 }
