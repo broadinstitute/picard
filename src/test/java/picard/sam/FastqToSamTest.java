@@ -36,8 +36,10 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,8 @@ import java.util.List;
  */
 public class FastqToSamTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/fastq2bam");
+    private static final String CLASSPATH = "\"" + System.getProperty("java.class.path") + "\" ";
+
 
     public String getCommandLineProgramName() {
         return FastqToSam.class.getSimpleName();
@@ -175,6 +179,64 @@ public class FastqToSamTest extends CommandLineProgramTest {
     public void testEmptyFastqAllowed() throws IOException {
         final File emptyFastq = File.createTempFile("empty", ".fastq");
         convertFile(emptyFastq, null, FastqQualityFormat.Illumina, false, false, true);
+    }
+
+    @Test
+    public void testStreamInputWithoutQuality() throws IOException {
+        ByteArrayOutputStream stderrStream = new ByteArrayOutputStream();
+        PrintStream newStderr = new PrintStream(stderrStream);
+        PrintStream oldStderr = System.err;
+        try {
+            System.setErr(newStderr);
+            final File tmpFile = File.createTempFile("empty", ".sam");
+            final String[] args = {
+                    "FASTQ=/dev/stdin",
+                    "SAMPLE_NAME=sample001",
+                    "OUTPUT=" + tmpFile
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+        } finally {
+            System.setErr(oldStderr);
+        }
+        Assert.assertTrue(stderrStream.toString().endsWith("QUALITY_FORMAT must be specified when either of FASTQ or FASTQ2 is not a regular file\n"));
+    }
+
+    @Test
+    public void testStreamInput() throws IOException {
+        final File output = newTempSamFile("stdin");
+        String fastq = """
+                       @ERR194147.10008417/1
+                       ATTTAATTAAGAAAATGTAAACTAAATGACAGTAGACAGACAAGTATGCCTTTGC
+                       +
+                       ???????????????????????????????????????????????????????
+                       """;        
+        String[] command = {
+                "/bin/bash",
+                "-c",
+                "echo -n '" + fastq + "'|" +
+                "java -classpath " +
+                        CLASSPATH +
+                        "picard.cmdline.PicardCommandLine " +
+                        "FastqToSam " +
+                        "-FASTQ /dev/stdin " +
+                        "-QUALITY_FORMAT Standard " +
+                        "-SAMPLE_NAME sample001 " +
+                        "-OUTPUT " + output 
+        };
+
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+            Assert.assertEquals(process.waitFor(), 0);
+        } catch (Exception e) {
+            Assert.fail("Failed to pipe data from stdin to FastqToSam", e);
+        }
+
+        try(final SamReader samReader = SamReaderFactory.makeDefault().open(output)) {
+            long actualCount = samReader.iterator().stream().count();
+            Assert.assertEquals(actualCount, 1);
+        }
     }
 
     private File convertFile(final String filename, final FastqQualityFormat version) throws IOException {
