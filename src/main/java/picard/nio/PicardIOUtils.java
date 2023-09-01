@@ -1,15 +1,12 @@
 package picard.nio;
 
-import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.*;
-import java.util.HashMap;
+import java.nio.file.Path;
 
 /**
  * Ported from GATKIOUtils.java
@@ -23,60 +20,6 @@ public class PicardIOUtils {
      */
     public static void deleteOnExit(final Path fileToDelete){
         DeleteRecursivelyOnExitPathHook.add(fileToDelete);
-    }
-
-    /**
-     *
-     * tsato: this sounds like exactly the job of PicardHtsPath()---remove this method?
-     *
-     * Converts the given URI to a {@link Path} object. If the filesystem cannot be found in the usual way, then attempt
-     * to load the filesystem provider using the thread context classloader. This is needed when the filesystem
-     * provider is loaded using a URL classloader (e.g. in spark-submit).
-     *
-     * Also makes an attempt to interpret the argument as a file name if it's not a URI.
-     *
-     * @param uriString the URI to convert.
-     * @return the resulting {@code Path}
-     * @throws PicardException if an I/O error occurs when creating the file system
-     */
-    public static Path getPath(String uriString) {
-        GATKUtils.nonNull(uriString);
-        URI uri;
-        try {
-            uri = URI.create(uriString);
-        } catch (IllegalArgumentException x) {
-            // not a valid URI. Caller probably just gave us a file name.
-            return Paths.get(uriString);
-        }
-        try {
-            // special case GCS, in case the filesystem provider wasn't installed properly but is available.
-            if (CloudStorageFileSystem.URI_SCHEME.equals(uri.getScheme())) {
-                return PicardBucketUtils.getPathOnGcs(uriString);
-            }
-            // Paths.get(String) assumes the default file system
-            // Paths.get(URI) uses the scheme
-            return uri.getScheme() == null ? Paths.get(uriString) : Paths.get(uri);
-        } catch (FileSystemNotFoundException e) {
-            try {
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                if ( cl == null ) {
-                    throw e;
-                }
-                return FileSystems.newFileSystem(uri, new HashMap<>(), cl).provider().getPath(uri);
-            }
-            catch (ProviderNotFoundException x) {
-                // TODO: this creates bogus Path on the current file system for schemes such as gendb, nonexistent, gcs
-                // TODO: we depend on this code path to allow IntervalUtils to all getPath on a string that may be either
-                // a literal interval or a feature file containing intervals
-                // not a valid URI. Caller probably just gave us a file name or "chr1:1-2".
-                return Paths.get(uriString);
-            }
-            catch ( IOException io ) {
-                // UserException in GATK but Picard does not differentiate between e.g. PicardException vs UserException
-                // Might be useful to add the UserException class in the long term
-                throw new PicardException(uriString + " is not a supported path", io);
-            }
-        }
     }
 
     /**

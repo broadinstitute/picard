@@ -39,20 +39,16 @@ import java.nio.file.Path;
 public class OptionalReferenceArgumentCollection implements ReferenceArgumentCollection {
     private final static Log log = Log.getInstance(OptionalReferenceArgumentCollection.class);
 
-    // tsato: does it work with the System.getProperty() way? What if the gcloud path was specified as an environment variable?
     @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.", common = true, optional = true)
     public PicardHtsPath REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA == null ? null : new PicardHtsPath(Defaults.REFERENCE_FASTA.getAbsolutePath());
 
-    /**
-     * @return The reference provided by the user, if any, or the default defined by {@code htsjdk.samtools.Defaults.REFERENCE_FASTA}
-     */
     @Override
     public File getReferenceFile() {
         return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
     }
 
     /**
-     * @return The reference provided by the user, if any, or the default, if any, as an nio Path.
+     * @return The reference provided by the user, if any, or the default, if any, as an nio Path. May be null. (tsato: remove this javadoc since it's already present in the base class?)
      */
     @Override
     public Path getReferencePath() { return REFERENCE_SEQUENCE == null ? null: REFERENCE_SEQUENCE.toPath(); }

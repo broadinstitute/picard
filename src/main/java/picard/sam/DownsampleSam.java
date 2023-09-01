@@ -300,7 +300,7 @@ public class DownsampleSam extends CommandLineProgram {
             try (final BufferedWriter writer = Files.newBufferedWriter(METRICS_FILE.toPath())){
                 metricsFile.write(writer);
             } catch (IOException e) {
-                throw new PicardException("Encountered an error writing the metrics file: " + METRICS_FILE.getURIString());
+                throw new PicardException("Encountered an error while writing the metrics file: " + METRICS_FILE.getURIString(), e);
             }
 
         }

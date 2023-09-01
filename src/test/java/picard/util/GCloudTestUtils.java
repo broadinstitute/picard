@@ -19,10 +19,11 @@ public final class GCloudTestUtils {
      * A publicly readable GCS bucket set as requester pays, this should not be owned by the same project that is set
      * as {@link #getTestProject()} or the tests for requester pays access may be invalid.
      *
-     * @return PICARD_REQUESTER_PAYS_BUCKET env. var if defined, {@value GCloudTestUtils#REQUESTER_PAYS_BUCKET_DEFAULT.getURIString()}.
+     * @return PICARD_REQUESTER_PAYS_BUCKET env. var if defined, or {@value GCloudTestUtils#REQUESTER_PAYS_BUCKET_DEFAULT.getURIString()},
+     * wrapped in PicardHtsPath.
      */
-    public static String getRequesterPaysBucket() {
-        return getSystemProperty("PICARD_REQUESTER_PAYS_BUCKET", REQUESTER_PAYS_BUCKET_DEFAULT.getURIString());
+    public static PicardHtsPath getRequesterPaysBucket() {
+        return new PicardHtsPath(getSystemProperty("PICARD_REQUESTER_PAYS_BUCKET", REQUESTER_PAYS_BUCKET_DEFAULT.getURIString()));
     }
 
     private static String getSystemProperty(final String variableName, final String defaultValue) {

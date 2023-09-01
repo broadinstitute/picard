@@ -3,7 +3,6 @@ package picard.nio;
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import com.google.cloud.storage.contrib.nio.CloudStoragePath;
 import htsjdk.samtools.util.FileExtensions;
-import org.apache.commons.io.FilenameUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,17 +14,11 @@ import java.util.UUID;
  * Derived from BucketUtils.java in GATK
  */
 public class PicardBucketUtils {
-    // In GATK these are accessed as e.g. GoogleCloudStorageFileSystem.SCHEME
     public static final String GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME = "gs";
     public static final String HTTP_FILESYSTEM_PROVIDER_SCHEME = "http";
     public static final String HTTPS_FILESYSTEM_PROVIDER_SCHEME = "https";
     public static final String HDFS_SCHEME = "hdfs";
     public final static String FILE_SCHEME = "file";
-
-    // To the extent possible, avoid converting e.g. a PicardHtsPath to a string and calling beginsWith() against these
-    // string variables. Instead, work directly with PicardHtsPath/HtsPath using e.g. PicardHtsPath::getScheme()
-    private static final String GCS_PREFIX = "gs://";
-    private static final String HDFS_PREFIX = HDFS_SCHEME + "://";
 
     // slashes omitted since hdfs paths seem to only have 1 slash which would be weirder to include than no slashes
     private PicardBucketUtils(){} //private so that no one will instantiate this class
@@ -95,15 +88,15 @@ public class PicardBucketUtils {
     }
 
     /**
-     * Note: to the extent possible, avoid working directly with string paths and
-     * use the same method that takes in a PicardHtsPath.
+     * Note: to the extent possible, avoid converting an HtsPath object to a String then calling this method.
+     * Instead, use the same method below that takes in a PicardHtsPath as input.
      *
      * @param path path to inspect
      * @return true if this path represents a gcs location
      */
     private static boolean isGcsUrl(final String path) {
         GATKUtils.nonNull(path);
-        return path.startsWith(GCS_PREFIX);
+        return path.startsWith("gs://");
     }
 
     /**
@@ -146,6 +139,6 @@ public class PicardBucketUtils {
      * Returns true if the given path is a HDFS (Hadoop filesystem) URL.
      */
     private static boolean isHadoopUrl(String path) {
-        return path.startsWith(HDFS_PREFIX);
+        return path.startsWith(HDFS_SCHEME + "://");
     }
 }

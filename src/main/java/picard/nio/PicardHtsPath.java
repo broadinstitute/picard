@@ -27,15 +27,16 @@ package picard.nio;
 import htsjdk.io.HtsPath;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.RuntimeIOException;
-import org.apache.commons.io.FilenameUtils;
+import htsjdk.utils.ValidationUtils;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -122,10 +123,12 @@ public class PicardHtsPath extends HtsPath {
 
     /**
      * Instead of a static method in PicardHtsPath, it could very well be a static method in PicardIOUtils.
+     * Or, it should be an instance variable in HtsPath, that returns a new HtsPath object...although we probalby want
+     * it to return a PicardHtsPath...similar to fromPath()
      *
      * Examples:
-     *     - test_na12878.bam -> test_na12878.bai (append = false)
-     *     - test_na12878.bam -> test_na12878.bam.md5 (append = true)
+     *     - (test_na12878.bam, .bai) -> test_na12878.bai (append = false)
+     *     - (test_na12878.bam, .bai) -> test_na12878.bam.md5 (append = true)
      *
      * @param path the original path
      * @param append whether to append (true) or replace (false) the new extension
@@ -133,15 +136,60 @@ public class PicardHtsPath extends HtsPath {
      * @return a new PicardHtsPath object pointed to a file with
      */
     public static PicardHtsPath replaceExtension(final PicardHtsPath path, final String newExtension, final boolean append){
+        ValidationUtils.validateArg(newExtension.startsWith("."), "newExtension must start with a dot '.'");
+
         if (append){
             return new PicardHtsPath(path.getURIString() + newExtension);
         } else {
-            return new PicardHtsPath(FilenameUtils.removeExtension(path.getURI().toString() + newExtension));
+            final Optional<String> oldExtension = path.getExtension();
+
+            if (oldExtension.isEmpty()){
+                throw new PicardException("The extension cannot be identified for the path: " + path.getURIString());
+            }
+
+            final String oldFileName = path.toPath().getFileName().toString();
+            return PicardHtsPath.fromPath(path.toPath().resolveSibling(oldFileName.replaceAll(oldExtension.get() + "$", newExtension)));
         }
     }
 
     /**
-     * Wrapper method for Path.resolve()
+     *
+     * Returns the extension of a filename including the preceding dot '.'
+     *
+     * e.g. /Users/jsoto/error.log -> ".log"
+     *      /Users/jsoto/stderr -> ""
+     *
+     * As a first pass, we will use the 'lastIndexOf' implementation.
+     *
+     *
+     * **/
+//    public static String getExtension(final String uRIString) {
+//        final int lastIndexOfPeriod = uRIString.lastIndexOf(".");
+//
+//        // This is probably not correct --- if say someone is on a Windows machine and giving it a gcloud path
+//        final int lastIndexOfSeparator = uRIString.lastIndexOf(FileSystems.getDefault().getSeparator());
+//
+//        // How about this?
+//        String separator;
+//        try {
+//            separator = FileSystems.getFileSystem(new URI(uRIString)).getSeparator();
+//        } catch (URISyntaxException e){
+//            // No problem: just use the default
+//            separator = FileSystems.getDefault().getSeparator();
+//        }
+//
+//        String a = File.separator;
+//
+//        String c = System.getProperty("file.separator");
+//
+//
+//        // What if there is no period...
+//        String extension = uRIString.substring(uRIString.lastIndexOf("."));
+//        return extension;
+//    }
+
+    /**
+     * Wrapper for Path.resolve()
      */
     public static PicardHtsPath resolve(final PicardHtsPath absPath, final String relativePath){
         return PicardHtsPath.fromPath(absPath.toPath().resolve(relativePath));

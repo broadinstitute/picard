@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import htsjdk.beta.exception.HtsjdkException;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
@@ -185,7 +186,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
             URI = referenceSequence.getHtsPath().getURIString();
         }
         if (OUTPUT == null) {
-            final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getHtsPath().toPath());
+            final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getReferencePath());
             OUTPUT = new PicardHtsPath(outputPath.toString());
             logger.info("Output dictionary will be written in ", OUTPUT);
         }
@@ -260,11 +261,12 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         } catch (IllegalArgumentException e) {
             // in case of an unexpected error delete the file so that there isn't a
             // truncated result which might be valid yet wrong.
+            OUTPUT.toPath().toFile().delete();
             if (Files.exists(OUTPUT.toPath())){
                 try {
                     Files.delete(OUTPUT.toPath());
                 } catch (IOException e2) {
-                    throw new PicardException("Unknown problem encountered, and failed to delete the incomplete output.", e2);
+                    throw new PicardException("Unknown problem encountered, and failed to delete the incomplete output.", e);
                 }
             }
             throw new PicardException("Unknown problem. Partial dictionary file was deleted.", e);

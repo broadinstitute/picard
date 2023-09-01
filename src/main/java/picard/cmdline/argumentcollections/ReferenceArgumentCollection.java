@@ -36,8 +36,10 @@ import picard.nio.PicardHtsPath;
  */
 public interface ReferenceArgumentCollection {
     /**
+     * This method is retained for backward compatibility with legacy tools that have not been updated to support PicardHtsPath input files.
+     * The preferred methods for accessing the reference file in the command line argument is either getHtsPath() or getReferencePath().
      *
-     * @return The reference provided by the user or the default as a File. May be null.
+     * @return The reference provided by the user, or the default defined by {@code htsjdk.samtools.Defaults.REFERENCE_FASTA}. May be null.
      */
     File getReferenceFile(); // tsato: update tools that call this method to convert File to PicardHtsPath and use getHtsPath()
 
@@ -58,6 +60,9 @@ public interface ReferenceArgumentCollection {
      *
      * The cloud-reference-enabled tools should override this method e.g. return REFERENCE_SEQUENCE (see DownsampleSam::makeReferenceArgumentCollection)
      * Once all the relevant subclasses have been updated, we plan to make this abstract.
+     *
+     * We do not currently support setting a remote path via an environment variable. For this, we would have to update
+     * HtsJdk.Defaults.REFERENCE_FASTA to support remote paths.
      *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
      */
