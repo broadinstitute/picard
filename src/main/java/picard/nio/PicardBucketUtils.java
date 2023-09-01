@@ -2,6 +2,7 @@ package picard.nio;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import com.google.cloud.storage.contrib.nio.CloudStoragePath;
+import htsjdk.io.IOPath;
 import htsjdk.samtools.util.FileExtensions;
 
 import java.nio.file.Path;
@@ -105,7 +106,7 @@ public class PicardBucketUtils {
      * @param pathSpec specifier to inspect
      * @return true if this {@code PicardHTSPath} represents a gcs URI.
      */
-    public static boolean isGcsUrl(final PicardHtsPath pathSpec) {
+    public static boolean isGcsUrl(final IOPath pathSpec) {
         GATKUtils.nonNull(pathSpec);
         return pathSpec.getScheme().equals(GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME);
     }
@@ -114,7 +115,7 @@ public class PicardBucketUtils {
      * @param pathSpec specifier to inspect
      * @return true if this {@code GATKPath} represents a remote storage system which may benefit from prefetching (gcs or http(s))
      */
-    public static boolean isEligibleForPrefetching(final PicardHtsPath pathSpec) {
+    public static boolean isEligibleForPrefetching(final IOPath pathSpec) {
         GATKUtils.nonNull(pathSpec);
         return isEligibleForPrefetching(pathSpec.getScheme());
     }

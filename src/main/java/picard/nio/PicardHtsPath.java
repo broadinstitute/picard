@@ -25,6 +25,7 @@
 package picard.nio;
 
 import htsjdk.io.HtsPath;
+import htsjdk.io.IOPath;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.utils.ValidationUtils;
@@ -135,7 +136,7 @@ public class PicardHtsPath extends HtsPath {
      * @param newExtension the extension including the dot e.g. ".txt"
      * @return a new PicardHtsPath object pointed to a file with
      */
-    public static PicardHtsPath replaceExtension(final PicardHtsPath path, final String newExtension, final boolean append){
+    public static PicardHtsPath replaceExtension(final IOPath path, final String newExtension, final boolean append){
         ValidationUtils.validateArg(newExtension.startsWith("."), "newExtension must start with a dot '.'");
 
         if (append){
@@ -151,42 +152,6 @@ public class PicardHtsPath extends HtsPath {
             return PicardHtsPath.fromPath(path.toPath().resolveSibling(oldFileName.replaceAll(oldExtension.get() + "$", newExtension)));
         }
     }
-
-    /**
-     *
-     * Returns the extension of a filename including the preceding dot '.'
-     *
-     * e.g. /Users/jsoto/error.log -> ".log"
-     *      /Users/jsoto/stderr -> ""
-     *
-     * As a first pass, we will use the 'lastIndexOf' implementation.
-     *
-     *
-     * **/
-//    public static String getExtension(final String uRIString) {
-//        final int lastIndexOfPeriod = uRIString.lastIndexOf(".");
-//
-//        // This is probably not correct --- if say someone is on a Windows machine and giving it a gcloud path
-//        final int lastIndexOfSeparator = uRIString.lastIndexOf(FileSystems.getDefault().getSeparator());
-//
-//        // How about this?
-//        String separator;
-//        try {
-//            separator = FileSystems.getFileSystem(new URI(uRIString)).getSeparator();
-//        } catch (URISyntaxException e){
-//            // No problem: just use the default
-//            separator = FileSystems.getDefault().getSeparator();
-//        }
-//
-//        String a = File.separator;
-//
-//        String c = System.getProperty("file.separator");
-//
-//
-//        // What if there is no period...
-//        String extension = uRIString.substring(uRIString.lastIndexOf("."));
-//        return extension;
-//    }
 
     /**
      * Wrapper for Path.resolve()
