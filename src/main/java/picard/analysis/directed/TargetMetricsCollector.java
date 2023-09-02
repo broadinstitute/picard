@@ -67,6 +67,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.LongStream;
@@ -125,6 +126,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     // histogram of depths. does not include bases with quality less than MINIMUM_BASE_QUALITY (default 20)
     // give it the bin label "coverage_or_base_quality" to make clear that in the metrics file the coverage and base quality histograms share the same bin column on the left
     private final Histogram<Integer> highQualityDepthHistogram = new Histogram<>("coverage_or_base_quality", "high_quality_coverage_count");
+
+    // histogram of depths with no coverage cap imposed.
+    private final Histogram<Integer> fullHighQualityDepthHistogram = new Histogram<>("coverage_or_base_quality", "high_quality_coverage_count");
+
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
@@ -699,7 +704,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
         private void calculateTargetCoverageMetrics() {
-            final long[] highQualityCoverageHistogramArray = new long[coverageCap+1];
+            // use ArrayList because the length of this is defined by the coverage depth.
+            final ArrayList<Long> fullHighQualityDepthHistogramList =  new ArrayList<>();
+
             int zeroCoverageTargets = 0;
 
             // the number of bases we counted towards the depth histogram plus those that got thrown out by the coverage cap
@@ -723,7 +730,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             for (final Coverage c : this.highQualityCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
                     zeroCoverageTargets++;
-                    highQualityCoverageHistogramArray[0] += c.interval.length();
+                    fullHighQualityDepthHistogramList.set(0, (long) c.interval.length());
                     targetBases[0] += c.interval.length();
                     minDepth = 0;
                     continue;
@@ -731,7 +738,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                 for (final int depth : c.getDepths()) {
                     totalCoverage += depth;
-                    highQualityCoverageHistogramArray[Math.min(depth, coverageCap)]++;
+                    Long index = fullHighQualityDepthHistogramList.get(depth);
+                    index = index + 1;
+                    fullHighQualityDepthHistogramList.set(depth, index);
                     maxDepth = Math.max(maxDepth, depth);
                     minDepth = Math.min(minDepth, depth);
 
@@ -747,20 +756,19 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 throw new PicardException("the number of target bases with at least 0x coverage does not equal the number of target bases");
             }
 
-            for (int i = 0; i < highQualityCoverageHistogramArray.length; ++i) {
-                highQualityDepthHistogram.increment(i, highQualityCoverageHistogramArray[i]);
+            for (int i = 0; i < fullHighQualityDepthHistogramList.size(); ++i) {
+                fullHighQualityDepthHistogram.increment(i, fullHighQualityDepthHistogramList.get(i));
             }
 
-            // we do this instead of highQualityDepthHistogram.getMean() because the histogram imposes a coverage cap
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
-            metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
+            metrics.MEDIAN_TARGET_COVERAGE = fullHighQualityDepthHistogram.getMedian();
             metrics.MAX_TARGET_COVERAGE = maxDepth;
             // Use Math.min() to account for edge case where highQualityCoverageByTarget is empty (minDepth=Long.MAX_VALUE)
             metrics.MIN_TARGET_COVERAGE = Math.min(minDepth, maxDepth);
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
             // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage
-            metrics.FOLD_80_BASE_PENALTY = metrics.MEAN_TARGET_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
+            metrics.FOLD_80_BASE_PENALTY = metrics.MEAN_TARGET_COVERAGE / fullHighQualityDepthHistogram.getPercentile(0.2);
             metrics.ZERO_CVG_TARGETS_PCT = zeroCoverageTargets / (double) allTargets.getIntervals().size();
 
             // Store the "how many bases at at-least X" calculations.
