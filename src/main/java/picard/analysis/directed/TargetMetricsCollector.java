@@ -699,8 +699,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
         private void calculateTargetCoverageMetrics() {
-            // use HashMap because the length of this is defined by the sparse coverage depth.
-            final HashMap<Integer, Long> fullHighQualityDepthHistogramMap =  new HashMap<>();
 
             int zeroCoverageTargets = 0;
 
@@ -725,7 +723,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             for (final Coverage c : this.highQualityCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
                     zeroCoverageTargets++;
-                    fullHighQualityDepthHistogramMap.put(0, (long) c.interval.length());
+                    highQualityDepthHistogram.increment(0, c.interval.length());
                     targetBases[0] += c.interval.length();
                     minDepth = 0;
                     continue;
@@ -733,9 +731,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                 for (final int depth : c.getDepths()) {
                     totalCoverage += depth;
-                    Long index = fullHighQualityDepthHistogramMap.getOrDefault(depth, 0L);
-                    index = index + 1;
-                    fullHighQualityDepthHistogramMap.put(depth, index);
+                    highQualityDepthHistogram.increment(depth, 1);
                     maxDepth = Math.max(maxDepth, depth);
                     minDepth = Math.min(minDepth, depth);
 
@@ -749,10 +745,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             if (targetBases[0] !=  highQualityCoverageByTarget.keySet().stream().mapToInt(Interval::length).sum()) {
                 throw new PicardException("the number of target bases with at least 0x coverage does not equal the number of target bases");
-            }
-
-            for (Map.Entry<Integer, Long> entry : fullHighQualityDepthHistogramMap.entrySet()) {
-                highQualityDepthHistogram.increment(entry.getKey(), entry.getValue());
             }
 
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
