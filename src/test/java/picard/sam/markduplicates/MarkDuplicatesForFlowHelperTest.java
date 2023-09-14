@@ -198,6 +198,25 @@ public class MarkDuplicatesForFlowHelperTest {
                             }
                         }
                 },
+                // testFLOW_END_QUALITY_STRATEGY: flow (homopolymer based) minumum
+                {
+                        DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES,
+                        new TestRecordInfo[] {
+                                new TestRecordInfo(76, 12,"76M", false, "AAAC", null),
+                                new TestRecordInfo(76, 12, "76M", true, "AACC", null)
+                        },
+                        new String[] { "FLOW_DUP_STRATEGY=FLOW_END_QUALITY_STRATEGY" },
+                        new TesterModifier() {
+                            @Override
+                            public void modify(final AbstractMarkDuplicatesCommandLineProgramTester tester) {
+                                final SAMRecord[] records = tester.getSamRecordSetBuilder().getRecords().toArray(new SAMRecord[0]);
+                                records[0].setAttribute("tp", new int[76]);
+                                records[1].setAttribute("tp", new int[76]);
+                                records[0].getBaseQualities()[1] = 25; // dip inside AAA
+                                records[1].getBaseQualities()[30] = 10;
+                            }
+                        }
+                },
 
                 // testUNPAIRED_END_UNCERTAINTY: End location is significant and uncertain, end sorted
                 {
@@ -208,6 +227,17 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(94, 12, null, false, null, null)
                         },
                         new String[] { "USE_END_IN_UNPAIRED_READS=true", "UNPAIRED_END_UNCERTAINTY=10" }, null
+                },
+
+                // testUNPAIRED_START_UNCERTAINTY: End location is significant and uncertain, end sorted
+                {
+                        null,
+                        new TestRecordInfo[] {
+                                new TestRecordInfo(74, 12, null, false, null, null),
+                                new TestRecordInfo(64, 22, null, true, null, null),
+                                new TestRecordInfo(54, 32, null, true, null, null)
+                        },
+                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "UNPAIRED_START_UNCERTAINTY=10" }, null
                 },
 
                 // testUNPAIRED_END_UNCERTAINTY: End location is significant and uncertain, end not sorted
