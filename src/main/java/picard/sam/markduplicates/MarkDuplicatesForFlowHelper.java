@@ -192,10 +192,8 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
      */
     @Override
     public short getReadDuplicateScore(final SAMRecord rec, final ReadEndsForMarkDuplicates pairedEnds) {
-        if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY ) {
+        if (md.flowBasedArguments.FLOW_MODE){
             return computeFlowDuplicateScore(rec, pairedEnds.read2Coordinate);
-        } else if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_END_QUALITY_STRATEGY ){
-            return computeFlowEndDuplicateScore(rec, pairedEnds.read2Coordinate);
         } else {
             return md.getReadDuplicateScore(rec, pairedEnds);
         }
