@@ -166,14 +166,16 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12,"76M", true, "AAAC", null),
                                 new TestRecordInfo(76, 12, "76M", false, "AACC", null)
                         },
-                        new String[] { "FLOW_QUALITY_SUM_STRATEGY=false" },
+                        new String[] { "FLOW_DUP_STRATEGY=FLOW_QUALITY_SUM_STRATEGY" },
                         new TesterModifier() {
                             @Override
                             public void modify(final AbstractMarkDuplicatesCommandLineProgramTester tester) {
                                 final SAMRecord[] records = tester.getSamRecordSetBuilder().getRecords().toArray(new SAMRecord[0]);
                                 records[0].setAttribute("tp", new int[76]);
                                 records[1].setAttribute("tp", new int[76]);
-                                records[0].getBaseQualities()[1] = 25; // dip inside AAA
+                                records[0].getBaseQualities()[0] = 25; // dip inside AAA
+                                records[0].getBaseQualities()[2] = 25; // dip inside AAA
+
                             }
                         }
                 },
@@ -185,7 +187,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12,"76M", false, "AAAC", null),
                                 new TestRecordInfo(76, 12, "76M", true, "AACC", null)
                         },
-                        new String[] { "FLOW_QUALITY_SUM_STRATEGY=true" },
+                        new String[] { "FLOW_DUP_STRATEGY=FLOW_QUALITY_SUM_STRATEGY" },
                         new TesterModifier() {
                             @Override
                             public void modify(final AbstractMarkDuplicatesCommandLineProgramTester tester) {
@@ -267,7 +269,7 @@ public class MarkDuplicatesForFlowHelperTest {
     }
 
     @Test(dataProvider = "forFlowDataProvider")
-    public void testForFlow(final DuplicateScoringStrategy.ScoringStrategy scoringStrategy, final TestRecordInfo[] recInfos, final String[] params, TesterModifier modifier) {
+    public void testForFlowMDCall(final DuplicateScoringStrategy.ScoringStrategy scoringStrategy, final TestRecordInfo[] recInfos, final String[] params, TesterModifier modifier) {
 
         // get tester, build records
         final AbstractMarkDuplicatesCommandLineProgramTester tester =
@@ -338,5 +340,34 @@ public class MarkDuplicatesForFlowHelperTest {
         final int score = MarkDuplicatesForFlowHelper.getFlowSumOfBaseQualities(rec, threshold);
         Assert.assertEquals(score, expectedScore);
     }
+
+    @DataProvider(name ="getFlowEndBaseQualitiesDataProvider")
+    public Object[][] getFlowEndBaseQualitiesDataProvider() {
+        return new Object[][] {
+                { "AAAA", new byte[] {50,50,50,50}, 2, 50 },
+                { "AAAA", new byte[] {50,10,10,50}, 4, 10 },
+                { "ACCA", new byte[] {20,10,10,20}, 1, 20 },
+                { "AABBCC", new byte[] {50,50,10,10,40,40}, 30, 10 },
+        };
+    }
+
+    @Test(dataProvider = "getFlowEndBaseQualitiesDataProvider")
+    public void testGetFlowEndBaseQualities(final String bases, final byte[] quals, final int threshold, final int expectedScore) {
+
+        // build record
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.getSamRecordSetBuilder().setReadLength(bases.length());
+        tester.addMappedFragment(0, 12, false, 50);
+
+        // install bases and quals
+        final SAMRecord rec = tester.getSamRecordSetBuilder().getRecords().iterator().next();
+        System.arraycopy(bases.getBytes(), 0, rec.getReadBases(), 0,bases.length());
+        System.arraycopy(quals, 0, rec.getBaseQualities(), 0, quals.length);
+
+        // calculate score
+        final int score = MarkDuplicatesForFlowHelper.getFlowSumOfBaseQualitiesNearEnds(rec, threshold);
+        Assert.assertEquals(score, expectedScore);
+    }
+
 
 }
