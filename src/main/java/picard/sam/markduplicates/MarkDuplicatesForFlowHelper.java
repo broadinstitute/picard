@@ -60,6 +60,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
     public static final char[]  CLIPPING_TAG_CONTAINS_AQ = {'A', 'Q'};
     public static final char[]  CLIPPING_TAG_CONTAINS_QZ = {'Q', 'Z'};
 
+    public static final int DIST_FROM_END = 10;
     // instance of hosting MarkDuplicates
     private final MarkDuplicates  md;
 
@@ -297,6 +298,55 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         return score;
     }
 
+    /**
+     * A quality selection strategy used for flow based reads.
+     *
+     * We look at the bases of the reads that are close to the ends of the fragment
+     * and calculate the minimal quality of the homopolymers.
+     *
+     * @param rec - SAMRecord to get a score for
+     * @param dist - Distance from the end
+     * @return - calculated score (see method description)
+     */
+    static protected int getFlowSumOfBaseQualitiesNearEnds(final SAMRecord rec, int dist) {
+        int score = 100;
+
+        // access qualities and bases
+        final byte[] quals = rec.getBaseQualities();
+        final byte[]  bases = rec.getReadBases();
+
+        boolean insideHpol = false;
+        if (dist > bases.length){
+            dist = bases.length;
+        }
+
+        for ( int i = 0 ; (i < dist) || ( insideHpol ) ; i ++ ) {
+            final byte base = bases[i];
+            if ( (i == bases.length - 1) || ( base != bases[i+1] )) {
+                insideHpol = false;
+            } else {
+                insideHpol = true;
+            }
+
+            if ( quals[i] < score) {
+                score = quals[i];
+            }
+        }
+
+        for ( int i = bases.length-1 ; (i > bases.length - 1 - dist) || ( insideHpol ) ; i -- ) {
+            final byte base = bases[i];
+            if ( (i == 0) || ( base != bases[i - 1] )) {
+                insideHpol = false;
+            } else {
+                insideHpol = true;
+            }
+
+            if ( quals[i] < score) {
+                score = quals[i];
+            }
+        }
+        return score;
+    }
     private short computeFlowDuplicateScore(final SAMRecord rec, final int end) {
 
         if ( end == END_INSIGNIFICANT_VALUE)
@@ -305,8 +355,13 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         Short storedScore = (Short)rec.getTransientAttribute(ATTR_DUPLICATE_SCORE);
         if ( storedScore == null ) {
             short score = 0;
-
-            score += (short) Math.min(getFlowSumOfBaseQualities(rec, md.flowBasedArguments.FLOW_EFFECTIVE_QUALITY_THRESHOLD), Short.MAX_VALUE / 2);
+            if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY) {
+                score += (short) Math.min(getFlowSumOfBaseQualities(rec, md.flowBasedArguments.FLOW_EFFECTIVE_QUALITY_THRESHOLD), Short.MAX_VALUE / 2);
+            } else if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_END_QUALITY_STRATEGY) {
+                score += (short) Math.min(getFlowSumOfBaseQualitiesNearEnds(rec, DIST_FROM_END), Short.MAX_VALUE / 2);
+            } else {
+                throw new IllegalArgumentException("Unknown flow duplicate selection strategy: " + md.flowBasedArguments.FLOW_DUP_STRATEGY);
+            }
 
             score += rec.getReadFailsVendorQualityCheckFlag() ? (short) (Short.MIN_VALUE / 2) : 0;
             storedScore = score;
