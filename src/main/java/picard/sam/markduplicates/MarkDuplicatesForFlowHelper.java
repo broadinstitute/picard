@@ -30,6 +30,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
 import picard.sam.markduplicates.util.ReadEndsForMarkDuplicates;
+import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesWithBarcodes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -178,7 +179,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         }
 
         // adjust score
-        if ( md.flowBasedArguments.FLOW_QUALITY_SUM_STRATEGY ) {
+        if ( md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY ) {
             ends.score = computeFlowDuplicateScore(rec, ends.read2Coordinate);
         }
 
@@ -190,8 +191,10 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
      */
     @Override
     public short getReadDuplicateScore(final SAMRecord rec, final ReadEndsForMarkDuplicates pairedEnds) {
-        if (md.flowBasedArguments.FLOW_QUALITY_SUM_STRATEGY ) {
+        if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY ) {
             return computeFlowDuplicateScore(rec, pairedEnds.read2Coordinate);
+        } else if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_END_QUALITY_STRATEGY ){
+            return computeFlowEndDuplicateScore(rec, pairedEnds.read2Coordinate);
         } else {
             return md.getReadDuplicateScore(rec, pairedEnds);
         }
@@ -294,62 +297,6 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         return score;
     }
 
-    /**
-     * A quality summing scoring strategy used for flow based reads.
-     *
-     * We look at the bases of the reads that are close to the ends of the fragment
-     * and calculate the minimal quality of the homopolymers
-     *
-     * @param rec - SAMRecord to get a score for
-     * @param dist - Distance fro the end end
-     * @return - calculated score (see method description)
-     */
-    static protected int getFlowSumOfBaseQualitiesNearEnds(final SAMRecord rec, int dist) {
-        int score = 100;
-
-        // access qualities and bases
-        final byte[] quals = rec.getBaseQualities();
-        final byte[]  bases = rec.getReadBases();
-
-
-
-        // loop on bases, extract qual related to homopolymer from start of homopolymer
-        byte lastBase = 0;
-        byte effectiveQual = 0;
-        boolean insideHpol = false;
-        if (dist > bases.length){
-            dist = bases.length;
-        }
-
-        for ( int i = 0 ; (i < dist) || ( insideHpol ) ; i ++ ) {
-            final byte base = bases[i];
-            if ( (i == bases.length - 1) || ( base != bases[i+1] )) {
-                insideHpol = false;
-            } else {
-                insideHpol = true;
-            }
-
-            if ( quals[i] < score) {
-                score = quals[i];
-            }
-        }
-
-        for ( int i = bases.length-1 ; (i > bases.length - 1 - dist) || ( insideHpol ) ; i -- ) {
-            final byte base = bases[i];
-            if ( (i == 0) || ( base != bases[i - 1] )) {
-                insideHpol = false;
-            } else {
-                insideHpol = true;
-            }
-
-            if ( quals[i] < score) {
-                score = quals[i];
-            }
-        }
-        return score;
-    }
-
-
     private short computeFlowDuplicateScore(final SAMRecord rec, final int end) {
 
         if ( end == END_INSIGNIFICANT_VALUE)
@@ -359,8 +306,8 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         if ( storedScore == null ) {
             short score = 0;
 
-//            score += (short) Math.min(getFlowSumOfBaseQualities(rec, md.flowBasedArguments.FLOW_EFFECTIVE_QUALITY_THRESHOLD), Short.MAX_VALUE / 2);
-            score += (short) Math.min(getFlowSumOfBaseQualitiesNearEnds(rec, 10), Short.MAX_VALUE / 2);
+            score += (short) Math.min(getFlowSumOfBaseQualities(rec, md.flowBasedArguments.FLOW_EFFECTIVE_QUALITY_THRESHOLD), Short.MAX_VALUE / 2);
+
             score += rec.getReadFailsVendorQualityCheckFlag() ? (short) (Short.MIN_VALUE / 2) : 0;
             storedScore = score;
             rec.setTransientAttribute(ATTR_DUPLICATE_SCORE, storedScore);

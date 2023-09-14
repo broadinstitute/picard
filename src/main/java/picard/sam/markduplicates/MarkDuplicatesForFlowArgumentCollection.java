@@ -4,12 +4,21 @@ import org.broadinstitute.barclay.argparser.Argument;
 
 public class MarkDuplicatesForFlowArgumentCollection {
 
+    public enum FLOW_DUPLICATE_SELECTION_STRATEGY {
+        FLOW_QUALITY_SUM_STRATEGY,
+        FLOW_END_QUALITY_STRATEGY
+    }
     @Argument(doc = "enable parameters and behavior specific to flow based reads.", optional = true)
     public boolean FLOW_MODE = false;
 
     @Argument(doc = "Use specific quality summing strategy for flow based reads. The strategy ensures that the same " +
             "(and correct) quality value is used for all bases of the same homopolymer.", optional = true)
-    public boolean FLOW_QUALITY_SUM_STRATEGY = false;
+    public FLOW_DUPLICATE_SELECTION_STRATEGY FLOW_DUP_STRATEGY = FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY;
+
+    @Argument(doc = "Selects the flow-based read with the best quality around the ends " +
+            "useful in cases of high duplication rate and one wants to ensure that the selected read is consistent in " +
+            "start and end positions with the majority.", optional = true)
+    public boolean FLOW_END_QUALITY_STRATEGY = false;
 
     @Argument(doc = "Make the end location of single end read be significant when considering duplicates, " +
             "in addition to the start location, which is always significant (i.e. require single-ended reads to start and" +
