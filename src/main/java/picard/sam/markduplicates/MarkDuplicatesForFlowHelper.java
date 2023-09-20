@@ -180,9 +180,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         }
 
         // adjust score
-        if ( md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY ) {
-            ends.score = computeFlowDuplicateScore(rec, ends.read2Coordinate);
-        }
+        ends.score = computeFlowDuplicateScore(rec, ends.read2Coordinate);
 
         return ends;
     }
