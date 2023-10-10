@@ -51,11 +51,7 @@ public final class GCloudTestUtils {
     }
 
     /**
-     *
-     * tsato: convert to string
-     *
      * A GCS path where the test inputs are stored.
-     * <p>
      * The value of PICARD_TEST_INPUTS should end in a "/" (for example, "gs://hellbender/test/resources/")
      *
      * @return PICARD_TEST_INPUTS env. var if defined or {@value #TEST_INPUTS_DEFAULT.getURIString()}.

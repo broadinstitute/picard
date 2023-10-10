@@ -256,7 +256,7 @@ public class ValidateSamFile extends CommandLineProgram {
             }
             if (IOUtil.isRegularPath(INPUT.toPath())) {
                 // Do not check termination if reading from a stream
-                validator.validateBamFileTermination(INPUT.toPath()); // tsato: needs htsjdk update---done
+                validator.validateBamFileTermination(INPUT.toPath());
             }
 
             result = false;

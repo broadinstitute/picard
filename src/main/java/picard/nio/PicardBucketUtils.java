@@ -19,43 +19,42 @@ public class PicardBucketUtils {
     public static final String HTTP_FILESYSTEM_PROVIDER_SCHEME = "http";
     public static final String HTTPS_FILESYSTEM_PROVIDER_SCHEME = "https";
     public static final String HDFS_SCHEME = "hdfs";
-    public final static String FILE_SCHEME = "file";
+    public static final String FILE_SCHEME = "file";
 
     // slashes omitted since hdfs paths seem to only have 1 slash which would be weirder to include than no slashes
     private PicardBucketUtils(){} //private so that no one will instantiate this class
 
     /**
-     * Get a temporary file path based on the prefix and extension provided.
+     * Get a temporary file path based on the prefix and extension provided
      * This file (and possible indexes associated with it) will be scheduled for deletion on shutdown.
      *
-     * As this is an "initial" path operation, it is OK to take for the prefix and extension variables to be strings.
-     *
-     * @param prefix a prefix for the file name
-     *               for remote paths this should be a valid URI to root the temporary file in (e.g. gs://hellbender/staging/)
-     *               there is no guarantee that this will be used as the root of the tmp file name, a local prefix may be placed in the tmp folder for example
-     * @param extension and extension for the temporary file path, the resulting path will end in this. It should include the period
-     *                  e.g. ".txt" extension of "txt" results in a filename "prefixtxt" without a period.
-     * @return a path to use as a temporary file, on remote file systems which don't support an atomic tmp file reservation a path is chosen with a long randomized name
+     * @param directory the directory where the temporary fill will be placed.
+     *               For remote paths this should be a valid URI to root the temporary file in (e.g. gs://hellbender/staging/)
+     *               If the prefix is not a GCS or hadoop URL, the resulting temp file will be placed in the local tmp folder.
+     * @param prefix the prefix to prepend before the randomly generated characters
+     * @param extension an extension for the temporary file path. Must start with a period e.g. ".txt"
+     * @return a new temporary path of the form [directory]/[prefix][random chars][.extension]
      *
      */
-    public static PicardHtsPath getTempFilePath(String prefix, String extension){
-        if (isGcsUrl(prefix) || (isHadoopUrl(prefix))){
-            // tsato: should we convert to PicardHtsPath or stay in Path...
-            final PicardHtsPath path = PicardHtsPath.fromPath(randomRemotePath(prefix, "", extension));
+    public static PicardHtsPath getTempFilePath(final String directory, final String prefix, final String extension){
+        if (isGcsUrl(directory) || (isHadoopUrl(directory))){
+            final PicardHtsPath path = PicardHtsPath.fromPath(randomRemotePath(directory, prefix, extension));
             PicardIOUtils.deleteOnExit(path.toPath());
             // Mark auxiliary files to be deleted
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TRIBBLE_INDEX, true).toPath());
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.TABIX_INDEX, true).toPath());
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.BAI_INDEX, true).toPath()); // e.g. file.bam.bai
-            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, ".md5", true).toPath());
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, FileExtensions.BAI_INDEX, false).toPath()); // e.g. file.bai
+            PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, ".md5", true).toPath());
             return path;
         } else {
-            return new PicardHtsPath(PicardIOUtils.createTempFile(prefix, extension));
+            return new PicardHtsPath(PicardIOUtils.createTempFile(directory, extension));
         }
     }
 
-
+    public static PicardHtsPath getTempFilePath(String directory, String extension){
+        return getTempFilePath(directory, "", extension);
+    }
 
     /**
      * Picks a random name, by putting some random letters between "prefix" and "suffix".
@@ -66,7 +65,6 @@ public class PicardBucketUtils {
      */
     private static Path randomRemotePath(String stagingLocation, String prefix, String suffix) {
         if (isGcsUrl(stagingLocation)) {
-            // Go through URI because Path.toString isn't guaranteed to include the "gs://" prefix.
             return getPathOnGcs(stagingLocation).resolve(prefix + UUID.randomUUID() + suffix);
         } else if (isHadoopUrl(stagingLocation)) {
             return Paths.get(stagingLocation, prefix + UUID.randomUUID() + suffix);
@@ -97,7 +95,7 @@ public class PicardBucketUtils {
      */
     private static boolean isGcsUrl(final String path) {
         GATKUtils.nonNull(path);
-        return path.startsWith("gs://");
+        return path.startsWith(GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME + "://");
     }
 
     /**

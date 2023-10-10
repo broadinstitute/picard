@@ -267,7 +267,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
                 Optional.of(bamOutput2), Optional.of(metricsOutput), Optional.empty());
 
         // Test cram (input/output)
-        // tsato: this test is very slow---takes about 5 min on Broad internal network
+        // Note: this test is very slow---takes about 5 min on Broad internal network
         final boolean testCram = true;
         if (testCram){
             final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", "cram");

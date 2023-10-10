@@ -41,24 +41,13 @@ public class RequiredReferenceArgumentCollection implements ReferenceArgumentCol
     @Argument(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.")
     public PicardHtsPath REFERENCE_SEQUENCE;
 
-    /**
-     *
-     * To be called by legacy tools
-     * @return The reference provided by the user as a File. May be null.
-     */
     public File getReferenceFile() {
         return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
     }
 
-    /**
-     * @return The reference provided by the user as an nio Path. May be null.
-     */
     @Override
     public Path getReferencePath() { return REFERENCE_SEQUENCE == null ? null: REFERENCE_SEQUENCE.toPath(); }
 
-    /**
-     * @return The reference provided by the user as a PicardHtsPath. May be null.
-     */
     @Override
     public PicardHtsPath getHtsPath() { return REFERENCE_SEQUENCE; }
 

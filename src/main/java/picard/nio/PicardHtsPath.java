@@ -123,18 +123,20 @@ public class PicardHtsPath extends HtsPath {
     }
 
     /**
-     * Instead of a static method in PicardHtsPath, it could very well be a static method in PicardIOUtils.
-     * Or, it should be an instance variable in HtsPath, that returns a new HtsPath object...although we probalby want
-     * it to return a PicardHtsPath...similar to fromPath()
+     * Takes an IOPath and returns a new PicardHtsPath object that keeps the same basename as the original but has
+     * a new extension. If the input path is a relative local path, it is converted to an absolute path via
+     * PicardHtsPath::toPath (we might change this behavior and avoid converting to an absolute path in the future,
+     * by for instance working directly with a string).
      *
      * Examples:
      *     - (test_na12878.bam, .bai) -> test_na12878.bai (append = false)
-     *     - (test_na12878.bam, .bai) -> test_na12878.bam.md5 (append = true)
+     *     - (test_na12878.bam, .md5) -> test_na12878.bam.md5 (append = true)
      *
-     * @param path the original path
-     * @param append whether to append (true) or replace (false) the new extension
-     * @param newExtension the extension including the dot e.g. ".txt"
-     * @return a new PicardHtsPath object pointed to a file with
+     * @param path The original path
+     * @param append If set to true, append the new extension to the original basename. If false, replace the original extension
+     *               with the new extension. If append = false and the original name has no extension, an exception will be thrown.
+     * @param newExtension A new file extension. Must include the leading dot e.g. ".txt", ".bam"
+     * @return A new PicardHtsPath object with the new extension
      */
     public static PicardHtsPath replaceExtension(final IOPath path, final String newExtension, final boolean append){
         ValidationUtils.validateArg(newExtension.startsWith("."), "newExtension must start with a dot '.'");
@@ -145,11 +147,12 @@ public class PicardHtsPath extends HtsPath {
             final Optional<String> oldExtension = path.getExtension();
 
             if (oldExtension.isEmpty()){
-                throw new PicardException("The extension cannot be identified for the path: " + path.getURIString());
+                throw new PicardException("The original path must have an extension when append = false: " + path.getURIString());
             }
 
             final String oldFileName = path.toPath().getFileName().toString();
-            return PicardHtsPath.fromPath(path.toPath().resolveSibling(oldFileName.replaceAll(oldExtension.get() + "$", newExtension)));
+            final String newFileName = oldFileName.replaceAll(oldExtension.get() + "$", newExtension);
+            return PicardHtsPath.fromPath(path.toPath().resolveSibling(newFileName));
         }
     }
 

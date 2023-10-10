@@ -51,10 +51,9 @@ public class PicardIOUtils {
             // Mark corresponding indices for deletion on exit as well just in case an index is created for the temp file:
             new File(file.getAbsolutePath() + FileExtensions.TRIBBLE_INDEX).deleteOnExit();
             new File(file.getAbsolutePath() + FileExtensions.TABIX_INDEX).deleteOnExit();
-            new File(file.getAbsolutePath() + ".bai").deleteOnExit();
+            new File(file.getAbsolutePath() + FileExtensions.BAI_INDEX).deleteOnExit();
+            new File(file.getAbsolutePath().replaceAll(extension + "$", FileExtensions.BAI_INDEX)).deleteOnExit();
             new File(file.getAbsolutePath() + ".md5").deleteOnExit();
-            new File(file.getAbsolutePath().replaceAll(extension + "$", ".bai")).deleteOnExit();
-
             return file;
         } catch (IOException ex) {
             throw new PicardException("Cannot create temp file: " + ex.getMessage(), ex);

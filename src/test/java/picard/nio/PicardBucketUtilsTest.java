@@ -10,9 +10,11 @@ public class PicardBucketUtilsTest {
     @Test
     public void testExtensionConsistent(){
         final PicardHtsPath cloudPath = PicardBucketUtils.getTempFilePath(GCloudTestUtils.getTestInputPath(), ".txt");
+        final PicardHtsPath cloudPath2 = PicardBucketUtils.getTempFilePath(GCloudTestUtils.getTestInputPath(),  "test", ".txt");
         final PicardHtsPath localPath = PicardBucketUtils.getTempFilePath("test", ".txt");
 
         Assert.assertTrue(cloudPath.hasExtension(".txt"));
+        Assert.assertTrue(cloudPath2.hasExtension(".txt"));
         Assert.assertTrue(localPath.hasExtension(".txt"));
     }
 
