@@ -124,7 +124,10 @@ public class PicardHtsPath extends HtsPath {
 
     /**
      * Takes an IOPath and returns a new PicardHtsPath object that keeps the same basename as the original but has
-     * a new extension. If the input path is a relative local path, it is converted to an absolute path via
+     * a new extension. If append is set to false, only the last component of an extension e.g. ".gz" in "my.fasta.gz"
+     * will be replaced.
+     *
+     * If the input path is a relative local path, it is converted to an absolute path via
      * PicardHtsPath::toPath (we might change this behavior and avoid converting to an absolute path in the future,
      * by for instance working directly with a string).
      *

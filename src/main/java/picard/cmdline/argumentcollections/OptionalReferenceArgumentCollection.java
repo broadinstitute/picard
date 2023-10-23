@@ -47,9 +47,6 @@ public class OptionalReferenceArgumentCollection implements ReferenceArgumentCol
         return ReferenceArgumentCollection.getFileSafe(REFERENCE_SEQUENCE, log);
     }
 
-    /**
-     * @return The reference provided by the user, if any, or the default, if any, as an nio Path. May be null. (tsato: remove this javadoc since it's already present in the base class?)
-     */
     @Override
     public Path getReferencePath() { return REFERENCE_SEQUENCE == null ? null: REFERENCE_SEQUENCE.toPath(); }
 

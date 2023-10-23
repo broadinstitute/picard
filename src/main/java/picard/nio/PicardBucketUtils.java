@@ -4,7 +4,9 @@ import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import com.google.cloud.storage.contrib.nio.CloudStoragePath;
 import htsjdk.io.IOPath;
 import htsjdk.samtools.util.FileExtensions;
+import htsjdk.utils.ValidationUtils;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -28,16 +30,25 @@ public class PicardBucketUtils {
      * Get a temporary file path based on the prefix and extension provided
      * This file (and possible indexes associated with it) will be scheduled for deletion on shutdown.
      *
-     * @param directory the directory where the temporary fill will be placed.
+     * @param directory the directory where the temporary fill will be placed. May be null.
      *               For remote paths this should be a valid URI to root the temporary file in (e.g. gs://hellbender/staging/)
-     *               If the prefix is not a GCS or hadoop URL, the resulting temp file will be placed in the local tmp folder.
-     * @param prefix the prefix to prepend before the randomly generated characters
+     *               If the directory is not a GCS or hadoop URL (or if it is null), the resulting temp file will be placed in the local tmp folder.
+     * @param prefix the prefix to prepend before the randomly generated characters. Must have length >= 3 for local temp files.
      * @param extension an extension for the temporary file path. Must start with a period e.g. ".txt"
      * @return a new temporary path of the form [directory]/[prefix][random chars][.extension]
      *
      */
-    public static PicardHtsPath getTempFilePath(final String directory, final String prefix, final String extension){
-        if (isGcsUrl(directory) || (isHadoopUrl(directory))){
+    public static PicardHtsPath getTempFilePath(final String directory, String prefix, final String extension){
+        ValidationUtils.validateArg(extension.startsWith("."), "The new extension must start with a period '.'");
+        final String defaultPrefix = "tmp";
+
+        if (directory == null){
+            // File#createTempFile requires that the prefix be at least 3 characters long
+            prefix = prefix.length() >= 3 ? prefix : defaultPrefix;
+            return new PicardHtsPath(PicardIOUtils.createTempFile(prefix, extension));
+        }
+
+        if (isGcsUrl(directory) || isHadoopUrl(directory)){
             final PicardHtsPath path = PicardHtsPath.fromPath(randomRemotePath(directory, prefix, extension));
             PicardIOUtils.deleteOnExit(path.toPath());
             // Mark auxiliary files to be deleted
@@ -48,7 +59,9 @@ public class PicardBucketUtils {
             PicardIOUtils.deleteOnExit(PicardHtsPath.replaceExtension(path, ".md5", true).toPath());
             return path;
         } else {
-            return new PicardHtsPath(PicardIOUtils.createTempFile(directory, extension));
+            // Assume the (non-null) directory points to a directory on a local filesystem
+            prefix = prefix.length() >= 3 ? prefix : defaultPrefix;
+            return new PicardHtsPath(PicardIOUtils.createTempFileInDirectory(prefix, extension, new File(directory)));
         }
     }
 
@@ -78,7 +91,7 @@ public class PicardBucketUtils {
      * on Spark because using the fat, shaded jar breaks the registration of the GCS FilesystemProvider.
      * To transform other types of string URLs into Paths, use IOUtils.getPath instead.
      */
-    public static CloudStoragePath getPathOnGcs(String gcsUrl) {
+    private static CloudStoragePath getPathOnGcs(String gcsUrl) {
         // use a split limit of -1 to preserve empty split tokens, especially trailing slashes on directory names
         final String[] split = gcsUrl.split("/", -1);
         final String BUCKET = split[2];
@@ -87,8 +100,6 @@ public class PicardBucketUtils {
     }
 
     /**
-     * Note: to the extent possible, avoid converting an HtsPath object to a String then calling this method.
-     * Instead, use the same method below that takes in a PicardHtsPath as input.
      *
      * @param path path to inspect
      * @return true if this path represents a gcs location

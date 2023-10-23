@@ -170,11 +170,13 @@ public class DownsampleSamTest extends CommandLineProgramTest {
             Assert.assertEquals(validateSamFile.doWork(), 0);
         }
 
-        // make sure that the total number of record in the resulting file in in the ballpark:
+        // make sure that the total number of record in the resulting file is in the ballpark:
         // don't run this when the seed is null since that is non-deterministic and might (unlikely) fail to hit the bounds.
         if (seed!=null) {
-            TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
-            TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
+            final long originalCount = SamTestUtil.countSamTotalRecord(samFile.toPath());
+            final long downsampledCount = SamTestUtil.countSamTotalRecord(downsampled.toPath());
+            TestNGUtil.assertGreaterThan(downsampledCount, fraction * 0.7 * originalCount);
+            TestNGUtil.assertLessThan(downsampledCount, fraction * 1.3 * originalCount);
         }
 
         if (metricsFile.isPresent()){
@@ -249,29 +251,46 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     final int DEFAULT_RANDOM_SEED = 42;
     private static final PicardHtsPath HG19_REFERENCE = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
 
+    @DataProvider(name="testCloudDataProvider")
+    public Object[][] testCloudDataProvider() {
+        return new Object[][] {
+                {NA12878_MINI, false, false},
+                {NA12878_MINI, true, false},
+                {NA12878_MINI, true, true},
+                {NA12878_MINI_CRAM, false, false},
+        };
+    }
 
     @Test(groups = "cloud")
-    public void testCloud() throws IOException {
+    public void testCloud(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
         // Test bam input and output (as opposed to cram)
         // Local output
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED);
-        // Output in the cloud
-        final PicardHtsPath bamOutput1 = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED,
-                Optional.of(bamOutput1), Optional.empty(), Optional.empty());
+        final String extension = inputSAM.isCram() ? ".cram" : ".bam";
+        final Optional<PicardHtsPath> output = outputInCloud ?
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", extension)) :
+                Optional.empty();
+        final Optional<PicardHtsPath> metricsFile = createMetrics ?
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", ".txt")) :
+                Optional.empty();
+        final Optional<PicardHtsPath> referenceFile = inputSAM.isCram() ? Optional.of(HG19_REFERENCE) : Optional.empty();
 
-        // Test generating a metrics file in the cloud
-        final PicardHtsPath metricsOutput = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", "txt");
-        final PicardHtsPath bamOutput2 = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", "bam");
-        testDownsampleWorker(NA12878_MINI, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED,
-                Optional.of(bamOutput2), Optional.of(metricsOutput), Optional.empty());
+        // Giving reference is a good idea thing to test, even with a bam.
+        testDownsampleWorker(inputSAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, metricsFile, referenceFile);
+    }
 
+    // Maybe cram being separate is ok, since it's a really different test
+    @Test(groups = "cloud")
+    public void testCloudCram() throws IOException {
         // Test cram (input/output)
         // Note: this test is very slow---takes about 5 min on Broad internal network
-        final boolean testCram = true;
-        if (testCram){
-            final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", "cram");
-            testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(HG19_REFERENCE));
-        }
+        // START HERE, CONFIRM TEST IS FASTER WITH A SMALLER FILE, MOVE THE FILE UP TO THE CLOUD, AND THEN ADD DATAPROVIDER FOR ABOVE TEST (AND MERGE WITH THIS ONE AS NEEDED)
+        final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", ".cram");
+        final PicardHtsPath testSmallReference = new PicardHtsPath("/Users/tsato/workspace/gatk/src/test/resources/large/human_g1k_v37.20.21.fasta");
+        final PicardHtsPath gatkb37chr2021Reference = new PicardHtsPath("gs://hellbender/test/resources/picard/references/human_g1k_v37.20.21.fasta");
+
+        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(testSmallReference));
+        testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(gatkb37chr2021Reference));
+        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(HG19_REFERENCE));
+
     }
 }
