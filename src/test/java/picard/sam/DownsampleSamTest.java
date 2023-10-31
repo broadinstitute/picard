@@ -284,12 +284,19 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         // Test cram (input/output)
         // Note: this test is very slow---takes about 5 min on Broad internal network
         // START HERE, CONFIRM TEST IS FASTER WITH A SMALLER FILE, MOVE THE FILE UP TO THE CLOUD, AND THEN ADD DATAPROVIDER FOR ABOVE TEST (AND MERGE WITH THIS ONE AS NEEDED)
-        final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", ".cram");
+        // final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", ".cram");
+        final PicardHtsPath NA12878_MINI_CRAM_LOCAL = new PicardHtsPath("/Users/tsato/workspace/picard/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+        final PicardHtsPath localOutputCram = new PicardHtsPath("test.cram");
+        final PicardHtsPath localOutput = new PicardHtsPath("test.bam");
         final PicardHtsPath testSmallReference = new PicardHtsPath("/Users/tsato/workspace/gatk/src/test/resources/large/human_g1k_v37.20.21.fasta");
         final PicardHtsPath gatkb37chr2021Reference = new PicardHtsPath("gs://hellbender/test/resources/picard/references/human_g1k_v37.20.21.fasta");
 
-        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(testSmallReference));
-        testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(gatkb37chr2021Reference));
+        // bam
+        testDownsampleWorker(NA12878_MINI_CRAM_LOCAL, 0.5, ConstantMemory.toString(), 42, Optional.of(localOutput), Optional.empty(), Optional.of(gatkb37chr2021Reference));
+
+        // cram
+        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(localOutput), Optional.empty(), Optional.of(testSmallReference));
+        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(localOutput), Optional.empty(), Optional.of(gatkb37chr2021Reference));
         // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(HG19_REFERENCE));
 
     }
