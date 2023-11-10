@@ -144,17 +144,17 @@ public class PicardHtsPath extends HtsPath {
     public static PicardHtsPath replaceExtension(final IOPath path, final String newExtension, final boolean append){
         ValidationUtils.validateArg(newExtension.startsWith("."), "newExtension must start with a dot '.'");
 
+        final String oldFileName = path.toPath().getFileName().toString();
+ 
+        String newFileName;
         if (append){
-            return new PicardHtsPath(path.getURIString() + newExtension);
+            newFileName = oldFileName + newExtension;
         } else {
             final Optional<String> oldExtension = path.getExtension();
-
             if (oldExtension.isEmpty()){
                 throw new PicardException("The original path must have an extension when append = false: " + path.getURIString());
+              newFileName = oldFileName.replaceAll(oldExtension.get() + "$", newExtension);
             }
-
-            final String oldFileName = path.toPath().getFileName().toString();
-            final String newFileName = oldFileName.replaceAll(oldExtension.get() + "$", newExtension);
             return PicardHtsPath.fromPath(path.toPath().resolveSibling(newFileName));
         }
     }
