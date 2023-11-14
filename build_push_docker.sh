@@ -20,6 +20,6 @@ read -p "Is this really what you want to do? " -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-    docker build -t ${PICARD_CLOUD_TAG} --build-arg build_command=cloudJar --build-arg jar_name=picardcloud.jar .
+    docker build -t ${PICARD_CLOUD_TAG} --build-arg release=true .
     docker push ${PICARD_CLOUD_TAG}
 fi
