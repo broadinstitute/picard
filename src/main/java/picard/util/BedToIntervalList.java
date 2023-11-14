@@ -24,6 +24,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -120,6 +121,11 @@ public class BedToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
+
+        if(PicardHtsPath.isOther(new PicardHtsPath(INPUT))) {
+            throw new IllegalArgumentException("BedToIntervalList cannot read from /dev/stdin.");
+        }
+
         try {
             // create a new header that we will assign the dictionary provided by the SAMSequenceDictionaryExtractor to.
             final SAMFileHeader header = new SAMFileHeader();
