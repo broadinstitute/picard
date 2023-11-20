@@ -73,6 +73,10 @@ import java.util.*;
  *      R=reference_sequence.fasta
  * </pre>
  *
+ * <h3>Note about required arguments</h3>
+ * The aligned reads must be specified using either the ALIGNED_BAM or READ1_ALIGNED_BAM and READ2_ALIGNED_BAM arguments.
+ * Without aligned reads specified in one of those manners, the tool will not run.
+ *
  *
  * <h3>Caveats</h3>
  * This tool has been developing for a while and many arguments have been added to it over the years.
