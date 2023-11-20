@@ -131,6 +131,9 @@ public class MergeBamAlignment extends CommandLineProgram {
             "     O=merge_alignments.bam \\\n" +
             "     R=reference_sequence.fasta\n" +
             "\n" +
+            "<h3>Note about required arguments</h3>\n" +
+            " The aligned reads must be specified using either the ALIGNED_BAM or READ1_ALIGNED_BAM and READ2_ALIGNED_BAM arguments. " +
+            " Without aligned reads specified in one of those manners, the tool will not run." +
             "<h3>Caveats</h3>\n" +
             "This tool has been developing for a while and many arguments have been added to it over the years. " +
             "You may be particularly interested in the following (partial) list:\n" +
