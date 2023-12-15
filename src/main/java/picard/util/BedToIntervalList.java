@@ -108,12 +108,12 @@ public class BedToIntervalList extends CommandLineProgram {
     public boolean DROP_MISSING_CONTIGS = false;
 
     @Argument(doc = "If true, write length zero intervals in input bed file to resulting interval list file.")
-    public boolean KEEP_ZERO_LENGTH_INTERVALS = false;
+    public boolean KEEP_LENGTH_ZERO_INTERVALS = false;
 
     private final Log LOG = Log.getInstance(getClass());
     private int missingIntervals = 0;
     private int missingRegion = 0;
-    private int zeroLengthIntervals = 0;
+    private int lengthZeroIntervals = 0;
 
     @Override
     protected int doWork() {
@@ -174,15 +174,15 @@ public class BedToIntervalList extends CommandLineProgram {
                 final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
 
                 // Use end+1 since bed start gets shifted by 1 using 1-based coordinates
-                if ((start == end+1) && !KEEP_ZERO_LENGTH_INTERVALS) {
-                    LOG.info(String.format("Skipping writing zero length interval at %s:%d-%d.", sequenceName, start, end));
+                if ((start == end+1) && !KEEP_LENGTH_ZERO_INTERVALS) {
+                    LOG.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
                 } else {
                     final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
                     intervalList.add(interval);
                 }
 
                 if (start == end+1) {
-                    zeroLengthIntervals++;
+                    lengthZeroIntervals++;
                 }
 
                 progressLogger.record(sequenceName, start);
@@ -197,15 +197,15 @@ public class BedToIntervalList extends CommandLineProgram {
                 }
             }
 
-            if (!KEEP_ZERO_LENGTH_INTERVALS) {
-                if (zeroLengthIntervals == 0) {
+            if (!KEEP_LENGTH_ZERO_INTERVALS) {
+                if (lengthZeroIntervals == 0) {
                     LOG.info("No input regions had length zero, so none were skipped.");
                 } else {
-                    LOG.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", zeroLengthIntervals));
+                    LOG.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", lengthZeroIntervals));
                 }
             } else {
-                if (zeroLengthIntervals > 0) {
-                    LOG.warn(String.format("Input file had %d entries with length zero. Run with the KEEP_ZERO_LENGTH_INTERVALS flag set to false to remove these.", zeroLengthIntervals));
+                if (lengthZeroIntervals > 0) {
+                    LOG.warn(String.format("Input file had %d entries with length zero. Run with the KEEP_LENGTH_ZERO_INTERVALS flag set to false to remove these.", lengthZeroIntervals));
                 }
             }
 

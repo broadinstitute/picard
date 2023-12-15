@@ -16,7 +16,7 @@ public class BedToIntervalListTest {
 
     private static final String TEST_DATA_DIR = "testdata/picard/util/BedToIntervalListTest";
 
-    private void doTest(final String inputBed, final String header, boolean keepZeroLength) throws IOException, SAMException {
+    private void doTest(final String inputBed, final String header, boolean keepLengthZero) throws IOException, SAMException {
         final File outputFile  = File.createTempFile("bed_to_interval_list_test.", ".interval_list");
         outputFile.deleteOnExit();
         final BedToIntervalList program = new BedToIntervalList();
@@ -25,7 +25,7 @@ public class BedToIntervalListTest {
         program.SEQUENCE_DICTIONARY = new File(TEST_DATA_DIR, header);
         program.OUTPUT = outputFile;
         program.UNIQUE = true;
-        program.KEEP_ZERO_LENGTH_INTERVALS = keepZeroLength;
+        program.KEEP_LENGTH_ZERO_INTERVALS = keepLengthZero;
         program.doWork();
 
         // Assert they are equal
@@ -56,8 +56,8 @@ public class BedToIntervalListTest {
         doTest(inputBed, "header.sam", true);
     }
 
-    @Test(dataProvider = "testZeroLengthIntervalsSkippedProvider")
-    public void testZeroLengthIntervalsSkipped(final String inputBed) throws IOException {
+    @Test(dataProvider = "testLengthZeroIntervalsSkippedProvider")
+    public void testLengthZeroIntervalsSkipped(final String inputBed) throws IOException {
         doTest(inputBed, "header.sam", false);
     }
 
@@ -111,7 +111,7 @@ public class BedToIntervalListTest {
     }
 
     @DataProvider
-    public Object[][] testZeroLengthIntervalsSkippedProvider() {
+    public Object[][] testLengthZeroIntervalsSkippedProvider() {
         return new Object[][]{
                 {"zero_length_test.bed"}
         };
