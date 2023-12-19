@@ -60,7 +60,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
     final PicardHtsPath NA12878_MINI_CRAM_LOCAL = new PicardHtsPath(TEST_DIR + "/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
     private static final PicardHtsPath HG19_REFERENCE_GCLOUD = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
-    
+
     @Override
     public String getCommandLineProgramName() {
             return DownsampleSam.class.getSimpleName();
