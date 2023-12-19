@@ -1,6 +1,5 @@
 package picard.util;
 
-;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
