@@ -42,6 +42,8 @@ public class PicardIOUtils {
      * @param extension Extension to concat to the end of the file name e.g. ".txt"
      * @param targetDir Directory in which to create the temp file. If null, the default temp directory is used.
      * @return A file in the temporary directory starting with name, ending with extension, which will be deleted after the program exits.
+     *
+     * TODO: consolidate this and BucketUtils::getTempFilePath
      */
     public static File createTempFileInDirectory(final String name, String extension, final File targetDir) {
         try {

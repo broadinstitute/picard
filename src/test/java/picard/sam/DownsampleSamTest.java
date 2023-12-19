@@ -5,6 +5,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.utils.ValidationUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -53,6 +54,13 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     private SAMRecordSetBuilder setBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
     private SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(readGroupId);
 
+    // Cloud-related test data
+    final int DEFAULT_RANDOM_SEED = 42;
+    private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
+    private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+    final PicardHtsPath NA12878_MINI_CRAM_LOCAL = new PicardHtsPath(TEST_DIR + "/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+    private static final PicardHtsPath HG19_REFERENCE_GCLOUD = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
+    
     @Override
     public String getCommandLineProgramName() {
             return DownsampleSam.class.getSimpleName();
@@ -246,58 +254,44 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         }
     }
 
-    private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
-    private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-    final int DEFAULT_RANDOM_SEED = 42;
-    private static final PicardHtsPath HG19_REFERENCE = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
-
-    @DataProvider(name="testCloudDataProvider")
-    public Object[][] testCloudDataProvider() {
+    @DataProvider(name="testCloudBamDataProvider")
+    public Object[][] testCloudBamDataProvider() {
         return new Object[][] {
-                {NA12878_MINI, false, false},
-                {NA12878_MINI, true, false},
                 {NA12878_MINI, true, true},
-                {NA12878_MINI_CRAM, false, false},
+                {NA12878_MINI, true, false},
+                {NA12878_MINI, false, true},
+                {NA12878_MINI, false, false},
         };
     }
 
-    @Test(groups = "cloud")
-    public void testCloud(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
-        // Test bam input and output (as opposed to cram)
-        // Local output
-        final String extension = inputSAM.isCram() ? ".cram" : ".bam";
+    @DataProvider(name="testCloudCramDataProvider")
+    public Object[][] testCloudCramDataProvider() {
+        return new Object[][] {
+                {NA12878_MINI_CRAM, true},
+                {NA12878_MINI_CRAM, false},
+                {NA12878_MINI_CRAM_LOCAL, true},
+                {NA12878_MINI_CRAM_LOCAL, false},
+        };
+    }
+
+    @Test(groups = "cloud", dataProvider = "testCloudBamDataProvider")
+    public void testCloudBAM(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
         final Optional<PicardHtsPath> output = outputInCloud ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", extension)) :
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", ".bam")) :
                 Optional.empty();
         final Optional<PicardHtsPath> metricsFile = createMetrics ?
                 Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", ".txt")) :
                 Optional.empty();
-        final Optional<PicardHtsPath> referenceFile = inputSAM.isCram() ? Optional.of(HG19_REFERENCE) : Optional.empty();
-
-        // Giving reference is a good idea thing to test, even with a bam.
-        testDownsampleWorker(inputSAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, metricsFile, referenceFile);
+        testDownsampleWorker(inputSAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, metricsFile, Optional.empty());
     }
 
-    // Maybe cram being separate is ok, since it's a really different test
-    @Test(groups = "cloud")
-    public void testCloudCram() throws IOException {
-        // Test cram (input/output)
-        // Note: this test is very slow---takes about 5 min on Broad internal network
-        // START HERE, CONFIRM TEST IS FASTER WITH A SMALLER FILE, MOVE THE FILE UP TO THE CLOUD, AND THEN ADD DATAPROVIDER FOR ABOVE TEST (AND MERGE WITH THIS ONE AS NEEDED)
-        // final PicardHtsPath cramOutputInCloud = PicardBucketUtils.getTempFilePath("downsample", ".cram");
-        final PicardHtsPath NA12878_MINI_CRAM_LOCAL = new PicardHtsPath("/Users/tsato/workspace/picard/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-        final PicardHtsPath localOutputCram = new PicardHtsPath("test.cram");
-        final PicardHtsPath localOutput = new PicardHtsPath("test.bam");
-        final PicardHtsPath testSmallReference = new PicardHtsPath("/Users/tsato/workspace/gatk/src/test/resources/large/human_g1k_v37.20.21.fasta");
-        final PicardHtsPath gatkb37chr2021Reference = new PicardHtsPath("gs://hellbender/test/resources/picard/references/human_g1k_v37.20.21.fasta");
-
-        // bam
-        testDownsampleWorker(NA12878_MINI_CRAM_LOCAL, 0.5, ConstantMemory.toString(), 42, Optional.of(localOutput), Optional.empty(), Optional.of(gatkb37chr2021Reference));
-
-        // cram
-        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(localOutput), Optional.empty(), Optional.of(testSmallReference));
-        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(localOutput), Optional.empty(), Optional.of(gatkb37chr2021Reference));
-        // testDownsampleWorker(NA12878_MINI_CRAM, 0.5, ConstantMemory.toString(), 42, Optional.of(cramOutputInCloud), Optional.empty(), Optional.of(HG19_REFERENCE));
-
+    // Isolate the test case for cram input from the above tests for bams, since we've observed significant slow down when using
+    // a cram file in the cloud.
+    @Test(groups = "cloud", dataProvider = "testCloudCramDataProvider")
+    public void testCloudCram(final PicardHtsPath inputCRAM, final boolean outputInCloud) throws IOException {
+        final Optional<PicardHtsPath> output = outputInCloud ?
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", ".cram")) :
+                Optional.empty();
+        testDownsampleWorker(inputCRAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, Optional.empty(), Optional.of(HG19_REFERENCE_GCLOUD));
     }
 }

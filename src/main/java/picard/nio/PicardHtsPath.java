@@ -124,12 +124,11 @@ public class PicardHtsPath extends HtsPath {
 
     /**
      * Takes an IOPath and returns a new PicardHtsPath object that keeps the same basename as the original but has
-     * a new extension. If append is set to false, only the last component of an extension e.g. ".gz" in "my.fasta.gz"
-     * will be replaced.
+     * a new extension. If append is set to false, only the last component of an extension will be replaced.
+     * e.g. "my.fasta.gz" -> "my.fasta.tmp"
      *
-     * If the input path is a relative local path, it is converted to an absolute path via
-     * PicardHtsPath::toPath (we might change this behavior and avoid converting to an absolute path in the future,
-     * by for instance working directly with a string).
+     * If the input IOPath was created from a rawInputString that specifies a relative local path, the new path will
+     * have a rawInputString that specifies an absolute path. (This perhaps unwanted conversion occurs when we call PicardHtsPath.toPath().)
      *
      * Examples:
      *     - (test_na12878.bam, .bai) -> test_na12878.bai (append = false)
@@ -153,10 +152,11 @@ public class PicardHtsPath extends HtsPath {
             final Optional<String> oldExtension = path.getExtension();
             if (oldExtension.isEmpty()){
                 throw new PicardException("The original path must have an extension when append = false: " + path.getURIString());
-              newFileName = oldFileName.replaceAll(oldExtension.get() + "$", newExtension);
             }
-            return PicardHtsPath.fromPath(path.toPath().resolveSibling(newFileName));
+            newFileName = oldFileName.replaceAll(oldExtension.get() + "$", newExtension);
         }
+
+        return PicardHtsPath.fromPath(path.toPath().resolveSibling(newFileName));
     }
 
     /**

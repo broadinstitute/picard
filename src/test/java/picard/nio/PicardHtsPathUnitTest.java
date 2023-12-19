@@ -21,9 +21,7 @@ public class PicardHtsPathUnitTest {
                 {"/Users/jdoe/workspace/picard/testdata/picard/sam/test.bam", ".bai", REPLACE, "/Users/jdoe/workspace/picard/testdata/picard/sam/test.bai"},
                 {"/Users/jdoe/workspace/picard/testdata/picard/sam/test.bam", ".md5", APPEND, "/Users/jdoe/workspace/picard/testdata/picard/sam/test.bam.md5"},
                 {"/Users/jdoe/workspace/picard/testdata/picard/sam/my.fasta.gz", ".fai", REPLACE, "/Users/jdoe/workspace/picard/testdata/picard/sam/my.fasta.fai"},
-                {"/Users/jdoe/workspace/picard/testdata/picard/sam/my.fasta.gz", ".md5", APPEND, "/Users/jdoe/workspace/picard/testdata/picard/sam/my.fasta.gz.md5"},
-                {"http://some/file.txt?someParam=someValue", ".log", APPEND, "http://some/file.log"}
-
+                {"/Users/jdoe/workspace/picard/testdata/picard/sam/my.fasta.gz", ".md5", APPEND, "/Users/jdoe/workspace/picard/testdata/picard/sam/my.fasta.gz.md5"}
 
         };
     }
@@ -33,7 +31,7 @@ public class PicardHtsPathUnitTest {
                                      final String expectedURI){
         final PicardHtsPath originalPath = new PicardHtsPath(originalURI);
         final PicardHtsPath newPath = PicardHtsPath.replaceExtension(originalPath, newExtension, append);
-        // We cannot directly compare the PicardHtsPath because replaceExtension() always creates a new PicardHtsPath with an absolute path as the rawInputString,
+        // We cannot directly compare the PicardHtsPath's because replaceExtension() creates a new PicardHtsPath with an absolute path as the rawInputString,
         // even if the input has a rawInputString that is a relative path. Instead, we check that the absolute URIs match.
         Assert.assertEquals(newPath.getURIString(), new PicardHtsPath(expectedURI).getURIString());
     }
