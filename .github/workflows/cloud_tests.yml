@@ -33,7 +33,7 @@ jobs:
     needs: check-secrets
     strategy:
       matrix:
-        java: [ 17 ]
+        java: [ 21 ]
         run_barclay_tests: [true, false]
         experimental: [ false ]
       fail-fast: false

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 17 ]
+        java: [ 21 ]
         experimental: [false]
         run_barclay_tests: [true, false]
       fail-fast: false
