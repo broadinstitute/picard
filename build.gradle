@@ -57,7 +57,7 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
 
 ensureBuildPrerequisites(buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '4.0.2')
+final htsjdkVersion = System.getProperty('htsjdk.version', '4.1.0')
 dependencies {
     implementation('com.intel.gkl:gkl:0.8.8') {
         exclude module: 'htsjdk'

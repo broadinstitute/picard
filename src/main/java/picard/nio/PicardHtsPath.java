@@ -24,13 +24,6 @@
 
 package picard.nio;
 
-import htsjdk.io.HtsPath;
-import htsjdk.io.IOPath;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.RuntimeIOException;
-import htsjdk.utils.ValidationUtils;
-import picard.PicardException;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,6 +32,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import htsjdk.io.HtsPath;
+import htsjdk.io.IOPath;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.utils.ValidationUtils;
+import picard.PicardException;
 
 /**
  * A Subclass of {@link HtsPath} with conversion to {@link Path} making use of {@link IOUtil}
