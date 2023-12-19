@@ -31,7 +31,7 @@ public class PicardHtsPathUnitTest {
                                      final String expectedURI){
         final PicardHtsPath originalPath = new PicardHtsPath(originalURI);
         final PicardHtsPath newPath = PicardHtsPath.replaceExtension(originalPath, newExtension, append);
-        // We cannot directly compare the PicardHtsPath's because replaceExtension() creates a new PicardHtsPath with an absolute path as the rawInputString,
+        // We cannot directly compare PicardHtsPaths because replaceExtension() creates a new PicardHtsPath with an absolute path as the rawInputString,
         // even if the input has a rawInputString that is a relative path. Instead, we check that the absolute URIs match.
         Assert.assertEquals(newPath.getURIString(), new PicardHtsPath(expectedURI).getURIString());
     }

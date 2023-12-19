@@ -267,15 +267,16 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @DataProvider(name="testCloudCramDataProvider")
     public Object[][] testCloudCramDataProvider() {
         return new Object[][] {
-                {NA12878_MINI_CRAM, true},
-                {NA12878_MINI_CRAM, false},
-                {NA12878_MINI_CRAM_LOCAL, true},
-                {NA12878_MINI_CRAM_LOCAL, false},
+                {NA12878_MINI_CRAM, true}
+                // The following cases are commented out because they are very slow.
+                // {NA12878_MINI_CRAM, false},
+                // {NA12878_MINI_CRAM_LOCAL, true},
+                // {NA12878_MINI_CRAM_LOCAL, false},
         };
     }
 
     @Test(groups = "cloud", dataProvider = "testCloudBamDataProvider")
-    public void testCloudBAM(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
+    public void testCloudBam(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
         final Optional<PicardHtsPath> output = outputInCloud ?
                 Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", ".bam")) :
                 Optional.empty();
