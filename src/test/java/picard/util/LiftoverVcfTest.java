@@ -381,6 +381,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         final Allele RefT = Allele.create("T", true);
         final Allele RefA = Allele.create("A", true);
         final Allele RefAC = Allele.create("AC", true);
+        final Allele RefGT = Allele.create("GT", true);
         final Allele RefC = Allele.create("C", true);
         final Allele RefG = Allele.create("G", true);
 
@@ -615,6 +616,19 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
         builder.source("test14").start(start).stop(stop).alleles(CollectionUtil.makeList(RefACGT, A, spanningDeletion));
         result_builder.start(CHAIN_SIZE - stop).stop(CHAIN_SIZE - start).alleles(CollectionUtil.makeList(RefAACG, A, spanningDeletion));
+        genotypeBuilder.alleles(builder.getAlleles());
+        resultGenotypeBuilder.alleles(result_builder.getAlleles());
+        builder.genotypes(genotypeBuilder.make());
+        result_builder.genotypes(resultGenotypeBuilder.make());
+        tests.add(new Object[]{builder.make(), REFERENCE, result_builder.make()});
+
+        // a spanning deletion with a multibase reference (for example a multiallelic mnp which has be split), where the spanning deletion is the only alt
+        // AC, * --> GT, *
+        start = CHAIN_SIZE - 13;
+        stop = start + 1;
+
+        builder.start(start).stop(stop).alleles(CollectionUtil.makeList(RefAC, spanningDeletion));
+        result_builder.start(CHAIN_SIZE - stop + 1).stop(CHAIN_SIZE - start + 1).alleles(CollectionUtil.makeList(RefGT, spanningDeletion));
         genotypeBuilder.alleles(builder.getAlleles());
         resultGenotypeBuilder.alleles(result_builder.getAlleles());
         builder.genotypes(genotypeBuilder.make());

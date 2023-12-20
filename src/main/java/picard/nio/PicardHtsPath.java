@@ -26,7 +26,9 @@ package picard.nio;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -111,6 +113,24 @@ public class PicardHtsPath extends HtsPath {
         Objects.requireNonNull(path);
         return new PicardHtsPath(new HtsPath(path.toUri().toString()));
     }
+
+    /**
+     * Test if {@code ioPath} is something other than a regular file, directory, or symbolic link.
+     * 
+     * @return {@code true} if it's a device, named pipe, htsget API URL, etc.
+     * @throws RuntimeException if an I/O error occurs when creating the file system
+     */
+    public static boolean isOther(final IOPath ioPath) {
+        if(ioPath.isPath()) {
+            try {
+                return Files.readAttributes(ioPath.toPath(), BasicFileAttributes.class).isOther();
+            } catch (IOException e) {
+                throw new RuntimeIOException(e);
+            }
+        } else {
+            return true;
+        }
+    }    
 
     /**
      * Create a {@link List<Path>} from {@link PicardHtsPath}s

@@ -23,6 +23,17 @@
  */
 package picard.sam;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
@@ -44,23 +55,11 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.nio.PicardHtsPath;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Converts a FASTQ file to an unaligned BAM or SAM file.
@@ -78,11 +77,11 @@ import java.util.List;
  *     These files might be in gzip compressed format (when file name is ending with ".gz").
  * </p>
  * <p>
- *     Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name (see <code>USE_SEQUENCIAL_FASTQ</code> for details below).
+ *     Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name (see <code>USE_SEQUENTIAL_FASTQ</code> for details below).
  * </p>
  * <p>
  *     By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly
- *     using the <code>QUALITY_FORMAT</code> argument.
+ *     using the <code>QUALITY_FORMAT</code> argument, and must do so if inputs are not a regular file (e.g. stdin).
  * </p>
  * <h3>Output</h3>
  * A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.
@@ -130,9 +129,9 @@ public class FastqToSam extends CommandLineProgram {
         "<p>One FASTQ file name for single-end or two for pair-end sequencing input data. " +
         "These files might be in gzip compressed format (when file name is ending with \".gz\").</p>" +
         "<p>Alternatively, for larger inputs you can provide a collection of FASTQ files indexed by their name " +
-        "(see USE_SEQUENCIAL_FASTQ for details below).</p>" +
+        "(see USE_SEQUENTIAL_FASTQ for details below).</p>" +
         "<p>By default, this tool will try to guess the base quality score encoding. However you can indicate it explicitly " +
-        "using the QUALITY_FORMAT argument.</p>" +
+        "using the QUALITY_FORMAT argument, and must do so if inputs are not a regular file (e.g. stdin).</p>" +
         "<h3>Output</h3>" +
         "<p>A single unaligned BAM or SAM file. By default, the records are sorted by query (read) name.</p>" +
         "<h3>Usage examples</h3>" +
@@ -176,7 +175,8 @@ public class FastqToSam extends CommandLineProgram {
 
     @Argument(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
             "Either Solexa (phred scaling + 66), Illumina (phred scaling + 64) or Standard (phred scaling + 33).  " +
-            "If this value is not specified, the quality format will be detected automatically.", optional = true)
+            "If input is from a regular file and this value is not specified, the quality format will be detected automatically. " +
+            "If input is not from a regular file, this value is required.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
     @Argument(doc="Output BAM/SAM/CRAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
@@ -238,6 +238,9 @@ public class FastqToSam extends CommandLineProgram {
     public Boolean ALLOW_EMPTY_FASTQ = false;
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
+
+    // tested for and set in customCommandLineValidation 
+    private Boolean regularFileInput;
 
     /**
      * Looks at fastq input(s) and attempts to determine the proper quality format
@@ -329,10 +332,12 @@ public class FastqToSam extends CommandLineProgram {
 
         final FastqReader reader1 = fileToFastqReader(FASTQ.toPath());
         if (reader1.hasNext()) {
-            // Set the quality format
-            QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader1,
-                    (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
-                    QUALITY_FORMAT);
+            if (regularFileInput) {
+                // Set the quality format
+                QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader1,
+                        (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2.toPath()),
+                        QUALITY_FORMAT);
+            }
         } else {
             if (ALLOW_EMPTY_FASTQ) {
                 LOG.warn("Input FASTQ is empty, will write out SAM/BAM file with no reads.");
@@ -360,7 +365,8 @@ public class FastqToSam extends CommandLineProgram {
             }
         }
         else {
-            readers1.add(fileToFastqReader(FASTQ.toPath()));
+            // use the already opened reader1 if input is STDIN or a named pipe
+            readers1.add(regularFileInput ? fileToFastqReader(FASTQ.toPath()) : reader1);
             if (FASTQ2 != null) {
                 readers2.add(fileToFastqReader(FASTQ2.toPath()));
             }
@@ -405,7 +411,7 @@ public class FastqToSam extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader.hasNext()  ; readCount++) {
             final FastqRecord frec = freader.next();
-            final SAMRecord srec = createSamRecord(writer.getFileHeader(), SequenceUtil.getSamReadNameFromFastqHeader(frec.getReadHeader()) , frec, false) ;
+            final SAMRecord srec = createSamRecord(writer.getFileHeader(), SequenceUtil.getSamReadNameFromFastqHeader(frec.getReadName()) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
             progress.record(srec);
@@ -422,8 +428,8 @@ public class FastqToSam extends CommandLineProgram {
             final FastqRecord frec1 = freader1.next();
             final FastqRecord frec2 = freader2.next();
 
-            final String frec1Name = SequenceUtil.getSamReadNameFromFastqHeader(frec1.getReadHeader());
-            final String frec2Name = SequenceUtil.getSamReadNameFromFastqHeader(frec2.getReadHeader());
+            final String frec1Name = SequenceUtil.getSamReadNameFromFastqHeader(frec1.getReadName());
+            final String frec2Name = SequenceUtil.getSamReadNameFromFastqHeader(frec2.getReadName());
             final String baseName = getBaseName(frec1Name, frec2Name, freader1, freader2);
 
             final SAMRecord srec1 = createSamRecord(writer.getFileHeader(), baseName, frec1, true) ;
@@ -462,7 +468,7 @@ public class FastqToSam extends CommandLineProgram {
             final int uQual = qual & 0xff;
             if (uQual < MIN_Q || uQual > MAX_Q) {
                 throw new PicardException("Base quality " + uQual + " is not in the range " + MIN_Q + ".." +
-                MAX_Q + " for read " + frec.getReadHeader());
+                MAX_Q + " for read " + frec.getReadName());
             }
         }
         srec.setBaseQualities(quals);
@@ -582,6 +588,11 @@ public class FastqToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (MIN_Q < 0) return new String[]{"MIN_Q must be >= 0"};
         if (MAX_Q > SAMUtils.MAX_PHRED_SCORE) return new String[]{"MAX_Q must be <= " + SAMUtils.MAX_PHRED_SCORE};
+        regularFileInput = !PicardHtsPath.isOther(FASTQ) && (FASTQ2 == null || !PicardHtsPath.isOther(FASTQ2));
+        if (QUALITY_FORMAT == null && !regularFileInput) {
+            return new String[]{"QUALITY_FORMAT must be specified when either of FASTQ or FASTQ2 is not a regular file"};
+        }
         return null;
     }
+
 }
