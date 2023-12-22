@@ -263,8 +263,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
                                    boolean unique, boolean dontMergeAbutting, Path input1, Path input2,
                                    final boolean cloudOutput) throws IOException {
-        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
-        final PicardHtsPath countOutput = PicardBucketUtils.getTempFilePath(outputDirFullName, ".txt");
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : null;
+        final String prefix = "IntervalListTools";
+        final PicardHtsPath countOutput = PicardBucketUtils.getTempFilePath(outputDirFullName, prefix, ".txt");
 
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT_VALUE=" + outputValue);

@@ -344,7 +344,7 @@ public abstract class CommandLineProgram {
         final PicardHtsPath picardHtsPath = referenceSequence.getHtsPath();
         REFERENCE_SEQUENCE = picardHtsPath == null ?
                 null :
-                new File(picardHtsPath.getRawInputString());
+                new File(picardHtsPath.getURI().getPath()); // Must remove the "file://" prefix
 
         // The TMP_DIR setting section below was moved from instanceMain() to here due to timing issues
         // related to checking whether R is installed. Certain programs, such as CollectInsertSizeMetrics
