@@ -242,8 +242,9 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
                                 final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) {
-        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
-        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(outputDirFullName, INTERVAL_LIST_EXTENSION);
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : null;
+        final String prefix = "IntervalListTools";
+        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(outputDirFullName, prefix, INTERVAL_LIST_EXTENSION);
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT=" + output);
         Assert.assertEquals(runPicardCommandLine(args), 0);

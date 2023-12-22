@@ -5,8 +5,10 @@ import com.google.cloud.storage.contrib.nio.CloudStoragePath;
 import htsjdk.io.IOPath;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.utils.ValidationUtils;
+import picard.PicardException;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
