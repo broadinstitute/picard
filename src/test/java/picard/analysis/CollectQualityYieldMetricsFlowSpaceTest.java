@@ -52,6 +52,8 @@ public class CollectQualityYieldMetricsFlowSpaceTest extends CommandLineProgramT
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
+                "--flow-fill-empty-bins-value", "0.000005",
+                "--flow-probability-threshold", "0.0001"
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -67,11 +69,11 @@ public class CollectQualityYieldMetricsFlowSpaceTest extends CommandLineProgramT
         Assert.assertEquals(metrics.READ_LENGTH, 375);
         Assert.assertEquals(metrics.TOTAL_FLOWS, 21053);
         Assert.assertEquals(metrics.PF_FLOWS, 21053);
-        Assert.assertEquals(metrics.Q20_FLOWS, 20409);
-        Assert.assertEquals(metrics.PF_Q20_FLOWS, 20409);
-        Assert.assertEquals(metrics.Q30_FLOWS, 0);
-        Assert.assertEquals(metrics.PF_Q30_FLOWS, 0);
-        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 20860);
-        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 20860);
+        Assert.assertEquals(metrics.Q20_FLOWS, 20671);
+        Assert.assertEquals(metrics.PF_Q20_FLOWS, 20671);
+        Assert.assertEquals(metrics.Q30_FLOWS, 20256);
+        Assert.assertEquals(metrics.PF_Q30_FLOWS, 20256);
+        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 44199);
+        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 44199);
     }
 }
