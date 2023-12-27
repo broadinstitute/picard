@@ -27,8 +27,8 @@ public class FlowBasedArgumentCollection implements Serializable {
 
 
 
-    private static final double DEFAULT_RATIO_THRESHOLD = 0.003;
-    private static final double DEFAULT_FILLING_VALUE = 0.001;
+    private static final double DEFAULT_RATIO_THRESHOLD = 0.0003;
+    private static final double DEFAULT_FILLING_VALUE = 0.0001;
     private static final boolean DEFAULT_REMOVE_LONGER_INDELS = false;
     private static final boolean DEFAULT_REMOVE_ONE_TO_ZERO = false;
     private static final boolean DEFAULT_SYMMETRIC_INDELS = false;
