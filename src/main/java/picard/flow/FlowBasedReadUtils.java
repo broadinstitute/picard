@@ -1,10 +1,11 @@
 package picard.flow;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,28 +20,149 @@ import java.util.Map;
  *
  */
 public class FlowBasedReadUtils {
-
-    public static final int FLOW_SUM_OF_BASE_QUALITY_THRESHOLD = 15;
-    public static final FlowBasedArgumentCollection DEFAULT_FLOW_BASED_ARGUMENT_COLLECTION = new FlowBasedArgumentCollection();
-    static final public int FLOW_BASED_INSIGNIFICANT_END = 0;
-
+    
     private static final Map<String, ReadGroupInfo> readGroupInfo = new LinkedHashMap<>();
 
-    public enum CycleSkipStatus {
-        NS(0),         // no skip
-        PCS(1),        // possible cycle skip
-        CS(2);         // cycle skip
+    /**
+     * Converts base space sequence to flow space
+     * @param bases base space sequence
+     * @param flowOrder flow order
+     * @return Array of flow values
+     */
 
-        private int priority;
+    static public int[] baseArrayToKey(final byte[] bases, final String flowOrder){
 
-        CycleSkipStatus(final int priority) {
-            this.priority = priority;
+        final ArrayList<Integer> result = new ArrayList<>();
+        final byte[] flowOrderBytes = flowOrder.getBytes();
+        int loc = 0;
+        int flowNumber = 0 ;
+        final int period = flowOrderBytes.length;
+        int periodGuard = 0;
+        while ( loc < bases.length ) {
+            final byte flowBase = flowOrderBytes[flowNumber%period];
+            if ((bases[loc]!=flowBase) && ( bases[loc]!= 'N')) {
+                result.add(0);
+                if ( ++periodGuard > period )
+                    throw new PicardException("baseArrayToKey periodGuard tripped, on " + new String(bases) + ", flowOrder: " + flowOrder
+                    + " This probably indicates the presence of a base (value) in the sequence that is not included in the provided flow order");
+            } else {
+                int count = 0;
+                while ( ( loc < bases.length) && ((bases[loc]==flowBase) || (bases[loc]== 'N')) ){
+                    loc++;
+                    count ++;
+                }
+                result.add(count);
+                periodGuard = 0;
+            }
+            flowNumber++;
+        }
+        final int[] ret = new int[result.size()];
+        for (int i = 0; i < result.size(); i++) {
+            ret[i] = result.get(i);
+        }
+        return ret;
+    }
+
+    /**
+     * For every flow of the key output the index of the last base that was output prior to this flow
+     * @param key given key
+     * @return array
+     */
+    static public int[] getKeyToBase(final int[] key) {
+        final int[] result = new int[key.length];
+        result[0] = -1;
+        for (int i = 1; i < result.length; i++) {
+            result[i] = result[i - 1] + key[i - 1];
+        }
+        return result;
+
+    }
+
+    /**
+     * For every flow of the key output the nucleotide that is being read for this flow
+     * @param flowOrder given flow order
+     * @param expectedLength the length of the key (key is not provided)
+     * @return array of bases
+     */
+
+    static public byte[] getFlowToBase(final String flowOrder, final int expectedLength) {
+        final byte[] result = new byte[expectedLength] ;
+        for ( int i = 0; i < result.length; i++ ) {
+            result[i] = (byte)flowOrder.charAt(i%flowOrder.length());
+        }
+        return result;
+    }
+
+    /**
+     * Prints the key as character-encoded string
+     * @param ints (key array)
+     * @return encoded string
+     */
+    static public String keyAsString(final int[] ints)
+    {
+        final StringBuilder   sb = new StringBuilder();
+
+        for ( final int i : ints )
+            sb.append((char)((i < 10) ? ('0' + i) : ('A' + i - 10)));
+
+        return sb.toString();
+    }
+
+    /**
+     * Converts a numerical array into flow space by flattening per-base elements to fill empty flows based on minimum scores.
+     * This is intended to make it easier to transform per-base read statistics that are computed on the read in base-space
+     * sanely into flow-space reads in a reasonable fashion that makes sense for parameters like indel-likelihoods.
+     *
+     * The rules are as follows:
+     *  - For every run of homopolymers, the minimum score for any given base is translated to cover the whole run
+     *  - For every 0 base flow, the score from the previous filled flow is copied into place.
+     *  - For the beginning of the array (in the case of preceding 0-flows) the given default value is used.
+     *
+     * Example:
+     *  A read with the following bases with a base-space calculated into flow space (ACTG) as:
+     *     TTTATGC -> 0030101101
+     *  With an input array like this:
+     *     byte[]{1,2,3,4,5,6,7}
+     *  We should expect the following result array (Which matches the key array in length)
+     *     byte[]{defaultQual,defaultQual,1,1,4,4,5,6,6,7}
+     *
+     * @param bases base space sequence
+     * @param keyLength size of the converted bases array in flow-space
+     * @param baseSpacedArrayToConvert Array of base-space scores to be conformed to flow space
+     * @param defaultQual default quality to use at the head of the array for non-covered flows
+     * @param flowOrder flow order
+     * @return Array of translated bases comparable to the keyLength
+     */
+    @VisibleForTesting
+    static public byte[] baseArrayToKeySpace(final byte[] bases, final int keyLength, final byte[] baseSpacedArrayToConvert, final byte defaultQual, final String flowOrder){
+
+        if (bases.length != baseSpacedArrayToConvert.length) {
+            throw new IllegalArgumentException("Read and qual arrays do not match");
         }
 
-        int getPriority() {
-            return this.priority;
-        }
+        final byte[] result = new byte[keyLength];
+        final byte[] flowOrderBytes = flowOrder.getBytes();
+        int loc = 0;
+        int flowNumber = 0 ;
+        byte lastQual = defaultQual;
+        final int period = flowOrderBytes.length;
+        while ( loc < bases.length ) {
+            final byte flowBase = flowOrderBytes[flowNumber%period];
+            if ((bases[loc]!=flowBase) && ( bases[loc]!='N')) {
+                result[flowNumber] = lastQual;
+            } else {
+                byte qual = Byte.MAX_VALUE;
+                while ( ( loc < bases.length) && ((bases[loc]==flowBase) || (bases[loc]== 'N')) ){
+                    qual = (byte)Math.min(baseSpacedArrayToConvert[loc], qual);
+                    loc++;
+                }
+                result[flowNumber] = qual;
+                lastQual = qual;
 
+            }
+            flowNumber++;
+        }
+        return result;
     }
 
     static public class ReadGroupInfo {
@@ -86,77 +208,6 @@ public class FlowBasedReadUtils {
 
     }
 
-    public static boolean readEndMarkedUncertain(final SAMRecord rec) {
-        final String        tm = rec.getStringAttribute(FlowBasedRead.CLIPPING_TAG_NAME);
-        if ( tm == null ) {
-            return false;
-        } else {
-            return tm.indexOf('Q') >= 0 || tm.indexOf('Z') >= 0;
-        }
-    }
-
-    public static boolean readEndMarkedUnclipped(final SAMRecord rec, boolean FLOW_Q_IS_KNOWN_END) {
-        final String        tm = rec.getStringAttribute(FlowBasedRead.CLIPPING_TAG_NAME);
-        if ( tm == null ) {
-            return false;
-        } else {
-            return (tm.indexOf('A') >= 0) || (FLOW_Q_IS_KNOWN_END && (tm.indexOf('Q') >= 0));
-        }
-    }
-
-    // get flow order for a specific read
-    public static byte[] getReadFlowOrder(final SAMFileHeader header, SAMRecord read) {
-
-        // are we looking for a specific read group, as specified by the read?
-        {
-            final SAMReadGroupRecord rg = (read != null) ? read.getReadGroup() : null;
-            if (rg != null && rg.getFlowOrder() != null) {
-                return rg.getFlowOrder().getBytes();
-            }
-        }
-
-        // if here, either no read was specified, or the read has no group, or the group is not found, or it has no flow
-        // revert to old behavior of returning the first found
-        for ( SAMReadGroupRecord rg : header.getReadGroups() ) {
-            // must match read group name?
-            String      flowOrder = rg.getFlowOrder();
-            if ( flowOrder != null ) {
-                return flowOrder.getBytes();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Computes the sum of base qualities of the given flow read.
-     */
-    public static int flowSumOfBaseQualities(final SAMRecord read) {
-        if (read == null) {
-            return 0;
-        } else {
-            int sum = 0;
-
-            // access qualities and bases
-            byte[]      quals = read.getBaseQualities();
-            byte[]      bases = read.getReadBases();
-
-            // loop on bases, extract qual related to homopolymer from start of homopolymer
-            int         i = 0;
-            byte        lastBase = 0;
-            byte        effectiveQual = 0;
-            for (final byte base : bases ) {
-                if ( base != lastBase )
-                    effectiveQual = quals[i];
-                if ( effectiveQual >= FLOW_SUM_OF_BASE_QUALITY_THRESHOLD )
-                    sum += effectiveQual;
-                lastBase = base;
-                i++;
-            }
-
-            return sum;
-        }
-    }
-
     public static boolean hasFlowTags(final SAMRecord rec) {
         return rec.hasAttribute(FlowBasedRead.FLOW_MATRIX_TAG_NAME)
                 || rec.hasAttribute(FlowBasedRead.FLOW_MATRiX_OLD_TAG_KR)
@@ -164,20 +215,6 @@ public class FlowBasedReadUtils {
 
     }
 
-    /**
-     *
-     * This is the function to run if you want to ask if the data are flow-based
-     *
-     * @param hdr - file header
-     * @param read - the read
-     * @return true if the read is flow-based
-     */
-    public static boolean isFlowPlatform(final SAMFileHeader hdr, final SAMRecord read) {
-        if (!hasFlowTags(read)){
-            return false;
-        }
-        return getReadGroupInfo(hdr, read).isFlowPlatform;
-    }
     public static synchronized ReadGroupInfo getReadGroupInfo(final SAMFileHeader hdr, final SAMRecord read) {
 
         if ( !hasFlowTags(read) ) {
@@ -193,19 +230,6 @@ public class FlowBasedReadUtils {
     }
 
     /**
-     * Finds a usable FlowOrder to be used for engine calculation (when no specufic flow order already established for a specific read)
-     */
-    public static String findFirstUsableFlowOrder(final SAMFileHeader hdr, final FlowBasedArgumentCollection fbargs) {
-        for ( final SAMReadGroupRecord rg : hdr.getReadGroups() ) {
-            final String flowOrder = rg.getFlowOrder();
-            if ( flowOrder != null && flowOrder.length() >= fbargs.flowOrderCycleLength ) {
-                return flowOrder.substring(0, fbargs.flowOrderCycleLength);
-            }
-        }
-
-        throw new PicardException("Unable to perform flow based operations without the flow order");
-    }
-
     /*
      * clips flows from the left to clip the input number of bases
      * Needed to trim the haplotype to the read
@@ -257,14 +281,6 @@ public class FlowBasedReadUtils {
     }
 
     /**
-     * create a FlowBasedRead from a proper SAMRecord
-     */
-    static public FlowBasedRead convertToFlowBasedRead(SAMRecord read, SAMFileHeader header) {
-        final ReadGroupInfo readGroupInfo = getReadGroupInfo(header, read);
-        return new FlowBasedRead(read, readGroupInfo.flowOrder, readGroupInfo.maxClass, DEFAULT_FLOW_BASED_ARGUMENT_COLLECTION);
-    }
-
-    /**
      * Retrieve flow matrix modifications matrix from its string argument format. This matrix contains
      * logic for modifying the flow matrix as it is read in. If the value of [n] is not zero,
      * then the hmer probability for hmer length n will be copied to the [n] position
@@ -284,6 +300,74 @@ public class FlowBasedReadUtils {
             return flowMatrixModsInstructions;
         } else {
             return null;
+        }
+    }
+
+    /**
+     * A canonical, master list of the standard NGS platforms.  These values
+     * can be obtained (efficiently) from a SAMRecord object with the
+     * getNGSPlatform method.
+     */
+    public enum NGSPlatform {
+        // note the order of elements here determines the order of matching operations, and therefore the
+        // efficiency of getting a NGSPlatform from a string.
+        ILLUMINA(SequencerFlowClass.DISCRETE, "ILLUMINA", "SLX", "SOLEXA"),
+        SOLID(SequencerFlowClass.DISCRETE, "SOLID"),
+        LS454(SequencerFlowClass.FLOW, "454", "LS454"),
+        COMPLETE_GENOMICS(SequencerFlowClass.DISCRETE, "COMPLETE"),
+        PACBIO(SequencerFlowClass.DISCRETE, "PACBIO"),
+        ION_TORRENT(SequencerFlowClass.FLOW, "IONTORRENT"),
+        CAPILLARY(SequencerFlowClass.OTHER, "CAPILLARY"),
+        HELICOS(SequencerFlowClass.OTHER, "HELICOS"),
+        ULTIMA(SequencerFlowClass.FLOW, "ULTIMA"),
+        UNKNOWN(SequencerFlowClass.OTHER, "UNKNOWN");
+
+
+        /**
+         * Array of the prefix names in a BAM file for each of the platforms.
+         */
+        protected final String[] BAM_PL_NAMES;
+        protected final SequencerFlowClass sequencerType;
+
+        NGSPlatform(final SequencerFlowClass type, final String... BAM_PL_NAMES) {
+            if ( BAM_PL_NAMES.length == 0 ) throw new IllegalStateException("Platforms must have at least one name");
+
+            for ( int i = 0; i < BAM_PL_NAMES.length; i++ )
+                BAM_PL_NAMES[i] = BAM_PL_NAMES[i].toUpperCase();
+
+            this.BAM_PL_NAMES = BAM_PL_NAMES;
+            this.sequencerType = type;
+        }
+
+        /**
+         * Returns the NGSPlatform corresponding to the PL tag in the read group
+         * @param plFromRG -- the PL field (or equivalent) in a ReadGroup object.  Can be null => UNKNOWN
+         * @return an NGSPlatform object matching the PL field of the header, or UNKNOWN if there was no match or plFromRG is null
+         */
+        public static NGSPlatform fromReadGroupPL(final String plFromRG) {
+            if ( plFromRG == null ) return UNKNOWN;
+
+            final String pl = plFromRG.toUpperCase();
+            for ( final NGSPlatform ngsPlatform : NGSPlatform.values() ) {
+                for ( final String bamPLName : ngsPlatform.BAM_PL_NAMES ) {
+                    if ( pl.contains(bamPLName) )
+                        return ngsPlatform;
+                }
+            }
+
+            return UNKNOWN;
+        }
+
+        /**
+         * In broad terms, each sequencing platform can be classified by whether it flows nucleotides in some order
+         * such that homopolymers get sequenced in a single event (ie 454 or Ion) or it reads each position in the
+         * sequence one at a time, regardless of base composition (Illumina or Solid).  This information is primarily
+         * useful in the BQSR process
+         */
+        public enum SequencerFlowClass {
+            DISCRETE,
+            FLOW,
+            OTHER //Catch-all for unknown platforms, as well as relics that GATK doesn't handle well (Capillary, Helicos)
         }
     }
 }

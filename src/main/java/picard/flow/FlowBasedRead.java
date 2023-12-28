@@ -15,11 +15,8 @@ import java.util.PriorityQueue;
 public class FlowBasedRead {
 
     public static final int MAX_CLASS = 12; //note - this is a historical value to support files with max class is not defined in the header, it is expected that mc tag exists in the CRAM
-    public static final String DEFAULT_FLOW_ORDER = "TGCA";
-    private static final long serialVersionUID = 42L;
 
     // constants
-    static private final int MINIMAL_READ_LENGTH = 10; // check if this is the right number
     private final double MINIMAL_CALL_PROB = 0.1;
     // constants for clippingTagContains.
     // The tag is present when the end of the read was clipped at base calling.
@@ -27,23 +24,13 @@ public class FlowBasedRead {
     // A - adaptor clipped
     // Q - quality clipped
     // Z - "three zeros" clipped
-    final public static String CLIPPING_TAG_NAME = "tm";
 
     final public static String FLOW_MATRIX_TAG_NAME = "tp";
     final public static String FLOW_MATRIX_T0_TAG_NAME = "t0";
     final public static String FLOW_MATRiX_OLD_TAG_KR = "kr";
     final public static String FLOW_MATRiX_OLD_TAG_TI = "ti";
-    public static final String FLOW_MATRiX_OLD_TAG_KH = "kh";
-    public static final String FLOW_MATRiX_OLD_TAG_KF = "kf";
-    public static final String FLOW_MATRiX_OLD_TAG_KD = "kd";
 
     final public static String MAX_CLASS_READ_GROUP_TAG = "mc";
-
-    final public static String[] HARD_CLIPPED_TAGS = new String[]{
-            FLOW_MATRIX_TAG_NAME, FLOW_MATRiX_OLD_TAG_KR, FLOW_MATRiX_OLD_TAG_TI,
-            FLOW_MATRiX_OLD_TAG_KH, FLOW_MATRiX_OLD_TAG_KF, FLOW_MATRiX_OLD_TAG_KD,
-            FLOW_MATRIX_T0_TAG_NAME
-    };
 
     /**
      * The sam record from which this flow based read originated
@@ -51,22 +38,11 @@ public class FlowBasedRead {
     private SAMRecord samRecord;
 
     /**
-     * The read's sequence, always in forward direction
-     */
-    private byte[] forwardSequence;
-
-    /**
      * The flow key for the read - i.e. lengths of hmers in an flow order.
      * <p>
      * For example, assuming a flow order of TGCA, and a forward sequence of GGAAT, the key will be 0,2,0,2,1
      */
     private int[] key;
-
-    /**
-     * the maping of key elements to their origin locations in the sequence. Entry n contains the offset in the sequence
-     * where the hmer described by this key element starts.
-     */
-    private int[] flow2base;
 
     /**
      * The maximal length of an hmer that can be encoded (normally in the 10-12 range)
@@ -98,58 +74,9 @@ public class FlowBasedRead {
     private Direction direction = Direction.SYNTHESIS;
 
     /**
-     * Was base clipping applied to this read? (normally to trim a read to the span of a haplotype)
-     */
-    private boolean baseClipped = false;
-
-    /**
-     * If applyBaseClipping was called, the left trimming that was actually applied to the read
-     */
-    private int trimLeftBase = 0;
-
-    /**
-     * If applyBaseClipping was called, the right trimming that was actually applied to the read
-     */
-    private int trimRightBase = 0;
-
-    /**
      * The flow based argument collection under which this read was created
      */
     private final FlowBasedArgumentCollection fbargs;
-
-    /**
-     * This allows tools to reduce/enlarge the lower limit of read size for clipping operations.
-     */
-    static private int minimalReadLength = MINIMAL_READ_LENGTH;
-
-
-    public byte[] getReadInsQuals() {
-        return readInsQuals;
-    }
-
-    public void setReadInsQuals(byte[] readInsQuals) {
-        this.readInsQuals = readInsQuals;
-    }
-
-    public byte[] getReadDelQuals() {
-        return readDelQuals;
-    }
-
-    public void setReadDelQuals(byte[] readDelQuals) {
-        this.readDelQuals = readDelQuals;
-    }
-
-    public byte[] getOverallGCP() {
-        return overallGCP;
-    }
-
-    public void setOverallGCP(byte[] overallGCP) {
-        this.overallGCP = overallGCP;
-    }
-
-    private byte[] readInsQuals;
-    private byte[] readDelQuals;
-    private byte[] overallGCP;
 
     public enum Direction {
         REFERENCE, SYNTHESIS
@@ -165,25 +92,15 @@ public class FlowBasedRead {
      * @param fbargs    arguments that control resoltion of the flow matrix
      */
     public FlowBasedRead(final SAMRecord samRecord, final String flowOrder, final int maxHmer, final FlowBasedArgumentCollection fbargs) {
-        this.samRecord = samRecord;
         this.fbargs = fbargs;
         this.maxHmer = maxHmer;
         this.samRecord = samRecord;
-        forwardSequence = getForwardSequence();
 
-        // read flow matrix in. note that below code contains accomodates for old formats
+        // read flow matrix in.
         if (samRecord.hasAttribute(FLOW_MATRIX_TAG_NAME)) {
-            // this path is the production path. A flow read should contain a FLOW_MATRIX_TAG_NAME tag
             readFlowMatrix(flowOrder);
         } else {
-            // NOTE: this path is vestigial and deals with old formats of the matrix
-            if (samRecord.hasAttribute(FLOW_MATRiX_OLD_TAG_KR)) {
-                readVestigialFlowMatrixFromKR(flowOrder);
-            } else if (samRecord.hasAttribute(FLOW_MATRiX_OLD_TAG_TI)) {
-                readVestigialFlowMatrixFromTI(flowOrder);
-            } else {
-                throw new PicardException("read missing flow matrix attribute: " + FLOW_MATRIX_TAG_NAME);
-            }
+            throw new PicardException("read missing flow matrix attribute: " + FLOW_MATRIX_TAG_NAME);
         }
 
         implementMatrixMods(FlowBasedReadUtils.getFlowMatrixModsInstructions(fbargs.flowMatrixMods, maxHmer));
@@ -230,9 +147,8 @@ public class FlowBasedRead {
         setDirection(Direction.REFERENCE);  // base is always in reference/alignment direction
         fillingValue = estimateFillingValue()/maxHmer;
 
-        key = FlowBasedKeyCodec.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
-        flow2base = FlowBasedKeyCodec.getKeyToBase(key);
-        flowOrder = FlowBasedKeyCodec.getFlowToBase(_flowOrder, key.length);
+        key = FlowBasedReadUtils.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
+        flowOrder = FlowBasedReadUtils.getFlowToBase(_flowOrder, key.length);
         // initialize matrix
         flowMatrix = new double[maxHmer + 1][key.length];
         for (int i = 0; i < maxHmer + 1; i++) {
@@ -320,10 +236,6 @@ public class FlowBasedRead {
         flowMatrix[1][flowIdx] = Math.max(flowMatrix[1][flowIdx], Math.min(probs[qualOfs - 1], probs[qualOfs]));
     }
 
-    public String getFlowOrder() {
-        return new String(Arrays.copyOfRange(flowOrder, 0, Math.min(fbargs.flowOrderCycleLength, flowOrder.length)));
-    }
-
     //Finds the quality that is being set when the probability of error is very low
     private double estimateFillingValue(){
         final byte[] quals = samRecord.getBaseQualities();
@@ -357,46 +269,6 @@ public class FlowBasedRead {
         return direction;
     }
 
-
-    private byte[] getForwardSequence() {
-        if (!isReverseStrand()) {
-            return samRecord.getReadBases();
-        } else {
-            final byte[] result = new byte[samRecord.getReadBases().length];
-            System.arraycopy(samRecord.getReadBases(), 0, result, 0, result.length);
-            SequenceUtil.reverseComplement(result);
-            return result;
-        }
-    }
-
-
-    private int[] getAttributeAsIntArray(final String attributeName, final boolean isSigned) {
-        final Object attributeValue = this.samRecord.getAttribute(attributeName);
-
-        if (attributeValue == null) {
-            return null;
-        } else if (attributeValue instanceof byte[]) {
-            final byte[] byteArrayAttributeValue = (byte[]) attributeValue;
-            final int[] ret = new int[byteArrayAttributeValue.length];
-            for (int i = 0; i < ret.length; i++)
-                if (!isSigned) ret[i] = byteArrayAttributeValue[i] & 0xff;
-                else ret[i] = byteArrayAttributeValue[i]; //converting signed byte to unsigned
-            return Arrays.copyOf(ret, ret.length);
-        } else if ((attributeValue instanceof int[])) {
-            final int[] ret = (int[]) attributeValue;
-            return Arrays.copyOf(ret, ret.length);
-        } else if (attributeValue instanceof short[]) {
-            final short[] shortArrayAttributeValue = (short[]) attributeValue;
-            final int[] ret = new int[shortArrayAttributeValue.length];
-            for (int i = 0; i < shortArrayAttributeValue.length; i++)
-                ret[i] = shortArrayAttributeValue[i];
-            return Arrays.copyOf(ret, ret.length);
-        } else {
-            throw new PicardException(attributeName + " is not an integer array");
-        }
-    }
-
-
     private void validateSequence() {
         for (final int b : key) {
             if (b > maxHmer - 1) {
@@ -423,54 +295,6 @@ public class FlowBasedRead {
         return (prob <= 1) ? prob : 1;
     }
 
-    /*
-     * Legacy function from the time when the error probability were in flow space and when the read was clipped we had to
-     * translate the clipping in the base space to the clipping in the flow space. Now does nothing (isBaseFormat() is true)
-     * but is kept for R&D cases.
-     */
-    public void applyAlignment() {
-        if ((getDirection() == Direction.SYNTHESIS) && (isReverseStrand())) {
-            flipMatrix();
-            ArrayUtils.reverse(key);
-            flow2base = FlowBasedKeyCodec.getKeyToBase(key);
-            SequenceUtil.reverseComplement(flowOrder);
-
-        }
-
-        final boolean isBase = isBaseFormat();
-        final int[] basePair = {0, 0};
-        final int[] clipLeftPair = !isBase ? findLeftClippingFromCigar() : basePair;
-        final int[] clipRightPair = !isBase ? findRightClippingFromCigar() : basePair;
-        final int clipLeft = clipLeftPair[0];
-        final int leftHmerClip = clipLeftPair[1];
-        final int clipRight = clipRightPair[0];
-        final int rightHmerClip = clipRightPair[1];
-
-        applyClipping(clipLeft, leftHmerClip, clipRight, rightHmerClip, false);
-
-        setDirection(Direction.REFERENCE);
-
-    }
-
-    private boolean isBaseFormat() {
-        return samRecord.hasAttribute(FLOW_MATRiX_OLD_TAG_TI) || samRecord.hasAttribute(FLOW_MATRIX_TAG_NAME);
-    }
-
-    private void fillFlowMatrix(final int[] kh, final int[] kf,
-                                final double[] kdProbs) {
-        for (int i = 0; i < kh.length; i++) {
-            // normal matrix filling
-            final int pos = kf[i];
-            final int hmer = kh[i] & 0xff;
-            if (hmer > maxHmer) {
-                flowMatrix[maxHmer][pos] = Math.max(flowMatrix[maxHmer][pos], kdProbs[i]);
-            } else {
-                flowMatrix[hmer][pos] = Math.max(flowMatrix[hmer][pos], kdProbs[i]);
-            }
-        }
-
-    }
-
     // execute the matrix modifications
     private void implementMatrixMods(final int[] flowMatrixModsInstructions) {
 
@@ -490,13 +314,6 @@ public class FlowBasedRead {
                     }
                 }
             }
-        }
-    }
-
-
-    private void flipMatrix() {
-        for (int i = 0; i < flowMatrix.length; i++) {
-            ArrayUtils.reverse(flowMatrix[i]);
         }
     }
 
@@ -522,142 +339,8 @@ public class FlowBasedRead {
         return result;
     }
 
-    private static void shiftColumnUp(final double[][] matrix, final int colnum, final int shift) {
-        for (int i = 0; i < matrix.length - shift; i++) {
-            matrix[i][colnum] = matrix[i + shift][colnum];
-        }
-        for (int i = matrix.length - shift; i < matrix.length; i++) {
-            matrix[i][colnum] = 0;
-        }
-
-    }
-
     public void setDirection(final Direction dir) {
         direction = dir;
-    }
-
-    //trims base-spaced reads. Usually not needed, but kept for completeness
-    public void applyBaseClipping(final int clipLeftBase, final int clipRightBase, boolean spread) {
-        final int[] clipLeftPair = findLeftClipping(clipLeftBase);
-        final int[] clipRightPair = findRightClipping(clipRightBase);
-        final int clipLeft = clipLeftPair[0];
-        final int leftHmerClip = clipLeftPair[1];
-        final int clipRight = clipRightPair[0];
-        final int rightHmerClip = clipRightPair[1];
-        if (getLength() - clipLeftBase - clipRightBase < minimalReadLength) {
-            baseClipped = true;
-            validKey = false;
-            trimLeftBase = clipLeftBase;
-            trimRightBase = clipRightBase;
-        } else {
-            applyClipping(clipLeft, leftHmerClip, clipRight, rightHmerClip, spread);
-            baseClipped = true;
-            trimLeftBase = clipLeftBase;
-            trimRightBase = clipRightBase;
-        }
-    }
-
-    private void applyClipping(int clipLeft, final int leftHmerClip, int clipRight, final int rightHmerClip, final boolean spread) {
-        if ((clipLeft < 0) || (clipRight < 0) || (clipLeft >= getKeyLength()) || (clipRight >= getKeyLength())) {
-            throw new IllegalStateException(String.format("Weird read clip calculated: left/right/keyLength %d/%d/%d", clipLeft, clipRight, getKeyLength()));
-        }
-
-        if ((leftHmerClip < 0) || (rightHmerClip < 0) || (leftHmerClip >= (getMaxHmer() + 2)) || (rightHmerClip >= (getMaxHmer() + 2))) {
-            throw new IllegalStateException(String.format("Weird read clip calculated: left/right/maxHmer+2 %d/%d/%d", leftHmerClip, rightHmerClip, getMaxHmer() + 2));
-        }
-
-        final int originalLength = key.length;
-
-        key[clipLeft] -= leftHmerClip;
-        boolean shiftLeft = true;
-        while (key[clipLeft] == 0) {
-            clipLeft += 1;
-            shiftLeft = false;
-        }
-
-        key[key.length - clipRight - 1] -= rightHmerClip;
-        boolean shiftRight = true;
-        while (key[originalLength - 1 - clipRight] == 0) {
-            clipRight += 1;
-            shiftRight = false;
-        }
-
-        key = Arrays.copyOfRange(key, clipLeft, originalLength - clipRight);
-        flow2base = FlowBasedKeyCodec.getKeyToBase(key);
-        flowOrder = Arrays.copyOfRange(flowOrder, clipLeft, originalLength - clipRight);
-
-        final double[][] newFlowMatrix = new double[flowMatrix.length][originalLength - clipLeft - clipRight];
-        for (int i = 0; i < newFlowMatrix.length; i++) {
-            newFlowMatrix[i] = Arrays.copyOfRange(flowMatrix[i], clipLeft, originalLength - clipRight);
-        }
-
-        flowMatrix = newFlowMatrix;
-        if (shiftLeft) {
-            shiftColumnUp(flowMatrix, 0, leftHmerClip);
-        }
-
-        if (shiftRight) {
-            shiftColumnUp(flowMatrix, flowMatrix[0].length - 1, rightHmerClip);
-        }
-
-        //Spread boundary flow probabilities for the boundary hmers of the read
-        //in this case the value of the genome hmer is uncertain
-        if (spread) {
-            spreadFlowLengthProbsAcrossCountsAtFlow(findFirstNonZero(key));
-            spreadFlowLengthProbsAcrossCountsAtFlow(findLastNonZero(key));
-        }
-    }
-
-    private int[] findLeftClippingFromCigar() {
-        final List<CigarElement> cigar = getCigarElements();
-        final int[] result = new int[2];
-        if (cigar.size() == 0) {
-            return result;
-        }
-
-        final CigarElement start = cigar.get(0);
-        if (start.getOperator() != CigarOperator.H) {
-            return result;
-        }
-
-        final int basesClipped = start.getLength();
-        return findLeftClipping(basesClipped);
-    }
-
-
-    private int[] findLeftClipping(final int basesClipped) {
-        return FlowBasedReadUtils.findLeftClipping(basesClipped, flow2base, key);
-    }
-
-    private int[] findRightClippingFromCigar() {
-        final List<CigarElement> cigar = getCigarElements();
-        final int[] result = new int[2];
-        if (cigar.size() == 0) {
-            result[0] = 0;
-            result[1] = 0;
-            return result;
-        }
-
-        final CigarElement end = cigar.get(cigar.size() - 1);
-        if (end.getOperator() != CigarOperator.H) {
-            result[0] = 0;
-            result[1] = 0;
-            return result;
-        }
-
-        final int basesClipped = end.getLength();
-
-        return findRightClipping(basesClipped);
-    }
-
-    private int[] findRightClipping(final int basesClipped) {
-        final int[] rkey = new int[key.length];
-        for (int i = 0; i < key.length; i++) {
-            rkey[i] = key[key.length - 1 - i];
-        }
-        final int[] rflow2base = FlowBasedKeyCodec.getKeyToBase(rkey);
-
-        return FlowBasedReadUtils.findRightClipping(basesClipped, rflow2base, rkey);
     }
 
     public byte[] getFlowOrderArray() {
@@ -671,36 +354,6 @@ public class FlowBasedRead {
     public int[] getKey() {
         return key;
     }
-
-    /**
-     * Number of total bases that the flow based key generates
-     *
-     * @return number of bases
-     */
-    public int totalKeyBases() {
-        int sum = 0;
-        for (int i = 0; i < key.length; i++) {
-            sum += key[i];
-        }
-        return sum;
-    }
-
-    public int seqLength() {
-        return forwardSequence.length;
-    }
-
-    public boolean isBaseClipped() {
-        return baseClipped;
-    }
-
-    public int getTrimmedStart() {
-        return trimLeftBase + getStart();
-    }
-
-    public int getTrimmedEnd() {
-        return getEnd() - trimRightBase;
-    }
-
 
     //functions that take care of simulating base format
     //they perform modifications on the flow matrix that are defined in applyFilteringFlowMatrix
@@ -790,25 +443,6 @@ public class FlowBasedRead {
                 for (int j = 1; j < getMaxHmer() + 1; j++) {
                     flowMatrix[j][i] = fillingValue;
                 }
-            }
-        }
-    }
-
-
-    /**
-     * Quantize probability values according to fbargs.probabilityQuantization and fbargs.probabilityScalingFactor
-     *
-     * @param kd_probs
-     */
-
-    private void quantizeProbs(final int[] kd_probs) {
-        final int nQuants = fbargs.probabilityQuantization;
-        final double bin_size = 6 * fbargs.probabilityScalingFactor / (float) nQuants;
-        for (int i = 0; i < kd_probs.length; i++) {
-            if (kd_probs[i] <= 0)
-                continue;
-            else {
-                kd_probs[i] = (byte) (bin_size * (byte) (kd_probs[i] / bin_size) + 1);
             }
         }
     }
@@ -907,149 +541,6 @@ public class FlowBasedRead {
         }
 
         return q.peek();
-    }
-
-    private double[] phredToProb(final int[] kq) {
-        final double[] result = new double[kq.length];
-        for (int i = 0; i < kq.length; i++) {
-            //disallow probabilities below fillingValue
-            result[i] = Math.max(Math.pow(10, ((double) -kq[i]) / fbargs.probabilityScalingFactor), fbargs.fillingValue);
-        }
-        return result;
-    }
-
-
-    public static void setMinimalReadLength(int minimalReadLength) {
-        FlowBasedRead.minimalReadLength = minimalReadLength;
-    }
-
-    // convert qualities and ti tag to flow matrix
-    private void readVestigialFlowMatrixFromTI(final String _flowOrder) {
-
-        // generate key (base to flow space)
-        setDirection(Direction.REFERENCE);  // base is always in reference/alignment direction
-        key = FlowBasedKeyCodec.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
-        flow2base = FlowBasedKeyCodec.getKeyToBase(key);
-        flowOrder = FlowBasedKeyCodec.getFlowToBase(_flowOrder, key.length);
-
-        // initialize matrix
-        flowMatrix = new double[maxHmer + 1][key.length];
-        for (int i = 0; i < maxHmer + 1; i++) {
-            for (int j = 0; j < key.length; j++) {
-                flowMatrix[i][j] = fbargs.fillingValue;
-            }
-        }
-
-        // access qual, convert to flow representation
-        final byte[] quals = samRecord.getBaseQualities();
-        final byte[] ti = samRecord.getByteArrayAttribute(FLOW_MATRiX_OLD_TAG_TI);
-        final double[] probs = new double[quals.length];
-        for (int i = 0; i < quals.length; i++) {
-            final double q = quals[i];
-            final double p = qualToErrorProb(q);
-            probs[i] = p * 2;
-        }
-
-        // apply key and qual/ti to matrix
-        int qualOfs = 0;
-        for (int i = 0; i < key.length; i++) {
-            final int run = key[i];
-
-            // the probability is not divided by two for hmers of length 1
-            if (run == 1) {
-                probs[qualOfs] = probs[qualOfs] / 2;
-            }
-
-            //filling the probability for the called hmer (not reported by the quals
-            if (run <= maxHmer) {
-                flowMatrix[run][i] = (run > 0) ? (1 - probs[qualOfs]) : 1;
-                //require a prob. at least 0.1
-                flowMatrix[run][i] = Math.max(MINIMAL_CALL_PROB, flowMatrix[run][i]);
-
-            }
-
-            if (run != 0) {
-                if (quals[qualOfs] != 40) {
-                    final int run1 = (ti[qualOfs] == 0) ? (run - 1) : (run + 1);
-                    if ((run1 <= maxHmer) && (run <= maxHmer)) {
-                        flowMatrix[run1][i] = probs[qualOfs] / flowMatrix[run][i];
-                    }
-                    if (run <= maxHmer) {
-                        flowMatrix[run][i] /= flowMatrix[run][i]; // for comparison to the flow space - probabilities are normalized by the key's probability
-                    }
-                }
-                qualOfs += run;
-            }
-
-        }
-
-        //this is just for tests of all kinds of
-        applyFilteringFlowMatrix();
-    }
-
-    // code for reading BAM format where the flow matrix is stored in sparse representation in kr,kf,kh and kd tags
-    // used for development of the new basecalling, but not in production code
-    private void readVestigialFlowMatrixFromKR(final String _flowOrder) {
-
-        key = getAttributeAsIntArray(FLOW_MATRiX_OLD_TAG_KR, true);
-
-        // creates a translation from flow # to base #
-        flow2base = FlowBasedKeyCodec.getKeyToBase(key);
-
-        // create a translation from
-        flowOrder = FlowBasedKeyCodec.getFlowToBase(_flowOrder, key.length);
-
-        flowMatrix = new double[maxHmer + 1][key.length];
-        for (int i = 0; i < maxHmer + 1; i++) {
-            for (int j = 0; j < key.length; j++) {
-                flowMatrix[i][j] = fbargs.fillingValue;
-            }
-        }
-
-        int[] kh = getAttributeAsIntArray(FLOW_MATRiX_OLD_TAG_KH, true);
-        int[] kf = getAttributeAsIntArray(FLOW_MATRiX_OLD_TAG_KF, false);
-        int[] kd = getAttributeAsIntArray(FLOW_MATRiX_OLD_TAG_KD, true);
-
-        final int[] key_kh = key;
-        final int[] key_kf = new int[key.length];
-        for (int i = 0; i < key_kf.length; i++)
-            key_kf[i] = i;
-        final int[] key_kd = new int[key.length];
-
-        kh = ArrayUtils.addAll(kh, key_kh);
-        kf = ArrayUtils.addAll(kf, key_kf);
-        kd = ArrayUtils.addAll(kd, key_kd);
-
-        quantizeProbs(kd);
-
-        final double[] kdProbs = phredToProb(kd);
-        fillFlowMatrix(kh, kf, kdProbs);
-        applyFilteringFlowMatrix();
-        validateSequence();
-    }
-
-    private boolean isReverseStrand() {
-        return samRecord.getReadNegativeStrandFlag();
-    }
-
-    private int getLength() {
-        return samRecord.getReadLength();
-    }
-
-    private List<CigarElement> getCigarElements() {
-        return samRecord.getCigar().getCigarElements();
-    }
-
-    private int getStart() {
-        return samRecord.getStart();
-    }
-
-    private int getEnd() {
-        return samRecord.getEnd();
-    }
-
-    private static double qualToErrorProb(final double qual) {
-        return Math.pow(10.0, qual / -10.0);
     }
 }
 

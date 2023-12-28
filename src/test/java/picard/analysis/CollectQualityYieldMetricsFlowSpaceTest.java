@@ -73,7 +73,7 @@ public class CollectQualityYieldMetricsFlowSpaceTest extends CommandLineProgramT
         Assert.assertEquals(metrics.PF_Q20_FLOWS, 20671);
         Assert.assertEquals(metrics.Q30_FLOWS, 20256);
         Assert.assertEquals(metrics.PF_Q30_FLOWS, 20256);
-        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 44199);
-        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 44199);
+        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 41183);
+        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 41183);
     }
 }
