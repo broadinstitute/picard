@@ -29,7 +29,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.IOUtil;
-import org.apache.commons.math3.util.Precision;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -52,20 +51,20 @@ import java.io.File;
 
 
 @CommandLineProgramProperties(
-        summary = CollectQualityYieldMetricsFlowSpace.USAGE_SUMMARY + CollectQualityYieldMetricsFlowSpace.USAGE_DETAILS,
-        oneLineSummary = CollectQualityYieldMetricsFlowSpace.USAGE_SUMMARY,
+        summary = CollectQualityYieldMetricsFlow.USAGE_SUMMARY + CollectQualityYieldMetricsFlow.USAGE_DETAILS,
+        oneLineSummary = CollectQualityYieldMetricsFlow.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @ExperimentalFeature
-public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
-    private QualityYieldMetricsCollectorFlowSpace collector = null;
+public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
+    private QualityYieldMetricsCollectorFlow collector = null;
 
     static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds from flow based read files.  ";
     static final String USAGE_DETAILS = "This tool evaluates the overall quality of reads within a bam file containing one read group. " +
             "The output indicates the total numbers of flows within a read group that pass a minimum base quality score threshold " +
             "<h4>Usage Example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar CollectQualityYieldMetricsFlowSpace \\<br /> " +
+            "java -jar picard.jar CollectQualityYieldMetricsFlow \\<br /> " +
             "      I=input.bam \\<br /> " +
             "      O=quality_yield_metrics.txt \\<br />" +
             "</pre>" +
@@ -93,7 +92,7 @@ public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        this.collector = new QualityYieldMetricsCollectorFlowSpace(INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS, fbargs);
+        this.collector = new QualityYieldMetricsCollectorFlow(INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS, fbargs);
     }
 
     @Override
@@ -103,13 +102,13 @@ public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
 
     @Override
     protected void finish() {
-        final MetricsFile<QualityYieldMetricsFlowSpace, Integer> metricsFile = getMetricsFile();
+        final MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile = getMetricsFile();
         this.collector.finish();
         this.collector.addMetricsToFile(metricsFile);
         metricsFile.write(OUTPUT);
     }
 
-    public static class QualityYieldMetricsCollectorFlowSpace {
+    public static class QualityYieldMetricsCollectorFlow {
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
         private final boolean includeSecondaryAlignments;
@@ -119,18 +118,18 @@ public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
         public final boolean includeSupplementalAlignments;
 
         // The metrics to be accumulated
-        private final QualityYieldMetricsFlowSpace metrics;
+        private final QualityYieldMetricsFlow metrics;
 
         // flow based args
         private final FlowBasedArgumentCollection fbargs;
 
-        public QualityYieldMetricsCollectorFlowSpace(final boolean includeSecondaryAlignments,
-                                                     final boolean includeSupplementalAlignments,
-                                                     final FlowBasedArgumentCollection fbargs) {
+        public QualityYieldMetricsCollectorFlow(final boolean includeSecondaryAlignments,
+                                                final boolean includeSupplementalAlignments,
+                                                final FlowBasedArgumentCollection fbargs) {
             this.includeSecondaryAlignments = includeSecondaryAlignments;
             this.includeSupplementalAlignments = includeSupplementalAlignments;
             this.fbargs = fbargs;
-            this.metrics = new QualityYieldMetricsFlowSpace();
+            this.metrics = new QualityYieldMetricsFlow();
         }
 
         public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
@@ -227,7 +226,7 @@ public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
             metrics.calculateDerivedFields();
         }
 
-        public void addMetricsToFile(final MetricsFile<QualityYieldMetricsFlowSpace, Integer> metricsFile) {
+        public void addMetricsToFile(final MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile) {
             metricsFile.addMetric(metrics);
         }
     }
@@ -236,9 +235,9 @@ public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
      * A set of metrics used to describe the general quality of a BAM file
      */
     @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
-    public static class QualityYieldMetricsFlowSpace extends MergeableMetricBase {
+    public static class QualityYieldMetricsFlow extends MergeableMetricBase {
 
-        public QualityYieldMetricsFlowSpace() {
+        public QualityYieldMetricsFlow() {
         }
 
         /**
@@ -315,11 +314,11 @@ public class CollectQualityYieldMetricsFlowSpace extends SinglePassSamProgram {
 
         @Override
         public MergeableMetricBase merge(final MergeableMetricBase other) {
-            if (!(other instanceof QualityYieldMetricsFlowSpace)){
+            if (!(other instanceof QualityYieldMetricsFlow)){
                 throw new PicardException("Only objects of the same type can be merged");
             }
 
-            final QualityYieldMetricsFlowSpace otherMetric = (QualityYieldMetricsFlowSpace) other;
+            final QualityYieldMetricsFlow otherMetric = (QualityYieldMetricsFlow) other;
 
             super.merge(otherMetric);
             calculateDerivedFields();

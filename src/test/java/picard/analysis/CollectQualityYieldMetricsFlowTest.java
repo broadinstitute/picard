@@ -32,21 +32,20 @@ import picard.cmdline.CommandLineProgramTest;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Created by dror27 on 21/12/23.
  */
-public class CollectQualityYieldMetricsFlowSpaceTest extends CommandLineProgramTest {
+public class CollectQualityYieldMetricsFlowTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
 
     public String getCommandLineProgramName() {
-        return CollectQualityYieldMetricsFlowSpace.class.getSimpleName();
+        return CollectQualityYieldMetricsFlow.class.getSimpleName();
     }
 
     @Test
     public void test() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test_flow_space.sam");
+        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test_flow.sam");
         final File outfile   = File.createTempFile("test", ".quality_yield_metrics_flow_space");
         outfile.deleteOnExit();
         final String[] args = new String[] {
@@ -58,12 +57,12 @@ public class CollectQualityYieldMetricsFlowSpaceTest extends CommandLineProgramT
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectQualityYieldMetricsFlowSpace.QualityYieldMetricsFlowSpace, ?> output = new MetricsFile<>();
+        final MetricsFile<CollectQualityYieldMetricsFlow.QualityYieldMetricsFlow, ?> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         Assert.assertEquals(output.getMetrics().size(),1);
 
-        final CollectQualityYieldMetricsFlowSpace.QualityYieldMetricsFlowSpace metrics = output.getMetrics().get(0);
+        final CollectQualityYieldMetricsFlow.QualityYieldMetricsFlow metrics = output.getMetrics().get(0);
         Assert.assertEquals(metrics.TOTAL_READS, 56);
         Assert.assertEquals(metrics.PF_READS, 56);
         Assert.assertEquals(metrics.READ_LENGTH, 375);
