@@ -28,6 +28,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
@@ -42,6 +43,7 @@ import picard.flow.FlowBasedReadUtils;
 import picard.util.help.HelpConstants;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * Command line program to calculate quality yield metrics for flow based read files
@@ -58,6 +60,10 @@ import java.io.File;
 @ExperimentalFeature
 public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
     private QualityYieldMetricsCollectorFlow collector = null;
+    public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
+    public Histogram<Integer> flowAvgQualityHistogram = new Histogram<>("KEY", "AVG_FLOW_QUAL");
+    public int[] flowAvgQualityCount = null;
+    public long[] flowAvgQualitySum = null;
 
     static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds from flow based read files.  ";
     static final String USAGE_DETAILS = "This tool evaluates the overall quality of reads within a bam file containing one read group. " +
@@ -105,10 +111,12 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         final MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile = getMetricsFile();
         this.collector.finish();
         this.collector.addMetricsToFile(metricsFile);
+        metricsFile.addHistogram(qualityHistogram);
+        metricsFile.addHistogram(flowAvgQualityHistogram);
         metricsFile.write(OUTPUT);
     }
 
-    public static class QualityYieldMetricsCollectorFlow {
+    public class QualityYieldMetricsCollectorFlow {
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
         private final boolean includeSecondaryAlignments;
@@ -150,9 +158,20 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
                 metrics.PF_FLOWS += fread.getKey().length;
             }
 
+            // get flow quals
             final byte[] quals = getFlowQualities(fread);
 
+            // make sure flowQualityCount/Sum are large enough
+            if ( flowAvgQualityCount == null ) {
+                flowAvgQualityCount = new int[quals.length];
+                flowAvgQualitySum = new long[quals.length];
+            } else if ( flowAvgQualityCount.length < quals.length ) {
+                flowAvgQualityCount = Arrays.copyOf(flowAvgQualityCount, quals.length);
+                flowAvgQualitySum = Arrays.copyOf(flowAvgQualitySum, quals.length);
+            }
+
             // add up quals, and quals >= 20
+            int flow = 0;
             for (final int qual : quals) {
                 metrics.Q20_EQUIVALENT_YIELD += qual;
 
@@ -172,7 +191,16 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
                         metrics.PF_Q20_FLOWS++;
                     }
                 }
+
+                // enter quality into histograms
+                qualityHistogram.increment(qual);
+                flowAvgQualityCount[flow]++;
+                flowAvgQualitySum[flow] += qual;
+
+                // advance
+                flow++;
             }
+
         }
 
         private byte[] getFlowQualities(FlowBasedRead fread) {
@@ -224,6 +252,10 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
             metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
             metrics.calculateDerivedFields();
+
+            for (int i = 0; i < flowAvgQualityCount.length ; i++ ) {
+                flowAvgQualityHistogram.increment(i, flowAvgQualityCount[i] != 0 ? ((double) flowAvgQualitySum[i] / flowAvgQualityCount[i]) : 0.0);
+            }
         }
 
         public void addMetricsToFile(final MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile) {
