@@ -40,10 +40,12 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.flow.FlowBasedArgumentCollection;
 import picard.flow.FlowBasedRead;
 import picard.flow.FlowBasedReadUtils;
+import picard.util.SeriesStats;
 import picard.util.help.HelpConstants;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Vector;
 
 /**
  * Command line program to calculate quality yield metrics for flow based read files
@@ -59,11 +61,11 @@ import java.util.Arrays;
 )
 @ExperimentalFeature
 public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
+    private static final int CYCLE_SIZE = 4;
     private QualityYieldMetricsCollectorFlow collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
-    public Histogram<Integer> flowAvgQualityHistogram = new Histogram<>("KEY", "AVG_FLOW_QUAL");
-    public int[] flowAvgQualityCount = null;
-    public long[] flowAvgQualitySum = null;
+
+    private Vector<SeriesStats> flowQualityStats = new Vector<>();
 
     static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds from flow based read files.  ";
     static final String USAGE_DETAILS = "This tool evaluates the overall quality of reads within a bam file containing one read group. " +
@@ -112,7 +114,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         this.collector.finish();
         this.collector.addMetricsToFile(metricsFile);
         metricsFile.addHistogram(qualityHistogram);
-        metricsFile.addHistogram(flowAvgQualityHistogram);
+        this.collector.addHistograms(metricsFile);
         metricsFile.write(OUTPUT);
     }
 
@@ -148,7 +150,6 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             FlowBasedReadUtils.ReadGroupInfo info = FlowBasedReadUtils.getReadGroupInfo(rec.getHeader(), rec);
             FlowBasedRead fread = new FlowBasedRead(rec, info.flowOrder, info.maxClass, fbargs);
 
-            final int length = rec.getReadLength();
             metrics.TOTAL_READS++;
             metrics.TOTAL_FLOWS += fread.getKey().length;
 
@@ -161,14 +162,10 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             // get flow quals
             final byte[] quals = getFlowQualities(fread);
 
-            // make sure flowQualityCount/Sum are large enough
-            if ( flowAvgQualityCount == null ) {
-                flowAvgQualityCount = new int[quals.length];
-                flowAvgQualitySum = new long[quals.length];
-            } else if ( flowAvgQualityCount.length < quals.length ) {
-                flowAvgQualityCount = Arrays.copyOf(flowAvgQualityCount, quals.length);
-                flowAvgQualitySum = Arrays.copyOf(flowAvgQualitySum, quals.length);
-            }
+            // allocate cycle qual accounting
+            int cycleCount = (int)Math.ceil((float)quals.length / CYCLE_SIZE);
+            int cycleQualCount[] = new int[cycleCount];
+            int cycleQualSum[] = new int[cycleCount];
 
             // add up quals, and quals >= 20
             int flow = 0;
@@ -194,13 +191,23 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
 
                 // enter quality into histograms
                 qualityHistogram.increment(qual);
-                flowAvgQualityCount[flow]++;
-                flowAvgQualitySum[flow] += qual;
+
+                // enter quality into cycle stats
+                final int cycle = flow / CYCLE_SIZE;
+                cycleQualCount[cycle]++;
+                cycleQualSum[cycle] += qual;
 
                 // advance
                 flow++;
             }
 
+            // make sure flowQualityCount/Sum are large enough and enter accounted values
+            while ( flowQualityStats.size() < cycleCount )
+                flowQualityStats.add(new SeriesStats());
+            for ( int cycle = 0 ; cycle < cycleCount ; cycle++ ) {
+                int id = !rec.getReadNegativeStrandFlag() ? cycle : (cycleCount - 1 - cycle);
+                flowQualityStats.get(id).add((double)cycleQualSum[cycle] / cycleQualCount[cycle]);
+            }
         }
 
         private byte[] getFlowQualities(FlowBasedRead fread) {
@@ -223,8 +230,6 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         private double[] computeErrorProb(final FlowBasedRead flowRead) {
 
             final int[] key = flowRead.getKey();
-            final byte[] flowOrder = flowRead.getFlowOrderArray();
-
             final double[] probCol = new double[flowRead.getMaxHmer() + 1];
             double[] result = new double[key.length];
 
@@ -252,14 +257,29 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
             metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
             metrics.calculateDerivedFields();
-
-            for (int i = 0; i < flowAvgQualityCount.length ; i++ ) {
-                flowAvgQualityHistogram.increment(i, flowAvgQualityCount[i] != 0 ? ((double) flowAvgQualitySum[i] / flowAvgQualityCount[i]) : 0.0);
-            }
         }
 
         public void addMetricsToFile(final MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile) {
             metricsFile.addMetric(metrics);
+        }
+
+        public void addHistograms(MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile) {
+
+            Histogram<Integer> meanHist = new Histogram<>("KEY", "MEAN_CYCLE_QUAL");
+            Histogram<Integer> medianHist = new Histogram<>("KEY", "MEDIAN_CYCLE_QUAL");
+            Histogram<Integer> q25Hist = new Histogram<>("KEY", "Q25_CYCLE_QUAL");
+            Histogram<Integer> q75Hist = new Histogram<>("KEY", "Q75_CYCLE_QUAL");
+            for (int i = 0; i < flowQualityStats.size() ; i++ ) {
+                SeriesStats ss = flowQualityStats.get(i);
+                meanHist.increment(i, ss.getMean());
+                medianHist.increment(i, ss.getMedian());
+                q25Hist.increment(i, ss.getPercentile(25));
+                q75Hist.increment(i, ss.getPercentile(75));
+            }
+            metricsFile.addHistogram(meanHist);
+            metricsFile.addHistogram(medianHist);
+            metricsFile.addHistogram(q25Hist);
+            metricsFile.addHistogram(q75Hist);
         }
     }
 
