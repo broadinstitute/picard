@@ -17,12 +17,10 @@ public class FlowBasedArgumentCollection implements Serializable {
     private static final boolean DEFAULT_FLOW_KEEP_BOUNDARY_FLOWS = false;
 
     @Advanced
-    @Hidden
     @Argument(fullName = FLOW_IGNORE_T0_TAG_LONG_NAME, doc = "Ignore t0 tag in the read when create flow matrix (arcane/obsolete)", optional = true)
     public boolean ignoreT0Tag = DEFAULT_FLOW_IGNORE_T0_TAG;
 
     @Advanced
-    @Hidden
     @Argument(fullName = FILLING_VALUE_LONG_NAME, doc = "Value to fill the zeros of the matrix with", optional=true)
     public double fillingValue = DEFAULT_FILLING_VALUE;
 
