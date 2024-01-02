@@ -48,7 +48,8 @@ public class FlowBasedRead {
      * The maximal length of an hmer that can be encoded (normally in the 10-12 range)
      */
     private int maxHmer;
-    private double fillingValue;
+    private double totalMinErrorProbability;
+    private double perHmerMinErrorProbability;
     /**
      * The order in which flow key in encoded (See decription for key field). Flow order may be wrapped if a longer one
      * needed.
@@ -134,7 +135,7 @@ public class FlowBasedRead {
         double total = 0;
         for (int i = call; i < maxHmer + 1; i++)
             total += flowMatrix[i][flowToSpread];
-        final double fillProb = Math.max(total / numberToFill, fillingValue);
+        final double fillProb = Math.max(total / numberToFill, perHmerMinErrorProbability);
         for (int i = call; i < maxHmer + 1; i++) {
             flowMatrix[i][flowToSpread] = fillProb;
         }
@@ -145,7 +146,12 @@ public class FlowBasedRead {
 
         // generate key (base to flow space)
         setDirection(Direction.REFERENCE);  // base is always in reference/alignment direction
-        fillingValue = estimateFillingValue()/maxHmer;
+        if (fbargs.fillingValue == 0) {
+            totalMinErrorProbability = estimateFillingValue();
+        } else {
+            totalMinErrorProbability = fbargs.fillingValue;
+        }
+        perHmerMinErrorProbability = totalMinErrorProbability/getMaxHmer();
 
         key = FlowBasedReadUtils.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
         flowOrder = FlowBasedReadUtils.getFlowToBase(_flowOrder, key.length);
@@ -153,7 +159,7 @@ public class FlowBasedRead {
         flowMatrix = new double[maxHmer + 1][key.length];
         for (int i = 0; i < maxHmer + 1; i++) {
             for (int j = 0; j < key.length; j++) {
-                flowMatrix[i][j] = fillingValue;
+                flowMatrix[i][j] = perHmerMinErrorProbability;
             }
         }
 
@@ -214,7 +220,7 @@ public class FlowBasedRead {
         for (int i = qualOfs; i < qualOfs + flowCall; i++) {
             if (tp[i] != 0) {
                 final int loc = Math.max(Math.min(flowCall + tp[i], maxHmer), 0);
-                if (flowMatrix[loc][flowIdx] == fillingValue) {
+                if (flowMatrix[loc][flowIdx] == perHmerMinErrorProbability) {
                     flowMatrix[loc][flowIdx] = probs[i];
                 } else {
                     flowMatrix[loc][flowIdx] += probs[i];
@@ -233,7 +239,11 @@ public class FlowBasedRead {
         if ((qualOfs == 0) | (qualOfs == probs.length)) { // do not report zero error probability on the edge of the read
             return;
         }
-        flowMatrix[1][flowIdx] = Math.max(flowMatrix[1][flowIdx], Math.min(probs[qualOfs - 1], probs[qualOfs]));
+        if ((Math.min(probs[qualOfs - 1], probs[qualOfs]) <= totalMinErrorProbability)) {
+            flowMatrix[1][flowIdx] = Math.max(flowMatrix[1][flowIdx], perHmerMinErrorProbability);
+        } else {
+            flowMatrix[1][flowIdx] = Math.max(flowMatrix[1][flowIdx], Math.min(probs[qualOfs - 1], probs[qualOfs]));
+        }
     }
 
     //Finds the quality that is being set when the probability of error is very low
@@ -396,9 +406,9 @@ public class FlowBasedRead {
     private void clipProbs() {
         for (int i = 0; i < getMaxHmer(); i++) {
             for (int j = 0; j < getNFlows(); j++) {
-                if ((flowMatrix[i][j] <= fbargs.probabilityRatioThreshold) &&
+                if ((flowMatrix[i][j] <= perHmerMinErrorProbability) &&
                         (key[j] != i)) {
-                    flowMatrix[i][j] = fillingValue;
+                    flowMatrix[i][j] = perHmerMinErrorProbability;
                 }
             }
         }
@@ -426,7 +436,7 @@ public class FlowBasedRead {
         for (int i = 0; i < getNFlows(); i++) {
             for (int j = 0; j < getMaxHmer() + 1; j++) {
                 if (Math.abs(j - key_kh[i]) > 1) {
-                    flowMatrix[j][i] = fillingValue;
+                    flowMatrix[j][i] = perHmerMinErrorProbability;
                 }
             }
         }
@@ -441,7 +451,7 @@ public class FlowBasedRead {
         for (int i = 0; i < getNFlows(); i++) {
             if (key_kh[i] == 0) {
                 for (int j = 1; j < getMaxHmer() + 1; j++) {
-                    flowMatrix[j][i] = fillingValue;
+                    flowMatrix[j][i] = perHmerMinErrorProbability;
                 }
             }
         }
@@ -472,9 +482,9 @@ public class FlowBasedRead {
         for (int i = 0; i < kr.length; i++) {
             final int idx = kr[i];
             if ((idx > 1) && (idx < maxHmer)) {
-                if ((flowMatrix[idx - 1][i] > fillingValue) && (flowMatrix[idx + 1][i] > fillingValue)) {
+                if ((flowMatrix[idx - 1][i] > perHmerMinErrorProbability) && (flowMatrix[idx + 1][i] > perHmerMinErrorProbability)) {
                     final int fixCell = flowMatrix[idx - 1][i] > flowMatrix[idx + 1][i] ? idx + 1 : idx - 1;
-                    flowMatrix[fixCell][i] = fillingValue;
+                    flowMatrix[fixCell][i] = perHmerMinErrorProbability;
                 }
             }
         }
@@ -489,15 +499,15 @@ public class FlowBasedRead {
         for (int i = 0; i < getMaxHmer(); i++) {
             for (int j = 0; j < getNFlows(); j++) {
                 final int fkey = key[j];
-                if (flowMatrix[i][j] <= fillingValue) {
+                if (flowMatrix[i][j] <= perHmerMinErrorProbability) {
                     continue;
                 } else {
                     if ((i - fkey) < -1) {
                         flowMatrix[fkey - 1][j] += flowMatrix[i][j];
-                        flowMatrix[i][j] = fillingValue;
+                        flowMatrix[i][j] = perHmerMinErrorProbability;
                     } else if ((i - fkey) > 1) {
                         flowMatrix[fkey + 1][j] += flowMatrix[i][j];
-                        flowMatrix[i][j] = fillingValue;
+                        flowMatrix[i][j] = perHmerMinErrorProbability;
                     }
 
                 }
@@ -522,7 +532,7 @@ public class FlowBasedRead {
             final double kth_highest = findKthLargest(tmpContainer, k + 1);
             for (int j = 0; j < maxHmer; j++) {
                 if (flowMatrix[j][i] < kth_highest){
-                    flowMatrix[j][i] = fillingValue;
+                    flowMatrix[j][i] = perHmerMinErrorProbability;
                 }
             }
         }
