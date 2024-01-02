@@ -52,7 +52,6 @@ public class CollectQualityYieldMetricsFlowTest extends CommandLineProgramTest {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "--flow-fill-empty-bins-value", "0.000005",
-                "--flow-probability-threshold", "0.0001"
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -72,7 +71,7 @@ public class CollectQualityYieldMetricsFlowTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PF_Q20_FLOWS, 20671);
         Assert.assertEquals(metrics.Q30_FLOWS, 20256);
         Assert.assertEquals(metrics.PF_Q30_FLOWS, 20256);
-        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 41183);
-        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 41183);
+        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 55247);
+        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 55247);
     }
 }
