@@ -44,7 +44,6 @@ import picard.util.SeriesStats;
 import picard.util.help.HelpConstants;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Vector;
 
 /**
@@ -317,7 +316,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
          * The average read length of all the reads
          */
         @NoMergingIsDerived
-        public int READ_LENGTH = 0;
+        public int MEAN_READ_LENGTH = 0;
 
         /**
          * The total number of flows in all reads
@@ -370,7 +369,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         @Override
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
-            this.READ_LENGTH = this.TOTAL_READS == 0 ? 0 : (int) (this.TOTAL_FLOWS / this.TOTAL_READS);
+            this.MEAN_READ_LENGTH = this.TOTAL_READS == 0 ? 0 : (int) (this.TOTAL_FLOWS / this.TOTAL_READS);
         }
 
         @Override

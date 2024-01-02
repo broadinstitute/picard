@@ -65,7 +65,7 @@ public class CollectQualityYieldMetricsFlowTest extends CommandLineProgramTest {
         final CollectQualityYieldMetricsFlow.QualityYieldMetricsFlow metrics = output.getMetrics().get(0);
         Assert.assertEquals(metrics.TOTAL_READS, 56);
         Assert.assertEquals(metrics.PF_READS, 56);
-        Assert.assertEquals(metrics.READ_LENGTH, 375);
+        Assert.assertEquals(metrics.MEAN_READ_LENGTH, 375);
         Assert.assertEquals(metrics.TOTAL_FLOWS, 21053);
         Assert.assertEquals(metrics.PF_FLOWS, 21053);
         Assert.assertEquals(metrics.Q20_FLOWS, 20671);
