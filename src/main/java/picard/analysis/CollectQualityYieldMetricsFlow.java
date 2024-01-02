@@ -64,7 +64,6 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
     private static final int CYCLE_SIZE = 4;
     private QualityYieldMetricsCollectorFlow collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
-
     private Vector<SeriesStats> flowQualityStats = new Vector<>();
 
     static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds from flow based read files.  ";
@@ -85,6 +84,9 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
     @Argument(doc = "If true, include bases from supplemental alignments in metrics. Setting to true may cause double-counting " +
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
+
+    @Argument(doc = "Determines whether to include the base quality histogram in the metrics file.")
+    public boolean INCLUDE_BQ_HISTOGRAM = false;
 
     @ArgumentCollection(doc = "flow based args")
     public FlowBasedArgumentCollection fbargs = new FlowBasedArgumentCollection();
@@ -113,8 +115,10 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         final MetricsFile<QualityYieldMetricsFlow, Integer> metricsFile = getMetricsFile();
         this.collector.finish();
         this.collector.addMetricsToFile(metricsFile);
-        metricsFile.addHistogram(qualityHistogram);
-        this.collector.addHistograms(metricsFile);
+        if ( INCLUDE_BQ_HISTOGRAM ) {
+            metricsFile.addHistogram(qualityHistogram);
+            this.collector.addHistograms(metricsFile);
+        }
         metricsFile.write(OUTPUT);
     }
 
@@ -163,9 +167,9 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             final byte[] quals = getFlowQualities(fread);
 
             // allocate cycle qual accounting
-            int cycleCount = (int)Math.ceil((float)quals.length / CYCLE_SIZE);
-            int cycleQualCount[] = new int[cycleCount];
-            int cycleQualSum[] = new int[cycleCount];
+            int cycleCount = INCLUDE_BQ_HISTOGRAM ? (int)Math.ceil((float)quals.length / CYCLE_SIZE) : 0;
+            int cycleQualCount[] = INCLUDE_BQ_HISTOGRAM ? new int[cycleCount] : null;
+            int cycleQualSum[] = INCLUDE_BQ_HISTOGRAM ? new int[cycleCount] : null;
 
             // add up quals, and quals >= 20
             int flow = 0;
@@ -189,24 +193,29 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
                     }
                 }
 
-                // enter quality into histograms
-                qualityHistogram.increment(qual);
+                if ( INCLUDE_BQ_HISTOGRAM ) {
 
-                // enter quality into cycle stats
-                final int cycle = flow / CYCLE_SIZE;
-                cycleQualCount[cycle]++;
-                cycleQualSum[cycle] += qual;
+                    // enter quality into histograms
+                    qualityHistogram.increment(qual);
+
+                    // enter quality into cycle stats
+                    final int cycle = flow / CYCLE_SIZE;
+                    cycleQualCount[cycle]++;
+                    cycleQualSum[cycle] += qual;
+                }
 
                 // advance
                 flow++;
             }
 
             // make sure flowQualityCount/Sum are large enough and enter accounted values
-            while ( flowQualityStats.size() < cycleCount )
-                flowQualityStats.add(new SeriesStats());
-            for ( int cycle = 0 ; cycle < cycleCount ; cycle++ ) {
-                int id = !rec.getReadNegativeStrandFlag() ? cycle : (cycleCount - 1 - cycle);
-                flowQualityStats.get(id).add((double)cycleQualSum[cycle] / cycleQualCount[cycle]);
+            if ( INCLUDE_BQ_HISTOGRAM ) {
+                while (flowQualityStats.size() < cycleCount)
+                    flowQualityStats.add(new SeriesStats());
+                for (int cycle = 0; cycle < cycleCount; cycle++) {
+                    int id = !rec.getReadNegativeStrandFlag() ? cycle : (cycleCount - 1 - cycle);
+                    flowQualityStats.get(id).add((double) cycleQualSum[cycle] / cycleQualCount[cycle]);
+                }
             }
         }
 

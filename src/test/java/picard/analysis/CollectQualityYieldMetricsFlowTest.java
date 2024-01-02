@@ -51,6 +51,7 @@ public class CollectQualityYieldMetricsFlowTest extends CommandLineProgramTest {
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
+                "INCLUDE_BQ_HISTOGRAM=TRUE",
                 "--flow-fill-empty-bins-value", "0.000005",
         };
 

@@ -1,16 +1,9 @@
 package picard.flow;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.util.SequenceUtil;
-import org.apache.commons.lang3.ArrayUtils;
 import picard.PicardException;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.PriorityQueue;
 
 public class FlowBasedRead {
 
@@ -18,12 +11,6 @@ public class FlowBasedRead {
 
     // constants
     private final double MINIMAL_CALL_PROB = 0.1;
-    // constants for clippingTagContains.
-    // The tag is present when the end of the read was clipped at base calling.
-    // The value of the tag is a string consisting of any one or more of the following:
-    // A - adaptor clipped
-    // Q - quality clipped
-    // Z - "three zeros" clipped
 
     final public static String FLOW_MATRIX_TAG_NAME = "tp";
     final public static String FLOW_MATRIX_T0_TAG_NAME = "t0";
@@ -70,18 +57,9 @@ public class FlowBasedRead {
     private boolean validKey;
 
     /**
-     * The direction of this read. After being red, the direction will also swing to be REFERENCE
-     */
-    private Direction direction = Direction.SYNTHESIS;
-
-    /**
      * The flow based argument collection under which this read was created
      */
     private final FlowBasedArgumentCollection fbargs;
-
-    public enum Direction {
-        REFERENCE, SYNTHESIS
-    }
 
 
     /**
@@ -103,8 +81,6 @@ public class FlowBasedRead {
         } else {
             throw new PicardException("read missing flow matrix attribute: " + FLOW_MATRIX_TAG_NAME);
         }
-
-        implementMatrixMods(FlowBasedReadUtils.getFlowMatrixModsInstructions(fbargs.flowMatrixMods, maxHmer));
 
         //Spread boundary flow probabilities when the read is unclipped
         //in this case the value of the hmer is uncertain
@@ -145,7 +121,6 @@ public class FlowBasedRead {
     private void readFlowMatrix(final String _flowOrder) {
 
         // generate key (base to flow space)
-        setDirection(Direction.REFERENCE);  // base is always in reference/alignment direction
         if (fbargs.fillingValue == 0) {
             totalMinErrorProbability = estimateFillingValue();
         } else {
@@ -169,7 +144,7 @@ public class FlowBasedRead {
         boolean specialTreatmentForZeroCalls = false;
         final byte[] t0 = SAMUtils.fastqToPhred(samRecord.getStringAttribute(FLOW_MATRIX_T0_TAG_NAME));
         final double[] t0probs = new double[quals.length];
-        if ((t0 != null) && fbargs.useT0Tag) {
+        if ((t0 != null) && !fbargs.ignoreT0Tag) {
             specialTreatmentForZeroCalls = true;
 
             if (t0.length != tp.length) {
@@ -275,10 +250,6 @@ public class FlowBasedRead {
         return key.length;
     }
 
-    public Direction getDirection() {
-        return direction;
-    }
-
     private void validateSequence() {
         for (final int b : key) {
             if (b > maxHmer - 1) {
@@ -305,28 +276,6 @@ public class FlowBasedRead {
         return (prob <= 1) ? prob : 1;
     }
 
-    // execute the matrix modifications
-    private void implementMatrixMods(final int[] flowMatrixModsInstructions) {
-
-        if (flowMatrixModsInstructions != null) {
-            for (int hmer = 0; hmer < flowMatrixModsInstructions.length; hmer++) {
-                final int hmer2 = flowMatrixModsInstructions[hmer];
-                if (hmer2 != 0) {
-                    for (int pos = 0; pos < flowMatrix[0].length; pos++) {
-
-                        if (flowMatrix[hmer][pos] > flowMatrix[hmer2][pos]) {
-                            flowMatrix[hmer2][pos] = flowMatrix[hmer][pos];
-                        }
-
-                        // if we are copying bacwards, zero out source
-                        if (hmer > hmer2)
-                            flowMatrix[hmer][pos] = 0;
-                    }
-                }
-            }
-        }
-    }
-
     private static int findFirstNonZero(final int[] array) {
         int result = -1;
         for (int i = 0; i < array.length; i++) {
@@ -349,18 +298,6 @@ public class FlowBasedRead {
         return result;
     }
 
-    public void setDirection(final Direction dir) {
-        direction = dir;
-    }
-
-    public byte[] getFlowOrderArray() {
-        return flowOrder;
-    }
-
-    public int getKeyLength() {
-        return key.length;
-    }
-
     public int[] getKey() {
         return key;
     }
@@ -369,35 +306,7 @@ public class FlowBasedRead {
     //they perform modifications on the flow matrix that are defined in applyFilteringFlowMatrix
     //this function was only applied when we tested what is the necessary information to be reported in the flow matrix
     private void applyFilteringFlowMatrix() {
-
-        if (fbargs.disallowLargerProbs) {
-            removeLargeProbs();
-        }
-
-        if (fbargs.removeLongerThanOneIndels) {
-            removeLongIndels(key);
-        }
-
-        if (fbargs.removeOneToZeroProbs) {
-            removeOneToZeroProbs(key);
-        }
-
-        if ((fbargs.lumpProbs)) {
-            lumpProbs();
-        }
         clipProbs();
-
-        if (fbargs.symmetricIndels) {
-            smoothIndels(key);
-        }
-        if (fbargs.onlyInsOrDel) {
-            reportInsOrDel(key);
-        }
-
-        if ((fbargs.retainMaxNProbs)) {
-            reportMaxNProbsHmer(key);
-        }
-
     }
 
     /**
@@ -412,145 +321,6 @@ public class FlowBasedRead {
                 }
             }
         }
-    }
-
-    /**
-     * remove probabilities larger than 1
-     */
-    private void removeLargeProbs() {
-        for (int i = 0; i < getNFlows(); i++) {
-            for (int j = 0; j < getMaxHmer() + 1; j++) {
-                if (flowMatrix[j][i] > 1) {
-                    flowMatrix[j][i] = 1;
-                }
-            }
-        }
-    }
-
-    /**
-     * This is vestigial and applies only to old formats
-     *
-     * @param key_kh
-     */
-    private void removeLongIndels(final int[] key_kh) {
-        for (int i = 0; i < getNFlows(); i++) {
-            for (int j = 0; j < getMaxHmer() + 1; j++) {
-                if (Math.abs(j - key_kh[i]) > 1) {
-                    flowMatrix[j][i] = perHmerMinErrorProbability;
-                }
-            }
-        }
-    }
-
-    /**
-     * This is vestigial and applies only to old formats
-     *
-     * @param key_kh
-     */
-    private void removeOneToZeroProbs(final int[] key_kh) {
-        for (int i = 0; i < getNFlows(); i++) {
-            if (key_kh[i] == 0) {
-                for (int j = 1; j < getMaxHmer() + 1; j++) {
-                    flowMatrix[j][i] = perHmerMinErrorProbability;
-                }
-            }
-        }
-    }
-
-    /**
-     * Smooth out probabilities by averaging with neighbours
-     *
-     * @param kr
-     */
-    private void smoothIndels(final int[] kr) {
-        for (int i = 0; i < kr.length; i++) {
-            final int idx = kr[i];
-            if ((idx > 1) && (idx < maxHmer)) {
-                final double prob = (flowMatrix[idx - 1][i] + flowMatrix[idx + 1][i]) / 2;
-                flowMatrix[idx - 1][i] = prob;
-                flowMatrix[idx + 1][i] = prob;
-            }
-        }
-    }
-
-    /**
-     * Only report probability of insertions or of deletions, never both
-     *
-     * @param kr
-     */
-    private void reportInsOrDel(final int[] kr) {
-        for (int i = 0; i < kr.length; i++) {
-            final int idx = kr[i];
-            if ((idx > 1) && (idx < maxHmer)) {
-                if ((flowMatrix[idx - 1][i] > perHmerMinErrorProbability) && (flowMatrix[idx + 1][i] > perHmerMinErrorProbability)) {
-                    final int fixCell = flowMatrix[idx - 1][i] > flowMatrix[idx + 1][i] ? idx + 1 : idx - 1;
-                    flowMatrix[fixCell][i] = perHmerMinErrorProbability;
-                }
-            }
-        }
-    }
-
-    /**
-     * Combine all probabilities of insertions together and report them as probabilities of 1-mer insertion
-     * Combine all probabilities of deletions together and report them as probabilities of 1-mer deletion
-     */
-    private void lumpProbs() {
-
-        for (int i = 0; i < getMaxHmer(); i++) {
-            for (int j = 0; j < getNFlows(); j++) {
-                final int fkey = key[j];
-                if (flowMatrix[i][j] <= perHmerMinErrorProbability) {
-                    continue;
-                } else {
-                    if ((i - fkey) < -1) {
-                        flowMatrix[fkey - 1][j] += flowMatrix[i][j];
-                        flowMatrix[i][j] = perHmerMinErrorProbability;
-                    } else if ((i - fkey) > 1) {
-                        flowMatrix[fkey + 1][j] += flowMatrix[i][j];
-                        flowMatrix[i][j] = perHmerMinErrorProbability;
-                    }
-
-                }
-
-            }
-        }
-
-    }
-
-    /*
-    Given full vector of error probabilities retain only the probabilities that can be reported in the base format
-    (N+1/2 highest error probabilities)
-     */
-    private void reportMaxNProbsHmer(final int[] key) {
-        final double[] tmpContainer = new double[maxHmer];
-        for (int i = 0; i < key.length; i++) {
-
-            for (int j = 0; j < tmpContainer.length; j++) {
-                tmpContainer[j] = flowMatrix[j][i];
-            }
-            final int k = (key[i] + 1) / 2;
-            final double kth_highest = findKthLargest(tmpContainer, k + 1);
-            for (int j = 0; j < maxHmer; j++) {
-                if (flowMatrix[j][i] < kth_highest){
-                    flowMatrix[j][i] = perHmerMinErrorProbability;
-                }
-            }
-        }
-
-    }
-
-
-    private static double findKthLargest(final double[] nums, final int k) {
-        final PriorityQueue<Double> q = new PriorityQueue<Double>(k);
-        for (final double i : nums) {
-            q.offer(i);
-
-            if (q.size() > k) {
-                q.poll();
-            }
-        }
-
-        return q.peek();
     }
 }
 
