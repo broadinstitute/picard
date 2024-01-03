@@ -224,7 +224,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             double[] errorProbs = computeErrorProb(fread);
             byte[] quals = new byte[errorProbs.length];
             for ( int i = 0 ; i < errorProbs.length ; i++ ) {
-                quals[i] = (byte)Math.ceil(-10 * Math.log10(errorProbs[i]));
+                quals[i] = (byte)Math.round(-10 * Math.log10(errorProbs[i]));
             }
             return quals;
         }
