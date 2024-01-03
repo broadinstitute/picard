@@ -209,9 +209,7 @@ public class FlowBasedReadUtils {
     }
 
     public static boolean hasFlowTags(final SAMRecord rec) {
-        return rec.hasAttribute(FlowBasedRead.FLOW_MATRIX_TAG_NAME)
-                || rec.hasAttribute(FlowBasedRead.FLOW_MATRiX_OLD_TAG_KR)
-                || rec.hasAttribute(FlowBasedRead.FLOW_MATRiX_OLD_TAG_TI);
+        return rec.hasAttribute(FlowBasedRead.FLOW_MATRIX_TAG_NAME);
 
     }
 

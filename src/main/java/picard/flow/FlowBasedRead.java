@@ -14,9 +14,6 @@ public class FlowBasedRead {
 
     final public static String FLOW_MATRIX_TAG_NAME = "tp";
     final public static String FLOW_MATRIX_T0_TAG_NAME = "t0";
-    final public static String FLOW_MATRiX_OLD_TAG_KR = "kr";
-    final public static String FLOW_MATRiX_OLD_TAG_TI = "ti";
-
     final public static String MAX_CLASS_READ_GROUP_TAG = "mc";
 
     /**
@@ -85,13 +82,14 @@ public class FlowBasedRead {
         //Spread boundary flow probabilities when the read is unclipped
         //in this case the value of the hmer is uncertain
         if (!fbargs.keepBoundaryFlows) {
-            if (samRecord.getCigar().getFirstCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getFirstCigarElement().getLength() > 0) {
+            if (samRecord.getReadUnmappedFlag() || (samRecord.getCigar().getFirstCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getFirstCigarElement().getLength() > 0)) {
                 spreadFlowLengthProbsAcrossCountsAtFlow(findFirstNonZero(key));
             }
-            if (samRecord.getCigar().getLastCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getLastCigarElement().getLength() > 0) {
+            if (samRecord.getReadUnmappedFlag() || (samRecord.getCigar().getLastCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getLastCigarElement().getLength() > 0)) {
                 spreadFlowLengthProbsAcrossCountsAtFlow(findLastNonZero(key));
             }
         }
+
 
         validateSequence();
     }
@@ -225,7 +223,7 @@ public class FlowBasedRead {
     private double estimateFillingValue(){
         final byte[] quals = samRecord.getBaseQualities();
         final byte[] tp = samRecord.getSignedByteArrayAttribute(FLOW_MATRIX_TAG_NAME);
-        byte maxQual = 0;
+        double maxQual = 0;
 
         for (int i = 0; i < quals.length; i++) {
             if (tp[i]!=0){
