@@ -344,6 +344,12 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         public long PF_Q20_FLOWS = 0;
 
         /**
+         * The percentage of flows in all reads that achieve quality score 20 or higher
+         */
+        @MergingIsManual
+        public double PCT_Q20_FLOWS = 0;
+
+        /**
          * The number of flows in all reads that achieve quality score 30 or higher
          */
         @MergeByAdding
@@ -354,6 +360,12 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
          */
         @MergeByAdding
         public long PF_Q30_FLOWS = 0;
+
+        /**
+         * The percentage of flows in all reads that achieve quality score 30 or higher
+         */
+        @MergingIsManual
+        public double PCT_Q30_FLOWS = 0;
 
         /**
          * The sum of quality scores of all flows divided by 20
@@ -371,6 +383,8 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
             this.MEAN_READ_LENGTH = this.TOTAL_READS == 0 ? 0 : (int) (this.TOTAL_FLOWS / this.TOTAL_READS);
+            this.PCT_Q20_FLOWS = (double)this.Q20_FLOWS / this.TOTAL_FLOWS;
+            this.PCT_Q30_FLOWS = (double)this.Q30_FLOWS / this.TOTAL_FLOWS;
         }
 
         @Override
