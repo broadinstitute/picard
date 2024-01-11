@@ -555,7 +555,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
 
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
                     final StringBuilder key = new StringBuilder();
-                    key.append(ReservedTagConstants.READ_GROUP_ID);
+                    key.append(rec.getReadGroup().getReadGroupId());
                     key.append(rec.getReadName());
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
 
