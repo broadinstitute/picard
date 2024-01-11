@@ -1,7 +1,7 @@
 package picard.nio;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import htsjdk.samtools.util.Log;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,10 +15,10 @@ import java.util.LinkedHashSet;
  *
  * <p>This class is a modification of {@link htsjdk.samtools.util.nio.DeleteOnExitPathHook}
  *
- * This class should be considered an implementation detail of {@link IOUtils#deleteOnExit(Path)} and not used directly.
+ * This class should be considered an implementation detail of {@link GATKIOUtils#deleteOnExit(Path)} and not used directly.
  */
 class DeleteRecursivelyOnExitPathHook {
-    private static final Logger LOG = LogManager.getLogger(DeleteRecursivelyOnExitPathHook.class);
+    private static final Log LOG = Log.getInstance(DeleteRecursivelyOnExitPathHook.class);
     private static LinkedHashSet<Path> paths = new LinkedHashSet<>();
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(DeleteRecursivelyOnExitPathHook::runHooks));
@@ -60,8 +60,8 @@ class DeleteRecursivelyOnExitPathHook {
             try {
                 GATKIOUtils.deleteRecursively(path);
             } catch (final Exception e) {
-                // do nothing if cannot be deleted, because it is a shutdown hook
-                LOG.debug(() -> "Could not recursively delete " + path.toString() + " during JVM shutdown because we encountered the following exception:", e);
+                // do nothing if itcannot be deleted, because it is a shutdown hook
+                LOG.debug(e, "Could not recursively delete ", path.toString(), " during JVM shutdown because we encountered the following exception:");
             }
         }
     }
