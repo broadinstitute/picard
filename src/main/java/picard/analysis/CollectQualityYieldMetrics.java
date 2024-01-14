@@ -201,39 +201,6 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         }
     }
 
-    public static class QualityYieldMetricsFlow extends QualityYieldMetrics{
-        /** The length of the longest interval on the reads where the average quality per-base is above (Q30) */
-        @NoMergingIsDerived
-        public long READ_LENGTH_AVG_Q_ABOVE_30 = 0;
-
-        /** The length of the longest interval on the reads where the average quality per-base is above (Q25) */
-        @NoMergingIsDerived
-        public long READ_LENGTH_AVG_Q_ABOVE_25 = 0;
-
-        @MergingIsManual
-        protected final HistogramGenerator histogramGenerator;
-
-        public QualityYieldMetricsFlow(final boolean useOriginalBaseQualities, final HistogramGenerator hg) {
-            histogramGenerator=hg;
-        }
-
-        @Override
-        public void calculateDerivedFields() {
-            super.calculateDerivedFields();
-            this.READ_LENGTH_AVG_Q_ABOVE_25 = histogramGenerator.calculateLQ(25, 1, 5);
-            this.READ_LENGTH_AVG_Q_ABOVE_30 = histogramGenerator.calculateLQ(30, 1, 5);
-        }
-
-        @Override
-        public MergeableMetricBase merge(final MergeableMetricBase other) {
-            if (!(other instanceof QualityYieldMetricsFlow)){
-                throw new PicardException("Only objects of the same type can be merged");
-            }
-            this.histogramGenerator.addOtherHistogramGenerator(((QualityYieldMetricsFlow)other).histogramGenerator);
-            super.merge(other);
-            return this;
-        }
-    }
     /**
      * A set of metrics used to describe the general quality of a BAM file
      */
