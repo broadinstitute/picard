@@ -26,6 +26,7 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Histogram;
@@ -59,8 +60,9 @@ import java.util.Vector;
 public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
     private QualityYieldMetricsCollector collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
-    public Map<String, Histogram<Integer>> snvqHistograms = new LinkedHashMap<>();
     private Vector<SeriesStats> readPositionQualityStats = new Vector<>();
+    public Histogram<Integer> snvqHistogram = new Histogram<>("KEY", "SNVQ_COUNT");
+    private Vector<SeriesStats> readPositionSnvqStats = new Vector<>();
     final byte[] baseOrder = "ACGT".getBytes();
 
     static final String USAGE_SUMMARY = "Collect SNVQ metrics about reads that pass quality thresholds and Illumina-specific filters.  ";
@@ -109,16 +111,6 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
         this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
-
-        // set up snvq histograms
-        for ( int i = 0 ; i < baseOrder.length ; i++ ) {
-            for (int j = 0; j < baseOrder.length; j++) {
-                if ( i != j ) {
-                    final String key = String.format("%c_%c", baseOrder[i], baseOrder[j]);
-                    snvqHistograms.put(key, new Histogram<>("KEY", key));
-                }
-            }
-        }
     }
 
     @Override
@@ -133,17 +125,8 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
         this.collector.addMetricsToFile(metricsFile);
         if ( INCLUDE_BQ_HISTOGRAM ) {
             metricsFile.addHistogram(qualityHistogram);
+            metricsFile.addHistogram(snvqHistogram);
             this.collector.addHistograms(metricsFile);
-
-            for ( int i = 0 ; i < baseOrder.length ; i++ ) {
-                for (int j = 0; j < baseOrder.length; j++) {
-                    if ( i != j ) {
-                        final String key = String.format("%c_%c", baseOrder[i], baseOrder[j]);
-                        metricsFile.addHistogram(snvqHistograms.get(key));
-                    }
-                }
-            }
-
         }
         metricsFile.write(OUTPUT);
     }
@@ -235,6 +218,48 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
                     }
                 }
 
+                // SNVQ counters
+                final byte base = bases[readPosition];
+                for ( int i = 0 ; i < baseOrder.length ; i++ ) {
+                    if ( base != baseOrder[i] ) {
+
+                        int q = snvq[i][readPosition] - 33;
+                        metrics.TOTAL_SNVQ++;
+                        if ( isPfRead )
+                            metrics.PF_SNVQ++;
+
+                        if (q >= 40) {
+                            metrics.Q20_SNVQ++;
+                            metrics.Q30_SNVQ++;
+                            metrics.Q40_SNVQS++;
+                            if ( isPfRead ) {
+                                metrics.PF_Q20_SNVQ++;
+                                metrics.PF_Q30_SNVQ++;
+                                metrics.PF_Q40_SNVQ++;
+                            }
+                        } else if (q >= 30) {
+                            metrics.Q20_SNVQ++;
+                            metrics.Q30_BASES++;
+                            if ( isPfRead ) {
+                                metrics.PF_Q20_SNVQ++;
+                                metrics.PF_Q30_BASES++;
+                            }
+                        } else if (q >= 20) {
+                            metrics.Q20_SNVQ++;
+                            if ( isPfRead ) {
+                                metrics.PF_Q20_SNVQ++;
+                            }
+                        }
+
+                        if (INCLUDE_BQ_HISTOGRAM) {
+                            snvqHistogram.increment(q);
+                            while (readPositionSnvqStats.size() <= readPosition)
+                                readPositionSnvqStats.add(new SeriesStats());
+                            readPositionSnvqStats.get(readPosition).add(q);
+                        }
+                    }
+                }
+
                 if (INCLUDE_BQ_HISTOGRAM) {
 
                     // enter quality into histograms
@@ -244,15 +269,6 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
                     while (readPositionQualityStats.size() <= readPosition)
                         readPositionQualityStats.add(new SeriesStats());
                     readPositionQualityStats.get(readPosition).add(qual);
-
-                    // enter snvq stats
-                    final byte base = bases[readPosition];
-                    for ( int i = 0 ; i < baseOrder.length ; i++ ) {
-                        if ( base != baseOrder[i] && (snvq[i][readPosition] != 33) ) {
-                            final String key = String.format("%c_%c", base, baseOrder[i]);
-                            snvqHistograms.get(key).increment(snvq[i][readPosition] - 33);
-                        }
-                    }
                 }
 
                 readPosition++;
@@ -270,12 +286,20 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
         }
 
         public void addHistograms(MetricsFile<QualityYieldMetrics, Integer> metricsFile) {
-            Histogram<Integer> meanHist = new Histogram<>("KEY", "READ_INDEX_MEAN_QUAL");
-            for (int i = 0; i < readPositionQualityStats.size() ; i++ ) {
+
+            final Histogram<Integer> h1 = new Histogram<>("KEY", "READ_INDEX_MEAN_QUAL");
+            for ( int i = 0; i < readPositionQualityStats.size() ; i++ ) {
                 SeriesStats ss = readPositionQualityStats.get(i);
-                meanHist.increment(i, ss.getMean());
+                h1.increment(i, ss.getMean());
             }
-            metricsFile.addHistogram(meanHist);
+            metricsFile.addHistogram(h1);
+
+            final Histogram<Integer> h2 = new Histogram<>("KEY", "READ_INDEX_MEAN_SNVQL");
+            for ( int i = 0; i < readPositionSnvqStats.size() ; i++ ) {
+                SeriesStats ss = readPositionSnvqStats.get(i);
+                h2.increment(i, ss.getMean());
+            }
+            metricsFile.addHistogram(h2);
         }
     }
 
@@ -359,6 +383,54 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
          */
         @MergeByAdding
         public long PF_Q40_BASES = 0;
+
+        /**
+         * The total number of SNVQ values in all reads
+         */
+        @MergeByAdding
+        public long TOTAL_SNVQ;
+
+        /**
+         * The total number of SNVQ values in all PF reads
+         */
+        @MergeByAdding
+        public long PF_SNVQ = 0;
+
+        /**
+         * The number of SNVQ values in all reads that achieve quality score 20 or higher
+         */
+        @MergeByAdding
+        public long Q20_SNVQ = 0;
+
+        /**
+         * The number of SNVQ values in PF reads that achieve quality score 20 or higher
+         */
+        @MergeByAdding
+        public long PF_Q20_SNVQ = 0;
+
+        /**
+         * The number of SNVQ values in all reads that achieve quality score 30 or higher
+         */
+        @MergeByAdding
+        public long Q30_SNVQ = 0;
+
+        /**
+         * The number of SNVQ values in PF reads that achieve quality score 30 or higher
+         */
+        @MergeByAdding
+        public long PF_Q30_SNVQ = 0;
+
+        /**
+         * The number of SNVQ values in all reads that achieve quality score 40 or higher
+         */
+        @MergeByAdding
+        public long Q40_SNVQS = 0;
+
+        /**
+         * The number of SNVQ values in PF reads that achieve quality score 40 or higher
+         */
+        @MergeByAdding
+        public long PF_Q40_SNVQ = 0;
 
         /**
          * The sum of quality scores of all bases divided by 20
