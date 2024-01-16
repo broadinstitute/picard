@@ -341,10 +341,8 @@ public abstract class CommandLineProgram {
         // object created by this code path won't be valid - but we still have to set it here in case
         // the tool tries to access REFERENCE_SEQUENCE directly (such tools will subsequently fail given
         // a non-local file anyway, but this prevents them from immediately throwing an NPE).
-        final PicardHtsPath picardHtsPath = referenceSequence.getHtsPath();
-        REFERENCE_SEQUENCE = picardHtsPath == null ?
-                null :
-                new File(picardHtsPath.getURI().getPath()); // Must remove the "file://" prefix
+        final PicardHtsPath refHtsPath = referenceSequence.getHtsPath();
+        REFERENCE_SEQUENCE = ReferenceArgumentCollection.getFileSafe(refHtsPath, Log.getInstance(this.getClass()));
 
         // The TMP_DIR setting section below was moved from instanceMain() to here due to timing issues
         // related to checking whether R is installed. Certain programs, such as CollectInsertSizeMetrics
