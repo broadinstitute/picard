@@ -24,6 +24,6 @@ public class GATKBucketUtilsTest {
     public void testIsEligibleForPrefetching(String path, boolean isPrefetchable){
         final URI uri = URI.create(path);
         final Path uriPath = Paths.get(uri);
-        Assert.assertEquals(GATKBucketUtils.isEligibleForPrefetching(uriPath), isPrefetchable);
+        Assert.assertEquals(PicardBucketUtils.isEligibleForPrefetching(uriPath), isPrefetchable);
     }
 }
