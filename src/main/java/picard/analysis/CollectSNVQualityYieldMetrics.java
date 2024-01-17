@@ -26,7 +26,7 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Histogram;
@@ -41,8 +41,6 @@ import picard.util.SeriesStats;
 import picard.util.help.HelpConstants;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -59,7 +57,7 @@ import java.util.Vector;
 @DocumentedFeature
 public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
     private QualityYieldMetricsCollector collector = null;
-    public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
+    public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "BQ_COUNT");
     private Vector<SeriesStats> readPositionQualityStats = new Vector<>();
     public Histogram<Integer> snvqHistogram = new Histogram<>("KEY", "SNVQ_COUNT");
     private Vector<SeriesStats> readPositionSnvqStats = new Vector<>();
@@ -83,10 +81,10 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
             "the QualityYieldMetrics documentation</a> for details and explanations of the output metrics." +
             "<hr />";
 
-    @Argument(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
-            doc = "If available in the OQ tag, use the original quality scores " +
-                    "as inputs instead of the quality scores in the QUAL field.")
-    public boolean USE_ORIGINAL_QUALITIES = true;
+    @Argument(shortName = StandardOptionDefinitions.USE_ACTUAL_BASE_QUALITIES_SHORT_NAME,
+            doc = "Use the actual base quality (QUAL) scores " +
+                    "as inputs instead of the quality scores in the BQ field.")
+    public boolean USE_ACTUAL_ORIGINAL_QUALITIES = false;
 
     @Argument(doc = "If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting " +
             "of bases if there are secondary alignments in the input file.")
@@ -110,7 +108,7 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
+        this.collector = new QualityYieldMetricsCollector(USE_ACTUAL_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
     }
 
     @Override
@@ -134,7 +132,7 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
     public class QualityYieldMetricsCollector {
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
-        private final boolean useOriginalQualities;
+        private final boolean useActualBaseQualities;
 
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
@@ -147,13 +145,13 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
         // The metrics to be accumulated
         private final QualityYieldMetrics metrics;
 
-        public QualityYieldMetricsCollector(final boolean useOriginalQualities,
+        public QualityYieldMetricsCollector(final boolean useActualBaseQualities,
                                             final boolean includeSecondaryAlignments,
                                             final boolean includeSupplementalAlignments) {
-            this.useOriginalQualities = useOriginalQualities;
+            this.useActualBaseQualities = useActualBaseQualities;
             this.includeSecondaryAlignments = includeSecondaryAlignments;
             this.includeSupplementalAlignments = includeSupplementalAlignments;
-            this.metrics = new QualityYieldMetrics(useOriginalQualities);
+            this.metrics = new QualityYieldMetrics(useActualBaseQualities);
         }
 
         public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
@@ -172,8 +170,8 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
 
             // access regular quality
             final byte[] quals;
-            if (this.useOriginalQualities) {
-                byte[] tmp = rec.getOriginalBaseQualities();
+            if (!this.useActualBaseQualities) {
+                byte[] tmp = rec.getStringAttribute(SAMTag.BQ).getBytes();
                 if (tmp == null) tmp = rec.getBaseQualities();
                 quals = tmp;
             } else {
@@ -287,14 +285,14 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
 
         public void addHistograms(MetricsFile<QualityYieldMetrics, Integer> metricsFile) {
 
-            final Histogram<Integer> h1 = new Histogram<>("KEY", "READ_INDEX_MEAN_QUAL");
+            final Histogram<Integer> h1 = new Histogram<>("KEY", "READ_INDEX_MEAN_BQ");
             for ( int i = 0; i < readPositionQualityStats.size() ; i++ ) {
                 SeriesStats ss = readPositionQualityStats.get(i);
                 h1.increment(i, ss.getMean());
             }
             metricsFile.addHistogram(h1);
 
-            final Histogram<Integer> h2 = new Histogram<>("KEY", "READ_INDEX_MEAN_SNVQL");
+            final Histogram<Integer> h2 = new Histogram<>("KEY", "READ_INDEX_MEAN_SNVQ");
             for ( int i = 0; i < readPositionSnvqStats.size() ; i++ ) {
                 SeriesStats ss = readPositionSnvqStats.get(i);
                 h2.increment(i, ss.getMean());
