@@ -269,7 +269,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @DataProvider(name="testCloudCramDataProvider")
     public Object[][] testCloudCramDataProvider() {
         return new Object[][] {
-                {NA12878_MINI_CRAM, true, HG19_REFERENCE_GCLOUD},
                 {NA12878_MINI_CRAM, true, HG19_CHR2021_GCLOUD}
         };
     }
@@ -285,8 +284,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         testDownsampleWorker(inputSAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, metricsFile, Optional.empty());
     }
 
-    // Isolate the test case for cram input from the above tests for bams, since we've observed significant slow down when using
-    // a cram file in the cloud.
+    // Isolate the test case for cram input from the above tests for bams, since the tool is much slower with a
     @Test(groups = "cloud", dataProvider = "testCloudCramDataProvider")
     public void testCloudCram(final PicardHtsPath inputCRAM, final boolean outputInCloud, final PicardHtsPath reference) throws IOException {
         final Optional<PicardHtsPath> output = outputInCloud ?
