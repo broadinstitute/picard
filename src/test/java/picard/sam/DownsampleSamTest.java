@@ -58,8 +58,10 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     final int DEFAULT_RANDOM_SEED = 42;
     private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
     private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-    final PicardHtsPath NA12878_MINI_CRAM_LOCAL = new PicardHtsPath(TEST_DIR + "/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+
+    // These are the hg19 references with chromosome names "1" (rather than "chr1")
     private static final PicardHtsPath HG19_REFERENCE_GCLOUD = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
+    private static final PicardHtsPath HG19_CHR2021_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/references/human_g1k_v37.20.21.fasta");
 
     @Override
     public String getCommandLineProgramName() {
@@ -267,11 +269,8 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @DataProvider(name="testCloudCramDataProvider")
     public Object[][] testCloudCramDataProvider() {
         return new Object[][] {
-                {NA12878_MINI_CRAM, true}
-                // The following cases are commented out because they are very slow.
-                // {NA12878_MINI_CRAM, false},
-                // {NA12878_MINI_CRAM_LOCAL, true},
-                // {NA12878_MINI_CRAM_LOCAL, false},
+                {NA12878_MINI_CRAM, true, HG19_REFERENCE_GCLOUD},
+                {NA12878_MINI_CRAM, true, HG19_CHR2021_GCLOUD}
         };
     }
 
@@ -289,10 +288,10 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     // Isolate the test case for cram input from the above tests for bams, since we've observed significant slow down when using
     // a cram file in the cloud.
     @Test(groups = "cloud", dataProvider = "testCloudCramDataProvider")
-    public void testCloudCram(final PicardHtsPath inputCRAM, final boolean outputInCloud) throws IOException {
+    public void testCloudCram(final PicardHtsPath inputCRAM, final boolean outputInCloud, final PicardHtsPath reference) throws IOException {
         final Optional<PicardHtsPath> output = outputInCloud ?
                 Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", ".cram")) :
                 Optional.empty();
-        testDownsampleWorker(inputCRAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, Optional.empty(), Optional.of(HG19_REFERENCE_GCLOUD));
+        testDownsampleWorker(inputCRAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, Optional.empty(), Optional.of(reference));
     }
 }

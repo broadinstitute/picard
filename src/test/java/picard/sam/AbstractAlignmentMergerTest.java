@@ -705,7 +705,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         //yuck!
         final RequiredReferenceArgumentCollection requiredReferenceArgumentCollection = new RequiredReferenceArgumentCollection();
-        requiredReferenceArgumentCollection.REFERENCE_SEQUENCE = new PicardHtsPath(reference.getAbsolutePath());
+        requiredReferenceArgumentCollection.REFERENCE_SEQUENCE = new PicardHtsPath(reference);
         mergeBamAlignment.referenceSequence = requiredReferenceArgumentCollection;
 
         final File fileMerged = newTempSamFile("merged");
