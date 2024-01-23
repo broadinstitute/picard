@@ -149,19 +149,18 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             if (rec.getReadLength() == 0) return;
             if (!this.includeSecondaryAlignments && rec.isSecondaryAlignment()) return;
             if (!this.includeSupplementalAlignments && rec.getSupplementaryAlignmentFlag()) return;
-
+            metrics.TOTAL_READS++;
+            final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
+            if (!isPfRead) {
+                return;
+            }
             // convert to a flow based read
             FlowBasedReadUtils.ReadGroupInfo info = FlowBasedReadUtils.getReadGroupInfo(rec.getHeader(), rec);
             FlowBasedRead fread = new FlowBasedRead(rec, info.flowOrder, info.maxClass, fbargs);
 
-            metrics.TOTAL_READS++;
-            metrics.TOTAL_FLOWS += fread.getKey().length;
 
-            final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
-            if (isPfRead) {
-                metrics.PF_READS++;
-                metrics.PF_FLOWS += fread.getKey().length;
-            }
+            metrics.PF_READS++;
+            metrics.PF_FLOWS += fread.getKey().length;
 
             // get flow quals
             final byte[] quals = getFlowQualities(fread);
@@ -317,13 +316,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
          * The average read length of all the reads
          */
         @NoMergingIsDerived
-        public int MEAN_READ_LENGTH = 0;
-
-        /**
-         * The total number of flows in all reads
-         */
-        @MergeByAdding
-        public long TOTAL_FLOWS;
+        public int MEAN_READ_LENGTH_IN_FLOWS = 0;
 
         /**
          * The total number of flows in all PF reads
@@ -347,7 +340,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
          * The percentage of flows in all reads that achieve quality score 20 or higher
          */
         @MergingIsManual
-        public double PCT_Q20_FLOWS = 0;
+        public double PCT_PF_Q20_FLOWS = 0;
 
         /**
          * The number of flows in all reads that achieve quality score 30 or higher
@@ -382,9 +375,9 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         @Override
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
-            this.MEAN_READ_LENGTH = this.TOTAL_READS == 0 ? 0 : (int) (this.TOTAL_FLOWS / this.TOTAL_READS);
-            this.PCT_Q20_FLOWS = (double)this.Q20_FLOWS / this.TOTAL_FLOWS;
-            this.PCT_Q30_FLOWS = (double)this.Q30_FLOWS / this.TOTAL_FLOWS;
+            this.MEAN_READ_LENGTH_IN_FLOWS = this.PF_READS == 0 ? 0 : (int) (this.PF_FLOWS / this.PF_READS);
+            this.PCT_PF_Q20_FLOWS = (double)this.PF_Q20_FLOWS / this.PF_FLOWS;
+            this.PCT_Q30_FLOWS = (double)this.PF_Q30_FLOWS / this.PF_FLOWS;
         }
 
         @Override
