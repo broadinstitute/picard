@@ -50,12 +50,12 @@ import java.util.Vector;
  */
 
 @CommandLineProgramProperties(
-        summary = CollectSNVQualityYieldMetrics.USAGE_SUMMARY + CollectSNVQualityYieldMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectSNVQualityYieldMetrics.USAGE_SUMMARY,
+        summary = CollectQualityYieldMetricsSNVQ.USAGE_SUMMARY + CollectQualityYieldMetricsSNVQ.USAGE_DETAILS,
+        oneLineSummary = CollectQualityYieldMetricsSNVQ.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
-public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
+public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
     private QualityYieldMetricsCollector collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "BQ_COUNT");
     private Vector<SeriesStats> readPositionQualityStats = new Vector<>();
@@ -189,7 +189,6 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
             // add up quals, and quals >= 20
             int readPosition = 0;
             for (final int qual : quals) {
-                metrics.Q20_EQUIVALENT_YIELD += qual;
 
                 if (qual >= 40) {
                     metrics.Q20_BASES++;
@@ -203,7 +202,6 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
                 }
 
                 if (isPfRead) {
-                    metrics.PF_Q20_EQUIVALENT_YIELD += qual;
                     if (qual >= 40) {
                         metrics.PF_Q20_BASES++;
                         metrics.PF_Q30_BASES++;
@@ -229,7 +227,7 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
                         if (q >= 40) {
                             metrics.Q20_SNVQ++;
                             metrics.Q30_SNVQ++;
-                            metrics.Q40_SNVQS++;
+                            metrics.Q40_SNVQ++;
                             if ( isPfRead ) {
                                 metrics.PF_Q20_SNVQ++;
                                 metrics.PF_Q30_SNVQ++;
@@ -274,8 +272,6 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
         }
 
         public void finish() {
-            metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
-            metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
             metrics.calculateDerivedFields();
         }
 
@@ -338,7 +334,7 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
          * The total number of bases in all reads
          */
         @MergeByAdding
-        public long TOTAL_BASES;
+        public long TOTAL_BASES = 0;
 
         /**
          * The total number of bases in all PF reads
@@ -386,7 +382,7 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
          * The total number of SNVQ values in all reads
          */
         @MergeByAdding
-        public long TOTAL_SNVQ;
+        public long TOTAL_SNVQ = 0;
 
         /**
          * The total number of SNVQ values in all PF reads
@@ -422,7 +418,7 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
          * The number of SNVQ values in all reads that achieve quality score 40 or higher
          */
         @MergeByAdding
-        public long Q40_SNVQS = 0;
+        public long Q40_SNVQ = 0;
 
         /**
          * The number of SNVQ values in PF reads that achieve quality score 40 or higher
@@ -431,16 +427,40 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
         public long PF_Q40_SNVQ = 0;
 
         /**
-         * The sum of quality scores of all bases divided by 20
+         * The percentage of SNVQ values in all reads that achieve quality score 20 or higher
          */
-        @MergeByAdding
-        public long Q20_EQUIVALENT_YIELD = 0;
+        @MergingIsManual
+        public double PCT_Q20_SNVQ = 0;
 
         /**
-         * The sum of quality scores of all bases in PF reads divided by 20
+         * The percentage of SNVQ values in all reads that achieve quality score 30 or higher
          */
-        @MergeByAdding
-        public long PF_Q20_EQUIVALENT_YIELD = 0;
+        @MergingIsManual
+        public double PCT_Q30_SNVQ = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 40 or higher
+         */
+        @MergingIsManual
+        public double PCT_Q40_SNVQ = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 20 or higher and pass filter
+         */
+        @MergingIsManual
+        public double PCT_PF_Q20_SNVQ = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 30 or higher and pass filter
+         */
+        @MergingIsManual
+        public double PCT_PF_Q30_SNVQ = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 40 or higher and pass filter
+         */
+        @MergingIsManual
+        public double PCT_PF_Q40_SNVQ = 0;
 
         @MergeByAssertEquals
         protected final boolean useOriginalQualities;
@@ -449,6 +469,14 @@ public class CollectSNVQualityYieldMetrics extends SinglePassSamProgram {
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
             this.READ_LENGTH = this.TOTAL_READS == 0 ? 0 : (int) (this.TOTAL_BASES / this.TOTAL_READS);
+
+            this.PCT_Q20_SNVQ = this.TOTAL_SNVQ == 0 ? 0 : (double)this.Q20_SNVQ / this.TOTAL_SNVQ;
+            this.PCT_Q30_SNVQ = this.TOTAL_SNVQ == 0 ? 0 : (double)this.Q30_SNVQ / this.TOTAL_SNVQ;
+            this.PCT_Q40_SNVQ = this.TOTAL_SNVQ == 0 ? 0 : (double)this.Q40_SNVQ / this.TOTAL_SNVQ;
+
+            this.PCT_PF_Q20_SNVQ = this.PF_SNVQ == 0 ? 0 : (double)this.PF_Q20_SNVQ / this.PF_SNVQ;
+            this.PCT_PF_Q30_SNVQ = this.PF_SNVQ == 0 ? 0 : (double)this.PF_Q30_SNVQ / this.PF_SNVQ;
+            this.PCT_PF_Q40_SNVQ = this.PF_SNVQ == 0 ? 0 : (double)this.PF_Q40_SNVQ / this.PF_SNVQ;
         }
 
         @Override

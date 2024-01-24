@@ -34,13 +34,13 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * Created by kbergin on 11/23/15.
+ * Created by dror27 on 24/01/2024.
  */
-public class CollectSNVQualityYieldMetricsTest extends CommandLineProgramTest {
+public class CollectQualityYieldMetricsSNVQTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
 
     public String getCommandLineProgramName() {
-        return CollectSNVQualityYieldMetrics.class.getSimpleName();
+        return CollectQualityYieldMetricsSNVQ.class.getSimpleName();
     }
 
     @Test
@@ -55,26 +55,35 @@ public class CollectSNVQualityYieldMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectSNVQualityYieldMetrics.QualityYieldMetrics, ?> output = new MetricsFile<>();
+        final MetricsFile<CollectQualityYieldMetricsSNVQ.QualityYieldMetrics, ?> output = new MetricsFile<>();
         output.read(new FileReader(outfile));
 
         Assert.assertEquals(output.getMetrics().size(),1);
 
-        final CollectSNVQualityYieldMetrics.QualityYieldMetrics metrics = output.getMetrics().get(0);
-        /*
-        Assert.assertEquals(metrics.TOTAL_READS, 52);
-        Assert.assertEquals(metrics.PF_READS, 52);
-        Assert.assertEquals(metrics.READ_LENGTH, 101);
-        Assert.assertEquals(metrics.TOTAL_BASES, 5252);
-        Assert.assertEquals(metrics.PF_BASES, 5252);
-        Assert.assertEquals(metrics.Q20_BASES, 3532);
-        Assert.assertEquals(metrics.PF_Q20_BASES, 3532);
-        Assert.assertEquals(metrics.Q30_BASES, 3145);
-        Assert.assertEquals(metrics.PF_Q30_BASES, 3145);
-        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 6497);
-        Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 6497);
-         */
-
+        final CollectQualityYieldMetricsSNVQ.QualityYieldMetrics metrics = output.getMetrics().get(0);
+        Assert.assertEquals(metrics.TOTAL_READS, 26577);
+        Assert.assertTrue(metrics.PF_READS > 0);
+        Assert.assertTrue(metrics.READ_LENGTH > 0);
+        Assert.assertTrue(metrics.TOTAL_BASES > 0);
+        Assert.assertTrue(metrics.PF_BASES > 0);
+        Assert.assertTrue(metrics.Q20_BASES > 0);
+        Assert.assertTrue(metrics.PF_Q20_BASES > 0);
+        Assert.assertTrue(metrics.PF_Q30_BASES > 0);
+        Assert.assertTrue(metrics.Q40_BASES > 0);
+        Assert.assertTrue(metrics.PF_Q40_BASES > 0);
+        Assert.assertTrue(metrics.TOTAL_SNVQ > 0);
+        Assert.assertTrue(metrics.PF_SNVQ > 0);
+        Assert.assertTrue(metrics.Q20_SNVQ > 0);
+        Assert.assertTrue(metrics.PF_Q20_SNVQ > 0);
+        Assert.assertTrue(metrics.Q30_SNVQ > 0);
+        Assert.assertTrue(metrics.PF_Q30_SNVQ > 00);
+        Assert.assertTrue(metrics.Q40_SNVQ > 0);
+        Assert.assertTrue(metrics.PF_Q40_SNVQ > 0);
+        Assert.assertTrue(metrics.PCT_Q20_SNVQ > 0);
+        Assert.assertTrue(metrics.PCT_Q30_SNVQ > 0);
+        Assert.assertTrue(metrics.PCT_Q40_SNVQ > 0);
+        Assert.assertTrue(metrics.PCT_PF_Q20_SNVQ > 00);
+        Assert.assertTrue(metrics.PCT_PF_Q30_SNVQ > 0);
+        Assert.assertTrue(metrics.PCT_PF_Q40_SNVQ > 0);
     }
-
 }
