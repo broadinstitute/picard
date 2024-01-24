@@ -235,10 +235,10 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
                             }
                         } else if (q >= 30) {
                             metrics.Q20_SNVQ++;
-                            metrics.Q30_BASES++;
+                            metrics.Q30_SNVQ++;
                             if ( isPfRead ) {
                                 metrics.PF_Q20_SNVQ++;
-                                metrics.PF_Q30_BASES++;
+                                metrics.PF_Q30_SNVQ++;
                             }
                         } else if (q >= 20) {
                             metrics.Q20_SNVQ++;
@@ -379,6 +379,42 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
         public long PF_Q40_BASES = 0;
 
         /**
+         * The percentage of SNVQ values in all reads that achieve quality score 20 or higher
+         */
+        @MergingIsManual
+        public double PCT_Q20_BASES = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 30 or higher
+         */
+        @MergingIsManual
+        public double PCT_Q30_BASES = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 40 or higher
+         */
+        @MergingIsManual
+        public double PCT_Q40_BASES = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 20 or higher and pass filter
+         */
+        @MergingIsManual
+        public double PCT_PF_Q20_BASES = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 30 or higher and pass filter
+         */
+        @MergingIsManual
+        public double PCT_PF_Q30_BASES = 0;
+
+        /**
+         * The percentage of SNVQ values in all reads that achieve quality score 40 or higher and pass filter
+         */
+        @MergingIsManual
+        public double PCT_PF_Q40_BASES = 0;
+
+        /**
          * The total number of SNVQ values in all reads
          */
         @MergeByAdding
@@ -469,6 +505,15 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
             this.READ_LENGTH = this.TOTAL_READS == 0 ? 0 : (int) (this.TOTAL_BASES / this.TOTAL_READS);
+
+            this.PCT_Q20_BASES = this.TOTAL_BASES == 0 ? 0 : (double)this.Q20_BASES / this.TOTAL_BASES;
+            this.PCT_Q30_BASES = this.TOTAL_BASES == 0 ? 0 : (double)this.Q30_BASES / this.TOTAL_BASES;
+            this.PCT_Q40_BASES = this.TOTAL_BASES == 0 ? 0 : (double)this.Q40_BASES / this.TOTAL_BASES;
+
+            this.PCT_PF_Q20_BASES = this.PF_BASES == 0 ? 0 : (double)this.PF_Q20_BASES / this.PF_BASES;
+            this.PCT_PF_Q30_BASES = this.PF_BASES == 0 ? 0 : (double)this.PF_Q30_BASES / this.PF_BASES;
+            this.PCT_PF_Q40_BASES = this.PF_BASES == 0 ? 0 : (double)this.PF_Q40_BASES / this.PF_BASES;
+
 
             this.PCT_Q20_SNVQ = this.TOTAL_SNVQ == 0 ? 0 : (double)this.Q20_SNVQ / this.TOTAL_SNVQ;
             this.PCT_Q30_SNVQ = this.TOTAL_SNVQ == 0 ? 0 : (double)this.Q30_SNVQ / this.TOTAL_SNVQ;
