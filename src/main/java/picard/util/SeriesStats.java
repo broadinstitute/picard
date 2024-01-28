@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SeriesStats {
 
@@ -13,7 +14,7 @@ public class SeriesStats {
     private double sum = 0;
     private double min = Double.NaN;
     private double max = Double.NaN;
-    private SortedMap<Double, AtomicInteger> bins = new TreeMap<>();
+    private SortedMap<Double, AtomicLong> bins = new TreeMap<>();
 
     public void add(double v) {
 
@@ -32,7 +33,7 @@ public class SeriesStats {
         if ( bins.containsKey(v) ) {
             bins.get(v).incrementAndGet();
         } else {
-            bins.put(v, new AtomicInteger(1));
+            bins.put(v, new AtomicLong(1));
         }
     }
 
@@ -73,8 +74,8 @@ public class SeriesStats {
 
             int percentileIndex = (int)(count * precentile / 100);
             int index = 0;
-            for (Map.Entry<Double, AtomicInteger> entry : bins.entrySet() ) {
-                int binSize = entry.getValue().get();
+            for (Map.Entry<Double, AtomicLong> entry : bins.entrySet() ) {
+                long binSize = entry.getValue().get();
                 if ( percentileIndex >= index && (percentileIndex < (index + binSize)) ) {
                     return entry.getKey();
                 }
@@ -97,8 +98,8 @@ public class SeriesStats {
 
         // calculate sum of sqr(deviations)
         double vsum = 0;
-        for (Map.Entry<Double, AtomicInteger> entry : bins.entrySet()) {
-            int binSize = entry.getValue().get();
+        for (Map.Entry<Double, AtomicLong> entry : bins.entrySet()) {
+            long binSize = entry.getValue().get();
             vsum += (Math.pow(entry.getKey() - mean, 2) * binSize);
         }
 
