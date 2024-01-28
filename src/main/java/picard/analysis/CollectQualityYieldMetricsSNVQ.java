@@ -172,7 +172,15 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
             final byte[] quals;
             if (!this.useActualBaseQualities) {
                 byte[] tmp = rec.getStringAttribute(SAMTag.BQ).getBytes();
-                if (tmp == null) tmp = rec.getBaseQualities();
+                if (tmp == null) {
+                    // fall back on base queslities
+                    tmp = rec.getBaseQualities();
+                } else {
+                    // zero base bq values
+                    for ( int i = 0 ; i < tmp.length ; i++ ) {
+                        tmp[i] -= 33;
+                    }
+                }
                 quals = tmp;
             } else {
                 quals = rec.getBaseQualities();
