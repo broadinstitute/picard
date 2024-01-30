@@ -778,36 +778,30 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.PCT_TARGET_BASES_100000X = (double) targetBases[17] / (double) targetBases[0];
         }
 
+
         private void calculateTheoreticalHetSensitivity(){
-            final long[] unfilteredDepthHistogramArray = new long[coverageCap + 1];
+            final long[] unfilteredDepthArray = new long[coverageCap + 1];
 
             // collect the unfiltered coverages (i.e. only quality 2 bases excluded) for all targets into a histogram array
             for (final Coverage c : this.unfilteredCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
-                    unfilteredDepthHistogramArray[0] += c.interval.length();
+                    unfilteredDepthArray[0] += c.interval.length();
+                    unfilteredDepthHistogram.increment(0, c.interval.length());
                     continue;
                 }
 
                 for (final int depth : c.getDepths()) {
-                    unfilteredDepthHistogramArray[Math.min(depth, coverageCap)]++;
+                    unfilteredDepthArray[Math.min(depth, coverageCap)]++;
+                    unfilteredDepthHistogram.increment(depth, 1);
                 }
             }
 
-            if (LongStream.of(baseQHistogramArray).sum() != LongStream.rangeClosed(0, coverageCap).map(i -> i * unfilteredDepthHistogramArray[(int)i]).sum()) {
+            if (LongStream.of(baseQHistogramArray).sum() != LongStream.rangeClosed(0, coverageCap).map(i -> i * unfilteredDepthArray[(int)i]).sum()) {
                 throw new PicardException("numbers of bases in the base quality histogram and the coverage histogram are not equal");
             }
 
-            // TODO: normalize the arrays directly. then we don't have to convert to Histograms
-            for (int i=0; i<baseQHistogramArray.length; ++i) {
-                unfilteredBaseQHistogram.increment(i, baseQHistogramArray[i]);
-            }
-
-            for (int i = 0; i < unfilteredDepthHistogramArray.length; i++){
-                unfilteredDepthHistogram.increment(i, unfilteredDepthHistogramArray[i]);
-            }
-
-            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredDepthHistogram);
-            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredBaseQHistogram);
+            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeDepthArray(unfilteredDepthArray);
+            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeDepthArray(baseQHistogramArray);
             metrics.HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, LOG_ODDS_THRESHOLD);
             metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
 
