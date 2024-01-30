@@ -34,6 +34,7 @@ import picard.util.MathUtil;
 
 import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -196,6 +197,22 @@ public class TheoreticalSensitivity {
             }
             return result;
         }
+    }
+
+    public static double[] normalizeDepthArray(final long[] depthArray) {
+        if (depthArray == null || depthArray.length == 0) {
+            throw new PicardException("Histogram is null and cannot be normalized");
+        }
+
+        long sumofValues = LongStream.of(depthArray).sum();
+        final double[] normalizedHistogram = new double[depthArray.length];
+
+        for (int i = 0; i < depthArray.length; i++) {
+            normalizedHistogram[i] = (double) depthArray[i] / sumofValues;
+        }
+
+        return normalizedHistogram;
+
     }
 
     public static double[] normalizeHistogram(final Histogram<Integer> histogram) {
