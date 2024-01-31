@@ -128,7 +128,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
-    private final Histogram<Integer> unCappedUnfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredBaseQHistogram = new Histogram<>("baseq", "unfiltered_baseq_count");
@@ -788,28 +787,21 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         private void calculateTheoreticalHetSensitivity(){
             LongStream.range(0, coverageCap).forEach(i -> unfilteredDepthHistogram.increment((int) i, 0));
-            LongStream.range(0, ufMaxDepth).forEach(i -> unCappedUnfilteredDepthHistogram.increment((int) i, 0));
 
             // collect the unfiltered coverages (i.e. only quality 2 bases excluded) for all targets into a histogram array
             for (final Coverage c : this.unfilteredCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
                     unfilteredDepthHistogram.increment(0, c.interval.length());
-                    unCappedUnfilteredDepthHistogram.increment(0, c.interval.length());
                     continue;
                 }
 
                 for (final int depth : c.getDepths()) {
                     unfilteredDepthHistogram.increment(Math.min(depth, coverageCap), 1);
-                    unCappedUnfilteredDepthHistogram.increment(depth, 1);
                 }
             }
 
             if (LongStream.of(baseQHistogramArray).sum() != unfilteredDepthHistogram.getSum()) {
                 throw new PicardException("numbers of bases in the base quality histogram and the coverage histogram are not equal");
-            }
-
-            if (LongStream.of(unCappedBaseQHistogramArray).sum() != unCappedUnfilteredDepthHistogram.getSum()) {
-                throw new PicardException("numbers of bases in the uncapped base quality histogram and the uncapped coverage histogram are not equal");
             }
 
             //TODO this is used elsewhere, so can't remove from here just yet - consider moving to accessor.
