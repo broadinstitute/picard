@@ -377,7 +377,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         // only excludes bases with quality 2. collected for theoretical set sensitivity
         private final Map<Interval, Coverage> unfilteredCoverageByTarget;
 
-        private long ufMaxDepth = 0;
         private long hqMaxDepth = 0;
 
         private final TargetMetrics metrics = new TargetMetrics();
@@ -638,7 +637,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                         baseQHistogramArray[qual]++;
                                     }
                                     unCappedBaseQHistogramArray[qual]++;
-                                    ufMaxDepth = Math.max(ufMaxDepth, ufCoverage.getDepths()[targetOffset]);
 
                                     // Then filtered
                                     if (highQual) {
