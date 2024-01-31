@@ -199,22 +199,6 @@ public class TheoreticalSensitivity {
         }
     }
 
-    public static double[] normalizeDepthArray(final long[] depthArray) {
-        if (depthArray == null || depthArray.length == 0) {
-            throw new PicardException("Histogram is null and cannot be normalized");
-        }
-
-        long sumofValues = LongStream.of(depthArray).sum();
-        final double[] normalizedHistogram = new double[depthArray.length];
-
-        for (int i = 0; i < depthArray.length; i++) {
-            normalizedHistogram[i] = (double) depthArray[i] / sumofValues;
-        }
-
-        return normalizedHistogram;
-
-    }
-
     public static double[] normalizeHistogram(final Histogram<Integer> histogram) {
         if (histogram == null) throw new PicardException("Histogram is null and cannot be normalized");
 
