@@ -30,6 +30,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -60,6 +61,11 @@ import java.util.Vector;
 )
 @ExperimentalFeature
 public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
+
+    private static final byte MIN_QUAL = 0;
+    private static final byte MAX_QUAL = 100;
+    private final Log log = Log.getInstance(CollectQualityYieldMetricsFlow.class);
+
     private static final int CYCLE_SIZE = 4;
     private QualityYieldMetricsCollectorFlow collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
@@ -216,7 +222,19 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             double[] errorProbs = computeErrorProb(fread);
             byte[] quals = new byte[errorProbs.length];
             for ( int i = 0 ; i < errorProbs.length ; i++ ) {
-                quals[i] = (byte)Math.round(-10 * Math.log10(errorProbs[i]));
+                if ( errorProbs[i] == 0.0 ) {
+                    // this is a special case that should not happen
+                    log.warn(fread.getReadName() + ": zero errorProb on flow: " + i);
+                    quals[i] = MAX_QUAL;
+                } else {
+                    long q = Math.round(-10 * Math.log10(errorProbs[i]));
+                    if ( q < MIN_QUAL || q > MAX_QUAL ) {
+                        // this is an out-of-range condition. should not happen as well
+                        log.warn(fread.getReadName() + ": qual " + q + " is out of range on flow: " + i);
+                        q = Math.max(MIN_QUAL, Math.min(MAX_QUAL, q));
+                    }
+                    quals[i] = (byte)q;
+                }
             }
             return quals;
         }

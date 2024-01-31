@@ -318,6 +318,10 @@ public class FlowBasedRead {
             }
         }
     }
+
+    public String getReadName() {
+        return samRecord.getReadName();
+    }
 }
 
 
