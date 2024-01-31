@@ -203,45 +203,6 @@ public class TheoreticalSensitivityTest {
         };
     }
 
-    @Test(dataProvider = "hetSensDataProvider")
-    public void testHetSensTargetedHS(final double expected, final File metricsFile) throws Exception {
-        final double tolerance = 0.000_000_01;
-
-        final MetricsFile<?, Integer> metrics = new MetricsFile<>();
-        try (final FileReader metricsFileReader = new FileReader(metricsFile)) {
-            metrics.read(metricsFileReader);
-        }
-
-        final List<Histogram<Integer>> histograms = metrics.getAllHistograms();
-        final Histogram<Integer> depthHistogram = histograms.get(0);
-        final Histogram<Integer> qualityHistogram = histograms.get(1);
-
-        //flip histograms into array to do testing.
-        final long[] depthHistArray = new long[depthHistogram.size()];
-        for (int i = 0; i < depthHistogram.size(); i++) {
-            if (depthHistogram.get(i) != null) {
-                depthHistArray[i] = (long) depthHistogram.get(i).getValue();
-            }
-        }
-
-        final long[] qualHistArray = new long[qualityHistogram.size()];
-        for (int i = 0; i < qualityHistogram.size(); i++) {
-            if (qualityHistogram.get(i) != null) {
-                qualHistArray[i] = (long) qualityHistogram.get(i).getValue();
-            }
-        }
-
-
-        final double[] depthDistribution = TheoreticalSensitivity.normalizeDepthArray(depthHistArray);
-        final double[] qualityDistribution = TheoreticalSensitivity.normalizeDepthArray(qualHistArray);
-
-        final int sampleSize = 1_000;
-        final double logOddsThreshold = 3.0;
-
-        final double result = TheoreticalSensitivity.hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, logOddsThreshold);
-        Assert.assertEquals(result, expected, tolerance);
-    }
-
 
     @Test(dataProvider = "hetSensDataProvider")
     public void testHetSensTargeted(final double expected, final File metricsFile) throws Exception {
