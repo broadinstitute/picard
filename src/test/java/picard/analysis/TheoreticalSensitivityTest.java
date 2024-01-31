@@ -203,7 +203,6 @@ public class TheoreticalSensitivityTest {
         };
     }
 
-
     @Test(dataProvider = "hetSensDataProvider")
     public void testHetSensTargeted(final double expected, final File metricsFile) throws Exception {
         final double tolerance = 0.000_000_01;
