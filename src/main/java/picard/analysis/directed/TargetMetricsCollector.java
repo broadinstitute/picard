@@ -128,9 +128,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
+    private final Histogram<Integer> unCappedUnfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredBaseQHistogram = new Histogram<>("baseq", "unfiltered_baseq_count");
+    private final Histogram<Integer> unCappedUnfilteredBaseQHistogram = new Histogram<>("baseq", "unfiltered_baseq_count");
 
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
@@ -367,12 +369,17 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         private File perBaseOutput;
 
         final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
+        final long[] unCappedBaseQHistogramArray = new long[Byte.MAX_VALUE];
+
         // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage
         // excludes bases with qualities lower than minimumBaseQuality (default 20)
         private final Map<Interval, Coverage> highQualityCoverageByTarget;
 
         // only excludes bases with quality 2. collected for theoretical set sensitivity
         private final Map<Interval, Coverage> unfilteredCoverageByTarget;
+
+        private long ufMaxDepth = 0;
+        private long hqMaxDepth = 0;
 
         private final TargetMetrics metrics = new TargetMetrics();
         private final int minimumBaseQuality;
@@ -631,11 +638,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                     if (ufCoverage.getDepths()[targetOffset] <= coverageCap) {
                                         baseQHistogramArray[qual]++;
                                     }
+                                    unCappedBaseQHistogramArray[qual]++;
+                                    ufMaxDepth = Math.max(ufMaxDepth, ufCoverage.getDepths()[targetOffset]);
 
                                     // Then filtered
                                     if (highQual) {
                                         final Coverage hqCoverage = highQualityCoverageByTarget.get(target);
                                         hqCoverage.addBase(targetOffset);
+                                        hqMaxDepth = Math.max(hqMaxDepth, hqCoverage.getDepths()[targetOffset]);
 
                                         if (coveredTargets.add(target)) {
                                             hqCoverage.incrementReadCount();
@@ -700,15 +710,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
         private void calculateTargetCoverageMetrics() {
 
+            LongStream.range(0, hqMaxDepth).forEach(i -> highQualityDepthHistogram.increment((int) i, 0));
+
             int zeroCoverageTargets = 0;
 
             // the number of bases we counted towards the depth histogram plus those that got thrown out by the coverage cap
             long totalCoverage = 0;
 
-            // the maximum depth at any target base
-            long maxDepth = 0;
-
-            // the minimum depth at any target base
             long minDepth = Long.MAX_VALUE;
 
             // The "how many target bases at at-least X" calculations.
@@ -732,7 +740,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 for (final int depth : c.getDepths()) {
                     totalCoverage += depth;
                     highQualityDepthHistogram.increment(depth, 1);
-                    maxDepth = Math.max(maxDepth, depth);
                     minDepth = Math.min(minDepth, depth);
 
                     // Add to the "how many target bases at at-least X" calculations.
@@ -749,9 +756,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
             metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
-            metrics.MAX_TARGET_COVERAGE = maxDepth;
+            metrics.MAX_TARGET_COVERAGE = hqMaxDepth;
             // Use Math.min() to account for edge case where highQualityCoverageByTarget is empty (minDepth=Long.MAX_VALUE)
-            metrics.MIN_TARGET_COVERAGE = Math.min(minDepth, maxDepth);
+            metrics.MIN_TARGET_COVERAGE = Math.min(minDepth, hqMaxDepth);
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
             // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage
@@ -780,28 +787,42 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
 
         private void calculateTheoreticalHetSensitivity(){
-            final long[] unfilteredDepthArray = new long[coverageCap + 1];
+            LongStream.range(0, coverageCap).forEach(i -> unfilteredDepthHistogram.increment((int) i, 0));
+            LongStream.range(0, ufMaxDepth).forEach(i -> unCappedUnfilteredDepthHistogram.increment((int) i, 0));
 
             // collect the unfiltered coverages (i.e. only quality 2 bases excluded) for all targets into a histogram array
             for (final Coverage c : this.unfilteredCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
-                    unfilteredDepthArray[0] += c.interval.length();
                     unfilteredDepthHistogram.increment(0, c.interval.length());
+                    unCappedUnfilteredDepthHistogram.increment(0, c.interval.length());
                     continue;
                 }
 
                 for (final int depth : c.getDepths()) {
-                    unfilteredDepthArray[Math.min(depth, coverageCap)]++;
-                    unfilteredDepthHistogram.increment(depth, 1);
+                    unfilteredDepthHistogram.increment(Math.min(depth, coverageCap), 1);
+                    unCappedUnfilteredDepthHistogram.increment(depth, 1);
                 }
             }
 
-            if (LongStream.of(baseQHistogramArray).sum() != LongStream.rangeClosed(0, coverageCap).map(i -> i * unfilteredDepthArray[(int)i]).sum()) {
+            if (LongStream.of(baseQHistogramArray).sum() != unfilteredDepthHistogram.getSum()) {
                 throw new PicardException("numbers of bases in the base quality histogram and the coverage histogram are not equal");
             }
 
-            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeDepthArray(unfilteredDepthArray);
-            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeDepthArray(baseQHistogramArray);
+            if (LongStream.of(unCappedBaseQHistogramArray).sum() != unCappedUnfilteredDepthHistogram.getSum()) {
+                throw new PicardException("numbers of bases in the uncapped base quality histogram and the uncapped coverage histogram are not equal");
+            }
+
+            //TODO this is used elsewhere, so can't remove from here just yet - consider moving to accessor.
+            for (int i=0; i<baseQHistogramArray.length; ++i) {
+                unfilteredBaseQHistogram.increment(i, baseQHistogramArray[i]);
+            }
+
+            for (int i=0; i<unCappedBaseQHistogramArray.length; ++i) {
+                unCappedUnfilteredBaseQHistogram.increment(i, unCappedBaseQHistogramArray[i]);
+            }
+
+            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredDepthHistogram);
+            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredBaseQHistogram);
             metrics.HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, LOG_ODDS_THRESHOLD);
             metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
 
@@ -931,7 +952,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         public void addMetricsToFile(final MetricsFile<METRIC_TYPE, Integer> hsMetricsComparableMetricsFile) {
             hsMetricsComparableMetricsFile.addMetric(convertMetric(this.metrics));
             hsMetricsComparableMetricsFile.addHistogram(highQualityDepthHistogram);
-            hsMetricsComparableMetricsFile.addHistogram(unfilteredBaseQHistogram);
+            hsMetricsComparableMetricsFile.addHistogram(unCappedUnfilteredBaseQHistogram);
         }
     }
 
