@@ -219,24 +219,22 @@ public class FlowBasedRead {
         }
     }
 
-    //Finds the quality that is being set when the probability of error is very low
+    //Finds the quality that is being set when the probability of error is the minimal
     private double estimateFillingValue(){
         final byte[] quals = samRecord.getBaseQualities();
-        final byte[] tp = samRecord.getSignedByteArrayAttribute(FLOW_MATRIX_TAG_NAME);
         double maxQual = 0;
 
         for (int i = 0; i < quals.length; i++) {
-            if (tp[i]!=0){
-                continue;
-            }
             if (quals[i] > maxQual){
                 maxQual = quals[i];
             }
         }
-        // in the very rare case when there is no tp=0 anywhere, just return the default "filling value"
+
+        // in the very rare case when there are no qualities in the read, we set the maxQual to 40
         if (maxQual==0){
-            return fbargs.fillingValue;
+            maxQual = 40;
         }
+
         return Math.pow(10, -maxQual / 10);
     }
 
