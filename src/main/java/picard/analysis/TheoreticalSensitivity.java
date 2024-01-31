@@ -34,7 +34,6 @@ import picard.util.MathUtil;
 
 import java.util.*;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.math3.distribution.BinomialDistribution;
