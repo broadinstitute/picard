@@ -25,12 +25,15 @@ package picard.sam;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
+import picard.util.GCloudTestUtils;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -278,5 +281,54 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
         return tempDict.toPath();
+    }
+
+    // This is a copy of gs://hellbender/test/resources/hg19mini.fasta. Using the original file in the original location is
+    // undesirable because an accompanying dictionary already exists in the same directory. So we copied it to picard/references
+    // where the dictionary does not exist.
+    final PicardHtsPath HG19_MINI = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "picard/references/hg19mini.fasta");
+    final PicardHtsPath HG19_MINI_LOCAL = new PicardHtsPath("testdata/picard/reference/hg19mini.fasta");
+
+    final PicardHtsPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_STAGING_DEFAULT, "picard/");
+
+    @DataProvider
+    public Object[][] cloudTestData() {
+        return new Object[][] {
+                {HG19_MINI},
+                {HG19_MINI_LOCAL}
+        };
+    }
+
+
+    @Test(groups = "cloud", dataProvider = "cloudTestData")
+    public void testCloud(final PicardHtsPath inputReference) {
+        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR.getURIString() + "test", ".dict");
+
+        final String[] argv = {
+                "REFERENCE=" + inputReference.getURI(),
+                "OUTPUT=" + output,
+        };
+
+        // This is the "original" dictionary that lives in gs://hellbender/test/resources/
+        final PicardHtsPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "hg19mini.dict");
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(expectedOutputPath.toPath());
+        final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(output.toPath());
+
+        assertDictionariesEqual(actualDictionary, expectedDictionary);
+        // Check the URI_TAG separately
+        Assert.assertEquals(actualDictionary.getSequence(0).getAttribute(SAMSequenceRecord.URI_TAG), inputReference.getURIString());
+    }
+
+    // SAMSequenceRecord::equal is too strict (we don't require UR of the two files to match), so check equality this way
+    private void assertDictionariesEqual(final SAMSequenceDictionary dict1, final SAMSequenceDictionary dict2){
+        Assert.assertEquals(dict1.size(), dict2.size());
+        for (int i = 0; i < dict2.size(); i++){
+            final SAMSequenceRecord expectedRecord = dict2.getSequence(i);
+            final SAMSequenceRecord actualRecord = dict1.getSequence(i);
+            Assert.assertEquals(actualRecord.getSequenceName(), expectedRecord.getSequenceName());
+            Assert.assertEquals(actualRecord.getSequenceLength(), expectedRecord.getSequenceLength());
+            Assert.assertEquals(actualRecord.getSequenceIndex(), expectedRecord.getSequenceIndex());
+        }
     }
 }

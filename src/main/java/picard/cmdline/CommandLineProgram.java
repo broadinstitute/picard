@@ -55,6 +55,7 @@ import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PathProvider;
+import picard.nio.PicardHtsPath;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -333,7 +334,15 @@ public abstract class CommandLineProgram {
         if (!ret) {
             return false;
         }
-        REFERENCE_SEQUENCE = referenceSequence.getReferenceFile();
+
+        // Set the REFERENCE_SEQUENCE for tools that are not nio-aware and still depend on a File object
+        // (as opposed to using the preferred method of calling referenceSequence.getHtsPath()). Note
+        // that if the URI scheme for the reference is something other than "file", the REFERENCE_SEQUENCE
+        // object created by this code path won't be valid - but we still have to set it here in case
+        // the tool tries to access REFERENCE_SEQUENCE directly (such tools will subsequently fail given
+        // a non-local file anyway, but this prevents them from immediately throwing an NPE).
+        final PicardHtsPath refHtsPath = referenceSequence.getHtsPath();
+        REFERENCE_SEQUENCE = ReferenceArgumentCollection.getFileSafe(refHtsPath, Log.getInstance(this.getClass()));
 
         // The TMP_DIR setting section below was moved from instanceMain() to here due to timing issues
         // related to checking whether R is installed. Certain programs, such as CollectInsertSizeMetrics

@@ -32,8 +32,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
-import picard.nio.GATKBucketUtils;
-import picard.nio.GATKIOUtils;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardIOUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
@@ -242,13 +242,14 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
                                 final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) {
-        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
-        final String output = GATKBucketUtils.getTempFilePath(outputDirFullName, INTERVAL_LIST_EXTENSION);
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : null;
+        final String prefix = "IntervalListTools";
+        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(outputDirFullName, prefix, INTERVAL_LIST_EXTENSION);
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT=" + output);
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        return IntervalList.fromPath(GATKIOUtils.getPath(output));
+        return IntervalList.fromPath(output.toPath());
     }
 
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue) throws IOException {
@@ -262,15 +263,16 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
                                    boolean unique, boolean dontMergeAbutting, Path input1, Path input2,
                                    final boolean cloudOutput) throws IOException {
-        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : "IntervalListTools";
-        final String countOutput = GATKBucketUtils.getTempFilePath(outputDirFullName, ".txt");
+        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : null;
+        final String prefix = "IntervalListTools";
+        final PicardHtsPath countOutput = PicardBucketUtils.getTempFilePath(outputDirFullName, prefix, ".txt");
 
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT_VALUE=" + outputValue);
         args.add("COUNT_OUTPUT=" + countOutput);
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
-        final Scanner reader = new Scanner(GATKIOUtils.getPath(countOutput));
+        final Scanner reader = new Scanner(countOutput.toPath());
         return reader.nextLong();
     }
 
@@ -537,7 +539,7 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
         // Files.createTempDirectory() seems to throw an error when used with a gs:// path
         final PicardHtsPath outputDir = new PicardHtsPath(CLOUD_OUTPUT_DIR + "scatter/");
-        GATKIOUtils.deleteOnExit(outputDir.toPath());
+        PicardIOUtils.deleteOnExit(outputDir.toPath());
 
         args.add("SCATTER_COUNT=" + scatterCount);
         args.add("OUTPUT=" + outputDir.toPath().toUri());
