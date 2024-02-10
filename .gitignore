@@ -16,7 +16,7 @@ jacoco.data
 .gradle
 build
 *.swp
-
+.vscode
 # OSX file system stuff
 .DS_STORE
 
