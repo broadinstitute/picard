@@ -202,8 +202,8 @@ public class MarkDuplicatesForFlowHelperTest {
                 {
                         DuplicateScoringStrategy.ScoringStrategy.SUM_OF_BASE_QUALITIES,
                         new TestRecordInfo[] {
-                                new TestRecordInfo(76, 12,"76M", false, "AAAC", null),
-                                new TestRecordInfo(76, 12, "76M", true, "AACC", null)
+                                new TestRecordInfo(76, 12,"76M", true, "AAAC", null),
+                                new TestRecordInfo(76, 12, "76M", false, "AACC", null)
                         },
                         new String[] { "FLOW_DUP_STRATEGY=FLOW_END_QUALITY_STRATEGY" },
                         new TesterModifier() {
