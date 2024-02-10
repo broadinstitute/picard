@@ -686,7 +686,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final RevertSam revertSam = new RevertSam();
 
         revertSam.INPUT = file;
-        final File fileUnaligned = newTempSamFile("unaligned");
+        final PicardHtsPath fileUnaligned = new PicardHtsPath(newTempSamFile("unaligned")); // tsato: replace with the picardBucketutils
         revertSam.OUTPUT = fileUnaligned;
 
         revertSam.SANITIZE = false;
@@ -700,7 +700,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         MergeBamAlignment mergeBamAlignment = new MergeBamAlignment();
 
         mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file.toPath().toFile()); // TODO update to use Path when MergeBamAlignment is updated to use Path
-        mergeBamAlignment.UNMAPPED_BAM = fileUnaligned;
+        mergeBamAlignment.UNMAPPED_BAM = fileUnaligned.toPath().toFile(); // tsato: see TODO above
         mergeBamAlignment.UNMAP_CONTAMINANT_READS = true;
 
         //yuck!
