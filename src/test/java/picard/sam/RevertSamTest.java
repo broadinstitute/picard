@@ -476,15 +476,15 @@ public class RevertSamTest extends CommandLineProgramTest {
         final SAMReadGroupRecord rg2 = new SAMReadGroupRecord("rg2");
 
         final Map<String, Path> outputMap = RevertSam.createOutputMap(null, new File("/foo/bar").toPath(), ".bam", Arrays.asList(rg1, rg2));
-        Assert.assertEquals(outputMap.get("rg1"), new File("/foo/bar/rg1.bam"));
-        Assert.assertEquals(outputMap.get("rg2"), new File("/foo/bar/rg2.bam"));
+        Assert.assertEquals(outputMap.get("rg1"), new File("/foo/bar/rg1.bam").toPath()); // tsato: questionable wrapping but ok for now
+        Assert.assertEquals(outputMap.get("rg2"), new File("/foo/bar/rg2.bam").toPath());
     }
 
     @Test
     public void testFilePathsWithMapFile() { // tsato: perhaps best to use PicardHtsPath instead of putting File.toPath everywhere
         final Map<String, Path> outputMap = RevertSam.createOutputMap(validOutputMap.toPath(), null, ".bam", Collections.emptyList());
-        Assert.assertEquals(outputMap.get("rg1"), new File("/path/to/my_rg_1.ubam"));
-        Assert.assertEquals(outputMap.get("rg2"), new File("/path/to/my_rg_2.ubam"));
+        Assert.assertEquals(outputMap.get("rg1"), new File("/path/to/my_rg_1.ubam").toPath());
+        Assert.assertEquals(outputMap.get("rg2"), new File("/path/to/my_rg_2.ubam").toPath());
     }
 
     @Test
