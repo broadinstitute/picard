@@ -613,7 +613,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
                         }
 
                         pairedEnds.score += calcHelper.getReadDuplicateScore(rec, pairedEnds);
-
                         this.pairSort.add(pairedEnds);
                     }
                 }
@@ -808,8 +807,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         }
     }
 
-    protected boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs,
-                                                 final boolean compareRead2, final boolean useBarcodes) {
+    protected boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
         boolean areComparable = lhs.libraryId == rhs.libraryId;
 
         if (useBarcodes && areComparable) { // areComparable is useful here to avoid the casts below
@@ -822,7 +820,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
 
         if (areComparable) {
             areComparable = lhs.read1ReferenceIndex == rhs.read1ReferenceIndex &&
-                    lhs.read1Coordinate==rhs.read1Coordinate &&
+                    lhs.read1Coordinate == rhs.read1Coordinate &&
                     lhs.orientation == rhs.orientation;
         }
 
