@@ -12,8 +12,8 @@ public class FlowBasedRead {
     // constants
     private final double MINIMAL_CALL_PROB = 0.1;
 
-    final public static String FLOW_MATRIX_TAG_NAME = "tp";
-    final public static String FLOW_MATRIX_T0_TAG_NAME = "t0";
+    final private static String FLOW_MATRIX_TAG_NAME = "tp";
+    final private static String FLOW_MATRIX_T0_TAG_NAME = "t0";
     final public static String MAX_CLASS_READ_GROUP_TAG = "mc";
 
     /**
@@ -29,16 +29,14 @@ public class FlowBasedRead {
     private int[] key;
 
     /**
-     * The maximal length of an hmer that can be encoded (normally in the 10-12 range)
+     * The maximal length of an hmer that can be encoded (normally in the 10-20 range)
      */
     private int maxHmer;
-    private double totalMinErrorProbability;
-    private double perHmerMinErrorProbability;
+
     /**
-     * The order in which flow key in encoded (See decription for key field). Flow order may be wrapped if a longer one
-     * needed.
+     * computed minimal error probability for an hmer
      */
-    private byte[] flowOrder;
+    private double perHmerMinErrorProbability;
 
     /**
      * The probability matrix for this read. [n][m] position represents that probablity that an hmer of n length will be
@@ -119,15 +117,14 @@ public class FlowBasedRead {
     private void readFlowMatrix(final String _flowOrder) {
 
         // generate key (base to flow space)
-        if (fbargs.fillingValue == 0) {
-            totalMinErrorProbability = estimateFillingValue();
-        } else {
-            totalMinErrorProbability = fbargs.fillingValue;
-        }
-        perHmerMinErrorProbability = totalMinErrorProbability/getMaxHmer();
 
+        // establish min probability
+        final double totalMinErrorProbability = (fbargs.fillingValue == 0) ? estimateFillingValue() : fbargs.fillingValue;
+        perHmerMinErrorProbability = totalMinErrorProbability / getMaxHmer();
+
+        // generate flow key
         key = FlowBasedReadUtils.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
-        flowOrder = FlowBasedReadUtils.getFlowToBase(_flowOrder, key.length);
+
         // initialize matrix
         flowMatrix = new double[maxHmer + 1][key.length];
         for (int i = 0; i < maxHmer + 1; i++) {
@@ -170,7 +167,7 @@ public class FlowBasedRead {
             }
 
             if ((run == 0) && (specialTreatmentForZeroCalls)) {
-                parseZeroQuals(t0probs, i, qualOfs);
+                parseZeroQuals(t0probs, i, qualOfs, totalMinErrorProbability);
             }
 
             double totalErrorProb = 0;
@@ -208,7 +205,7 @@ public class FlowBasedRead {
     // place it on the neighboring bases and choose the **lower** error probability between the
     // neighbors (that's how T0 encoding works). The error is placed only on the 1-mer error assuming
     // that 2->0 errors are negligibly rare.
-    private void parseZeroQuals(final double[] probs, final int flowIdx, final int qualOfs) {
+    private void parseZeroQuals(final double[] probs, final int flowIdx, final int qualOfs, final double totalMinErrorProbability) {
         if ((qualOfs == 0) | (qualOfs == probs.length)) { // do not report zero error probability on the edge of the read
             return;
         }
