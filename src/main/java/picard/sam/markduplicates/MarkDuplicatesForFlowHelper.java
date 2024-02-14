@@ -197,7 +197,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         }
     }
 
-    //This method is identical to areComparableForDuplicates but allow working with readStartUncertainty
+    //This method is identical to MarkDuplicates.areComparableForDuplicates but allows working with readStartUncertainty
     protected boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs,
                                                  final boolean compareRead2, final boolean useBarcodes) {
         boolean areComparable = lhs.libraryId == rhs.libraryId;

@@ -11,8 +11,10 @@ public class MarkDuplicatesForFlowArgumentCollection {
     @Argument(doc = "enable parameters and behavior specific to flow based reads.", optional = true)
     public boolean FLOW_MODE = false;
 
-    @Argument(doc = "Use specific quality summing strategy for flow based reads. The strategy ensures that the same " +
-            "(and correct) quality value is used for all bases of the same homopolymer.", optional = true)
+    @Argument(doc = "Use specific quality summing strategy for flow based reads. Two strategies are available: " + 
+          "FLOW_QUALITY_SUM_STRATEG: The selects the read with the best total homopolymer quality." + 
+            " FLOW_END_QUALITY_STRATEGY: The strategy selects the read with the best homopolymer quality close to the end (10 bases) of the read. " +
+            " The latter strategy is recommended for samples with high duplication rate ", optional = true)
     public FLOW_DUPLICATE_SELECTION_STRATEGY FLOW_DUP_STRATEGY = FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY;
 
     @Argument(doc = "Make the end location of single end read be significant when considering duplicates, " +
