@@ -30,6 +30,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
 import picard.sam.markduplicates.util.ReadEndsForMarkDuplicates;
+import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesWithBarcodes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
     public static final char[]  CLIPPING_TAG_CONTAINS_AQ = {'A', 'Q'};
     public static final char[]  CLIPPING_TAG_CONTAINS_QZ = {'Q', 'Z'};
 
+    public static final int DIST_FROM_END = 10;
     // instance of hosting MarkDuplicates
     private final MarkDuplicates  md;
 
@@ -105,19 +107,24 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
         int nextChunkRead1Coordinate2Min = Integer.MAX_VALUE;
         int nextChunkRead1Coordinate2Max = Integer.MIN_VALUE;
+        int nextChunkRead1Coordinate1Min = Integer.MAX_VALUE;
+        int nextChunkRead1Coordinate1Max = Integer.MIN_VALUE;
+
         final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
         boolean containsPairs = false;
         boolean containsFrags = false;
 
         for (final ReadEndsForMarkDuplicates next : md.fragSort) {
             if (firstOfNextChunk != null && areComparableForDuplicatesWithEndSignificance(firstOfNextChunk, next, useBarcodes,
-                    nextChunkRead1Coordinate2Min, nextChunkRead1Coordinate2Max)) {
+                    nextChunkRead1Coordinate2Min, nextChunkRead1Coordinate2Max, nextChunkRead1Coordinate1Min, nextChunkRead1Coordinate1Max)) {
                 nextChunk.add(next);
                 containsPairs = containsPairs || next.isPaired();
                 containsFrags = containsFrags || !next.isPaired();
                 if ( next.read2Coordinate != END_INSIGNIFICANT_VALUE) {
                     nextChunkRead1Coordinate2Min = Math.min(nextChunkRead1Coordinate2Min, next.read2Coordinate);
                     nextChunkRead1Coordinate2Max = Math.max(nextChunkRead1Coordinate2Max, next.read2Coordinate);
+                    nextChunkRead1Coordinate1Min = Math.min(nextChunkRead1Coordinate1Min, next.read1Coordinate);
+                    nextChunkRead1Coordinate1Max = Math.max(nextChunkRead1Coordinate1Max, next.read1Coordinate);
 
                     if ( firstOfNextChunk.read2Coordinate == END_INSIGNIFICANT_VALUE)
                         firstOfNextChunk = next;
@@ -129,6 +136,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
                 nextChunk.clear();
                 nextChunk.add(next);
                 firstOfNextChunk = next;
+                nextChunkRead1Coordinate1Min = nextChunkRead1Coordinate1Max = next.read1Coordinate;
                 if ( next.read2Coordinate != END_INSIGNIFICANT_VALUE)
                     nextChunkRead1Coordinate2Min = nextChunkRead1Coordinate2Max = next.read2Coordinate;
                 else {
@@ -172,9 +180,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         }
 
         // adjust score
-        if ( md.flowBasedArguments.FLOW_QUALITY_SUM_STRATEGY ) {
-            ends.score = computeFlowDuplicateScore(rec, ends.read2Coordinate);
-        }
+        ends.score = computeFlowDuplicateScore(rec, ends.read2Coordinate);
 
         return ends;
     }
@@ -184,11 +190,37 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
      */
     @Override
     public short getReadDuplicateScore(final SAMRecord rec, final ReadEndsForMarkDuplicates pairedEnds) {
-        if (md.flowBasedArguments.FLOW_QUALITY_SUM_STRATEGY ) {
+        if (md.flowBasedArguments.FLOW_MODE){
             return computeFlowDuplicateScore(rec, pairedEnds.read2Coordinate);
         } else {
             return md.getReadDuplicateScore(rec, pairedEnds);
         }
+    }
+
+    //This method is identical to MarkDuplicates.areComparableForDuplicates but allows working with readStartUncertainty
+    protected boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs,
+                                                 final boolean compareRead2, final boolean useBarcodes) {
+        boolean areComparable = lhs.libraryId == rhs.libraryId;
+
+        if (useBarcodes && areComparable) { // areComparable is useful here to avoid the casts below
+            final ReadEndsForMarkDuplicatesWithBarcodes lhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) lhs;
+            final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
+            areComparable = lhsWithBarcodes.barcode == rhsWithBarcodes.barcode &&
+                    lhsWithBarcodes.readOneBarcode == rhsWithBarcodes.readOneBarcode &&
+                    lhsWithBarcodes.readTwoBarcode == rhsWithBarcodes.readTwoBarcode;
+        }
+
+        if (areComparable) {
+            areComparable = lhs.read1ReferenceIndex == rhs.read1ReferenceIndex &&
+                    lhs.orientation == rhs.orientation;
+        }
+
+        if (areComparable && compareRead2) {
+            areComparable = lhs.read2ReferenceIndex == rhs.read2ReferenceIndex &&
+                    lhs.read2Coordinate == rhs.read2Coordinate;
+        }
+
+        return areComparable;
     }
 
     /**
@@ -197,9 +229,14 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
      * applicable for flow mode invocation.
      */
     private boolean areComparableForDuplicatesWithEndSignificance(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean useBarcodes,
-                                                                  final int lhsRead1Coordinate2Min, final int lhsRead1Coordinate2Max) {
-        boolean areComparable = md.areComparableForDuplicates(lhs, rhs, false, useBarcodes);
+                                                                  final int lhsRead1Coordinate2Min, final int lhsRead1Coordinate2Max,
+                                                                  final int lhsRead1Coordinate1Min, final int lhsRead1Coordinate1Max) {
+        boolean areComparable = areComparableForDuplicates(lhs, rhs, false, useBarcodes);
 
+        if (areComparable) {
+            areComparable = endCoorInRangeWithUncertainty(lhsRead1Coordinate1Min, lhsRead1Coordinate1Max,
+                    rhs.read1Coordinate, md.flowBasedArguments.UNPAIRED_START_UNCERTAINTY);
+        }
         if (areComparable) {
             areComparable = (!endCoorSignificant(lhs.read2Coordinate, rhs.read2Coordinate) ||
                     endCoorInRangeWithUncertainty(lhsRead1Coordinate2Min, lhsRead1Coordinate2Max,
@@ -236,8 +273,8 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         final byte[]  bases = rec.getReadBases();
 
         // create iteration range and direction
-        final int startingOffset = !rec.getReadNegativeStrandFlag() ? 0 : bases.length;
-        final int endOffset = !rec.getReadNegativeStrandFlag() ? bases.length : 0;
+        final int startingOffset = !rec.getReadNegativeStrandFlag() ? 0 : bases.length - 1;
+        final int endOffset = !rec.getReadNegativeStrandFlag() ? bases.length : -1;
         final int  iterIncr = !rec.getReadNegativeStrandFlag() ? 1 : -1;
 
         // loop on bases, extract qual related to homopolymer from start of homopolymer
@@ -257,6 +294,55 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         return score;
     }
 
+    /**
+     * A quality selection strategy used for flow based reads.
+     *
+     * We look at the bases of the reads that are close to the ends of the fragment
+     * and calculate the minimal quality of the homopolymers.
+     *
+     * @param rec - SAMRecord to get a score for
+     * @param dist - Distance from the end
+     * @return - calculated score (see method description)
+     */
+    static protected int getFlowSumOfBaseQualitiesNearEnds(final SAMRecord rec, int dist) {
+        int score = 100;
+
+        // access qualities and bases
+        final byte[] quals = rec.getBaseQualities();
+        final byte[]  bases = rec.getReadBases();
+
+        boolean insideHpol = false;
+        if (dist > bases.length){
+            dist = bases.length;
+        }
+
+        for ( int i = 0 ; (i < dist) || ( insideHpol ) ; i ++ ) {
+            final byte base = bases[i];
+            if ( (i == bases.length - 1) || ( base != bases[i+1] )) {
+                insideHpol = false;
+            } else {
+                insideHpol = true;
+            }
+
+            if ( quals[i] < score) {
+                score = quals[i];
+            }
+        }
+
+        for ( int i = bases.length-1 ; (i > bases.length - 1 - dist) || ( insideHpol ) ; i -- ) {
+            final byte base = bases[i];
+            if ( (i == 0) || ( base != bases[i - 1] )) {
+                insideHpol = false;
+            } else {
+                insideHpol = true;
+            }
+
+            if ( quals[i] < score) {
+                score = quals[i];
+            }
+        }
+        return score;
+    }
     private short computeFlowDuplicateScore(final SAMRecord rec, final int end) {
 
         if ( end == END_INSIGNIFICANT_VALUE)
@@ -265,8 +351,13 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         Short storedScore = (Short)rec.getTransientAttribute(ATTR_DUPLICATE_SCORE);
         if ( storedScore == null ) {
             short score = 0;
-
-            score += (short) Math.min(getFlowSumOfBaseQualities(rec, md.flowBasedArguments.FLOW_EFFECTIVE_QUALITY_THRESHOLD), Short.MAX_VALUE / 2);
+            if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY) {
+                score += (short) Math.min(getFlowSumOfBaseQualities(rec, md.flowBasedArguments.FLOW_EFFECTIVE_QUALITY_THRESHOLD), Short.MAX_VALUE / 2);
+            } else if (md.flowBasedArguments.FLOW_DUP_STRATEGY == MarkDuplicatesForFlowArgumentCollection.FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_END_QUALITY_STRATEGY) {
+                score += (short) Math.min(getFlowSumOfBaseQualitiesNearEnds(rec, DIST_FROM_END), Short.MAX_VALUE / 2);
+            } else {
+                throw new IllegalArgumentException("Unknown flow duplicate selection strategy: " + md.flowBasedArguments.FLOW_DUP_STRATEGY);
+            }
 
             score += rec.getReadFailsVendorQualityCheckFlag() ? (short) (Short.MIN_VALUE / 2) : 0;
             storedScore = score;

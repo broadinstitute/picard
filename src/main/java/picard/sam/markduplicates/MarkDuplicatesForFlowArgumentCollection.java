@@ -4,12 +4,18 @@ import org.broadinstitute.barclay.argparser.Argument;
 
 public class MarkDuplicatesForFlowArgumentCollection {
 
+    public enum FLOW_DUPLICATE_SELECTION_STRATEGY {
+        FLOW_QUALITY_SUM_STRATEGY,
+        FLOW_END_QUALITY_STRATEGY
+    }
     @Argument(doc = "enable parameters and behavior specific to flow based reads.", optional = true)
     public boolean FLOW_MODE = false;
 
-    @Argument(doc = "Use specific quality summing strategy for flow based reads. The strategy ensures that the same " +
-            "(and correct) quality value is used for all bases of the same homopolymer.", optional = true)
-    public boolean FLOW_QUALITY_SUM_STRATEGY = false;
+    @Argument(doc = "Use specific quality summing strategy for flow based reads. Two strategies are available: " + 
+          "FLOW_QUALITY_SUM_STRATEG: The selects the read with the best total homopolymer quality." + 
+            " FLOW_END_QUALITY_STRATEGY: The strategy selects the read with the best homopolymer quality close to the end (10 bases) of the read. " +
+            " The latter strategy is recommended for samples with high duplication rate ", optional = true)
+    public FLOW_DUPLICATE_SELECTION_STRATEGY FLOW_DUP_STRATEGY = FLOW_DUPLICATE_SELECTION_STRATEGY.FLOW_QUALITY_SUM_STRATEGY;
 
     @Argument(doc = "Make the end location of single end read be significant when considering duplicates, " +
             "in addition to the start location, which is always significant (i.e. require single-ended reads to start and" +
@@ -25,6 +31,11 @@ public class MarkDuplicatesForFlowArgumentCollection {
             "reads where the end position might vary due to sequencing errors. " +
             "(for this argument, \"read end\" means 3' end)", optional = true)
     public int UNPAIRED_END_UNCERTAINTY = 0;
+
+    @Argument(doc = "Maximal difference of the read start position that counted as equal. Useful for flow based " +
+            "reads where the end position might vary due to sequencing errors. " +
+            "(for this argument, \"read start\" means 5' end in the direction of sequencing)", optional = true)
+    public int UNPAIRED_START_UNCERTAINTY = 0;
 
     @Argument(doc = "Skip first N flows, starting from the read's start, when considering duplicates. Useful for flow based reads where sometimes there " +
             "is noise in the first flows " +
