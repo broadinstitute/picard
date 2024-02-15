@@ -217,6 +217,41 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(insWithIndelHandling.PCT_USABLE_BASES_ON_TARGET,   1.0d);      // inserted bases are counted as on target
     }
 
+    @Test
+    public void testHsMetricsF80DoesNotUseCovCap() throws IOException {
+        final SAMRecordSetBuilder highCoverage = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final IntervalList targets = new IntervalList(highCoverage.getHeader());
+        final IntervalList baits   = new IntervalList(highCoverage.getHeader());
+        targets.add(new Interval("chr1", 1000, 1199, false, "t1"));
+        baits.add(new Interval("chr1", 950,  1049, false, "b1"));
+        baits.add(new Interval("chr1", 1050, 1149, false, "b2"));
+        baits.add(new Interval("chr1", 1150, 1249, false, "b3"));
+
+        // Generate 100000 reads that fully cover the target in each BAM
+        for (int i=0; i<100000; ++i) {
+            highCoverage.addFrag( "r" + i, 0, 1000, false, false, "100M100M", null, 30);
+        }
+
+        // Write things out to file
+        final File dir = IOUtil.createTempDir("hsmetrics.test").toFile();
+        final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
+        final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
+        baits.write(bs);
+        targets.write(ts);
+        final File withHighCovBam = writeBam(highCoverage, new File(dir, "fold_80.bam"));
+
+        // Now run CollectHsMetrics
+        final File out = Files.createTempFile("hsmetrics_high_coverage.", ".txt").toFile();
+        runPicardCommandLine(Arrays.asList("COVERAGE_CAP=10", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withHighCovBam.getAbsolutePath()));
+        final HsMetrics highCoverageMetrics = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
+        // actual coverage should not be impacted by coverage_cap
+        Assert.assertEquals(highCoverageMetrics.MEAN_TARGET_COVERAGE, 100000);
+        Assert.assertEquals(highCoverageMetrics.MEDIAN_TARGET_COVERAGE, 100000);
+        Assert.assertEquals(highCoverageMetrics.FOLD_80_BASE_PENALTY, 1);
+    }
+
 
     @Test
     public void testHsMetricsHighTargetCoverage() throws IOException {
