@@ -1,0 +1,93 @@
+name: Cloud Tests
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PICARD_TEST_INPUTS: gs://hellbender/test/resources/
+  PICARD_TEST_STAGING: gs://hellbender-test-logs/staging/
+  PICARD_TEST_LOGS: /hellbender-test-logs/build_reports/
+  PICARD_TEST_PROJECT: broad-dsde-dev
+
+jobs:
+  ## This workaround is necessary since there is no equivalent to the old TRAVIS_SECURE_ENVIRONMENT variable that indicated
+  ## if a run was privileged and had secrets. Since the GCP credentials are necessary for all tests in order to upload their,
+  ## results that makes them a reasonable proxy for testing the credentials of this entire execution. https://github.com/actions/runner/issues/520
+  check-secrets:
+    name: check if the environment has privileges
+    outputs:
+      google-credentials: ${{ steps.google-credentials.outputs.defined }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: google-credentials
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        if: "${{ env.GCP_CREDENTIALS != '' }}"
+        run: echo defined=true >> $GITHUB_OUTPUT
+
+  test:
+    runs-on: ubuntu-latest
+    needs: check-secrets
+    strategy:
+      matrix:
+        java: [ 17 ]
+        run_barclay_tests: [true, false]
+        experimental: [ false ]
+      fail-fast: false
+    continue-on-error: ${{ matrix.experimental }}
+    name: Java ${{ matrix.Java }}, Barclay=${{ matrix.run_barclay_tests}} cloud tests
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: 'Set up java ${{ matrix.Java }}'
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.Java }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: 'Compile with Gradle'
+        run: |
+          ./gradlew compileJava 
+          ./gradlew installDist
+
+      #Google Cloud stuff
+      - id: 'gcloud-auth'
+        if: needs.check-secrets.outputs.google-credentials == 'true'
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ env.PICARD_TEST_PROJECT }}
+          create_credentials_file: true
+
+      - name: 'Set up Cloud SDK'
+        if: needs.check-secrets.outputs.google-credentials == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: compile test code
+        if: needs.check-secrets.outputs.google-credentials == 'true'
+        run: ./gradlew compileTestJava
+
+      - name: Run tests
+        if: needs.check-secrets.outputs.google-credentials == 'true'
+        env:
+          TEST_TYPE: cloud
+        run: |
+          if [[ ${{matrix.run_barclay_tests}} == true ]]; then
+            echo "Running tests using the Barclay command line parser."
+            ./gradlew barclayTest
+          else
+            echo "Running tests using the legacy Picard command line parser."
+            ./gradlew jacocoTestReport
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloud-test-results-${{ matrix.Java }}-barclay-${{ matrix.run_barclay_tests}}
+          path: build/reports/tests

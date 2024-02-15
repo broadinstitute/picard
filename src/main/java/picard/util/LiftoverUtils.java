@@ -187,7 +187,9 @@ public class LiftoverUtils {
     private static boolean isIndelForLiftover(final VariantContext vc) {
         final Allele ref = vc.getReference();
         if (ref.length() != 1) {
-            return true;
+            //need to make sure the only other alleles are not all symbolic or spanning deletion
+            return vc.getAlternateAlleles().stream()
+                    .anyMatch(a -> !a.isSymbolic() && !a.equals(Allele.SPAN_DEL));
         }
 
         return vc.getAlleles().stream()

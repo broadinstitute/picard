@@ -27,13 +27,11 @@ import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceDictionaryCodec;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.AsciiWriter;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.Md5CalculatingOutputStream;
-import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -43,13 +41,16 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.ReferenceProgramGroup;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
 import picard.util.SequenceDictionaryUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -93,7 +94,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     @Argument(doc = "Output SAM file containing only the sequence dictionary. By default it will use the base name of the input reference with the .dict extension",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "AS", doc = "Put into AS field of sequence dictionary entry if supplied", optional = true)
     public String GENOME_ASSEMBLY;
@@ -167,7 +168,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     private Iterable<SAMSequenceRecord> getSamSequenceRecordsIterable() {
         return () -> {
             final SequenceDictionaryUtils.SamSequenceRecordsIterator iterator =
-                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(REFERENCE_SEQUENCE,
+                    new SequenceDictionaryUtils.SamSequenceRecordsIterator(referenceSequence.getReferencePath(),
                             TRUNCATE_NAMES_AT_WHITESPACE);
             iterator.setGenomeAssembly(GENOME_ASSEMBLY);
             iterator.setSpecies(SPECIES);
@@ -181,10 +182,11 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      */
     protected String[] customCommandLineValidation() {
         if (URI == null) {
-            URI = "file:" + referenceSequence.getReferenceFile().getAbsolutePath();
+            URI = referenceSequence.getHtsPath().getURIString();
         }
         if (OUTPUT == null) {
-            OUTPUT = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getReferenceFile());
+            final Path outputPath = ReferenceSequenceFileFactory.getDefaultDictionaryForReferenceSequence(referenceSequence.getReferencePath());
+            OUTPUT = new PicardHtsPath(outputPath.toString());
             logger.info("Output dictionary will be written in ", OUTPUT);
         }
         return super.customCommandLineValidation();
@@ -199,11 +201,16 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     public static class CreateSeqDictReferenceArgumentCollection implements ReferenceArgumentCollection {
         @Argument(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
-        public File REFERENCE;
+        public PicardHtsPath REFERENCE;
+
+        @Override
+        public PicardHtsPath getHtsPath() {
+            return REFERENCE;
+        }
 
         @Override
         public File getReferenceFile() {
-            return REFERENCE;
+            return ReferenceArgumentCollection.getFileSafe(REFERENCE, logger);
         }
     }
 
@@ -216,11 +223,15 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     protected int doWork() {
         int sequencesWritten = 0;
 
-        if (OUTPUT.exists()) {
-            throw new PicardException(OUTPUT.getAbsolutePath() +
+        if (Files.exists(OUTPUT.toPath())) {
+            throw new PicardException(OUTPUT.getURIString() +
                     " already exists.  Delete this file and try again, or specify a different output file.");
         }
-        IOUtil.assertFileIsWritable(OUTPUT);
+
+        // We can check for writability provided the file is in a local filesystem and not in gcloud
+        if (OUTPUT.getScheme().equals(PicardBucketUtils.FILE_SCHEME)){
+            IOUtil.assertFileIsWritable(OUTPUT.toPath().toFile());
+        }
 
         // map for aliases mapping a contig to its aliases
         final Map<String, Set<String>> aliasesByContig = loadContigAliasesMap();
@@ -245,25 +256,31 @@ public class CreateSequenceDictionary extends CommandLineProgram {
                 }
             }
         } catch (IOException e) {
-            throw new PicardException("Can't write to or close output file " + OUTPUT.getAbsolutePath(), e);
+            throw new PicardException("Can't write to or close output file " + OUTPUT.getURIString(), e);
         } catch (IllegalArgumentException e) {
             // in case of an unexpected error delete the file so that there isn't a
             // truncated result which might be valid yet wrong.
-            OUTPUT.delete();
+            if (Files.exists(OUTPUT.toPath())){
+                try {
+                    Files.delete(OUTPUT.toPath());
+                } catch (IOException e2) {
+                    throw new PicardException("Unknown problem encountered, and failed to delete the incomplete output. " + e2.getMessage(), e);
+                }
+            }
             throw new PicardException("Unknown problem. Partial dictionary file was deleted.", e);
         }
 
         return 0;
     }
 
-    private BufferedWriter makeWriter() throws FileNotFoundException {
+    private BufferedWriter makeWriter() throws IOException {
         return new BufferedWriter(
                 new AsciiWriter(this.CREATE_MD5_FILE ?
                         new Md5CalculatingOutputStream(
-                                new FileOutputStream(OUTPUT, false),
-                                new File(OUTPUT.getAbsolutePath() + ".md5")
+                                Files.newOutputStream(OUTPUT.toPath(), StandardOpenOption.CREATE_NEW),
+                                new PicardHtsPath(OUTPUT.getURIString() + ".md5").toPath()
                         )
-                        : new FileOutputStream(OUTPUT)
+                        : Files.newOutputStream(OUTPUT.toPath(), StandardOpenOption.CREATE_NEW)
                 )
         );
     }

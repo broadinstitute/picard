@@ -24,6 +24,7 @@
 
 package picard.sam;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
@@ -41,10 +42,12 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -123,12 +126,12 @@ public class ValidateSamFile extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Input SAM/BAM/CRAM file")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Output file or standard out if missing",
             optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "M",
             doc = "Mode of output")
@@ -204,7 +207,7 @@ public class ValidateSamFile extends CommandLineProgram {
     @Override
     protected int doWork() {
         try {
-            IOUtil.assertFileIsReadable(INPUT);
+            IOUtil.assertFileIsReadable(INPUT.toPath());
             ReferenceSequenceFile reference = null;
             if (REFERENCE_SEQUENCE != null) {
                 IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
@@ -215,9 +218,8 @@ public class ValidateSamFile extends CommandLineProgram {
             }
             final PrintWriter out;
             if (OUTPUT != null) {
-                IOUtil.assertFileIsWritable(OUTPUT);
                 try {
-                    out = new PrintWriter(OUTPUT);
+                    out = new PrintWriter(Files.newOutputStream(OUTPUT.toPath()));
                 } catch (FileNotFoundException e) {
                     // we already asserted this so we should not get here
                     throw new PicardException("Unexpected exception", e);
@@ -231,7 +233,7 @@ public class ValidateSamFile extends CommandLineProgram {
             final SamReaderFactory factory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
                     .validationStringency(ValidationStringency.SILENT)
                     .enable(SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS);
-            final SamReader samReader = factory.open(INPUT);
+            final SamReader samReader = factory.open(INPUT.toPath());
 
             if (samReader.type() != SamReader.Type.BAM_TYPE && samReader.type() != SamReader.Type.BAM_CSI_TYPE) VALIDATE_INDEX = false;
 
@@ -252,9 +254,9 @@ public class ValidateSamFile extends CommandLineProgram {
             if (VALIDATE_INDEX) {
                 validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
             }
-            if (IOUtil.isRegularPath(INPUT)) {
+            if (IOUtil.isRegularPath(INPUT.toPath())) {
                 // Do not check termination if reading from a stream
-                validator.validateBamFileTermination(INPUT);
+                validator.validateBamFileTermination(INPUT.toPath());
             }
 
             result = false;

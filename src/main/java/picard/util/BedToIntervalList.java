@@ -107,9 +107,13 @@ public class BedToIntervalList extends CommandLineProgram {
     @Argument(doc = "If true, entries that are on contig-names that are missing from the provided dictionary will be dropped.")
     public boolean DROP_MISSING_CONTIGS = false;
 
+    @Argument(doc = "If true, write length zero intervals in input bed file to resulting interval list file.")
+    public boolean KEEP_LENGTH_ZERO_INTERVALS = false;
+
     private final Log LOG = Log.getInstance(getClass());
     private int missingIntervals = 0;
     private int missingRegion = 0;
+    private int lengthZeroIntervals = 0;
 
     @Override
     protected int doWork() {
@@ -168,8 +172,18 @@ public class BedToIntervalList extends CommandLineProgram {
                 }
 
                 final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
-                final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
-                intervalList.add(interval);
+
+                // Use end+1 since bed start gets shifted by 1 using 1-based coordinates
+                if ((start == end+1) && !KEEP_LENGTH_ZERO_INTERVALS) {
+                    LOG.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
+                } else {
+                    final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
+                    intervalList.add(interval);
+                }
+
+                if (start == end+1) {
+                    lengthZeroIntervals++;
+                }
 
                 progressLogger.record(sequenceName, start);
             }
@@ -182,6 +196,19 @@ public class BedToIntervalList extends CommandLineProgram {
                     LOG.warn(String.format("There were %d missing regions with a total of %d bases", missingIntervals, missingRegion));
                 }
             }
+
+            if (!KEEP_LENGTH_ZERO_INTERVALS) {
+                if (lengthZeroIntervals == 0) {
+                    LOG.info("No input regions had length zero, so none were skipped.");
+                } else {
+                    LOG.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", lengthZeroIntervals));
+                }
+            } else {
+                if (lengthZeroIntervals > 0) {
+                    LOG.warn(String.format("Input file had %d entries with length zero. Run with the KEEP_LENGTH_ZERO_INTERVALS flag set to false to remove these.", lengthZeroIntervals));
+                }
+            }
+
             // Sort and write the output
             IntervalList out = intervalList;
             if (SORT) {

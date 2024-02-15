@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -78,7 +79,7 @@ public class SequenceDictionaryUtils {
         private ReferenceSequence nextRefSeq;
         private final MessageDigest md5;
 
-        public SamSequenceRecordsIterator(File referenceSequence, boolean truncateNamesAtWhitespace) {
+        public SamSequenceRecordsIterator(final Path referenceSequence, final boolean truncateNamesAtWhitespace) {
             this.truncateNamesAtWhitespace = truncateNamesAtWhitespace;
             this.refSeqFile = ReferenceSequenceFileFactory.
                     getReferenceSequenceFile(referenceSequence, truncateNamesAtWhitespace);
