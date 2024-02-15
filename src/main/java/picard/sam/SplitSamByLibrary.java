@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -48,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Command-line program to split a SAM or BAM file into separate files based on
+ * Command-line program to split a SAM/BAM/CRAM file into separate files based on
  * library name.
  *
  * <p> This tool takes a SAM or BAM file and separates all the reads
@@ -86,11 +87,11 @@ import java.util.Map;
 @DocumentedFeature
 public class SplitSamByLibrary extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Splits a SAM or BAM file into individual files by library";
-    static final String USAGE_DETAILS = "Takes a SAM or BAM file and separates all the reads " +
-            "into one SAM or BAM file per library name.  Reads that do not have " +
+    static final String USAGE_SUMMARY = "Splits a SAM/BAM/CRAM file into individual files by library";
+    static final String USAGE_DETAILS = "Takes a SAM/BAM/CRAM file and separates all the reads " +
+            "into one output file per library name.  Reads that do not have " +
             "a read group specified or whose read group does not have a library name " +
-            "are written to a file called 'unknown.' The format (SAM or BAM) of the  " +
+            "are written to a file called 'unknown.' The format (SAM/BAM/CRAM) of the  " +
             "output files matches that of the input file." +
             "<br />"+
             "<h4>Usage example:</h4>" +
@@ -101,10 +102,10 @@ public class SplitSamByLibrary extends CommandLineProgram {
             "</pre>";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "The SAM or BAM file to be split. ")
+            doc = "The SAM, BAM of CRAM file to be split. ")
     public File INPUT;
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc = "The directory where the library SAM or BAM files should be written " +
+            doc = "The directory where the per-library output files should be written " +
                     "(defaults to the current directory). ", optional = true)
     public File OUTPUT = new File(".").getAbsoluteFile();
 
@@ -112,67 +113,65 @@ public class SplitSamByLibrary extends CommandLineProgram {
 
     public static final int NO_LIBRARIES_SPECIFIED_IN_HEADER = 2;
 
-    public static void main(String[] args) {
-        System.exit(new SplitSamByLibrary().instanceMain(args));
-    }
-
     @Override
-    protected int doWork() {
+    protected int doWork()  {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertDirectoryIsWritable(OUTPUT);
 
-        SamReader reader = SamReaderFactory.makeDefault().open(INPUT);
-        Map<String, SAMFileWriter> libraryToWriter = new HashMap<String, SAMFileWriter>();
-        Map<String, List<SAMReadGroupRecord>> libraryToRg = new HashMap<String, List<SAMReadGroupRecord>>();
-        SAMFileWriterFactory factory = new SAMFileWriterFactory();
-        String extension = reader.type().equals(SamReader.Type.BAM_TYPE) ? ".bam" : ".sam";
-
-        SAMFileHeader unknownHeader = reader.getFileHeader().clone();
-        unknownHeader.setReadGroups(new ArrayList<SAMReadGroupRecord>());
         SAMFileWriter unknown = null;
+        final Map<String, SAMFileWriter> libraryToWriter = new HashMap<>();
+        try(SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT)) {
+            final Map<String, List<SAMReadGroupRecord>> libraryToRg = new HashMap<>();
+            final SAMFileWriterFactory factory = new SAMFileWriterFactory();
+            final String extension = "." + reader.type().fileExtension();
 
-        for (SAMReadGroupRecord rg : reader.getFileHeader().getReadGroups()) {
-            String lib = rg.getLibrary();
-            if (lib != null) {
-                if (!libraryToRg.containsKey(lib)) {
-                    libraryToRg.put(lib, new ArrayList<SAMReadGroupRecord>());
+            final SAMFileHeader unknownHeader = reader.getFileHeader().clone();
+            unknownHeader.setReadGroups(new ArrayList<>());
+
+            for (final SAMReadGroupRecord rg : reader.getFileHeader().getReadGroups()) {
+                final String lib = rg.getLibrary();
+                if (lib != null) {
+                    if (!libraryToRg.containsKey(lib)) {
+                        libraryToRg.put(lib, new ArrayList<>());
+                    }
+                    libraryToRg.get(lib).add(rg);
+                } else {
+                    unknownHeader.addReadGroup(rg);
                 }
-                libraryToRg.get(lib).add(rg);
-            } else {
-                unknownHeader.addReadGroup(rg);
             }
-        }
 
-        if (libraryToRg.isEmpty()) {
-            log.error("No individual libraries are " +
-                    "specified in the header of " + INPUT.getAbsolutePath());
-            return NO_LIBRARIES_SPECIFIED_IN_HEADER;
-        }
+            if (libraryToRg.isEmpty()) {
+                log.error("No individual libraries are " +
+                        "specified in the header of " + INPUT.getAbsolutePath());
+                return NO_LIBRARIES_SPECIFIED_IN_HEADER;
+            }
 
-        for (Map.Entry<String, List<SAMReadGroupRecord>> entry : libraryToRg.entrySet()) {
-            String lib = entry.getKey();
-            SAMFileHeader header = reader.getFileHeader().clone();
-            header.setReadGroups(entry.getValue());
-            libraryToWriter.put(lib, factory.makeSAMOrBAMWriter(header, true,
-                    new File(OUTPUT, IOUtil.makeFileNameSafe(lib) + extension)));
-        }
+            for (Map.Entry<String, List<SAMReadGroupRecord>> entry : libraryToRg.entrySet()) {
+                final String lib = entry.getKey();
+                final SAMFileHeader header = reader.getFileHeader().clone();
+                header.setReadGroups(entry.getValue());
+                libraryToWriter.put(lib, factory.makeWriter(header, true,
+                        new File(OUTPUT, IOUtil.makeFileNameSafe(lib) + extension),
+                        REFERENCE_SEQUENCE));
+            }
 
-        for (Iterator<SAMRecord> it = reader.iterator(); it.hasNext(); ) {
-            SAMRecord sam = it.next();
-            SAMReadGroupRecord rg = sam.getReadGroup();
-            if (rg != null && rg.getLibrary() != null) {
-                libraryToWriter.get(rg.getLibrary()).addAlignment(sam);
-            } else {
-                if (unknown == null) {
-                    unknown = factory.makeSAMOrBAMWriter(unknownHeader, true,
-                            new File(OUTPUT, "unknown" + extension));
+            for (final SAMRecord sam : reader) {
+                final SAMReadGroupRecord rg = sam.getReadGroup();
+                if (rg != null && rg.getLibrary() != null) {
+                    libraryToWriter.get(rg.getLibrary()).addAlignment(sam);
+                } else {
+                    if (unknown == null) {
+                        unknown = factory.makeWriter(unknownHeader, true,
+                                new File(OUTPUT, "unknown" + extension),
+                                REFERENCE_SEQUENCE);
+                    }
+                    unknown.addAlignment(sam);
                 }
-                unknown.addAlignment(sam);
             }
+        } catch (IOException e) {
+            log.error("Trouble while reading %s", INPUT.getAbsolutePath());
+            log.error(e.getMessage());
         }
-
-        // Close the reader and writers
-        CloserUtil.close(reader);
 
         if (unknown != null) {
             unknown.close();

@@ -24,13 +24,21 @@
 
 package picard.sam;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Histogram;
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.analysis.MergeableMetricBase;
+import picard.util.help.HelpConstants;
+import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
+import picard.util.MathUtil;
+import java.util.List;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
  * within a stream of SAMRecords.
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class DuplicationMetrics extends MergeableMetricBase {
     /**
      * The library on which the duplicate marking was performed.
@@ -103,7 +111,11 @@ public class DuplicationMetrics extends MergeableMetricBase {
         this.ESTIMATED_LIBRARY_SIZE = estimateLibrarySize(this.READ_PAIRS_EXAMINED - this.READ_PAIR_OPTICAL_DUPLICATES,
                 this.READ_PAIRS_EXAMINED - this.READ_PAIR_DUPLICATES);
 
-        PERCENT_DUPLICATION = (UNPAIRED_READ_DUPLICATES + READ_PAIR_DUPLICATES * 2) / (double) (UNPAIRED_READS_EXAMINED + READ_PAIRS_EXAMINED * 2);
+        if (UNPAIRED_READS_EXAMINED + READ_PAIRS_EXAMINED != 0) {
+            PERCENT_DUPLICATION = (UNPAIRED_READ_DUPLICATES + READ_PAIR_DUPLICATES * 2) / (double) (UNPAIRED_READS_EXAMINED + READ_PAIRS_EXAMINED * 2);
+        } else {
+            PERCENT_DUPLICATION = (double) 0;
+        }
     }
 
     /**
@@ -209,7 +221,7 @@ public class DuplicationMetrics extends MergeableMetricBase {
         for (double x = 1; x <= 100; x += 1) {
             histo.increment(x, estimateRoi(ESTIMATED_LIBRARY_SIZE, x, READ_PAIRS_EXAMINED, uniquePairs));
         }
-
+        histo.setValueLabel("CoverageMult");
         return histo;
     }
 
@@ -227,6 +239,38 @@ public class DuplicationMetrics extends MergeableMetricBase {
         System.out.println("X Seq\tX Unique");
         for (Histogram.Bin<Double> bin : m.calculateRoiHistogram().values()) {
             System.out.println(bin.getId() + "\t" + bin.getValue());
+        }
+    }
+
+    /**
+     * Adds duplicated read to the metrics
+     */
+    public void addDuplicateReadToMetrics(final SAMRecord rec) {
+        // only update duplicate counts for "decider" reads, not tag-a-long reads
+        if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
+            // Update the duplication metrics
+            if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+                ++UNPAIRED_READ_DUPLICATES;
+
+            } else {
+                ++READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
+            }
+        }
+    }
+
+    /**
+     * Adds a read to the metrics
+     */
+    public void addReadToLibraryMetrics(final SAMRecord rec) {
+        // First bring the simple metrics up to date
+        if (rec.getReadUnmappedFlag()) {
+            ++UNMAPPED_READS;
+        } else if (rec.isSecondaryOrSupplementary()) {
+            ++SECONDARY_OR_SUPPLEMENTARY_RDS;
+        } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+            ++UNPAIRED_READS_EXAMINED;
+        } else {
+            ++READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
         }
     }
 }

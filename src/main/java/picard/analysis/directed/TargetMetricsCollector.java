@@ -24,12 +24,30 @@
 
 package picard.analysis.directed;
 
-import htsjdk.samtools.*;
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.CoordMath;
+import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.OverlapDetector;
+import htsjdk.samtools.util.QualityUtil;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.TheoreticalSensitivity;
@@ -43,7 +61,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.LongStream;
 
 /**
@@ -106,6 +131,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredBaseQHistogram = new Histogram<>("baseq", "unfiltered_baseq_count");
+    private final Histogram<Integer> unCappedUnfilteredBaseQHistogram = new Histogram<>("baseq", "unfiltered_baseq_count");
 
     private static final double LOG_ODDS_THRESHOLD = 3.0;
 
@@ -174,16 +200,16 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
      */
     protected static <MT extends MetricBase> void reflectiveCopy(final TargetMetrics targetMetrics, final MT outputMetrics, final String [] targetKeys, final String [] outputKeys) {
 
-        if(targetKeys == null || outputKeys == null) {
-            if(outputKeys != null) {
+        if (targetKeys == null || outputKeys == null) {
+            if (outputKeys != null) {
                 throw new PicardException("Target keys is null but output keys == " + StringUtil.join(",", outputKeys));
             }
 
-            if(targetKeys != null) {
+            if (targetKeys != null) {
                 throw new PicardException("Output keys is null but target keys == " + StringUtil.join(",", targetKeys));
             }
         } else {
-            if(targetKeys.length != outputKeys.length) {
+            if (targetKeys.length != outputKeys.length) {
                 throw new PicardException("Target keys and output keys do not have the same length: " +
                         "targetKeys == (" + StringUtil.join(",", targetKeys) + ") " +
                         "outputKeys == (" + StringUtil.join(",", outputKeys) + ")");
@@ -192,12 +218,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         final Class mtClass = outputMetrics.getClass();
         final Set<Field> targetSet = CollectionUtil.makeSet(TargetMetrics.class.getFields());
-
-        for(final String targetKey : targetKeys) {
-            if(targetSet.contains(targetKey)) {
-                targetSet.remove(targetKey);
-            }
-        }
 
         final Set<String> outputSet = new HashSet<String>();
         for(final Field field : outputMetrics.getClass().getFields()) {
@@ -214,14 +234,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 }
             }
         }
-
-        for(int i = 0; i < targetKeys.length; i++) {
-            try {
-                final Field targetMetricField = TargetMetrics.class.getField(targetKeys[i]);
-                final Field outputMetricField = mtClass.getField(outputKeys[i]);
-                outputMetricField.set(outputMetrics, targetMetricField.get(targetMetrics));
-            } catch(final Exception exc) {
-                throw new PicardException("Exception while copying TargetMetrics." + targetKeys[i] + " to " + mtClass.getName() + "." + outputKeys[i], exc);
+        if(targetKeys != null) {
+            for (int i = 0; i < targetKeys.length; i++) {
+                try {
+                    final Field targetMetricField = TargetMetrics.class.getField(targetKeys[i]);
+                    final Field outputMetricField = mtClass.getField(outputKeys[i]);
+                    outputMetricField.set(outputMetrics, targetMetricField.get(targetMetrics));
+                } catch (final Exception exc) {
+                    throw new PicardException("Exception while copying TargetMetrics." + targetKeys[i] + " to " + mtClass.getName() + "." + outputKeys[i], exc);
+                }
             }
         }
     }
@@ -328,8 +349,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     @Override
     protected PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> makeAllReadCollector() {
         final PerUnitTargetMetricCollector collector = (PerUnitTargetMetricCollector) makeChildCollector(null, null, null);
-        if (perTargetCoverage != null) collector.setPerTargetOutput(perTargetCoverage);
-        if (perBaseCoverage   != null) collector.setPerBaseOutput(perBaseCoverage);
+        if (perTargetCoverage != null) {
+            collector.setPerTargetOutput(perTargetCoverage);
+        }
+        if (perBaseCoverage != null) {
+            collector.setPerBaseOutput(perBaseCoverage);
+        }
 
         return collector;
     }
@@ -343,12 +368,16 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         private File perBaseOutput;
 
         final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
+        final long[] unCappedBaseQHistogramArray = new long[Byte.MAX_VALUE];
+
         // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage
         // excludes bases with qualities lower than minimumBaseQuality (default 20)
         private final Map<Interval, Coverage> highQualityCoverageByTarget;
 
         // only excludes bases with quality 2. collected for theoretical set sensitivity
         private final Map<Interval, Coverage> unfilteredCoverageByTarget;
+
+        private long hqMaxDepth = 0;
 
         private final TargetMetrics metrics = new TargetMetrics();
         private final int minimumBaseQuality;
@@ -421,7 +450,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Adds information about an individual SAMRecord to the statistics. */
         public void acceptRecord(final SAMRecord record) {
             // Just ignore secondary alignments altogether
-            if (record.isSecondaryAlignment()) return;
+            if (record.isSecondaryAlignment()) {
+                return;
+            }
 
             // Cache some things, and compute the total number of bases aligned in the record.
             final boolean mappedInPair = record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag() && !record.getSupplementaryAlignmentFlag();
@@ -453,13 +484,17 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             ///////////////////////////////////////////////////////////////////
             // Non-PF reads can be totally ignored beyond this point
             ///////////////////////////////////////////////////////////////////
-            if (record.getReadFailsVendorQualityCheckFlag()) return;
+            if (record.getReadFailsVendorQualityCheckFlag()) {
+                return;
+            }
 
             // BASE Based Metrics
             // Strangely enough we should not count supplementals in PF_BASES, assuming that the
             // main record also contains these bases! But we *do* count the aligned bases, assuming
             // that those bases are not *aligned* in the primary record
-            if (!record.getSupplementaryAlignmentFlag()) this.metrics.PF_BASES += record.getReadLength();
+            if (!record.getSupplementaryAlignmentFlag()) {
+                this.metrics.PF_BASES += record.getReadLength();
+            }
 
             if (!record.getReadUnmappedFlag()) {
                 this.metrics.PF_BASES_ALIGNED += basesAlignedInRecord;
@@ -471,7 +506,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             ///////////////////////////////////////////////////////////////////
             // Unmapped reads can be totally ignored beyond this point
             ///////////////////////////////////////////////////////////////////
-            if (record.getReadUnmappedFlag()) return;
+            if (record.getReadUnmappedFlag()) {
+                return;
+            }
 
             // Prefetch the list of target and bait overlaps here as they're needed multiple times.
             final Interval read = new Interval(record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd());
@@ -486,7 +523,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     !record.getMateUnmappedFlag() &&
                     !probes.isEmpty()) {
                 ++this.metrics.PF_SELECTED_PAIRS;
-                if (!record.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
+                if (!record.getDuplicateReadFlag()) {
+                    ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
+                }
             }
 
             // Compute the bait-related metrics *before* applying the duplicate read
@@ -501,7 +540,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                             final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
 
                             for (int pos = block.getReferenceStart(); pos <= end; ++pos) {
-                                if (pos >= bait.getStart() && pos <= bait.getEnd()) ++onBaitBases;
+                                if (pos >= bait.getStart() && pos <= bait.getEnd()) {
+                                    ++onBaitBases;
+                                }
                             }
                         }
                     }
@@ -532,7 +573,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             ///////////////////////////////////////////////////////////////////
             // And lastly, ignore reads falling below the mapq threshold
             ///////////////////////////////////////////////////////////////////
-            if (this.mapQFilter.filterOut(record)) return;
+            if (this.mapQFilter.filterOut(record)) {
+                return;
+            }
 
             // NB: this could modify the record.  See noSideEffects.
             final SAMRecord rec;
@@ -557,7 +600,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             //   5. The count of overall on-target bases, and on-target bases from paired reads
             final Set<Interval> coveredTargets = new HashSet<>(); // Each target is added to this the first time the read covers it
             int readOffset = 0;
-            int refOffset  = rec.getAlignmentStart() - 1;
+            int refPos  = rec.getAlignmentStart() ;
 
             for (final CigarElement cig : rec.getCigar()) {
                 final CigarOperator op = cig.getOperator();
@@ -565,7 +608,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                 for (int i=0; i<len; ++i) {
                     if (op.isAlignment() || (this.includeIndels && op.isIndel())) {
-                        final int refPos       = refOffset + 1;
                         final int qual         = baseQualities[readOffset];
                         final boolean highQual = qual >= this.minimumBaseQuality;
                         final boolean onTarget = overlapsAny(refPos, targets);
@@ -591,12 +633,16 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                     // Unfiltered first (for theoretical het sensitivity)
                                     final Coverage ufCoverage = unfilteredCoverageByTarget.get(target);
                                     ufCoverage.addBase(targetOffset);
-                                    if (ufCoverage.getDepths()[targetOffset] <= coverageCap) baseQHistogramArray[qual]++;
+                                    if (ufCoverage.getDepths()[targetOffset] <= coverageCap) {
+                                        baseQHistogramArray[qual]++;
+                                    }
+                                    unCappedBaseQHistogramArray[qual]++;
 
                                     // Then filtered
                                     if (highQual) {
                                         final Coverage hqCoverage = highQualityCoverageByTarget.get(target);
                                         hqCoverage.addBase(targetOffset);
+                                        hqMaxDepth = Math.max(hqMaxDepth, hqCoverage.getDepths()[targetOffset]);
 
                                         if (coveredTargets.add(target)) {
                                             hqCoverage.incrementReadCount();
@@ -608,8 +654,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     }
 
                     // Finally update the offsets!
-                    if (op.consumesReadBases()) readOffset += 1;
-                    if (op.consumesReferenceBases()) refOffset += 1;
+                    if (op.consumesReadBases()) {
+                        readOffset++;
+                    }
+                    if (op.consumesReferenceBases()) {
+                        refPos++;
+                    }
                 }
             }
         }
@@ -656,18 +706,19 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
         private void calculateTargetCoverageMetrics() {
-            final long[] highQualityCoverageHistogramArray = new long[coverageCap+1];
+
+            LongStream.range(0, hqMaxDepth).forEach(i -> highQualityDepthHistogram.increment((int) i, 0));
+
             int zeroCoverageTargets = 0;
 
             // the number of bases we counted towards the depth histogram plus those that got thrown out by the coverage cap
             long totalCoverage = 0;
 
-            // the maximum depth at any target base
-            long maxDepth = 0;
+            long minDepth = Long.MAX_VALUE;
 
             // The "how many target bases at at-least X" calculations.
             // downstream code relies on this array being sorted in ascending order
-            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100};
+            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000};
 
             // counts for how many target bases are at at least X coverage,
             // where X corresponds to the value at the same offset in targetBasesDepth
@@ -677,15 +728,16 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             for (final Coverage c : this.highQualityCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
                     zeroCoverageTargets++;
-                    highQualityCoverageHistogramArray[0] += c.interval.length();
+                    highQualityDepthHistogram.increment(0, c.interval.length());
                     targetBases[0] += c.interval.length();
+                    minDepth = 0;
                     continue;
                 }
 
                 for (final int depth : c.getDepths()) {
                     totalCoverage += depth;
-                    highQualityCoverageHistogramArray[Math.min(depth, coverageCap)]++;
-                    maxDepth = Math.max(maxDepth, depth);
+                    highQualityDepthHistogram.increment(depth, 1);
+                    minDepth = Math.min(minDepth, depth);
 
                     // Add to the "how many target bases at at-least X" calculations.
                     for (int i = 0; i < targetBasesDepth.length; i++) {
@@ -699,14 +751,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 throw new PicardException("the number of target bases with at least 0x coverage does not equal the number of target bases");
             }
 
-            for (int i = 0; i < highQualityCoverageHistogramArray.length; ++i) {
-                highQualityDepthHistogram.increment(i, highQualityCoverageHistogramArray[i]);
-            }
-
-            // we do this instead of highQualityDepthHistogram.getMean() because the histogram imposes a coverage cap
             metrics.MEAN_TARGET_COVERAGE = (double) totalCoverage / metrics.TARGET_TERRITORY;
             metrics.MEDIAN_TARGET_COVERAGE = highQualityDepthHistogram.getMedian();
-            metrics.MAX_TARGET_COVERAGE = maxDepth;
+            metrics.MAX_TARGET_COVERAGE = hqMaxDepth;
+            // Use Math.min() to account for edge case where highQualityCoverageByTarget is empty (minDepth=Long.MAX_VALUE)
+            metrics.MIN_TARGET_COVERAGE = Math.min(minDepth, hqMaxDepth);
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
             // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage
@@ -722,34 +771,44 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.PCT_TARGET_BASES_40X  = (double) targetBases[6] / (double) targetBases[0];
             metrics.PCT_TARGET_BASES_50X  = (double) targetBases[7] / (double) targetBases[0];
             metrics.PCT_TARGET_BASES_100X = (double) targetBases[8] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_250X = (double) targetBases[9] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_500X = (double) targetBases[10] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_1000X = (double) targetBases[11] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_2500X = (double) targetBases[12] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_5000X = (double) targetBases[13] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_10000X = (double) targetBases[14] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_25000X = (double) targetBases[15] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_50000X = (double) targetBases[16] / (double) targetBases[0];
+            metrics.PCT_TARGET_BASES_100000X = (double) targetBases[17] / (double) targetBases[0];
         }
 
+
         private void calculateTheoreticalHetSensitivity(){
-            final long[] unfilteredDepthHistogramArray = new long[coverageCap + 1];
+            LongStream.range(0, coverageCap).forEach(i -> unfilteredDepthHistogram.increment((int) i, 0));
 
             // collect the unfiltered coverages (i.e. only quality 2 bases excluded) for all targets into a histogram array
             for (final Coverage c : this.unfilteredCoverageByTarget.values()) {
                 if (!c.hasCoverage()) {
-                    unfilteredDepthHistogramArray[0] += c.interval.length();
+                    unfilteredDepthHistogram.increment(0, c.interval.length());
                     continue;
                 }
 
                 for (final int depth : c.getDepths()) {
-                    unfilteredDepthHistogramArray[Math.min(depth, coverageCap)]++;
+                    unfilteredDepthHistogram.increment(Math.min(depth, coverageCap), 1);
                 }
             }
 
-            if (LongStream.of(baseQHistogramArray).sum() != LongStream.rangeClosed(0, coverageCap).map(i -> i * unfilteredDepthHistogramArray[(int)i]).sum()) {
+            if (LongStream.of(baseQHistogramArray).sum() != unfilteredDepthHistogram.getSum()) {
                 throw new PicardException("numbers of bases in the base quality histogram and the coverage histogram are not equal");
             }
 
-            // TODO: normalize the arrays directly. then we don't have to convert to Histograms
+            //TODO this is used elsewhere, so can't remove from here just yet - consider moving to accessor.
             for (int i=0; i<baseQHistogramArray.length; ++i) {
                 unfilteredBaseQHistogram.increment(i, baseQHistogramArray[i]);
             }
 
-            for (int i = 0; i < unfilteredDepthHistogramArray.length; i++){
-                unfilteredDepthHistogram.increment(i, unfilteredDepthHistogramArray[i]);
+            for (int i=0; i<unCappedBaseQHistogramArray.length; ++i) {
+                unCappedUnfilteredBaseQHistogram.increment(i, unCappedBaseQHistogramArray[i]);
             }
 
             final double [] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(unfilteredDepthHistogram);
@@ -883,7 +942,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         public void addMetricsToFile(final MetricsFile<METRIC_TYPE, Integer> hsMetricsComparableMetricsFile) {
             hsMetricsComparableMetricsFile.addMetric(convertMetric(this.metrics));
             hsMetricsComparableMetricsFile.addHistogram(highQualityDepthHistogram);
-            hsMetricsComparableMetricsFile.addHistogram(unfilteredBaseQHistogram);
+            hsMetricsComparableMetricsFile.addHistogram(unCappedUnfilteredBaseQHistogram);
         }
     }
 

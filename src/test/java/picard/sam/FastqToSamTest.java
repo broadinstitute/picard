@@ -36,8 +36,11 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +49,8 @@ import java.util.List;
  */
 public class FastqToSamTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/fastq2bam");
+    private static final String CLASSPATH = "\"" + System.getProperty("java.class.path") + "\" ";
+
 
     public String getCommandLineProgramName() {
         return FastqToSam.class.getSimpleName();
@@ -55,7 +60,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
     @DataProvider(name = "okVersionFiles")
     public Object[][] okVersionFiles() {
         return new Object[][] {
-            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq",      FastqQualityFormat.Standard },
+            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq.gz",      FastqQualityFormat.Standard },
             {"fastq-sanger/5k-30BB2AAXX.3.aligned.sam.fastq",     FastqQualityFormat.Standard },
             {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", FastqQualityFormat.Standard }, // all sanger chars
 
@@ -164,6 +169,76 @@ public class FastqToSamTest extends CommandLineProgramTest {
         convertFile(filename1, filename2, version);
     }
 
+    @Test(expectedExceptionsMessageRegExp = "Input fastq is empty. Set ALLOW_EMPTY_FASTQ if you still want to write out a file with no reads.", expectedExceptions = PicardException.class)
+    public void testEmptyFastq() throws IOException {
+        final File emptyFastq = File.createTempFile("empty", ".fastq");
+        convertFile(emptyFastq, null, FastqQualityFormat.Illumina, false, false, false);
+    }
+
+    @Test
+    public void testEmptyFastqAllowed() throws IOException {
+        final File emptyFastq = File.createTempFile("empty", ".fastq");
+        convertFile(emptyFastq, null, FastqQualityFormat.Illumina, false, false, true);
+    }
+
+    @Test
+    public void testStreamInputWithoutQuality() throws IOException {
+        ByteArrayOutputStream stderrStream = new ByteArrayOutputStream();
+        PrintStream newStderr = new PrintStream(stderrStream);
+        PrintStream oldStderr = System.err;
+        try {
+            System.setErr(newStderr);
+            final File tmpFile = File.createTempFile("empty", ".sam");
+            final String[] args = {
+                    "FASTQ=/dev/stdin",
+                    "SAMPLE_NAME=sample001",
+                    "OUTPUT=" + tmpFile
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+        } finally {
+            System.setErr(oldStderr);
+        }
+        Assert.assertTrue(stderrStream.toString().endsWith("QUALITY_FORMAT must be specified when either of FASTQ or FASTQ2 is not a regular file\n"));
+    }
+
+    @Test
+    public void testStreamInput() throws IOException {
+        final File output = newTempSamFile("stdin");
+        String fastq = """
+                       @ERR194147.10008417/1
+                       ATTTAATTAAGAAAATGTAAACTAAATGACAGTAGACAGACAAGTATGCCTTTGC
+                       +
+                       ???????????????????????????????????????????????????????
+                       """;        
+        String[] command = {
+                "/bin/bash",
+                "-c",
+                "echo -n '" + fastq + "'|" +
+                "java -classpath " +
+                        CLASSPATH +
+                        "picard.cmdline.PicardCommandLine " +
+                        "FastqToSam " +
+                        "-FASTQ /dev/stdin " +
+                        "-QUALITY_FORMAT Standard " +
+                        "-SAMPLE_NAME sample001 " +
+                        "-OUTPUT " + output 
+        };
+
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+            Assert.assertEquals(process.waitFor(), 0);
+        } catch (Exception e) {
+            Assert.fail("Failed to pipe data from stdin to FastqToSam", e);
+        }
+
+        try(final SamReader samReader = SamReaderFactory.makeDefault().open(output)) {
+            long actualCount = samReader.iterator().stream().count();
+            Assert.assertEquals(actualCount, 1);
+        }
+    }
+
     private File convertFile(final String filename, final FastqQualityFormat version) throws IOException {
         return convertFile(filename, null, version);
     }
@@ -172,20 +247,26 @@ public class FastqToSamTest extends CommandLineProgramTest {
         return convertFile(fastqFilename1, fastqFilename2, version,false);
     }
 
-    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version,final boolean permissiveFormat) throws IOException {
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version, final boolean permissiveFormat) throws IOException {
         return convertFile(fastqFilename1, fastqFilename2, version, permissiveFormat, false);
     }
 
-    private File convertFile(final String fastqFilename1,
-                             final String fastqFilename2, 
-                             final FastqQualityFormat version,
-                             final boolean permissiveFormat,
-                             final boolean useSequentialFastqs) throws IOException {
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version, final boolean permissiveFormat, final boolean useSequentialFastqs) throws IOException {
         final File fastq1 = new File(TEST_DATA_DIR, fastqFilename1);
         final File fastq2 = (fastqFilename2 != null) ? new File(TEST_DATA_DIR, fastqFilename2) : null;
+        return convertFile(fastq1, fastq2, version, permissiveFormat, useSequentialFastqs, false);
+    }
+
+    private File convertFile(final File fastq1,
+                             final File fastq2,
+                             final FastqQualityFormat version,
+                             final boolean permissiveFormat,
+                             final boolean useSequentialFastqs,
+                             final boolean allowEmptyFastq) throws IOException {
+
         final File samFile = newTempSamFile(fastq1.getName());
 
-        final List<String> args =new ArrayList<String>();
+        final List<String> args = new ArrayList<>();
 
         args.add("FASTQ=" + fastq1.getAbsolutePath());
         args.add("OUTPUT=" + samFile.getAbsolutePath());
@@ -193,9 +274,10 @@ public class FastqToSamTest extends CommandLineProgramTest {
         args.add("READ_GROUP_NAME=rg");
         args.add("SAMPLE_NAME=s1");
 
-        if (fastqFilename2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
+        if (fastq2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
         if (permissiveFormat) args.add("ALLOW_AND_IGNORE_EMPTY_LINES=true");
         if (useSequentialFastqs) args.add("USE_SEQUENTIAL_FASTQS=true");
+        if (allowEmptyFastq) args.add("ALLOW_EMPTY_FASTQ=true");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
         return samFile ;
@@ -296,9 +378,9 @@ public class FastqToSamTest extends CommandLineProgramTest {
         final String pairedEnd1 = "sequential-files/paired_end_R1_001.fastq";
         final String pairedEnd2 = "sequential-files/paired_end_R2_001.fastq";
         
-        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + singleEnd)).size(), 2);
-        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + pairedEnd1)).size(), 2);
-        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + pairedEnd2)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(Paths.get(TEST_DATA_DIR.getPath(), singleEnd)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(Paths.get(TEST_DATA_DIR.getPath(),  pairedEnd1)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(Paths.get(TEST_DATA_DIR.getPath(), pairedEnd2)).size(), 2);
 
         convertFileAndVerifyRecordCount(1, singleEnd, null, FastqQualityFormat.Illumina, true, false);
         convertFileAndVerifyRecordCount(2, singleEnd, null, FastqQualityFormat.Illumina, true, true);

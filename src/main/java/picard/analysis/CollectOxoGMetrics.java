@@ -40,11 +40,12 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
-import htsjdk.samtools.util.SequenceUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.help.HelpConstants;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.*;
@@ -85,7 +86,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             "" +
             "<hr />";
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "Input BAM file for analysis.")
+            doc = "Input SAM/BAM/CRAM file for analysis.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
@@ -136,6 +137,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
     private static final String UNKNOWN_SAMPLE = "UnknownSample";
 
     /** Metrics class for outputs. */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static final class CpcgMetrics extends MetricBase {
         /** The name of the sample being assayed. */
         public String SAMPLE_ALIAS;
@@ -234,11 +236,14 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
         if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
-            SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                    refWalker.getSequenceDictionary());
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    in.getFileHeader().getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    refWalker.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
         }
 
         final Set<String> samples = new HashSet<>();

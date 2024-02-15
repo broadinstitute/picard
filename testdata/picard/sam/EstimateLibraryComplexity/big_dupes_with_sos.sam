@@ -85,9 +85,9 @@
 @SQ	SN:GL000192.1	LN:547496
 @SQ	SN:NC_007605	LN:171823
 @SQ	SN:hs37d5	LN:35477943
-@RG	ID:H06HD.1	PL:illumina	PU:H06HDADXX130110.1.ATCACGAT	LB:Solexa-135852	SM:NA12878	CN:BI
-@RG	ID:H06HD.2	PL:illumina	PU:H06HDADXX130110.2.ATCACGAT	LB:Solexa-135852	SM:NA12878	CN:BI
-@RG	ID:H06JU.1	PL:illumina	PU:H06JUADXX130110.1.ATCACGAT	LB:Solexa-135852	SM:NA12878	CN:BI
+@RG	ID:H06HD.1	PL:ILLUMINA	PU:H06HDADXX130110.1.ATCACGAT	LB:Solexa-135852	SM:NA12878	CN:BI
+@RG	ID:H06HD.2	PL:ILLUMINA	PU:H06HDADXX130110.2.ATCACGAT	LB:Solexa-135852	SM:NA12878	CN:BI
+@RG	ID:H06JU.1	PL:ILLUMINA	PU:H06JUADXX130110.1.ATCACGAT	LB:Solexa-135852	SM:NA12878	CN:BI
 @PG	ID:GATK IndelRealigner	VN:2.6-192-gc7d9d71	CL:knownAlleles=[(RodBinding name=knownAlleles source=/humgen/gsa-hpprojects/GATK/bundle/current/b37/dbsnp_137.b37.vcf)] targetIntervals=/humgen/gsa-firehose2/carneiro/ceu/NA12878/NA12878.intervals LODThresholdForCleaning=5.0 consensusDeterminationModel=USE_READS entropyThreshold=0.15 maxReadsInMemory=150000 maxIsizeForMovement=3000 maxPositionalMoveAllowed=200 maxConsensuses=30 maxReadsForConsensuses=120 maxReadsForRealignment=20000 noOriginalAlignmentTags=false nWayOut=null generate_nWayOut_md5s=false check_early=false noPGTag=false keepPGTags=false indelsFileForDebugging=null statisticsFileForDebugging=null SNPsFileForDebugging=null
 @PG	ID:GATK PrintReads	VN:2.6-192-gc7d9d71	CL:readGroup=null platform=null number=-1 sample_file=[] sample_name=[] simplify=false no_pg_tag=false
 C4A4WACXX140821:8:1112:2344:1985	339	7	1	255	101M	=	302	201	CAACAGAAGCAGGAATCTGTGTTTGTGTTTCGGAAAAAAAGCTGAAAAGATTATCGAATCAAAAAAAAATCCCGATTTCATTCCGCAGCTAACCTCCCAAA	IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII

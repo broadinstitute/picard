@@ -27,10 +27,10 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     private File output;
     private int readNameCounter = 0;
     protected boolean noMateCigars = false;
-    private boolean deleteOnExit = true;
+    final private boolean deleteOnExit;
     private final ArrayList<String> args = new ArrayList<>();
 
-    private Map<SAMFileHeader, Path> fastaFiles = new HashMap<>();
+    protected Map<SAMFileHeader, Path> fastaFiles = new HashMap<>();
 
     public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder, boolean recordsNeedSorting) {
         this.deleteOnExit = deleteOnExit;
@@ -82,7 +82,6 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         this.output = output;
     }
 
-
     public void addArg(final String arg) {
         args.add(arg);
     }
@@ -96,7 +95,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     }
 
     private void setOutputDir() {
-        this.outputDir = IOUtil.createTempDir(this.getClass().getSimpleName() + ".", ".tmp");
+        this.outputDir = IOUtil.createTempDir(this.getClass().getSimpleName() + ".tmp").toFile();
         if (deleteOnExit) {
             outputDir.deleteOnExit();
         }
@@ -366,6 +365,8 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             if (inputExtension.equals(".cram")) {
                 args.add("REFERENCE_SEQUENCE=" + fastaFiles.get(samRecordSetBuilder.getHeader()));
             }
+
+            customPretestCallback();
             Assert.assertEquals(runPicardCommandLine(args), 0);
             test();
         } catch (IOException ex) {
@@ -373,6 +374,8 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             throw new RuntimeException(ex);
         }
     }
+
+    protected void customPretestCallback(){};
 
     private File createInputFile(final String extension) throws IOException {
         // Create the input file
@@ -384,7 +387,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         if (extension.equals(".cram")) {
             final Path fasta = fastaFiles.computeIfAbsent(samRecordSetBuilder.getHeader(), h -> {
 
-                final Path fastaDir = IOUtil.createTempDir("SamFileTester", "").toPath();
+                final Path fastaDir = IOUtil.createTempDir("SamFileTester");
                 IOUtil.deleteOnExit(fastaDir);
                 final Path newFasta = fastaDir.resolve("input.fasta");
                 IOUtil.deleteOnExit(newFasta);
@@ -399,7 +402,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                     Assert.assertFalse(sum >= 10_000_000,
                             "Sequence dictionary is very large (total size " + sum + "). In a Cram test this could be a problem leading to writing lots" +
                                     "of bases to disk. please modify the tester using 'ModifyTesterForCramTests'. " +
-                                    "For exmaple look at testBulkFragmentsNoDuplicates in AbstractMarkDuplicatesCommandLineProgramTest");
+                                    "For example look at testBulkFragmentsNoDuplicates in AbstractMarkDuplicatesCommandLineProgramTest");
 
                     samRecordSetBuilder.writeRandomReference(newFasta);
                 } catch (IOException e) {
@@ -414,8 +417,11 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             writer = samFileWriterFactory.makeWriter(samRecordSetBuilder.getHeader(), true, input, null);
         }
 
-        samRecordSetBuilder.getRecords().forEach(writer::addAlignment);
+        for(final SAMRecord a : samRecordSetBuilder.getRecords()) {
+            writer.addAlignment(a);
+        }
         writer.close();
+
         return input;
     }
 

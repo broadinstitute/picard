@@ -27,14 +27,17 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
+import picard.util.GCloudTestUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -45,12 +48,13 @@ import java.util.stream.Collectors;
  * @author alecw@broadinstitute.org
  */
 public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
-    private static File TEST_DATA_DIR = new File("testdata/picard");
-    private static File BASIC_FASTA = new File(TEST_DATA_DIR + "/sam", "basic.fasta");
-    private static File SPECIAL_FASTA = new File(TEST_DATA_DIR + "/sam", "special.fasta");
-    private static File SPECIAL_ALT = new File(TEST_DATA_DIR + "/sam", "special.alt");
-    private static File EQUIVALENCE_TEST_FASTA = new File(TEST_DATA_DIR + "/reference", "test.fasta");
-    private static File DUPLICATE_FASTA = new File(TEST_DATA_DIR + "/sam", "duplicate_sequence_names.fasta");
+    private static final File TEST_DATA_DIR = new File("testdata/picard");
+    private static final File BASIC_FASTA = new File(TEST_DATA_DIR + "/sam", "basic.fasta");
+    private static final File EQUIVALENCE_TEST_FASTA = new File(TEST_DATA_DIR + "/reference", "test.fasta");
+    private static final File DUPLICATE_FASTA = new File(TEST_DATA_DIR + "/sam", "duplicate_sequence_names.fasta");
+
+    private static final File SPECIAL_FASTA = new File(TEST_DATA_DIR + "/sam", "special.fasta");
+    private static final File SPECIAL_ALT = new File(TEST_DATA_DIR + "/sam", "special.alt");
 
     public String getCommandLineProgramName() {
         return CreateSequenceDictionary.class.getSimpleName();
@@ -93,13 +97,13 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
 
-        List<String> currentDict = new BufferedReader(new FileReader(outputDict))
+        final List<String> currentDict = new BufferedReader(new FileReader(outputDict))
                 .lines()
                 //remove info about location fasta file
                 .map(s -> s.replaceAll("UR:.*", ""))
                 .collect(Collectors.toList());
 
-        List<String> expectedDict = new BufferedReader(new FileReader(TEST_DATA_DIR + "/reference/csd_dict.dict"))
+        final List<String> expectedDict = new BufferedReader(new FileReader(TEST_DATA_DIR + "/reference/csd_dict.dict"))
                 .lines()
                 //remove info about location fasta file
                 .map(s -> s.replaceAll("UR:.*", ""))
@@ -147,29 +151,31 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
                 "TRUNCATE_NAMES_AT_WHITESPACE=true"
         };
         Assert.assertEquals(runPicardCommandLine(argv), 0);
-        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(outputDict);
+        final SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(outputDict.toPath());
         Assert.assertNotNull(dict, "dictionary is null");
        
         // check chr1
-        SAMSequenceRecord ssr = dict.getSequence("chr1");
-        Assert.assertNotNull(ssr, "chr1 missing in dictionary");
-        String an = ssr.getAttribute("AN");
-        Assert.assertNotNull(an, "AN Missing");
-        Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
+
+        final SAMSequenceRecord ssr1 = dict.getSequence("chr1");
+        Assert.assertNotNull(ssr1, "chr1 missing in dictionary");
+        final String an1 = ssr1.getAttribute("AN");
+        Assert.assertNotNull(ssr1, "AN Missing");
+        Set<String> anSet = new HashSet<>(Arrays.asList(an1.split("[,]")));
+
         Assert.assertTrue(anSet.contains("1"));
         Assert.assertTrue(anSet.contains("01"));
         Assert.assertTrue(anSet.contains("k1"));
         Assert.assertFalse(anSet.contains("M"));
         
         // check chr2
-        ssr = dict.getSequence("chr2");
-        Assert.assertNotNull(ssr, "chr2 missing in dictionary");
-        an = ssr.getAttribute("AN");
-        Assert.assertNull(an, "AN Present");
+        SAMSequenceRecord ssr2 = dict.getSequence("chr2");
+        Assert.assertNotNull(ssr2, "chr2 missing in dictionary");
+        final String an2 = ssr2.getAttribute("AN");
+        Assert.assertNull(an2, "AN Present");
         
         // check chrM
-        ssr = dict.getSequence("chrM");
-        Assert.assertNull(ssr, "chrM present in dictionary");
+        final SAMSequenceRecord ssrM = dict.getSequence("chrM");
+        Assert.assertNull(ssrM, "chrM present in dictionary");
     }
 
     @Test
@@ -207,6 +213,122 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
             Assert.assertNotNull(an, "AN Missing");
             final Set<String> anSet = new HashSet<>(Arrays.asList(an.split("[,]")));
             Assert.assertTrue(anSet.contains("2/hello"));
+        }
+    }
+
+    // Test that dictionary MD5s are invariant across dos/unix line endings
+    @Test
+    public void testSequenceMD5sRespectLineEndings() throws IOException {
+        // NOTE: the .fasta test files here that use windows cr/lf line endings have to be listed in
+        // the repo .gitattributes file in order to prevent git from converting them to use local
+        // platform line endings on checkout
+        final Path picardDictPath = makeTempDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/test.fasta"),
+                "CreateSequenceDictionaryTest_unix.");
+
+        final Path picardDosDictPath = makeTempDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/test_dos_line_endings.fasta"),
+                "CreateSequenceDictionaryTest_dos.");
+
+        final Path picardDosGZDictPath = makeTempDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/test_dos_line_endings.fasta.gz"),
+                "CreateSequenceDictionaryTest_dos_gz.");
+        final SAMSequenceDictionary unixDict = SAMSequenceDictionaryExtractor.extractDictionary(picardDictPath);
+        final SAMSequenceDictionary dosDict = SAMSequenceDictionaryExtractor.extractDictionary(picardDosDictPath);
+        final SAMSequenceDictionary dosGZDict = SAMSequenceDictionaryExtractor.extractDictionary(picardDosGZDictPath);
+
+        // test files generated with samtools 1.17
+
+        // converted by samtools from test.fasta
+        final SAMSequenceDictionary samtoolsDict = SAMSequenceDictionaryExtractor.extractDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/samtools_test.dict"));
+        // converted by samtools from test_windows_line_endings.fasta
+        final SAMSequenceDictionary samtoolsDosDict = SAMSequenceDictionaryExtractor.extractDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/samtools_test_dos_line_endings.dict"));
+        // from test_windows_line_endings.fasta.gz
+        final SAMSequenceDictionary samtoolsDosGZDict = SAMSequenceDictionaryExtractor.extractDictionary(
+                Paths.get(TEST_DATA_DIR + "/reference/samtools_test_dos_line_endings_gz.dict"));
+
+        final List<SAMSequenceRecord> picardRecords = unixDict.getSequences();
+        final List<SAMSequenceRecord> picardDosRecords = dosDict.getSequences();
+        final List<SAMSequenceRecord> picardDosGZRecords = dosGZDict.getSequences();
+        final List<SAMSequenceRecord> samtoolsRecords = samtoolsDict.getSequences();
+        final List<SAMSequenceRecord> samtoolsDosRecords = samtoolsDosDict.getSequences();
+        final List<SAMSequenceRecord> samtoolsDosGZRecords = samtoolsDosGZDict.getSequences();
+
+        Assert.assertEquals(picardRecords.size(), picardDosRecords.size());
+        Assert.assertEquals(picardRecords.size(), picardDosGZRecords.size());
+        Assert.assertEquals(picardRecords.size(), samtoolsRecords.size());
+        Assert.assertEquals(picardRecords.size(), samtoolsDosRecords.size());
+        Assert.assertEquals(picardRecords.size(), samtoolsDosGZRecords.size());
+
+        for (int i = 0; i < picardRecords.size(); i++) {
+            Assert.assertEquals(picardRecords.get(i).getMd5(), picardDosRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), picardDosGZRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), samtoolsRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), samtoolsDosRecords.get(i).getMd5());
+            Assert.assertEquals(picardRecords.get(i).getMd5(), samtoolsDosGZRecords.get(i).getMd5());
+        }
+    }
+
+    final Path makeTempDictionary(final Path inputFasta, final String dictNamePrefix) throws IOException {
+        final File tempDict = File.createTempFile(dictNamePrefix, ".dict");
+        tempDict.delete();
+        tempDict.deleteOnExit();
+        final String[] argv = {
+                "REFERENCE=" + inputFasta.toAbsolutePath(),
+                "OUTPUT=" + tempDict
+        };
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        return tempDict.toPath();
+    }
+
+    // This is a copy of gs://hellbender/test/resources/hg19mini.fasta. Using the original file in the original location is
+    // undesirable because an accompanying dictionary already exists in the same directory. So we copied it to picard/references
+    // where the dictionary does not exist.
+    final PicardHtsPath HG19_MINI = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "picard/references/hg19mini.fasta");
+    final PicardHtsPath HG19_MINI_LOCAL = new PicardHtsPath("testdata/picard/reference/hg19mini.fasta");
+
+    final PicardHtsPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_STAGING_DEFAULT, "picard/");
+
+    @DataProvider
+    public Object[][] cloudTestData() {
+        return new Object[][] {
+                {HG19_MINI},
+                {HG19_MINI_LOCAL}
+        };
+    }
+
+
+    @Test(groups = "cloud", dataProvider = "cloudTestData")
+    public void testCloud(final PicardHtsPath inputReference) {
+        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR.getURIString() + "test", ".dict");
+
+        final String[] argv = {
+                "REFERENCE=" + inputReference.getURI(),
+                "OUTPUT=" + output,
+        };
+
+        // This is the "original" dictionary that lives in gs://hellbender/test/resources/
+        final PicardHtsPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "hg19mini.dict");
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
+        final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(expectedOutputPath.toPath());
+        final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(output.toPath());
+
+        assertDictionariesEqual(actualDictionary, expectedDictionary);
+        // Check the URI_TAG separately
+        Assert.assertEquals(actualDictionary.getSequence(0).getAttribute(SAMSequenceRecord.URI_TAG), inputReference.getURIString());
+    }
+
+    // SAMSequenceRecord::equal is too strict (we don't require UR of the two files to match), so check equality this way
+    private void assertDictionariesEqual(final SAMSequenceDictionary dict1, final SAMSequenceDictionary dict2){
+        Assert.assertEquals(dict1.size(), dict2.size());
+        for (int i = 0; i < dict2.size(); i++){
+            final SAMSequenceRecord expectedRecord = dict2.getSequence(i);
+            final SAMSequenceRecord actualRecord = dict1.getSequence(i);
+            Assert.assertEquals(actualRecord.getSequenceName(), expectedRecord.getSequenceName());
+            Assert.assertEquals(actualRecord.getSequenceLength(), expectedRecord.getSequenceLength());
+            Assert.assertEquals(actualRecord.getSequenceIndex(), expectedRecord.getSequenceIndex());
         }
     }
 }

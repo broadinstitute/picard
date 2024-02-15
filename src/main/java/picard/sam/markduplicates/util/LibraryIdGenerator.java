@@ -30,10 +30,12 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Histogram;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 /**
  * A class to generate library Ids and keep duplication metrics by library IDs.
@@ -47,20 +49,24 @@ public class LibraryIdGenerator {
     private final SAMFileHeader header;
     private final Map<String, Short> libraryIds = new HashMap<String, Short>(); // from library string to library id
     private short nextLibraryId = 1;
-    private final Map<String, DuplicationMetrics> metricsByLibrary = new HashMap<>();
+    private final Map<String, DuplicationMetrics> metricsByLibrary = new TreeMap<>();
     private final Histogram<Short> opticalDuplicatesByLibraryId = new Histogram<>();
     private final Histogram<Double> duplicateCountHist = new Histogram<>("set_size", "all_sets");
     private final Histogram<Double> nonOpticalDuplicateCountHist = new Histogram<>("set_size", "non_optical_sets");
     private final Histogram<Double> opticalDuplicateCountHist = new Histogram<>("set_size", "optical_sets");
 
     public LibraryIdGenerator(final SAMFileHeader header) {
+        this(header, false);
+    }
+
+    public LibraryIdGenerator(final SAMFileHeader header, final boolean flowMetrics) {
         this.header = header;
 
         for (final SAMReadGroupRecord readGroup : header.getReadGroups()) {
             final String library = LibraryIdGenerator.getReadGroupLibraryName(readGroup);
             DuplicationMetrics metrics = metricsByLibrary.get(library);
             if (metrics == null) {
-                metrics = new DuplicationMetrics();
+                metrics = DuplicationMetricsFactory.createMetrics(flowMetrics);
                 metrics.LIBRARY = library;
                 metricsByLibrary.put(library, metrics);
             }
@@ -92,9 +98,9 @@ public class LibraryIdGenerator {
     }
 
     public static String getReadGroupLibraryName(final SAMReadGroupRecord readGroup) {
-		return Optional.ofNullable(readGroup.getLibrary())
-				.orElse(UNKNOWN_LIBRARY);
-	}
+        return Optional.ofNullable(readGroup.getLibrary())
+                .orElse(UNKNOWN_LIBRARY);
+    }
    
     /**
      * Gets the library name from the header for the record. If the RG tag is not present on

@@ -24,27 +24,30 @@
 
 package picard.sam;
 
+import com.google.common.annotations.VisibleForTesting;
+import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
-import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,15 +69,15 @@ import java.util.List;
  *
  * This tool is a wrapper for {@link SamFileValidator}.
  *
- * <h4>Usage example:</h4>
+ * <h3>Usage example:</h3>
  * <pre>
- * java -jar picard.jar ValidateSamFile \\<br />
- *       I=input.bam \\<br />
+ * java -jar picard.jar ValidateSamFile \<br />
+ *       I=input.bam \<br />
  *       MODE=SUMMARY
  * </pre>
  * <p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional
  *  <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>
- * "<hr />
+ * <hr />
  *
  * @author Doug Voet
  */
@@ -85,8 +88,8 @@ import java.util.List;
 @DocumentedFeature
 public class ValidateSamFile extends CommandLineProgram {
     private static final Log log = Log.getInstance(ValidateSamFile.class);
-    static final String USAGE_SUMMARY = "Validates a SAM or BAM file.";
-    static final String USAGE_DETAILS = "<p>This tool reports on the validity of a SAM or BAM file relative to the SAM format " +
+    static final String USAGE_SUMMARY = "Validates a SAM/BAM/CRAM file.";
+    static final String USAGE_DETAILS = "<p>This tool reports on the validity of a SAM/BAM/CRAM file relative to the SAM format " +
             "specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper " +
             "formatting, faulty alignments, incorrect flag values, etc. </p> " +
 
@@ -100,33 +103,42 @@ public class ValidateSamFile extends CommandLineProgram {
 
             "<p>After identifying and fixing your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM " +
             "file prior to proceeding with your downstream analysis.  This will verify that all problems in your file have been addressed.</p>" +
-            "<h4>Usage example:</h4>" +
+            "<h3>Usage example:</h3>" +
             "<pre>" +
             "java -jar picard.jar ValidateSamFile \\<br />" +
             "      I=input.bam \\<br />" +
             "      MODE=SUMMARY" +
             "</pre>" +
             "<p>To obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional " +
-            " <a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p>" +
             ""+
-            "<hr />";
+            "<hr />"+
+            "Return codes depend on the errors/warnings discovered:" +
+            "<p>"+
+            "-1 failed to complete execution\n" +
+            "0  ran successfully\n" +
+            "1  warnings but no errors\n" +
+            "2  errors and warnings\n" +
+            "3  errors but no warnings";
+
+
     public enum Mode {VERBOSE, SUMMARY}
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "Input SAM/BAM file")
-    public File INPUT;
+            doc = "Input SAM/BAM/CRAM file")
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Output file or standard out if missing",
             optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "M",
             doc = "Mode of output")
     public Mode MODE = Mode.VERBOSE;
 
     @Argument(doc = "List of validation error types to ignore.", optional = true)
-    public List<SAMValidationError.Type> IGNORE = new ArrayList<SAMValidationError.Type>();
+    public List<SAMValidationError.Type> IGNORE = new ArrayList<>();
 
     @Argument(shortName = "MO",
             doc = "The maximum number of lines output in verbose mode")
@@ -147,7 +159,7 @@ public class ValidateSamFile extends CommandLineProgram {
     public IndexValidationStringency INDEX_VALIDATION_STRINGENCY = IndexValidationStringency.EXHAUSTIVE;
 
     @Argument(shortName = "BISULFITE",
-            doc = "Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
+            doc = "Whether the input file consists of bisulfite sequenced reads. " +
                     "If so, C->T is not counted as an error in computing the value of the NM tag.")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
@@ -163,10 +175,6 @@ public class ValidateSamFile extends CommandLineProgram {
             "high duplication or chimerism rates (> 10%), the mate validation process often requires extremely " +
             "large amounts of memory to run, so this flag allows you to forego that check.")
     public boolean SKIP_MATE_VALIDATION = false;
-
-    public static void main(final String[] args) {
-        System.exit(new ValidateSamFile().instanceMain(args));
-    }
 
     /**
      * Return types for doWork()
@@ -199,7 +207,7 @@ public class ValidateSamFile extends CommandLineProgram {
     @Override
     protected int doWork() {
         try {
-            IOUtil.assertFileIsReadable(INPUT);
+            IOUtil.assertFileIsReadable(INPUT.toPath());
             ReferenceSequenceFile reference = null;
             if (REFERENCE_SEQUENCE != null) {
                 IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
@@ -210,9 +218,8 @@ public class ValidateSamFile extends CommandLineProgram {
             }
             final PrintWriter out;
             if (OUTPUT != null) {
-                IOUtil.assertFileIsWritable(OUTPUT);
                 try {
-                    out = new PrintWriter(OUTPUT);
+                    out = new PrintWriter(Files.newOutputStream(OUTPUT.toPath()));
                 } catch (FileNotFoundException e) {
                     // we already asserted this so we should not get here
                     throw new PicardException("Unexpected exception", e);
@@ -226,9 +233,9 @@ public class ValidateSamFile extends CommandLineProgram {
             final SamReaderFactory factory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
                     .validationStringency(ValidationStringency.SILENT)
                     .enable(SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS);
-            final SamReader samReader = factory.open(INPUT);
+            final SamReader samReader = factory.open(INPUT.toPath());
 
-            if (samReader.type() != SamReader.Type.BAM_TYPE) VALIDATE_INDEX = false;
+            if (samReader.type() != SamReader.Type.BAM_TYPE && samReader.type() != SamReader.Type.BAM_CSI_TYPE) VALIDATE_INDEX = false;
 
             factory.setOption(SamReaderFactory.Option.CACHE_FILE_BASED_INDEXES, VALIDATE_INDEX);
             factory.reapplyOptions(samReader);
@@ -247,9 +254,9 @@ public class ValidateSamFile extends CommandLineProgram {
             if (VALIDATE_INDEX) {
                 validator.setIndexValidationStringency(VALIDATE_INDEX ? IndexValidationStringency.EXHAUSTIVE : IndexValidationStringency.NONE);
             }
-            if (IOUtil.isRegularPath(INPUT)) {
+            if (IOUtil.isRegularPath(INPUT.toPath())) {
                 // Do not check termination if reading from a stream
-                validator.validateBamFileTermination(INPUT);
+                validator.validateBamFileTermination(INPUT.toPath());
             }
 
             result = false;

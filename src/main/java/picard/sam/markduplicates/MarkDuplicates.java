@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
@@ -54,9 +55,9 @@ import java.util.Map;
         oneLineSummary = MarkDuplicates.USAGE_SUMMARY,
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
-public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
+public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram implements MarkDuplicatesHelper {
     static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";
-    static final String USAGE_DETAILS = "<p>This tool locates and tags duplicate reads in a BAM or SAM file, where duplicate reads are " +
+    static final String USAGE_DETAILS = "<p>This tool locates and tags duplicate reads in a SAM, BAM or CRAM file, where duplicate reads are " +
             "defined as originating from a single fragment of DNA.  Duplicates can arise during sample preparation e.g. library " +
             "construction using PCR.  See also " +
             "<a href='https://broadinstitute.github.io/picard/command-line-overview.html#EstimateLibraryComplexity'>EstimateLibraryComplexity</a>" +
@@ -65,20 +66,21 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "referred to as optical duplicates.</p>" +
             "" +
             "<p>The MarkDuplicates tool works by comparing sequences in the 5 prime positions of both reads and read-pairs in a SAM/BAM file.  " +
-            "An BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are" +
+            "A BARCODE_TAG option is available to facilitate duplicate marking using molecular barcodes.  After duplicate reads are" +
             " collected, the tool differentiates the primary and duplicate reads using an algorithm that ranks reads by the sums " +
-            "of their base-quality scores (default method).</p>  " +
-
-            "<p>The tool's main output is a new SAM or BAM file, in which duplicates have been identified in the SAM flags field for each" +
+            "of their base-quality scores (default method). Note that this is different from directly checking if the sequences match, which " +
+            "MarkDuplicates does not do.</p>  " +
+            "" +
+            "<p>The tool's main output is a new SAM, BAM or CRAM file, in which duplicates have been identified in the SAM flags field for each" +
             " read.  Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024.  " +
             "If you are not familiar with this type of annotation, please see the following " +
             "<a href='https://www.broadinstitute.org/gatk/blog?id=7019'>blog post</a> for additional information.</p>" +
             "" +
             "<p>Although the bitwise flag annotation indicates whether a read was marked as a duplicate, it does not identify the type of " +
             "duplicate.  To do this, a new tag called the duplicate type (DT) tag was recently added as an optional output in  " +
-            "the 'optional field' section of a SAM/BAM file.  Invoking the TAGGING_POLICY option," +
+            "the 'optional field' section of a SAM/BAM/CRAM file.  Invoking the TAGGING_POLICY option," +
             " you can instruct the program to mark all the duplicates (All), only the optical duplicates (OpticalOnly), or no " +
-            "duplicates (DontTag).  The records within the output of a SAM/BAM file will have values for the 'DT' tag (depending on the invoked " +
+            "duplicates (DontTag).  The records within the output of a SAM/BAM/CRAM file will have values for the 'DT' tag (depending on the invoked " +
             "TAGGING_POLICY), as either library/PCR-generated duplicates (LB), or sequencing-platform artifact duplicates (SQ).  " +
             "This tool uses the READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options as the primary methods to identify " +
             "and differentiate duplicate types.  Set READ_NAME_REGEX to null to skip optical duplicate detection, e.g. for RNA-seq " +
@@ -116,7 +118,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * The optional attribute in SAM/BAM files used to store the duplicate type.
+     * The optional attribute in SAM/BAM/CRAM files used to store the duplicate type.
      */
     public static final String DUPLICATE_TYPE_TAG = "DT";
     /**
@@ -215,12 +217,18 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "the BARCODE_TAG option be set to a non null value.  Default null.", optional = true)
     public String MOLECULAR_IDENTIFIER_TAG = null;
 
+    @ArgumentCollection
+    public MarkDuplicatesForFlowArgumentCollection flowBasedArguments = new MarkDuplicatesForFlowArgumentCollection();
 
-    private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
-    private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
-    private SortingLongCollection duplicateIndexes;
-    private SortingLongCollection opticalDuplicateIndexes;
-    private SortingCollection<RepresentativeReadIndexer> representativeReadIndicesForDuplicates;
+    protected SortingCollection<ReadEndsForMarkDuplicates> pairSort;
+    protected SortingCollection<ReadEndsForMarkDuplicates> fragSort;
+    protected SortingLongCollection duplicateIndexes;
+    protected SortingLongCollection opticalDuplicateIndexes;
+    protected SortingCollection<RepresentativeReadIndexer> representativeReadIndicesForDuplicates;
+
+    // some calculations are performed using a helper class, which can be parameter specific
+    // by default, this instance is the helper
+    private MarkDuplicatesHelper calcHelper = this;
 
     private int numDuplicateIndices = 0;
     static private final long NO_SUCH_INDEX = Long.MAX_VALUE; // needs to be large so that that >= test fails for query-sorted traversal
@@ -240,7 +248,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
-     * Main work method.  Reads the BAM file once and collects sorted information about
+     * Main work method.  Reads the SAM file once and collects sorted information about
      * the 5' ends of both ends of each read (or just one end in the case of pairs).
      * Then makes a pass through those determining duplicates before re-reading the
      * input file and writing it out with duplication flags set correctly.
@@ -252,11 +260,17 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
+        // use flow based calculation helper?
+        if ( flowBasedArguments.FLOW_MODE ) {
+            calcHelper = new MarkDuplicatesForFlowHelper(this);
+        }
+
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
         buildSortedReadEndLists(useBarcodes);
         reportMemoryStats("After buildSortedReadEndLists");
-        generateDuplicateIndexes(useBarcodes, this.REMOVE_SEQUENCING_DUPLICATES || this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag);
+        calcHelper.generateDuplicateIndexes(useBarcodes, this.REMOVE_SEQUENCING_DUPLICATES || this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag);
+
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
 
@@ -293,9 +307,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         // Key: previous PG ID on a SAM Record (or null).  Value: New PG ID to replace it.
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
 
-        try (SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
-                true,
-                OUTPUT)) {
+        try (SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader, true, OUTPUT,REFERENCE_SEQUENCE)){
 
             // Now copy over the file while marking all the necessary indexes as duplicates
             long recordInFileIndex = 0;
@@ -307,12 +319,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             RepresentativeReadIndexer rri = null;
             int representativeReadIndexInFile = -1;
             int duplicateSetSize = -1;
-            int nextRepresentativeIndex = -1;
+            int nextReadInDuplicateSetIndex = -1;
             if (TAG_DUPLICATE_SET_MEMBERS) {
                 representativeReadIterator = this.representativeReadIndicesForDuplicates.iterator();
                 if (representativeReadIterator.hasNext()) {
                     rri = representativeReadIterator.next();
-                    nextRepresentativeIndex = rri.readIndexInFile;
+                    nextReadInDuplicateSetIndex = rri.readIndexInFile;
                     representativeReadIndexInFile = rri.representativeReadIndexInFile;
                     duplicateSetSize = rri.setSize;
                 }
@@ -321,28 +333,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
             final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
             String duplicateQueryName = null;
+            String representativeQueryName = null;
 
             while (iterator.hasNext()) {
                 final SAMRecord rec = iterator.next();
 
-                final String library = LibraryIdGenerator.getLibraryName(header, rec);
-                DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
-                if (metrics == null) {
-                    metrics = new DuplicationMetrics();
-                    metrics.LIBRARY = library;
-                    libraryIdGenerator.addMetricsByLibrary(library, metrics);
-                }
-
-                // First bring the simple metrics up to date
-                if (rec.getReadUnmappedFlag()) {
-                    ++metrics.UNMAPPED_READS;
-                } else if (rec.isSecondaryOrSupplementary()) {
-                    ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
-                } else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                    ++metrics.UNPAIRED_READS_EXAMINED;
-                } else {
-                    ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
-                }
+                DuplicationMetrics metrics = AbstractMarkDuplicatesCommandLineProgram.addReadToLibraryMetrics(rec, header, libraryIdGenerator, flowBasedArguments.FLOW_MODE);
 
                 // Now try and figure out the next duplicate index (if going by coordinate. if going by query name, only do this
                 // if the query name has changed.
@@ -355,15 +351,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 if (isDuplicate) {
                     rec.setDuplicateReadFlag(true);
 
-                    // only update duplicate counts for "decider" reads, not tag-a-long reads
-                    if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-                        // Update the duplication metrics
-                        if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
-                            ++metrics.UNPAIRED_READ_DUPLICATES;
-                        } else {
-                            ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
-                        }
-                    }
+                    metrics.addDuplicateReadToMetrics(rec);
                 } else {
                     rec.setDuplicateReadFlag(false);
                 }
@@ -388,22 +376,27 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                 // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
                 if (TAG_DUPLICATE_SET_MEMBERS) {
-                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
+                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextReadInDuplicateSetIndex &&
+                            (sortOrder == SAMFileHeader.SortOrder.coordinate || !rec.getReadName().equals(representativeQueryName));
                     if (needNextRepresentativeIndex && representativeReadIterator.hasNext()) {
                         rri = representativeReadIterator.next();
-                        nextRepresentativeIndex = rri.readIndexInFile;
+                        nextReadInDuplicateSetIndex = rri.readIndexInFile;
                         representativeReadIndexInFile = rri.representativeReadIndexInFile;
                         duplicateSetSize = rri.setSize;
                     }
-                    final boolean isInDuplicateSet = recordInFileIndex == nextRepresentativeIndex ||
+
+                    /* If this record's index is readInDuplicateSetIndex, then it is in a duplicateset.
+                    For queryname sorted data, we only have one representativeReadIndex entry per read name, so we need
+                    to also look for additional reads with the same name.
+                     */
+                    final boolean isInDuplicateSet = recordInFileIndex == nextReadInDuplicateSetIndex ||
                             (sortOrder == SAMFileHeader.SortOrder.queryname &&
-                                    recordInFileIndex > nextDuplicateIndex);
+                                    recordInFileIndex > nextReadInDuplicateSetIndex && rec.getReadName().equals(representativeQueryName));
                     if (isInDuplicateSet) {
                         if (!rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag()) {
-                            if (TAG_DUPLICATE_SET_MEMBERS) {
-                                rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
-                                rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
-                            }
+                            rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
+                            rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
+                            representativeQueryName = rec.getReadName();
                         }
                     }
                 }
@@ -413,23 +406,6 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     UmiUtil.setMolecularIdentifier(rec, "", MOLECULAR_IDENTIFIER_TAG, DUPLEX_UMI);
                 }
 
-                // Tag any read pair that was in a duplicate set with the duplicate set size and a representative read name
-                if (TAG_DUPLICATE_SET_MEMBERS) {
-                    final boolean needNextRepresentativeIndex = recordInFileIndex > nextRepresentativeIndex;
-                    if (needNextRepresentativeIndex && representativeReadIterator.hasNext()) {
-                        rri = representativeReadIterator.next();
-                        nextRepresentativeIndex = rri.readIndexInFile;
-                        representativeReadIndexInFile = rri.representativeReadIndexInFile;
-                        duplicateSetSize = rri.setSize;
-                    }
-                    final boolean isInDuplicateSet = recordInFileIndex == nextRepresentativeIndex ||
-                            (sortOrder == SAMFileHeader.SortOrder.queryname &&
-                                    recordInFileIndex > nextDuplicateIndex);
-                    if (isInDuplicateSet && !rec.isSecondaryOrSupplementary() && !rec.getReadUnmappedFlag() && TAG_DUPLICATE_SET_MEMBERS) {
-                        rec.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeReadIndexInFile);
-                        rec.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
-                    }
-                }
 
                 // Note, duplicateQueryName must be incremented after we have marked both optical and sequencing duplicates for queryname sorted files.
                 if (isDuplicate) {
@@ -452,19 +428,24 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
 
             // remember to close the inputs
+            log.info("Writing complete. Closing input iterator.");
             iterator.close();
 
+            log.info("Duplicate Index cleanup.");
             this.duplicateIndexes.cleanup();
             if (TAG_DUPLICATE_SET_MEMBERS) {
+                log.info("Representative read Index cleanup.");
                 this.representativeReadIndicesForDuplicates.cleanup();
             }
 
+            log.info("Getting Memory Stats.");
             reportMemoryStats("Before output close");
         }
+        log.info("Closed outputs. Getting more Memory Stats.");
         reportMemoryStats("After output close");
 
         // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator);
+        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
 
         return 0;
     }
@@ -528,13 +509,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
         final SAMFileHeader.SortOrder assumedSortOrder = headerAndIterator.header.getSortOrder();
         final SAMFileHeader header = headerAndIterator.header;
-        final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
+        final ReadEndsForMarkDuplicatesMap tmp = assumedSortOrder == SAMFileHeader.SortOrder.queryname ?
+                new MemoryBasedReadEndsForMarkDuplicatesMap() :  new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
         long index = 0;
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
 
         if (null == this.libraryIdGenerator) {
-            this.libraryIdGenerator = new LibraryIdGenerator(header);
+            this.libraryIdGenerator = new LibraryIdGenerator(header, flowBasedArguments.FLOW_MODE);
         }
 
         String duplicateQueryName = null;
@@ -568,12 +550,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
             } else if (!rec.isSecondaryOrSupplementary()) {
                 final long indexForRead = assumedSortOrder == SAMFileHeader.SortOrder.queryname ? duplicateIndex : index;
-                final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, indexForRead, rec, useBarcodes);
+                final ReadEndsForMarkDuplicates fragmentEnd = calcHelper.buildReadEnds(header, indexForRead, rec, useBarcodes);
                 this.fragSort.add(fragmentEnd);
 
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
                     final StringBuilder key = new StringBuilder();
-                    key.append(ReservedTagConstants.READ_GROUP_ID);
+                    key.append(rec.getReadGroup().getReadGroupId());
                     key.append(rec.getReadName());
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key.toString());
 
@@ -630,7 +612,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                                     pairedEnds.orientation == ReadEnds.R);
                         }
 
-                        pairedEnds.score += DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
+                        pairedEnds.score += calcHelper.getReadDuplicateScore(rec, pairedEnds);
                         this.pairSort.add(pairedEnds);
                     }
                 }
@@ -652,9 +634,23 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /**
+     * Calculates score for the duplicate read
+     * @param rec - read
+     * @param pairedEnds - location of the read ends
+     * @return - read score calculated according to the DUPLICATE_SCORING_STRATEGY:
+     *         SUM_OF_BASE_QUALITIES, (default)
+     *         TOTAL_MAPPED_REFERENCE_LENGTH,
+     *         RANDOM
+     *
+     */
+    public short getReadDuplicateScore(final SAMRecord rec, final ReadEndsForMarkDuplicates pairedEnds) {
+        return DuplicateScoringStrategy.computeDuplicateScore(rec, this.DUPLICATE_SCORING_STRATEGY);
+    }
+
+    /**
      * Builds a read ends object that represents a single read.
      */
-    private ReadEndsForMarkDuplicates buildReadEnds(final SAMFileHeader header, final long index, final SAMRecord rec, final boolean useBarcodes) {
+    public ReadEndsForMarkDuplicates buildReadEnds(final SAMFileHeader header, final long index, final SAMRecord rec, final boolean useBarcodes) {
         final ReadEndsForMarkDuplicates ends;
 
         if (useBarcodes) {
@@ -713,7 +709,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * Goes through the accumulated ReadEndsForMarkDuplicates objects and determines which of them are
      * to be marked as duplicates.
      */
-    private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
+    protected void sortIndicesForDuplicates(final boolean indexOpticalDuplicates){
         final int entryOverhead;
         if (TAG_DUPLICATE_SET_MEMBERS) {
             // Memory requirements for RepresentativeReadIndexer:
@@ -739,6 +735,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     maxInMemory,
                     TMP_DIR);
         }
+    }
+    public void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
+        sortIndicesForDuplicates(indexOpticalDuplicates);
 
         ReadEndsForMarkDuplicates firstOfNextChunk = null;
         final List<ReadEndsForMarkDuplicates> nextChunk = new ArrayList<>(200);
@@ -797,7 +796,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
     }
 
-    private void handleChunk(List<ReadEndsForMarkDuplicates> nextChunk) {
+    protected void handleChunk(List<ReadEndsForMarkDuplicates> nextChunk) {
         if (nextChunk.size() > 1) {
             markDuplicatePairs(nextChunk);
             if (TAG_DUPLICATE_SET_MEMBERS) {
@@ -808,7 +807,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
     }
 
-    private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
+    protected boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
         boolean areComparable = lhs.libraryId == rhs.libraryId;
 
         if (useBarcodes && areComparable) { // areComparable is useful here to avoid the casts below
@@ -867,7 +866,9 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         // for read name (for representative read name), add the last of the pair that was examined
         for (final ReadEndsForMarkDuplicates end : list) {
             addRepresentativeReadOfDuplicateSet(best.read1IndexInFile, list.size(), end.read1IndexInFile);
-            addRepresentativeReadOfDuplicateSet(best.read1IndexInFile, list.size(), end.read2IndexInFile);
+            if (end.read1IndexInFile != end.read2IndexInFile) {
+                addRepresentativeReadOfDuplicateSet(best.read1IndexInFile, list.size(), end.read2IndexInFile);
+            }
         }
     }
 
@@ -950,7 +951,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      *
      * @param containsPairs true if the list also contains objects containing pairs, false otherwise.
      */
-    private void markDuplicateFragments(final List<ReadEndsForMarkDuplicates> list, final boolean containsPairs) {
+    protected void markDuplicateFragments(final List<ReadEndsForMarkDuplicates> list, final boolean containsPairs) {
         if (containsPairs) {
             for (final ReadEndsForMarkDuplicates end : list) {
                 if (!end.isPaired()) {

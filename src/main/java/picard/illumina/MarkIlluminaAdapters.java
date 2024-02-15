@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,9 +71,9 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 @DocumentedFeature
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
-    static final String USAGE_SUMMARY = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ";
+    static final String USAGE_SUMMARY = "Reads a SAM/BAM/CRAM file and rewrites it with new adapter-trimming tags.  ";
     static final String USAGE_DETAILS = "<p>This tool clears any existing adapter-trimming tags (XT:i:) in the optional tag region of " +
-            "a SAM file.  The SAM/BAM file must be sorted by query name.</p> "+
+            "the input file.  The SAM/BAM/CRAM file must be sorted by query name.</p> "+
             "<p>Outputs a metrics file histogram showing counts of bases_clipped per read." +
             "" +
     "<h4>Usage example:</h4>" +
@@ -138,18 +138,17 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(MarkIlluminaAdapters.class);
 
-    // Stock main method
-    public static void main(final String[] args) {
-        System.exit(new MarkIlluminaAdapters().instanceMain(args));
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
-        if ((FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null)) {
+        if (hasEitherAdapter()) {
             return new String[]{"THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must either both be null or both be set."};
         } else {
             return null;
         }
+    }
+
+    private boolean hasEitherAdapter() {
+        return (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null);
     }
 
     @Override
@@ -162,7 +161,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         SAMFileWriter out = null;
         if (OUTPUT != null) {
             IOUtil.assertFileIsWritable(OUTPUT);
-            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
+            out = new SAMFileWriterFactory().makeWriter(in.getFileHeader(), true, OUTPUT, REFERENCE_SEQUENCE);
         }
 
         final Histogram<Integer> histo = new Histogram<Integer>("clipped_bases", "read_count");
@@ -172,7 +171,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         {
             final List<AdapterPair> tmp = new ArrayList<AdapterPair>();
             tmp.addAll(ADAPTERS);
-            if (FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null) {
+            if (hasBothAdapters()) {
                 tmp.add(new CustomAdapterPair(FIVE_PRIME_ADAPTER, THREE_PRIME_ADAPTER));
             }
             adapters = tmp.toArray(new AdapterPair[tmp.size()]);
@@ -199,7 +198,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
             if (rec.getReadPairedFlag()) {
                 // Assert that the input file is in query name order only if we see some PE reads
                 if (order != SAMFileHeader.SortOrder.queryname) {
-                    throw new PicardException("Input BAM file must be sorted by queryname");
+                    throw new PicardException("Input file must be sorted by queryname");
                 }
 
                 if (rec2 == null) throw new PicardException("Missing mate pair for paired read: " + rec.getReadName());
@@ -250,5 +249,9 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
         CloserUtil.close(in);
         return 0;
+    }
+
+    private boolean hasBothAdapters(){
+        return FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER != null;
     }
 }

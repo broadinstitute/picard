@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2014-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,7 +65,7 @@ import java.util.*;
 @DocumentedFeature
 public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads, accounting for mate CIGAR.  ";
-    static final String USAGE_DETAILS = "This tool locates and tags duplicate reads (both PCR and optical) in a BAM or SAM file, where " +
+    static final String USAGE_DETAILS = "This tool locates and tags duplicate reads (both PCR and optical) in a BAM, SAM or CRAM file, where " +
             "duplicate reads are defined as originating from the same original fragment of DNA, taking into account the CIGAR string of " +
             "read mates. <br /><br />" +
             "" +
@@ -112,11 +112,6 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
     private boolean warnedNullProgramRecords = false;
     private boolean warnedMissingProgramRecords = false;
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new MarkDuplicatesWithMateCigar().instanceMainWithExit(args);
-    }
-
     /**
      * Main work method.
      */
@@ -145,9 +140,10 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
 
         // Open the output
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader,
                 true,
-                OUTPUT);
+                OUTPUT,
+                REFERENCE_SEQUENCE);
 
         // Create the mark duplicate iterator.  The duplicate marking is handled by the iterator, conveniently.
         final MarkDuplicatesWithMateCigarIterator iterator = new MarkDuplicatesWithMateCigarIterator(headerAndIterator.header,
@@ -192,7 +188,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         log.info("Found " + ((long) opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters."); // cast as long due to returning a double
 
         // Write out the metrics
-        finalizeAndWriteMetrics(iterator.getLibraryIdGenerator());
+        finalizeAndWriteMetrics(iterator.getLibraryIdGenerator(), getMetricsFile(), METRICS_FILE);
 
         return 0;
     }

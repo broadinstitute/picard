@@ -27,10 +27,10 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
         return new Object[][] {
                 // 11 total, 10 defined unique intervals (two variants are adjacent), one is filtered in INFO and
                 // one is filtered in FORMAT FT, but only INFO counts
-                { new File(TEST_RESOURCE_DIR, "small_m2_more_variants.vcf"), false, 11 - 1 - 1 },
+                { new File(TEST_RESOURCE_DIR, "small_m2_more_variants.vcf"), false, true, 11 - 1 - 1 },
 
                 // 11 total, 10 defined unique intervals (two variants are adjacent)
-                { new File(TEST_RESOURCE_DIR, "small_m2_more_variants.vcf"), true, 11 - 1 }
+                { new File(TEST_RESOURCE_DIR, "small_m2_more_variants.vcf"), true, false, 11 - 1 }
         };
     }
 
@@ -38,6 +38,7 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
     public void testExcludingFiltered(
             final File inputFile,
             final boolean includeFiltered,
+            final boolean useFirstID,
             final int expectedIntervalsSize) throws IOException
     {
         final File outputFile = File.createTempFile("vcftointervallist_", ".interval_list");
@@ -48,6 +49,11 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
         if (includeFiltered) {
             arguments.add(VcfToIntervalList.INCLUDE_FILTERED_SHORT_NAME + "=true");
         }
+        if (useFirstID) {
+            arguments.add("VARIANT_ID_METHOD=USE_FIRST");
+        } else {
+            arguments.add("VARIANT_ID_METHOD=CONCAT_ALL"); // this should be the default and unnecessary
+        }
         runPicardCommandLine(arguments);
 
         Assert.assertTrue(outputFile.exists());
@@ -55,5 +61,15 @@ public class VcfToIntervalListTest extends CommandLineProgramTest {
         final List<Interval> intervals = IntervalList.fromFile(outputFile).getIntervals();
 
         Assert.assertEquals(intervals.size(), expectedIntervalsSize);
+
+        if (useFirstID) {
+            for (Interval interval : intervals) {
+                Assert.assertFalse(interval.getName().contains("|"));
+            }
+        } else {
+            // make sure the one where two sites that should be concatenated into one interval were actually concatenated
+            Assert.assertTrue(intervals.get(5).getName().contains("|"));
+        }
+
     }
 }

@@ -72,7 +72,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
     /**
      * Merges the likelihoods from the supplied Fingerprint into the likelihoods for this fingerprint.
      */
-    public void merge(final Fingerprint other) {
+    public Fingerprint merge(final Fingerprint other) {
         final Set<HaplotypeBlock> haps = new HashSet<>();
         haps.addAll(keySet());
         haps.addAll(other.keySet());
@@ -81,31 +81,13 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
             HaplotypeProbabilities probabilities = get(haplotype);
             final HaplotypeProbabilities otherProbabilities = other.get(haplotype);
             if (probabilities == null) {
-                probabilities = otherProbabilities;
+                probabilities = otherProbabilities.deepCopy();
                 put(haplotype, probabilities);
             } else if (otherProbabilities != null) {
                 probabilities.merge(otherProbabilities);
             }
         }
-    }
-
-    /**
-     * Attempts to filter out haplotypes that may have suspect genotyping by removing haplotypes that reach
-     * a minimum confidence score yet have a significant fraction of observations from a third or fourth allele.
-     */
-    public void filterSuspectSites() {
-        final Iterator<Map.Entry<HaplotypeBlock, HaplotypeProbabilities>> iterator = entrySet().iterator();
-        while (iterator.hasNext()) {
-            final Map.Entry<HaplotypeBlock, HaplotypeProbabilities> entry = iterator.next();
-            final HaplotypeProbabilities p = entry.getValue();
-            if (p instanceof HaplotypeProbabilitiesFromSequence) {
-                final HaplotypeProbabilitiesFromSequence probs = (HaplotypeProbabilitiesFromSequence) p;
-
-                if (probs.getLodMostProbableGenotype() >= 3 && probs.getFractionUnexpectedAlleleObs() > 0.1) {
-                    iterator.remove();
-                }
-            }
-        }
+        return this;
     }
 
     public static Function<FingerprintIdDetails, String> getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType CROSSCHECK_BY) {
@@ -150,21 +132,30 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                 .collect(Collectors.toMap(
                         entry -> {
                             // merge the keys (unequal values are eliminated by merge).
-
-                            final FingerprintIdDetails finalId = new FingerprintIdDetails();
-                            entry.getValue().forEach(id -> finalId.merge(id.getKey()));
+                            final List<Map.Entry<FingerprintIdDetails, Fingerprint>> entryList = entry.getValue();
+                            final FingerprintIdDetails finalId;
+                            if (entryList.size() == 1) {
+                                finalId = entryList.get(0).getKey();
+                            } else {
+                                finalId = new FingerprintIdDetails();
+                                entryList.forEach(id -> finalId.merge(id.getKey()));
+                            }
                             finalId.group = entry.getKey();
                             return finalId;
 
                         }, entry -> {
                             // merge the values by merging the fingerprints.
 
-                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
                             //use the "by" function to determine the "info" part of the fingerprint
-                            final Fingerprint sampleFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
-                            entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet()).forEach(sampleFp::merge);
-                            return sampleFp;
+                            final Set<Fingerprint> fingerprintsSet = entry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toSet());
+                            if (fingerprintsSet.size() == 1) {
+                                return fingerprintsSet.iterator().next();
+                            }
+                            final FingerprintIdDetails firstDetail = entry.getValue().get(0).getKey();
+                            final Fingerprint mergedFp = new Fingerprint(firstDetail.sample, null, by.apply(firstDetail));
 
+                            fingerprintsSet.forEach(mergedFp::merge);
+                            return mergedFp;
                         }));
     }
 

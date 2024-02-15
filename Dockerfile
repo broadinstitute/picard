@@ -1,35 +1,37 @@
-FROM openjdk:8 
-MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
+ARG BASE_DOCKER=eclipse-temurin:17-jdk
+ARG release=false
 
-ARG build_command=shadowJar
-ARG jar_name=picard.jar
+FROM ${BASE_DOCKER} as build
+LABEL stage=buildStage
 
-# Install ant, git for building
+# Install git for building
 RUN apt-get update && \
-    apt-get --no-install-recommends install -y --force-yes \
-        git \
-        r-base \
-        ant && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y
+    apt-get --no-install-recommends install -y \
+        git
 
 # Assumes Dockerfile lives in root of the git repo. Pull source files into container
 COPY / /usr/picard/
 WORKDIR /usr/picard
 
-# Build the distribution jar, clean up everything else
-RUN ./gradlew ${build_command} && \
-    mv build/libs/${jar_name} picard.jar && \
-    mv src/main/resources/picard/docker_helper.sh docker_helper.sh && \
-    ./gradlew clean && \
-    rm -rf src && \
-    rm -rf gradle && \
-    rm -rf .git && \
-    rm gradlew && \
-    rm build.gradle
+# download gradle then build
+RUN ./gradlew -Drelease=${release} \
+   clean \
+   printVersion \
+   shadowJar
+
+FROM ${BASE_DOCKER} as final
+MAINTAINER Broad Institute DSDE <dsde-engineering@broadinstitute.org>
+
+# Install R
+RUN apt-get update && \
+    apt-get --no-install-recommends install -y \
+        r-base &&\
+    apt-get clean autoclean && \
+    apt-get autoremove -y
+
+RUN mkdir /usr/picard/
+
+COPY --from=build /usr/picard/build/libs/picard.jar /usr/picard/
 
 RUN mkdir /usr/working
 WORKDIR /usr/working
-
-ENTRYPOINT ["/usr/picard/docker_helper.sh"]
-CMD [""]

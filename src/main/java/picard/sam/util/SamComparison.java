@@ -1,67 +1,171 @@
 package picard.sam.util;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.metrics.Header;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IterableAdapter;
+import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
+import picard.sam.SamComparisonMetric;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.io.File;
+import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
- * Rudimentary SAM comparer. Compares headers, and if headers are compatible enough, compares SAMRecords,
- * looking only at basic alignment info. Summarizes the number of alignments that match, mismatch, are missing, etc.
- * Supplementary and secondary alignments are skipped. The inputs are assumed to be valid (as per SamFileValidator),
- * otherwise undefined behavior may occur.
+ * Compare two SAM/BAM files.  Compares headers, and if headers are compatible enough, compares SAMRecords,
+ * looking at alignment and duplicate marking info.  Can perform either a naive comparison for which each alignment must be identical, or a more sophisticated check of "equivalence", where mapping quality
+ * 0 reads are allowed to have different alignments, and duplicate marks are allowed to differ to account for ambiguities in selecting the representative read of a duplicate set.  Results of comparison are
+ * summarised in an output metrics file.
  */
 public final class SamComparison {
-    private final SamReader reader1;
-    private final SamReader reader2;
+    private final SamReader leftReader;
+    private final SamReader rightReader;
 
     private boolean sequenceDictionariesDiffer;
-    private final boolean headersAreEqual;
-    private final boolean alignmentsAreEqual;
 
-    private int mappingsMatch = 0;
-    private int unmappedBoth = 0;
-    private int unmappedLeft = 0;
-    private int unmappedRight = 0;
-    private int mappingsDiffer = 0;
-    private int missingLeft = 0;
-    private int missingRight = 0;
+    private final SamComparisonMetric comparisonMetric = new SamComparisonMetric();
 
-    private enum AlignmentComparison {
+    private final SAMComparisonArgumentCollection samComparisonArgumentCollection;
+
+    // Ideally, this should be a Histogram<Pair<Integer, Integer>>, however, the MetricsFile class cannot read
+    // arbitrary types, therefore, it must be converted to a String, which may be slower
+    private final Histogram<String> mappingQualityHistogram = new Histogram<>();
+
+    private SortingCollection<SAMRecord> markDuplicatesCheckLeft;
+    private SortingCollection<SAMRecord> markDuplicatesCheckRight;
+
+    public enum AlignmentComparison {
         UNMAPPED_BOTH, UNMAPPED_LEFT, UNMAPPED_RIGHT, MAPPINGS_DIFFER, MAPPINGS_MATCH
     }
 
     /**
      * Note: the caller must make sure the SamReaders are closed properly.
      */
-    public SamComparison(final SamReader reader1, final SamReader reader2) {
-        this.reader1 = reader1;
-        this.reader2 = reader2;
-        this.headersAreEqual = compareHeaders();
-        this.alignmentsAreEqual = compareAlignments();
+    public SamComparison(final SamReader leftReader, final SamReader rightReader) {
+        this(leftReader, rightReader, null, null, new SAMComparisonArgumentCollection());
     }
 
-    public void printReport() {
-        System.out.println("Match\t" + mappingsMatch);
-        System.out.println("Differ\t" + mappingsDiffer);
-        System.out.println("Unmapped_both\t" + unmappedBoth);
-        System.out.println("Unmapped_left\t" + unmappedLeft);
-        System.out.println("Unmapped_right\t" + unmappedRight);
-        System.out.println("Missing_left\t" + missingLeft);
-        System.out.println("Missing_right\t" + missingRight);
+    public SamComparison(final SamReader leftReader, final SamReader rightReader, final String leftName, final String rightName, final SAMComparisonArgumentCollection samComparisonArgumentCollection) {
+        this.leftReader = leftReader;
+        this.rightReader = rightReader;
+        this.samComparisonArgumentCollection = samComparisonArgumentCollection;
+        comparisonMetric.LEFT_FILE = leftName;
+        comparisonMetric.RIGHT_FILE = rightName;
+        if (samComparisonArgumentCollection.LENIENT_DUP) {
+            setupLenientDuplicateChecking();
+        }
+        comparisonMetric.ARE_EQUAL = compareHeaders();
+        comparisonMetric.ARE_EQUAL &= compareAlignmentsAndCatalogDuplicateMarkingDifferences();
+        if (samComparisonArgumentCollection.LENIENT_DUP) {
+            countLenientDuplicateMarkingDifferences();
+        }
+        comparisonMetric.ARE_EQUAL &= comparisonMetric.DUPLICATE_MARKINGS_DIFFER == 0;
     }
 
-    private boolean compareAlignments() {
-        if (!compareValues(reader1.getFileHeader().getSortOrder(), reader2.getFileHeader().getSortOrder(),
+    public void writeReport(final File output) {
+        writeReport(output, Collections.EMPTY_LIST);
+    }
+
+    public void writeReport(final File output, final List<Header> headers) {
+        final MetricsFile<SamComparisonMetric, String> comparisonMetricFile = new MetricsFile<>();
+
+        headers.forEach(comparisonMetricFile::addHeader);
+        comparisonMetricFile.addAllMetrics(Collections.singletonList(comparisonMetric));
+        if (samComparisonArgumentCollection.COMPARE_MQ) {
+            comparisonMetricFile.addHistogram(mappingQualityHistogram);
+        }
+        comparisonMetricFile.write(output);
+    }
+
+    private void setupLenientDuplicateChecking() {
+        /* Setup for duplicate marking checks.  Recs which disagree on duplicate marking will be added to markDuplicatesCheckLeft/Right and then fed to a DuplicateSetIterator to check if
+         * differences are due only to choice of representative read within duplicate set.
+         */
+        final SAMFileHeader leftHeader = leftReader.getFileHeader();
+        final SAMFileHeader rightHeader = rightReader.getFileHeader();
+        final SAMRecordDuplicateComparator leftDupComparator = new SAMRecordDuplicateComparator(Collections.singletonList(leftHeader));
+        final SAMRecordDuplicateComparator rightDupComparator = new SAMRecordDuplicateComparator(Collections.singletonList(rightHeader));
+        markDuplicatesCheckLeft = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(leftHeader),
+                leftDupComparator, SAMFileWriterImpl.getDefaultMaxRecordsInRam());
+        markDuplicatesCheckRight = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(rightHeader),
+                rightDupComparator, SAMFileWriterImpl.getDefaultMaxRecordsInRam());
+    }
+
+    private void countLenientDuplicateMarkingDifferences() {
+        /* Count duplicate marking differences allowing swaps within duplicate sets.  Should only be used when lenientDup == true.
+           Reads which have different duplicate markings will have been saved in markDuplicatesCheckLeft and markDuplicatesCheckRight
+           in catalogDuplicateDifferences.
+         */
+
+        if (!samComparisonArgumentCollection.LENIENT_DUP) {
+            throw new PicardException("Should only use countLenientDuplicateMarkingDifferences when in lenient duplicate marking mode.");
+        }
+
+        final DuplicateSetIterator duplicateSetLeftIterator = new DuplicateSetIterator(markDuplicatesCheckLeft.iterator(), leftReader.getFileHeader(), true);
+        final DuplicateSetIterator duplicateSetRightIterator = new DuplicateSetIterator(markDuplicatesCheckRight.iterator(), rightReader.getFileHeader(), true);
+        /* Iterate through duplicateSetIterators.  This will iterate through all reads with differing duplicate markings in left and right files.  Passing through the first
+         * iterator (i.e. left file), for each duplicate set we create a set of duplicate reads that the representative read could "swap" with.  On the pass through the second iterator, for each
+         * duplicate read, we look for the reads it is allowed to swap with in the duplicate set from the first iterator.  If the allowed swap can also be performed in this duplicate set,
+         * we do not count the read or the read it could be swapped with as having mismatched duplicates.  Note however, that once a swap is allowed, the reads swapped cannot be used for any
+         * further swaps.
+         */
+        // count reads which are not saved
+        final HashMap<String, Set<String>> swapTargetsForLeftReps = new HashMap<>();
+        for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetLeftIterator)) {
+           // do not want to redo duplicate marking, want to keep marks assigned in input files
+           final List<SAMRecord> allRecords = duplicateSet.getRecords(false);
+           if (allRecords.size() > 1) {
+               // for this set, get a list of non-rep reads that can potentially swap with the rep read
+               final Set<String> nonRepReads = allRecords.stream()
+                       .filter(SAMRecord::getDuplicateReadFlag)
+                       .map(SAMRecord::getReadName)
+                       .collect(Collectors.toSet());
+               allRecords.stream().filter(r -> !r.getDuplicateReadFlag())
+                       .forEach(leftRep -> swapTargetsForLeftReps.put(leftRep.getReadName(), nonRepReads));
+           }
+        }
+        // set of fragments which have been "matched", i.e. will not be counted as having mismatched duplicate marks.
+        final HashSet<String> matchedSwaps = new HashSet<>();
+        for (final DuplicateSet duplicateSet : new IterableAdapter<>(duplicateSetRightIterator)) {
+           // do not want to redo duplicate marking, want to keep marking assigned in files
+           final List<SAMRecord> records = duplicateSet.getRecords(false);
+           if (records.size() > 1) {
+               // create a list of non-rep reads for this set that were also rep-reads in the left file
+               final List<String> nonRepSwapCandidates = records.stream()
+                       .filter(SAMRecord::getDuplicateReadFlag)
+                       .map(SAMRecord::getReadName)
+                       .filter(swapTargetsForLeftReps::containsKey)
+                       .collect(Collectors.toList());
+               // now try to match up the rep reads in this set with a non-rep swap candidate
+               records.stream().filter(r -> !r.getDuplicateReadFlag()).map(SAMRecord::getReadName)
+                       .filter(repRead -> !matchedSwaps.contains(repRead))
+                       .forEach(unMatchedRep ->
+                           nonRepSwapCandidates.stream()
+                                   .filter(nonRep -> !matchedSwaps.contains(nonRep) && swapTargetsForLeftReps.get(nonRep).contains(unMatchedRep))
+                                   .findFirst()
+                                   .ifPresent(matchedRep -> matchedSwaps.addAll(Arrays.asList(matchedRep, unMatchedRep)))
+                   );
+           }
+           // count reads which differ, but for which no swap match was found
+           comparisonMetric.DUPLICATE_MARKINGS_DIFFER += records.stream().filter(n -> !matchedSwaps.contains(n.getReadName())).count();
+        }
+
+    }
+
+    private boolean compareAlignmentsAndCatalogDuplicateMarkingDifferences() {
+        /* Compares alignments of primary sam records.  Eventual comparison of sam records found in both files is performed in tallyAlignments.  tallyAlignments
+         * includes duplicate marking cataloging, which counts all duplicate marking differences when in strict mode, or adds reads which differ in duplicate marking
+         * to sam record iterators to be counted while allowing for swaps later in countLenientDuplicateMarkingDifferences.
+         */
+        if (!compareValues(leftReader.getFileHeader().getSortOrder(), rightReader.getFileHeader().getSortOrder(),
                 "Sort Order")) {
             System.out.println("Cannot compare alignments if sort orders differ.");
             return false;
         }
-        switch (reader1.getFileHeader().getSortOrder()) {
+        switch (leftReader.getFileHeader().getSortOrder()) {
             case coordinate:
                 if (sequenceDictionariesDiffer) {
                     System.out.println("Cannot compare coordinate-sorted SAM files because sequence dictionaries differ.");
@@ -75,15 +179,15 @@ public final class SamComparison {
                 return compareUnsortedAlignments();
             default:
                 // unreachable
-                throw new PicardException(String.format("Unrecognized sort order (%s) found.", reader1.getFileHeader().getSortOrder()));
+                throw new PicardException(String.format("Unrecognized sort order (%s) found.", leftReader.getFileHeader().getSortOrder()));
         }
     }
 
     private boolean compareCoordinateSortedAlignments() {
         final SecondaryOrSupplementarySkippingIterator itLeft =
-                new SecondaryOrSupplementarySkippingIterator(reader1.iterator());
+                new SecondaryOrSupplementarySkippingIterator(leftReader.iterator());
         final SecondaryOrSupplementarySkippingIterator itRight =
-                new SecondaryOrSupplementarySkippingIterator(reader2.iterator());
+                new SecondaryOrSupplementarySkippingIterator(rightReader.iterator());
 
         // Save any reads which haven't been matched during in-order scan.
         final Map<PrimaryAlignmentKey, SAMRecord> leftUnmatched = new LinkedHashMap<>();
@@ -98,7 +202,7 @@ public final class SamComparison {
                     final PrimaryAlignmentKey leftKey = new PrimaryAlignmentKey(left);
                     final SAMRecord right = rightUnmatched.remove(leftKey);
                     if (right == null) {
-                        ++missingRight;
+                        ++comparisonMetric.MISSING_RIGHT;
                     } else {
                         tallyAlignmentRecords(left, right);
                     }
@@ -158,16 +262,16 @@ public final class SamComparison {
             final SAMRecord left = leftEntry.getValue();
             final SAMRecord right = rightUnmatched.remove(leftKey);
             if (right == null) {
-                ++missingRight;
+                ++comparisonMetric.MISSING_RIGHT;
                 continue;
             }
             tallyAlignmentRecords(left, right);
         }
 
         // Any elements remaining in rightUnmatched are guaranteed not to be in leftUnmatched.
-        missingLeft += rightUnmatched.size();
+        comparisonMetric.MISSING_LEFT += rightUnmatched.size();
 
-        return allVisitedAlignmentsEqual();
+        return comparisonMetric.allVisitedAlignmentsEqual();
     }
 
     private int compareAlignmentCoordinates(final SAMRecord left, final SAMRecord right) {
@@ -180,8 +284,8 @@ public final class SamComparison {
         } else if (rightReferenceName == null) {
             return -1;
         }
-        final int leftReferenceIndex = reader1.getFileHeader().getSequenceIndex(leftReferenceName);
-        final int rightReferenceIndex = reader1.getFileHeader().getSequenceIndex(rightReferenceName);
+        final int leftReferenceIndex = leftReader.getFileHeader().getSequenceIndex(leftReferenceName);
+        final int rightReferenceIndex = rightReader.getFileHeader().getSequenceIndex(rightReferenceName);
 
         if (leftReferenceIndex != rightReferenceIndex) {
             return leftReferenceIndex - rightReferenceIndex;
@@ -190,21 +294,21 @@ public final class SamComparison {
     }
 
     private boolean compareQueryNameSortedAlignments() {
-        final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(reader1.iterator());
-        final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(reader2.iterator());
+        final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(leftReader.iterator());
+        final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(rightReader.iterator());
 
         while (it1.hasCurrent()) {
             if (!it2.hasCurrent()) {
-                missingRight += countRemaining(it1);
+                comparisonMetric.MISSING_RIGHT += countRemaining(it1);
             }
             final PrimaryAlignmentKey leftKey = new PrimaryAlignmentKey(it1.getCurrent());
             final PrimaryAlignmentKey rightKey = new PrimaryAlignmentKey(it2.getCurrent());
             final int cmp = leftKey.compareTo(rightKey);
             if (cmp < 0) {
-                ++missingRight;
+                ++comparisonMetric.MISSING_RIGHT;
                 it1.advance();
             } else if (cmp > 0) {
-                ++missingLeft;
+                ++comparisonMetric.MISSING_LEFT;
                 it2.advance();
             } else {
                 tallyAlignmentRecords(it1.getCurrent(), it2.getCurrent());
@@ -213,9 +317,9 @@ public final class SamComparison {
             }
         }
         if (it2.hasCurrent()) {
-            missingLeft += countRemaining(it2);
+            comparisonMetric.MISSING_LEFT += countRemaining(it2);
         }
-        return allVisitedAlignmentsEqual();
+        return comparisonMetric.allVisitedAlignmentsEqual();
     }
 
     /**
@@ -223,8 +327,8 @@ public final class SamComparison {
      * basis of their PrimaryAlignmentKey.
      */
     private boolean compareUnsortedAlignments() {
-        final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(reader1.iterator());
-        final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(reader2.iterator());
+        final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(leftReader.iterator());
+        final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(rightReader.iterator());
 
         final Map<PrimaryAlignmentKey, SAMRecord> leftUnmatched = new LinkedHashMap<>();
 
@@ -234,9 +338,9 @@ public final class SamComparison {
         consumeAll(it1, (alignmentRecord, primaryKey) -> leftUnmatched.put(primaryKey, alignmentRecord));
         consumeUnmatchedRights(it2, leftUnmatched);
 
-        missingRight += leftUnmatched.size();
+        comparisonMetric.MISSING_RIGHT += leftUnmatched.size();
 
-        return allVisitedAlignmentsEqual();
+        return comparisonMetric.allVisitedAlignmentsEqual();
     }
 
     /**
@@ -252,7 +356,7 @@ public final class SamComparison {
                     if (left != null) {
                         tallyAlignmentRecords(left, alignmentRecord);
                     } else {
-                        ++missingLeft;
+                        ++comparisonMetric.MISSING_LEFT;
                     }
                 });
     }
@@ -268,13 +372,6 @@ public final class SamComparison {
             final SAMRecord record = it.getCurrent();
             recordKeyHandler.accept(record, new PrimaryAlignmentKey(record));
         }
-    }
-
-    /**
-     * Check the alignments tallied thus far for any kind of disparity.
-     */
-    private boolean allVisitedAlignmentsEqual() {
-        return !(missingLeft > 0 || missingRight > 0 || mappingsDiffer > 0 || unmappedLeft > 0 || unmappedRight > 0);
     }
 
     private int countRemaining(final SecondaryOrSupplementarySkippingIterator it) {
@@ -300,44 +397,51 @@ public final class SamComparison {
     }
 
     private boolean alignmentsMatch(final SAMRecord s1, final SAMRecord s2) {
-        return (s1.getReferenceName().equals(s2.getReferenceName()) &&
+        return ((s1.getReferenceName().equals(s2.getReferenceName()) &&
                 s1.getAlignmentStart() == s2.getAlignmentStart() &&
-                s1.getReadNegativeStrandFlag() == s1.getReadNegativeStrandFlag());
+                s1.getReadNegativeStrandFlag() == s1.getReadNegativeStrandFlag()) ||
+                (samComparisonArgumentCollection.LENIENT_LOW_MQ_ALIGNMENT && s1.getMappingQuality() <= samComparisonArgumentCollection.LOW_MQ_THRESHOLD &&
+                        s2.getMappingQuality() <= samComparisonArgumentCollection.LOW_MQ_THRESHOLD) ||
+                (samComparisonArgumentCollection.LENIENT_UNKNOWN_MQ_ALIGNMENT && s1.getMappingQuality() == SAMRecord.UNKNOWN_MAPPING_QUALITY && s2.getMappingQuality() == SAMRecord.UNKNOWN_MAPPING_QUALITY));
+    }
+
+    private void compareAndUpdateMappingQualityConcordance(final SAMRecord s1, final SAMRecord s2) {
+        mappingQualityHistogram.increment(String.format("%d,%d", s1.getMappingQuality(), s2.getMappingQuality()));
     }
 
     /**
-     * Compare the mapping information for two SAMRecords.
+     * Compare the mapping information for two SAMRecords.  Makes comparison of alignments, and also catalogs duplicate marking differences.
      */
     private void tallyAlignmentRecords(final SAMRecord s1, final SAMRecord s2) {
         if (!s1.getReadName().equals(s2.getReadName())) {
             throw new PicardException("Read names do not match: " + s1.getReadName() + " : " + s2.getReadName());
         }
+        catalogDuplicateDifferences(s1, s2);
         final AlignmentComparison comp = compareAlignmentRecords(s1, s2);
-        switch (comp) {
-            case UNMAPPED_BOTH:
-                ++unmappedBoth;
-                break;
-            case UNMAPPED_LEFT:
-                ++unmappedLeft;
-                break;
-            case UNMAPPED_RIGHT:
-                ++unmappedRight;
-                break;
-            case MAPPINGS_DIFFER:
-                ++mappingsDiffer;
-                break;
-            case MAPPINGS_MATCH:
-                ++mappingsMatch;
-                break;
-            default:
-                // unreachable
-                throw new PicardException("Unhandled comparison type: " + comp);
+        comparisonMetric.updateMetric(comp);
+
+        if (samComparisonArgumentCollection.COMPARE_MQ) {
+            compareAndUpdateMappingQualityConcordance(s1, s2);
+        }
+    }
+
+    private void catalogDuplicateDifferences(final SAMRecord s1, final SAMRecord s2) {
+        // if strict, reads with differing duplicate marking are counted by DUPLICATE_MARKINGS_DIFFER.
+        // if lenient, reads with differing duplicate marking are added to markDuplicatesCheckLeft/Right
+        // to later be counted while allowing for swaps withing duplicate sets by updateLenientDuplicateMarkingDifferences
+        if (s1.getDuplicateReadFlag() != s2.getDuplicateReadFlag()) {
+            if (samComparisonArgumentCollection.LENIENT_DUP) {
+                markDuplicatesCheckLeft.add(s1);
+                markDuplicatesCheckRight.add(s2);
+            } else {
+                comparisonMetric.DUPLICATE_MARKINGS_DIFFER++;
+            }
         }
     }
 
     private boolean compareHeaders() {
-        final SAMFileHeader h1 = reader1.getFileHeader();
-        final SAMFileHeader h2 = reader2.getFileHeader();
+        final SAMFileHeader h1 = leftReader.getFileHeader();
+        final SAMFileHeader h2 = rightReader.getFileHeader();
         boolean ret = compareValues(h1.getVersion(), h2.getVersion(), "File format version");
         ret = compareValues(h1.getCreator(), h2.getCreator(), "File creator") && ret;
         ret = compareValues(h1.getAttribute("SO"), h2.getAttribute("SO"), "Sort order") && ret;
@@ -346,7 +450,9 @@ public final class SamComparison {
             sequenceDictionariesDiffer = true;
         }
         ret = compareReadGroups(h1, h2) && ret;
-        ret = compareProgramRecords(h1, h2) && ret;
+        if (!samComparisonArgumentCollection.LENIENT_HEADER) {
+            ret = compareProgramRecords(h1, h2) && ret;
+        }
         return ret;
     }
 
@@ -413,7 +519,7 @@ public final class SamComparison {
         return ret;
     }
 
-    private static boolean compareSequenceDictionaries(final SAMFileHeader h1, final SAMFileHeader h2) {
+    private boolean compareSequenceDictionaries(final SAMFileHeader h1, final SAMFileHeader h2) {
         final List<SAMSequenceRecord> s1 = h1.getSequenceDictionary().getSequences();
         final List<SAMSequenceRecord> s2 = h2.getSequenceDictionary().getSequences();
         if (s1.size() != s2.size()) {
@@ -427,7 +533,7 @@ public final class SamComparison {
         return ret;
     }
 
-    private static boolean compareSequenceRecord(final SAMSequenceRecord sequenceRecord1, final SAMSequenceRecord sequenceRecord2, final int which) {
+    private boolean compareSequenceRecord(final SAMSequenceRecord sequenceRecord1, final SAMSequenceRecord sequenceRecord2, final int which) {
         if (!sequenceRecord1.getSequenceName().equals(sequenceRecord2.getSequenceName())) {
             reportDifference(sequenceRecord1.getSequenceName(), sequenceRecord2.getSequenceName(),
                     "Name of sequence record " + which);
@@ -435,14 +541,16 @@ public final class SamComparison {
         }
         boolean ret = compareValues(sequenceRecord1.getSequenceLength(), sequenceRecord2.getSequenceLength(), "Length of sequence " +
                 sequenceRecord1.getSequenceName());
-        ret = compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies(), "Species of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly(), "Assembly of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAttribute("M5"), sequenceRecord2.getAttribute("M5"), "MD5 of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
-        ret = compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR"), "URI of sequence " +
-                sequenceRecord1.getSequenceName()) && ret;
+        if (!samComparisonArgumentCollection.LENIENT_HEADER) {
+            ret = compareValues(sequenceRecord1.getSpecies(), sequenceRecord2.getSpecies(), "Species of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+            ret = compareValues(sequenceRecord1.getAssembly(), sequenceRecord2.getAssembly(), "Assembly of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+            ret = compareValues(sequenceRecord1.getAttribute("M5"), sequenceRecord2.getAttribute("M5"), "MD5 of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+            ret = compareValues(sequenceRecord1.getAttribute("UR"), sequenceRecord2.getAttribute("UR"), "URI of sequence " +
+                    sequenceRecord1.getSequenceName()) && ret;
+        }
         return ret;
     }
 
@@ -473,48 +581,38 @@ public final class SamComparison {
     }
 
     public int getMappingsMatch() {
-        return mappingsMatch;
+        return comparisonMetric.MAPPINGS_MATCH;
     }
 
     public int getUnmappedBoth() {
-        return unmappedBoth;
+        return comparisonMetric.UNMAPPED_BOTH;
     }
 
     public int getUnmappedLeft() {
-        return unmappedLeft;
+        return comparisonMetric.UNMAPPED_LEFT;
     }
 
     public int getUnmappedRight() {
-        return unmappedRight;
+        return comparisonMetric.UNMAPPED_RIGHT;
     }
 
     public int getMappingsDiffer() {
-        return mappingsDiffer;
+        return comparisonMetric.MAPPINGS_DIFFER;
     }
 
     public int getMissingLeft() {
-        return missingLeft;
+        return comparisonMetric.MISSING_LEFT;
     }
 
     public int getMissingRight() {
-        return missingRight;
+        return comparisonMetric.MISSING_RIGHT;
     }
 
-    /**
-     * Returns true if the headers are equal, false otherwise.
-     */
-    public boolean areHeadersEqual(){
-        return headersAreEqual;
-    }
-
-    /**
-     * Returns true if the alignments are equal, false otherwise.
-     */
-    public boolean areAlignmentsEqual(){
-        return alignmentsAreEqual;
+    public int getDuplicateMarkingsDiffer() {
+        return comparisonMetric.DUPLICATE_MARKINGS_DIFFER;
     }
 
     public boolean areEqual() {
-        return headersAreEqual && alignmentsAreEqual;
+        return comparisonMetric.ARE_EQUAL;
     }
 }

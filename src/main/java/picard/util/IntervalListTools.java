@@ -24,10 +24,16 @@
 
 package picard.util;
 
-import htsjdk.samtools.SAMException;
+import htsjdk.io.HtsPath;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.FileExtensions;
+import htsjdk.utils.ValidationUtils;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser.ClpEnum;
@@ -37,12 +43,25 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
+import picard.util.IntervalList.IntervalListScatter;
 import picard.util.IntervalList.IntervalListScatterMode;
 import picard.util.IntervalList.IntervalListScatterer;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * Performs various {@link IntervalList} manipulations.
@@ -219,16 +238,27 @@ public class IntervalListTools extends CommandLineProgram {
                     "       O=new.interval_list" +
                     " </pre>" +
                     "" +
+                    " <h4>5. Combine overlapping intervals but NOT abutting intervals:</h4>" +
+                    " <pre>" +
+                    " java -jar picard.jar IntervalListTools \\\n" +
+                    "       ACTION=UNION \\\n" +
+                    "       DONT_MERGE_ABUTTING=true \\\n" +
+                    "       I=input1.interval_list \\\n" +
+                    "       O=new.interval_list" +
+                    " </pre>" +
+                    "" +
                     "";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
-                    "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)
-    public List<File> INPUT;
+                    "result of merging the inputs. Supported formats are interval_list and VCF." +
+                    "If file extension is unrecognized, assumes file is interval_list" +
+                    "For standard input (stdin), write /dev/stdin as the input file", minElements = 1)
+    public List<PicardHtsPath> INPUT;
 
     @Argument(doc = "The output interval list file to write (if SCATTER_COUNT == 1) or the directory into which " +
             "to write the scattered interval sub-directories (if SCATTER_COUNT > 1).", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(doc = "The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
             "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the " +
@@ -238,6 +268,9 @@ public class IntervalListTools extends CommandLineProgram {
     @Argument(doc = "If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true.")
     public boolean UNIQUE = false;
 
+    @Argument(doc = "If false, do not merge abutting intervals (keep them separate). Note: abutting intervals are combined by default with the UNION action.", optional = true)
+    public boolean DONT_MERGE_ABUTTING = false;
+
     @Argument(doc = "If true, sort the resulting interval list by coordinate.")
     public boolean SORT = true;
 
@@ -245,7 +278,7 @@ public class IntervalListTools extends CommandLineProgram {
     public Action ACTION = Action.CONCAT;
 
     @Argument(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
-    public List<File> SECOND_INPUT;
+    public List<PicardHtsPath> SECOND_INPUT;
 
     @Argument(doc = "One or more lines of comment to add to the header of the output file (as @CO lines in the SAM header).", optional = true)
     public List<String> COMMENT = null;
@@ -276,7 +309,7 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Argument(doc = "File to which to print count of bases or intervals in final output interval list.  When not set, value indicated by OUTPUT_VALUE will be printed to stdout.  " +
             "If this parameter is set, OUTPUT_VALUE must not be NONE.", optional = true)
-    public File COUNT_OUTPUT;
+    public PicardHtsPath COUNT_OUTPUT;
 
     enum Output {
         NONE {
@@ -305,48 +338,40 @@ public class IntervalListTools extends CommandLineProgram {
     public enum Action implements ClpEnum {
 
         CONCAT("The concatenation of all the intervals in all the INPUTs, no sorting or merging of overlapping/abutting " +
-                "intervals implied. Will result in a possibly unsorted list unless requested otherwise.", false) {
-            @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
-                return IntervalList.concatenate(list);
-            }
-        },
+                "intervals implied. Will result in a possibly unsorted list unless requested otherwise.", false),
+
         UNION("Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS, " +
-                "with overlapping and abutting intervals merged into one.", false) {
-            @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
-                return IntervalList.union(list);
-            }
-        },
+                "with overlapping and abutting intervals merged into one.", false),
+
         INTERSECT("The sorted and merged set of all loci that are contained in all of the INPUTs.", false) {
             @Override
-            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
-                return IntervalList.intersection(list);
+            IntervalList reduceEach(final IntervalList list1, final IntervalList list2) {
+                return IntervalList.intersection(CollectionUtil.makeList(list1, list2));
             }
         },
         SUBTRACT("Subtracts the intervals in SECOND_INPUT from those in INPUT. The resulting loci are those in INPUT that are not in SECOND_INPUT.", true) {
             @Override
-            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+            IntervalList act(final IntervalList list1, final IntervalList list2) {
                 return IntervalList.subtract(list1, list2);
             }
         },
         SYMDIFF("Results in loci that are in INPUT or SECOND_INPUT but are not in both.", true) {
             @Override
-            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
-                return IntervalList.difference(list1, list2);
+            IntervalList act(final IntervalList list1, final IntervalList list2) {
+                //todo: fix this when new htsjdk
+                return IntervalList.difference(Collections.singleton(list1), Collections.singleton(list2));
             }
         },
         OVERLAPS("Outputs the entire intervals from INPUT that have bases which overlap any interval from SECOND_INPUT. " +
                 "Note that this is different than INTERSECT in that each original interval is either emitted in its entirety, or not at all.", true) {
             @Override
-            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+            IntervalList act(final IntervalList list1, final IntervalList list2) {
                 return IntervalList.overlaps(list1, list2);
             }
         };
 
         final String helpdoc;
         final boolean takesSecondInput;
-
         Action(final String helpdoc, boolean takesSecondInput) {
             this.helpdoc = helpdoc;
             this.takesSecondInput = takesSecondInput;
@@ -357,24 +382,26 @@ public class IntervalListTools extends CommandLineProgram {
             return helpdoc;
         }
 
-        abstract IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2);
+        IntervalList act(final IntervalList firstList, final IntervalList secondList) {
+            return firstList;
+        }
 
+        IntervalList reduceEach(final IntervalList list1, final IntervalList list2){
+                return IntervalList.concatenate(CollectionUtil.makeList(list1, list2));
+        }
     }
 
     @Override
     protected int doWork() {
-        // Check inputs
-        IOUtil.assertFilesAreReadable(INPUT);
-        IOUtil.assertFilesAreReadable(SECOND_INPUT);
-        if (COUNT_OUTPUT != null) {
-            IOUtil.assertFileIsWritable(COUNT_OUTPUT);
-        }
+        // Check input
+        IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(INPUT));
+        IOUtil.assertPathsAreReadable(PicardHtsPath.toPaths(SECOND_INPUT));
 
         // Read in the interval lists and apply any padding
-        final List<IntervalList> lists = openIntervalLists(INPUT);
+        final IntervalList lists = openIntervalLists(INPUT, ACTION::reduceEach);
 
         // same for the second list
-        final List<IntervalList> secondLists = openIntervalLists(SECOND_INPUT);
+        final IntervalList secondLists = openIntervalLists(SECOND_INPUT, ACTION::reduceEach);
 
         if (UNIQUE && !SORT) {
             LOG.warn("UNIQUE=true requires sorting but SORT=false was specified.  Results will be sorted.");
@@ -383,15 +410,20 @@ public class IntervalListTools extends CommandLineProgram {
         final IntervalList result = ACTION.act(lists, secondLists);
 
         if (INVERT) {
-            SORT = false; // no need to sort, since return will be sorted by definition.
+            SORT = false; // no need to sort, since uniqued() output will be sorted by definition.
+            UNIQUE = true;
+        }
+
+        if (ACTION == Action.UNION) { // UNION is basically Action.CONCAT with SORT and UNIQUE
+            SORT = true;
             UNIQUE = true;
         }
 
         final IntervalList possiblySortedResult = SORT ? result.sorted() : result;
         final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult) : possiblySortedResult;
 
-        //only get unique if this has been asked unless inverting (since the invert will return a unique list)
-        List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+        //only get unique if this has been asked OR if action is UNION, unless inverting (since the invert will return a unique list)
+        List<Interval> finalIntervals = UNIQUE ? IntervalListTools.uniqued(possiblyInvertedResult, !DONT_MERGE_ABUTTING).getIntervals() : possiblyInvertedResult.getIntervals();
 
         if (BREAK_BANDS_AT_MULTIPLES_OF > 0) {
             finalIntervals = IntervalList.breakIntervalsAtBandMultiples(finalIntervals, BREAK_BANDS_AT_MULTIPLES_OF);
@@ -418,80 +450,77 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
 
-        final IntervalList output = new IntervalList(header);
-        for (final Interval i : finalIntervals) {
-            output.add(i);
+        final IntervalList outputIntervals = new IntervalList(header);
+        finalIntervals.forEach(outputIntervals::add);
+
+        final ScatterSummary resultIntervals;
+
+        if (SCATTER_CONTENT != null) {
+            final long listSize = SUBDIVISION_MODE.make().listWeight(outputIntervals);
+            SCATTER_COUNT = (int)Math.round((double) listSize / SCATTER_CONTENT);
+            LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
         }
 
-        final List<IntervalList> resultIntervals;
-        if (OUTPUT != null) {
-
-            if (SCATTER_CONTENT != null) {
-                final long listSize = SUBDIVISION_MODE.make().listWeight(output);
-                SCATTER_COUNT = (int) listSize / SCATTER_CONTENT;
-                LOG.info(String.format("Using SCATTER_CONTENT = %d and an interval of size %d, attempting to scatter into %s intervals.", SCATTER_CONTENT, listSize, SCATTER_COUNT));
+        if (OUTPUT != null && SCATTER_COUNT > 1) {
+            final ScatterSummary scattered = writeScatterIntervals(outputIntervals);
+            LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size, OUTPUT));
+            if (scattered.size != SCATTER_COUNT) {
+                LOG.warn(String.format(
+                        "Requested scatter width of %s, but only emitted %s.  (This may be an expected consequence of running in %s mode.)",
+                        SCATTER_COUNT,
+                        scattered.size,
+                        SUBDIVISION_MODE
+                ));
             }
+            resultIntervals = scattered;
 
-            if (OUTPUT != null) {
-                if (SCATTER_COUNT == 1) {
-                    IOUtil.assertFileIsWritable(OUTPUT);
-                } else {
-                    IOUtil.assertDirectoryIsWritable(OUTPUT);
-                }
-            }
-
-            if (SCATTER_COUNT == 1) {
-                output.write(OUTPUT);
-                resultIntervals = Collections.singletonList(output);
-            } else {
-                final List<IntervalList> scattered = writeScatterIntervals(output);
-                LOG.info(String.format("Wrote %s scatter subdirectories to %s.", scattered.size(), OUTPUT));
-                if (scattered.size() != SCATTER_COUNT) {
-                    LOG.warn(String.format(
-                            "Requested scatter width of %s, but only emitted %s.  (This may be an expected consequence of running in %s mode.)",
-                            SCATTER_COUNT,
-                            scattered.size(),
-                            SUBDIVISION_MODE
-                    ));
-                }
-                resultIntervals = scattered;
-            }
         } else {
-            resultIntervals = Collections.singletonList(output);
+            if (OUTPUT != null) {
+                outputIntervals.write(OUTPUT.toPath());
+            }
+
+            resultIntervals = new ScatterSummary();
+            resultIntervals.size = 1;
+            resultIntervals.intervalCount = outputIntervals.getIntervals().size();
+            resultIntervals.baseCount = outputIntervals.getBaseCount();
         }
 
-        long totalBaseCount = 0;
-        long intervalCount = 0;
-        for (final IntervalList finalInterval : resultIntervals) {
-            totalBaseCount += finalInterval.getBaseCount();
-            intervalCount += finalInterval.size();
-        }
-
-        LOG.info("Produced " + intervalCount + " intervals totalling " + totalBaseCount + " bases.");
+        LOG.info("Produced " + resultIntervals.intervalCount + " intervals totalling " + resultIntervals.baseCount + " bases.");
         if (COUNT_OUTPUT != null) {
-            try (final PrintStream countStream = new PrintStream(COUNT_OUTPUT)) {
-                OUTPUT_VALUE.output(totalBaseCount, intervalCount, countStream);
+            try (final PrintStream countStream = new PrintStream(Files.newOutputStream(COUNT_OUTPUT.toPath()))) {
+                OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, countStream);
             }
             catch (final IOException e) {
-                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getAbsolutePath());
+                throw new PicardException("There was a problem writing count to " + COUNT_OUTPUT.getURIString());
             }
         } else {
-            OUTPUT_VALUE.output(totalBaseCount, intervalCount, System.out);
+            OUTPUT_VALUE.output(resultIntervals.baseCount, resultIntervals.intervalCount, System.out);
         }
         return 0;
     }
 
-    private List<IntervalList> openIntervalLists(final List<File> files) {
-        final List<IntervalList> lists = new ArrayList<>();
-        for (final File f : files) {
-            try {
-                lists.add(IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
-            } catch (final Exception e) {
-                LOG.error("There was a problem opening IntervalList file " + f.getAbsolutePath());
-                throw e;
-            }
-        }
-        return lists;
+    private IntervalList openIntervalLists(final List<PicardHtsPath> files, BinaryOperator<IntervalList> accumulator ) {
+        return files.stream()
+                .map(f->IntervalListInputType.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING))
+                .reduce(accumulator)
+                .orElse(null);
+    }
+
+    private static IntervalList uniqued(IntervalList nonUnique, boolean mergeAbutting) {
+        // A subroutine to replace htsjdk's IntervalList "unique()" method, which combines abutting intervals by default.
+        // Returns an IntervalList.
+        // Inputs:
+        //  - non_unique: an IntervalList to be operated on
+        //  - merge_abutting: a boolean to combine abutting intervals (if true) or not (if false).
+        // Outputs:
+        //  - an IntervalList that is uniqued with overlapping intervals merged, and abutting intervals handled per the boolean flag.
+        // TODO: Move this to htsjdk eventually
+        final boolean concatenateNames = true;
+        final boolean enforceSameStrands = false;
+        List<Interval> newIntervals = IntervalList.getUniqueIntervals(nonUnique, mergeAbutting, concatenateNames, enforceSameStrands);
+        IntervalList newList = new IntervalList(nonUnique.getHeader());
+        newList.addall(newIntervals);
+        return newList;
     }
 
     @Override
@@ -512,86 +541,93 @@ public class IntervalListTools extends CommandLineProgram {
         if (COUNT_OUTPUT != null && OUTPUT_VALUE == Output.NONE) {
             errorMsgs.add("COUNT_OUTPUT was provided but OUTPUT_VALUE is set to NONE.");
         }
-
-        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
+        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[0]);
     }
 
+
+    static class ScatterSummary {
+        public long size;
+        public long baseCount;
+        public long intervalCount;
+    }
     /**
      * Method to scatter an interval list by locus.
+     * The scattered interval_list will have the following format (when SCATTER_COUNT = 3)
+     * - OUTPUT/temp_0001_of_3/scatter.interval_list
+     * - OUTPUT/temp_0002_of_3/scatter.interval_list
+     * - OUTPUT/temp_0003_of_3/scatter.interval_list (need to check)
      *
      * @param list The list of intervals to scatter
      * @return The scattered intervals, represented as a {@link List} of {@link IntervalList}
      */
-    private List<IntervalList> writeScatterIntervals(final IntervalList list) {
+    private ScatterSummary writeScatterIntervals(final IntervalList list) {
+        ValidationUtils.validateArg(SCATTER_COUNT > 0, "Scatter count should be a positive integer, but it was" + SCATTER_COUNT + ".");
         final IntervalListScatterer scatterer = SUBDIVISION_MODE.make();
-        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT);
+        final IntervalListScatter scatter = new IntervalListScatter(scatterer, list, SCATTER_COUNT);
 
         final DecimalFormat fileNameFormatter = new DecimalFormat("0000");
         int fileIndex = 1;
-        for (final IntervalList intervals : scattered) {
-            intervals.write(createDirectoryAndGetScatterFile(OUTPUT, scattered.size(), fileNameFormatter.format(fileIndex++)));
+        final ScatterSummary summary = new ScatterSummary();
+
+        for (final IntervalList intervals : scatter) {
+            summary.size++;
+            summary.baseCount += intervals.getBaseCount();
+            summary.intervalCount += intervals.getIntervals().size();
+            intervals.write(createSubDirectoryAndGetScatterFile(OUTPUT, SCATTER_COUNT, fileNameFormatter.format(fileIndex++)));
         }
 
-        return scattered;
+        return summary;
     }
 
-    private static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
-        return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
-                scatterTotal + "/scattered" + IntervalList.INTERVAL_LIST_FILE_EXTENSION);
-    }
-
-    private static File createDirectoryAndGetScatterFile(final File outputDirectory, final long scatterCount, final String formattedIndex) {
-        createDirectoryOrFail(outputDirectory);
-        final File result = getScatteredFileName(outputDirectory, scatterCount, formattedIndex);
-        createDirectoryOrFail(result.getParentFile());
-        return result;
-    }
-
-    private static void createDirectoryOrFail(final File directory) {
-        if (!directory.exists() && !directory.mkdir()) {
-            throw new PicardException("Unable to create directory: " + directory.getAbsolutePath());
+    public static Path createSubDirectoryAndGetScatterFile(final PicardHtsPath outputDirectory, final long scatterCount, final String formattedIndex) {
+        final String newFileName = "temp_" + formattedIndex + "_of_" + scatterCount + "/scattered" + FileExtensions.INTERVAL_LIST;
+        try {
+            final Path result = outputDirectory.toPath().resolve(newFileName);
+            Files.createDirectories(result.getParent()); // If the directory already exists, do not throw an error. (Compare to Files.createDirectory())
+            return result;
+        } catch (IOException e){
+            throw new PicardException("Encountered an error while creating output directories that house scattered output", e);
         }
     }
 
     enum IntervalListInputType {
-        VCF(IOUtil.VCF_EXTENSIONS) {
+        VCF(FileExtensions.VCF_LIST) {
             @Override
-            protected IntervalList getIntervalListInternal(final File vcf, final boolean includeFiltered) {
-                return VCFFileReader.fromVcf(vcf, includeFiltered);
+            protected IntervalList getIntervalListInternal(final Path vcf, final boolean includeFiltered) {
+                return VCFFileReader.toIntervalList(vcf, includeFiltered);
             }
         },
-        INTERVAL_LIST(IOUtil.INTERVAL_LIST_FILE_EXTENSION) {
+
+        INTERVAL_LIST(Collections.singleton(FileExtensions.INTERVAL_LIST)) {
             @Override
-            protected IntervalList getIntervalListInternal(final File intervalList, final boolean includeFiltered) {
-                return IntervalList.fromFile(intervalList);
+            protected IntervalList getIntervalListInternal(final Path intervalList, final boolean includeFiltered) {
+                return IntervalList.fromPath(intervalList);
             }
         };
 
         protected final Collection<String> applicableExtensions;
 
-        IntervalListInputType(final String... s) {
-            applicableExtensions = CollectionUtil.makeSet(s);
-        }
-
         IntervalListInputType(final Collection<String> extensions) {
             applicableExtensions = extensions;
         }
 
-        protected abstract IntervalList getIntervalListInternal(final File file, final boolean includeFiltered);
+        protected abstract IntervalList getIntervalListInternal(final Path path, final boolean includeFiltered);
 
-        static IntervalListInputType forFile(final File intervalListExtractable) {
+        // "getType" is perhaps a better name for this function
+        static IntervalListInputType forFile(final HtsPath intervalListExtractable) {
             for (final IntervalListInputType intervalListInputType : IntervalListInputType.values()) {
                 for (final String s : intervalListInputType.applicableExtensions) {
-                    if (intervalListExtractable.getName().endsWith(s)) {
+                    if (intervalListExtractable.toPath().getFileName().endsWith(s)) {
                         return intervalListInputType;
                     }
                 }
             }
-            throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(IntervalListInputType.values()));
+            LOG.info("Unrecognized file extension, defaulting to .interval_list");
+            return INTERVAL_LIST;
         }
 
-        public static IntervalList getIntervalList(final File file, final boolean includeFiltered) {
-            return forFile(file).getIntervalListInternal(file, includeFiltered);
+        public static IntervalList getIntervalList(final HtsPath file, final boolean includeFiltered) {
+            return forFile(file).getIntervalListInternal(file.toPath(), includeFiltered);
         }
 
         @Override

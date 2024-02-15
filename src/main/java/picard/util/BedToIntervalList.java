@@ -18,6 +18,7 @@ import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -102,12 +103,17 @@ public class BedToIntervalList extends CommandLineProgram {
     @Argument(doc="If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).")
     public boolean UNIQUE = false;
 
-    final Log LOG = Log.getInstance(getClass());
+    @Hidden
+    @Argument(doc = "If true, entries that are on contig-names that are missing from the provided dictionary will be dropped.")
+    public boolean DROP_MISSING_CONTIGS = false;
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new BedToIntervalList().instanceMainWithExit(args);
-    }
+    @Argument(doc = "If true, write length zero intervals in input bed file to resulting interval list file.")
+    public boolean KEEP_LENGTH_ZERO_INTERVALS = false;
+
+    private final Log LOG = Log.getInstance(getClass());
+    private int missingIntervals = 0;
+    private int missingRegion = 0;
+    private int lengthZeroIntervals = 0;
 
     @Override
     protected int doWork() {
@@ -134,13 +140,23 @@ public class BedToIntervalList extends CommandLineProgram {
                 final int start = bedFeature.getStart();
                 final int end = bedFeature.getEnd();
                 // NB: do not use an empty name within an interval
-                String name = bedFeature.getName();
-                if (name.isEmpty()) name = null;
+                final String name;
+                if (bedFeature.getName().isEmpty()) {
+                    name = null;
+                } else {
+                    name = bedFeature.getName();
+                }
 
                 final SAMSequenceRecord sequenceRecord = header.getSequenceDictionary().getSequence(sequenceName);
 
                 // Do some validation
                 if (null == sequenceRecord) {
+                    if (DROP_MISSING_CONTIGS) {
+                        LOG.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, bedFeature.getStart(), bedFeature.getEnd()));
+                        missingIntervals++;
+                        missingRegion += bedFeature.getEnd() - bedFeature.getStart();
+                        continue;
+                    }
                     throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
                 } else if (start < 1) {
                     throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
@@ -156,18 +172,53 @@ public class BedToIntervalList extends CommandLineProgram {
                 }
 
                 final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
-                final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
-                intervalList.add(interval);
+
+                // Use end+1 since bed start gets shifted by 1 using 1-based coordinates
+                if ((start == end+1) && !KEEP_LENGTH_ZERO_INTERVALS) {
+                    LOG.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
+                } else {
+                    final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
+                    intervalList.add(interval);
+                }
+
+                if (start == end+1) {
+                    lengthZeroIntervals++;
+                }
 
                 progressLogger.record(sequenceName, start);
             }
             CloserUtil.close(bedReader);
 
+            if (DROP_MISSING_CONTIGS) {
+                if (missingRegion == 0) {
+                    LOG.info("There were no missing regions.");
+                } else {
+                    LOG.warn(String.format("There were %d missing regions with a total of %d bases", missingIntervals, missingRegion));
+                }
+            }
+
+            if (!KEEP_LENGTH_ZERO_INTERVALS) {
+                if (lengthZeroIntervals == 0) {
+                    LOG.info("No input regions had length zero, so none were skipped.");
+                } else {
+                    LOG.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", lengthZeroIntervals));
+                }
+            } else {
+                if (lengthZeroIntervals > 0) {
+                    LOG.warn(String.format("Input file had %d entries with length zero. Run with the KEEP_LENGTH_ZERO_INTERVALS flag set to false to remove these.", lengthZeroIntervals));
+                }
+            }
+
             // Sort and write the output
             IntervalList out = intervalList;
-            if (SORT) out = out.sorted();
-            if (UNIQUE) out = out.uniqued();
+            if (SORT) {
+                out = out.sorted();
+            }
+            if (UNIQUE) {
+                out = out.uniqued();
+            }
             out.write(OUTPUT);
+            LOG.info(String.format("Wrote %d intervals spanning a total of %d bases", out.getIntervals().size(),out.getBaseCount()));
 
         } catch (final IOException e) {
             throw new RuntimeException(e);

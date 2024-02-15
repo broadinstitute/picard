@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2009 - 2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 package picard.sam;
 
 import htsjdk.samtools.BAMRecordCodec;
-import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
@@ -103,7 +102,7 @@ public class FixMateInformation extends CommandLineProgram {
             "<h3>Caveats</h3>\n"+
             "The program should run with fairly limited memory unless there are many mate pairs that are missing or far apart " +
             "from each other in the file, as it keeps track of the unmatched mates.";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input files to check and fix. Multiple files will be " +
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM/BAM/CRAM input files to check and fix. Multiple files will be " +
             "merged and sorted.")
     public List<File> INPUT;
 
@@ -129,10 +128,6 @@ public class FixMateInformation extends CommandLineProgram {
 
     protected SAMFileWriter out;
 
-    public static void main(final String[] args) {
-        new FixMateInformation().instanceMainWithExit(args);
-    }
-
     protected int doWork() {
         // Open up the input
         boolean allQueryNameSorted = true;
@@ -156,10 +151,11 @@ public class FixMateInformation extends CommandLineProgram {
         } else {
             final File soleInput = INPUT.get(0).getAbsoluteFile();
             final File dir = soleInput.getParentFile().getAbsoluteFile();
+            final String extension = parseExtension(soleInput);
             try {
                 IOUtil.assertFileIsWritable(soleInput);
                 IOUtil.assertDirectoryIsWritable(dir);
-                OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", BamFileIoUtils.BAM_FILE_EXTENSION, dir);
+                OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", extension, dir);
             } catch (final IOException ioe) {
                 throw new RuntimeIOException("Could not create tmp file in " + dir.getAbsolutePath());
             }
@@ -285,9 +281,14 @@ public class FixMateInformation extends CommandLineProgram {
         return 0;
     }
 
+    private String parseExtension(final File input) {
+        String[] splitted = input.getName().split("\\.");
+        return splitted[splitted.length - 1];
+    }
+
     protected void createSamFileWriter(final SAMFileHeader header) {
-        out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
-                header.getSortOrder() == SortOrder.queryname, OUTPUT);
+        out = new SAMFileWriterFactory().makeWriter(header,
+                header.getSortOrder() == SortOrder.queryname, OUTPUT, REFERENCE_SEQUENCE);
 
     }
 

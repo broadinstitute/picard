@@ -32,19 +32,39 @@ import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.AbstractLocusInfo;
+import htsjdk.samtools.util.AbstractLocusIterator;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
+import htsjdk.samtools.util.EdgeReadIterator;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
-import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.IntervalArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
-import picard.filter.*;
+import picard.filter.CountingAdapterFilter;
+import picard.filter.CountingDuplicateFilter;
+import picard.filter.CountingFilter;
+import picard.filter.CountingMapQFilter;
+import picard.filter.CountingPairedFilter;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
@@ -81,7 +101,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
 "<hr />"
 ;
 
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file.")
     public File INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output metrics file.")
@@ -113,7 +133,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     public int SAMPLE_SIZE=10000;
 
     @ArgumentCollection
-    protected IntervalArgumentCollection intervalArugmentCollection = makeIntervalArgumentCollection();
+    protected IntervalArgumentCollection intervalArgumentCollection = makeIntervalArgumentCollection();
 
     @Argument(doc="Output for Theoretical Sensitivity metrics.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
@@ -171,7 +191,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        INTERVALS = intervalArugmentCollection.getIntervalFile();
+        INTERVALS = intervalArgumentCollection.getIntervalFile();
         if (INTERVALS != null) {
             IOUtil.assertFileIsReadable(INTERVALS);
         }
@@ -190,6 +210,15 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SamReader in = getSamReader();
         final AbstractLocusIterator iterator = getLocusIterator(in);
+
+        // Verify the sequence dictionaries match
+        if (!this.header.getSequenceDictionary().isEmpty()) {
+            SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                    this.header.getSequenceDictionary(),
+                    INPUT.getAbsolutePath(),
+                    refWalker.getSequenceDictionary(),
+                    REFERENCE_SEQUENCE.getAbsolutePath());
+        }
 
         final List<SamRecordFilter> filters = new ArrayList<>();
         final CountingFilter adapterFilter = new CountingAdapterFilter();
@@ -250,7 +279,7 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         return intervals;
     }
 
-    /** This method should only be called after {@link this.getSamReader()} is called. */
+    /** This method should only be called after {@link #getSamReader()} is called. */
     protected SAMFileHeader getSamFileHeader() {
         if (this.header == null) throw new IllegalStateException("getSamFileHeader() was called but this.header is null");
         return this.header;
@@ -342,10 +371,10 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     }
 
     /**
-     * Creates {@link htsjdk.samtools.util.AbstractLocusIterator} implementation according to {@link this#USE_FAST_ALGORITHM} value.
+     * Creates {@link htsjdk.samtools.util.AbstractLocusIterator} implementation according to {@link #USE_FAST_ALGORITHM} value.
      *
      * @param in inner {@link htsjdk.samtools.SamReader}
-     * @return if {@link this#USE_FAST_ALGORITHM} is enabled, returns {@link htsjdk.samtools.util.EdgeReadIterator} implementation,
+     * @return if {@link #USE_FAST_ALGORITHM} is enabled, returns {@link htsjdk.samtools.util.EdgeReadIterator} implementation,
      * otherwise default algorithm is used and {@link htsjdk.samtools.util.SamLocusIterator} is returned.
      */
     protected AbstractLocusIterator getLocusIterator(final SamReader in) {
@@ -360,11 +389,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     }
 
     /**
-     * Creates {@link picard.analysis.AbstractWgsMetricsCollector} implementation according to {@link this#USE_FAST_ALGORITHM} value.
+     * Creates {@link picard.analysis.AbstractWgsMetricsCollector} implementation according to {@link #USE_FAST_ALGORITHM} value.
      *
      * @param coverageCap the maximum depth/coverage to consider.
      * @param intervals the intervals over which metrics are collected.
-     * @return if {@link this#USE_FAST_ALGORITHM} is enabled, returns {@link picard.analysis.FastWgsMetricsCollector} implementation,
+     * @return if {@link #USE_FAST_ALGORITHM} is enabled, returns {@link picard.analysis.FastWgsMetricsCollector} implementation,
      * otherwise default algorithm is used and {@link picard.analysis.CollectWgsMetrics.WgsMetricsCollector} is returned.
      */
     protected AbstractWgsMetricsCollector getCollector(final int coverageCap, final IntervalList intervals) {
@@ -400,8 +429,14 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
                 }
 
                 if (recs.getBaseQuality() < collectWgsMetrics.MINIMUM_BASE_QUALITY ||
-                        SequenceUtil.isNoCall(recs.getReadBase()))                  { ++basesExcludedByBaseq;   continue; }
-                if (!readNames.add(recs.getRecord().getReadName()))                 { ++basesExcludedByOverlap; continue; }
+                        SequenceUtil.isNoCall(recs.getReadBase())) {
+                    ++basesExcludedByBaseq;
+                    continue;
+                }
+                if (!readNames.add(recs.getRecord().getReadName())) {
+                    ++basesExcludedByOverlap;
+                    continue;
+                }
                 pileupSize++;
             }
             final int highQualityDepth = Math.min(pileupSize, coverageCap);

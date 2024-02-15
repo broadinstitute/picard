@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2015-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.sam.DuplicationMetrics;
+import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
 import picard.sam.markduplicates.util.LibraryIdGenerator;
 import picard.sam.markduplicates.util.ReadEnds;
@@ -66,7 +67,7 @@ import java.util.Set;
 @DocumentedFeature
 @ExperimentalFeature
 @CommandLineProgramProperties(
-        summary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
+        summary = "Examines aligned records in the supplied SAM/BAM/CRAM file to locate duplicate molecules. " +
                 "All records are then written to the output file with the duplicate records flagged.",
         oneLineSummary = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
         programGroup = ReadDataManipulationProgramGroup.class
@@ -74,19 +75,12 @@ import java.util.Set;
 public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
     private final Log log = Log.getInstance(MarkDuplicatesWithMateCigar.class);
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new MarkDuplicatesWithMateCigar().instanceMainWithExit(args);
-    }
-
-    private class ReadEndsForSimpleMarkDuplicatesWithMateCigar extends ReadEnds {
-    }
+    private class ReadEndsForSimpleMarkDuplicatesWithMateCigar extends ReadEnds {}
     
     private static boolean isPairedAndBothMapped(final SAMRecord record) {
         return record.getReadPairedFlag() &&
                 !record.getReadUnmappedFlag() &&
                 !record.getMateUnmappedFlag();
-        
     }
 
     /**
@@ -114,9 +108,10 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
 
         // Open the output
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
+        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader,
                 false,
-                OUTPUT);
+                OUTPUT,
+                REFERENCE_SEQUENCE);
 
         final SAMRecordDuplicateComparator comparator = new SAMRecordDuplicateComparator(Collections.singletonList(headerAndIterator.header));
         comparator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
@@ -144,7 +139,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
                 final String library = LibraryIdGenerator.getLibraryName(header, record);
                 DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
                 if (metrics == null) {
-                    metrics = new DuplicationMetrics();
+                    metrics = DuplicationMetricsFactory.createMetrics();
                     metrics.LIBRARY = library;
                     libraryIdGenerator.addMetricsByLibrary(library, metrics);
                 }
@@ -227,7 +222,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         log.info("Marking " + numDuplicates + " records as duplicates.");
 
         // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator);
+        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
 
         return 0;
     }

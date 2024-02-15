@@ -133,7 +133,7 @@ public class CallingMetricAccumulator implements VariantProcessor.Accumulator<Ca
      * @return Sample name if there is only one sample that contains alternate allele(s), else null if either multiple samples that
      * are not homref, or no samples that are not homref.
      */
-    protected static String getSingletonSample(final VariantContext vc) {
+    public static String getSingletonSample(final VariantContext vc) {
 
         // peek can only change effectively final variables...workaround
         final String[] sampleName = new String[1];

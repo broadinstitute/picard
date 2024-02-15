@@ -25,7 +25,7 @@ public class BamToBfqTest {
     @Test(dataProvider = "inputs")
     public void testBamToBfq(final File input, final boolean isPairedRun,
                      final String outputFilePrefix) throws IOException {
-        final File analysisDir = IOUtil.createTempDir("BamToBfqTest", ".dir");
+        final File analysisDir = IOUtil.createTempDir("BamToBfqTestDir").toFile();
         try {
             final String[] args = new String[] {
                     "INPUT=" + input.getAbsolutePath(),

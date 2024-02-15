@@ -34,7 +34,15 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.*;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -42,9 +50,9 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +91,7 @@ public class FixVcfHeader extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     @Argument(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input VCF/BCF file.")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output VCF/BCF file.")
     public File OUTPUT;
@@ -92,17 +100,12 @@ public class FixVcfHeader extends CommandLineProgram {
     public int CHECK_FIRST_N_RECORDS = -1;
 
     @Argument(shortName="H", doc="The replacement VCF header.", optional=true)
-    public File HEADER = null;
+    public PicardHtsPath HEADER = null;
 
     @Argument(doc="Enforce that the samples are the same (and in the same order) when replacing the VCF header.", optional=true)
     public boolean ENFORCE_SAME_SAMPLES = true;
 
     private final Log log = Log.getInstance(FixVcfHeader.class);
-
-    // Stock main method
-    public static void main(final String[] args) {
-        new FixVcfHeader().instanceMainWithExit(args);
-    }
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -111,16 +114,17 @@ public class FixVcfHeader extends CommandLineProgram {
     }
 
     @Override protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        if (HEADER != null) IOUtil.assertFileIsReadable(HEADER);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        if (HEADER != null){
+            IOUtil.assertFileIsReadable(HEADER.toPath());
+        }
 
-        final VCFFileReader reader     = new VCFFileReader(INPUT, false);
+        final VCFFileReader reader     = new VCFFileReader(INPUT.toPath(), false);
         final VCFHeader existingHeader = reader.getFileHeader();
         final VCFHeader outHeader;
         if (HEADER != null) { // read the header from the file
             final VCFHeader inputHeader;
-            try (VCFFileReader headerReader = new VCFFileReader(HEADER, false)) {
+            try (VCFFileReader headerReader = new VCFFileReader(HEADER.toPath(), false)) {
                 inputHeader      = headerReader.getFileHeader();
                 if (ENFORCE_SAME_SAMPLES) {
                     outHeader = inputHeader;
@@ -152,7 +156,7 @@ public class FixVcfHeader extends CommandLineProgram {
             final Map<String, VCFInfoHeaderLine> infoHeaderLines = new HashMap<>();
             final Map<String, VCFFormatHeaderLine> formatHeaderLines = new HashMap<>();
             final ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
-            try (VCFFileReader in = new VCFFileReader(INPUT, false)) {
+            try (VCFFileReader in = new VCFFileReader(INPUT.toPath(), false)) {
                 log.info("Reading in records to re-build the header.");
                 for (final VariantContext ctx : in) {
                     // FILTER

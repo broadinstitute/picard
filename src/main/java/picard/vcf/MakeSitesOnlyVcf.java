@@ -15,10 +15,10 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 
@@ -76,27 +76,22 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Argument(shortName="S", doc="Names of one or more samples to include in the output VCF.", optional=true)
     public Set<String> SAMPLE = new TreeSet<String>();
 
-    // Stock main method
-    public static void main(final String[] args) {
-        new MakeSitesOnlyVcf().instanceMainWithExit(args);
+    public MakeSitesOnlyVcf() {
+        CREATE_INDEX = true;
     }
-
-	public MakeSitesOnlyVcf() {
-		CREATE_INDEX = true;
-	}
 
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-	    final VCFFileReader reader = new VCFFileReader(INPUT, false);
-	    final VCFHeader inputVcfHeader = new VCFHeader(reader.getFileHeader().getMetaDataInInputOrder());
-	    final SAMSequenceDictionary sequenceDictionary = inputVcfHeader.getSequenceDictionary();
+        final VCFFileReader reader = new VCFFileReader(INPUT, false);
+        final VCFHeader inputVcfHeader = new VCFHeader(reader.getFileHeader().getMetaDataInInputOrder());
+        final SAMSequenceDictionary sequenceDictionary = inputVcfHeader.getSequenceDictionary();
 
-	    if (CREATE_INDEX && sequenceDictionary == null) {
-		    throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
-	    }
+        if (CREATE_INDEX && sequenceDictionary == null) {
+            throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
+        }
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(MakeSitesOnlyVcf.class), 10000);
 
@@ -115,16 +110,16 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 
         // Go through the input, strip the records and write them to the output
         final CloseableIterator<VariantContext> iterator = reader.iterator();
-	    while (iterator.hasNext()) {
-		    final VariantContext full = iterator.next();
+        while (iterator.hasNext()) {
+            final VariantContext full = iterator.next();
             final VariantContext site = subsetToSamplesWithOriginalAnnotations(full, SAMPLE);
             writer.add(site);
             progress.record(site.getContig(), site.getStart());
         }
 
-	    CloserUtil.close(iterator);
-	    CloserUtil.close(reader);
-	    writer.close();
+        CloserUtil.close(iterator);
+        CloserUtil.close(reader);
+        writer.close();
 
         return 0;
     }

@@ -9,6 +9,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.utils.ValidationUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -16,6 +17,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardHtsPath;
 import picard.sam.util.SamTestUtil;
 import picard.util.TestNGUtil;
 
@@ -74,7 +76,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
             setBuilder.addPair(readName, 1, 1, 100);
         }
 
-        tempDir = IOUtil.createTempDir("pds_test", "PositionalDownsampling");
+        tempDir = IOUtil.createTempDir("pds_test_PositionalDownsampling").toFile();
         tempSamFile = File.createTempFile("PositionalDownsampleSam", ".bam", tempDir);
 
         BufferedLineReader bufferedLineReader = null;
@@ -114,7 +116,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
     public void TestBuilder() {
         final ValidateSamFile validateSamFile = new ValidateSamFile();
 
-        validateSamFile.INPUT = tempSamFile;
+        validateSamFile.INPUT = new PicardHtsPath(tempSamFile);
         Assert.assertEquals(validateSamFile.doWork(), 0);
     }
 
@@ -150,12 +152,12 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         // make sure that the resulting BAM is valid.
         final ValidateSamFile validateSamFile = new ValidateSamFile();
 
-        validateSamFile.INPUT = downsampled;
+        validateSamFile.INPUT = new PicardHtsPath(downsampled);
         Assert.assertEquals(validateSamFile.doWork(), 0);
 
         //make sure that the total number of record in the resulting file in in the ballpark:
-        TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile));
-        TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile));
+        TestNGUtil.assertGreaterThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * .8 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
+        TestNGUtil.assertLessThan(SamTestUtil.countSamTotalRecord(downsampled.toPath()), fraction * 1.2 * SamTestUtil.countSamTotalRecord(samFile.toPath()));
     }
 
     
@@ -220,7 +222,7 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
                 "FRACTION=" + fraction
         };
         //should blow up due to bad inputs
-        assert runPicardCommandLine(args) != 0;
+        Assert.assertNotEquals(runPicardCommandLine(args), 0);
     }
 
 }

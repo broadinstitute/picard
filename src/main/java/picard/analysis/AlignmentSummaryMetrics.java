@@ -24,15 +24,21 @@
 
 package picard.analysis;
 
+import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.metrics.MultilevelMetrics;
+import picard.util.help.HelpConstants;
 
 /**
  * High level metrics about the alignment of reads within a SAM file, produced by
  * the CollectAlignmentSummaryMetrics program and usually stored in a file with
  * the extension ".alignment_summary_metrics".
  */
+@DocumentedFeature(
+        groupName = HelpConstants.DOC_CAT_METRICS,
+        groupSummary = HelpConstants.DOC_CAT_METRICS_SUMMARY,
+        summary = "Alignment metrics")
 public class AlignmentSummaryMetrics extends MultilevelMetrics {
-    public enum Category { UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR }
+    public enum Category {UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR}
 
     /**
      * One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
@@ -48,10 +54,14 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      */
     public long TOTAL_READS;
 
-    /** The number of PF reads where PF is defined as passing Illumina's filter. */
+    /**
+     * The number of PF reads where PF is defined as passing Illumina's filter.
+     */
     public long PF_READS;
 
-    /** The fraction of reads that are PF (PF_READS / TOTAL_READS) */
+    /**
+     * The fraction of reads that are PF (PF_READS / TOTAL_READS)
+     */
     public double PCT_PF_READS;
 
     /**
@@ -71,7 +81,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      * The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS
      */
     public double PCT_PF_READS_ALIGNED;
-    
+
     /**
      * The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.
      */
@@ -121,9 +131,41 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     /**
      * The mean read length of the set of reads examined.  When looking at the data for a single lane with
      * equal length reads this number is just the read length.  When looking at data for merged lanes with
-     * differing read lengths this is the mean read length of all reads.
+     * differing read lengths this is the mean read length of all reads. Computed using all read lengths
+     * including clipped bases.
      */
     public double MEAN_READ_LENGTH;
+
+    /** The standard deviation of the read lengths. Computed using all read lengths including clipped bases. */
+    public double SD_READ_LENGTH;
+
+    /**
+     * The median read length of the set of reads examined.  When looking at the data for a single lane with
+     * equal length reads this number is just the read length.  When looking at data for merged lanes with
+     * differing read lengths this is the median read length of all reads. Computed using all bases in reads,
+     * including clipped bases.
+     */
+    public double MEDIAN_READ_LENGTH;
+
+    /**
+     * The median absolute deviation of the distribution of all read lengths.  If the distribution is
+     * essentially normal then the standard deviation can be estimated as ~1.4826 * MAD. Computed using all
+     * read lengths including clipped bases.
+     */
+    public double MAD_READ_LENGTH;
+
+    /** The minimum read length. Computed using all read lengths including clipped bases. */
+    public double MIN_READ_LENGTH;
+
+    /** The maximum read length. Computed using all read lengths including clipped bases. */
+    public double MAX_READ_LENGTH;
+
+    /**
+     * The mean aligned read length of the set of reads examined.  When looking at the data for a single lane with
+     * equal length reads this number is just the read length.  When looking at data for merged lanes with
+     * differing read lengths this is the mean read length of all reads. Clipped bases are not counted.
+     */
+    public double MEAN_ALIGNED_READ_LENGTH;
 
     /**
      * The number of aligned reads whose mate pair was also aligned to the reference.
@@ -170,4 +212,22 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
      */
     public double PCT_ADAPTER;
 
+    /**
+     * the fraction of PF bases that are on (primary) aligned reads and are soft-clipped, as a fraction of the
+     * PF_ALIGNED_BASES (even though these are not aligned!)
+     */
+    public double PCT_SOFTCLIP;
+
+    /**
+     * The fraction of PF bases that are (on primary, aligned reads and) hard-clipped, as a fraction of the
+     * PF_ALIGNED_BASES (even though these are not aligned!)
+     */
+    public double PCT_HARDCLIP;
+
+    /**
+     * The average length of the soft-clipped bases at the 3' end of reads. This could be used as an estimate for
+     * the amount by which the insert-size must be increased in order to obtain a significant reduction in bases
+     * lost due to reading off the end of the insert.
+     */
+    public double AVG_POS_3PRIME_SOFTCLIP_LENGTH;
 }

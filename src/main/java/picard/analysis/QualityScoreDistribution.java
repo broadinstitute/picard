@@ -98,9 +98,12 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
-    /** Required main method. */
-    public static void main(final String[] args) {
-        System.exit(new QualityScoreDistribution().instanceMain(args));
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+        return super.customCommandLineValidation();
     }
 
     @Override
@@ -161,7 +164,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             final int rResult = RExecutor.executeFromClasspath(
                     "picard/analysis/qualityScoreDistribution.R",
                     OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     INPUT.getName(),
                     this.plotSubtitle);
 

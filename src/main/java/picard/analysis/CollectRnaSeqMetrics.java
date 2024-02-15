@@ -122,8 +122,8 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
-    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
-    "These reads are not counted as ")
+    @Argument(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases. " +
+    "These reads are not counted towards any metrics, except for the PF_BASES field.", optional = true)
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
     @Argument(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
@@ -132,6 +132,9 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Argument(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
+    @Argument(doc="The distance into a transcript over which 5' and 3' bias is calculated.")
+    public int END_BIAS_BASES = RnaSeqMetricsCollector.defaultEndBiasBases;
+
     private RnaSeqMetricsCollector collector;
 
     /**
@@ -139,17 +142,17 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
      */
     private String plotSubtitle = "";
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectRnaSeqMetrics().instanceMainWithExit(argv);
-    }
-
     @Override
     protected String[] customCommandLineValidation() {
         // No ribosomal intervals file and rRNA fragment percentage = 0
         if ( RIBOSOMAL_INTERVALS == null && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
+
+        if (!checkRInstallation(CHART_OUTPUT != null)) {
+            return new String[]{"R is not installed on this machine. It is required for creating the chart."};
+        }
+
         return super.customCommandLineValidation();
     }
 
@@ -168,7 +171,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
 
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE,
-                true);
+                true, END_BIAS_BASES);
 
         // If we're working with a single library, assign that library's name as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
@@ -199,7 +202,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         if (CHART_OUTPUT != null && atLeastOneHistogram) {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/rnaSeqCoverage.R",
                                                                OUTPUT.getAbsolutePath(),
-                                                               CHART_OUTPUT.getAbsolutePath(),
+                                                               CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                                                                INPUT.getName(),
                                                                this.plotSubtitle);
 

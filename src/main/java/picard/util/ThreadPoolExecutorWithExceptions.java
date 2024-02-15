@@ -1,5 +1,6 @@
 package picard.util;
 
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
 
 import java.util.concurrent.CancellationException;
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
  * while executing
  */
 public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
+    private static final Log log = Log.getInstance(ThreadPoolExecutorWithExceptions.class);
     public Throwable exception = null;
 
     /**
@@ -43,6 +45,7 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
         }
         if (t != null) {
             exception = t;
+            log.error(t, "A thread failed:");
             throw new PicardException(t.getMessage(), t);
         }
     }
@@ -53,5 +56,18 @@ public class ThreadPoolExecutorWithExceptions extends ThreadPoolExecutor {
         t.setUncaughtExceptionHandler((t1, e) -> {
             throw new PicardException("Uncaught exception in thread: " + t1.getName() + " : " + e.getMessage(), e);
         });
+    }
+
+    public boolean hasError() {
+        return exception != null;
+    }
+
+    /**
+     * Calls `shutdownNow, adjusts the core size to 0 and low timeout to ensure threads get killed and garbage collected.
+     */
+    public void cleanUp() {
+        shutdownNow();
+        setCorePoolSize(0);
+        setKeepAliveTime(1, TimeUnit.MINUTES);
     }
 }

@@ -64,7 +64,7 @@ import java.util.List;
 public class CollectJumpingLibraryMetrics extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Collect jumping library metrics. ";
     static final String USAGE_DETAILS = "<p>This tool collects high-level metrics about the " +
-"presence of outward-facing (jumping) and inward-facing (non-jumping) read pairs within a SAM or BAM file." +
+"presence of outward-facing (jumping) and inward-facing (non-jumping) read pairs within a SAM/BAM/CRAM file." +
 "For a brief primer on jumping libraries, see the GATK "+
 "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6326'>Dictionary</a></p>." +
 
@@ -103,11 +103,6 @@ public class CollectJumpingLibraryMetrics extends CommandLineProgram {
 
     private static final int SAMPLE_FOR_MODE = 50000; // How many outward-facing pairs to sample to determine the mode
 
-    /** Stock main method. */
-    public static void main(String[] args) {
-        System.exit(new CollectJumpingLibraryMetrics().instanceMain(args));
-    }
-
     /**
      * Calculates the detailed statistics about the jumping library and then generates the results.
      */
@@ -132,7 +127,7 @@ public class CollectJumpingLibraryMetrics extends CommandLineProgram {
         double chimeraSizeMinimum = Math.max(getOutieMode(), (double) CHIMERA_KB_MIN);
 
         for (File f : INPUT) {
-            SamReader reader = SamReaderFactory.makeDefault().open(f);
+            SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(f);
 
             if (reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
                 throw new PicardException("SAM file must " + f.getName() + " must be sorted in coordintate order");
@@ -239,7 +234,7 @@ public class CollectJumpingLibraryMetrics extends CommandLineProgram {
         Histogram<Integer> histo = new Histogram<Integer>();
 
         for (File f : INPUT) {
-            SamReader reader = SamReaderFactory.makeDefault().open(f);
+            SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(f);
             int sampled = 0;
             for (Iterator<SAMRecord> it = reader.iterator(); it.hasNext() && sampled < samplePerFile; ) {
                 SAMRecord sam = it.next();

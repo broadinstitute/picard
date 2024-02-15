@@ -24,8 +24,8 @@ package picard.sam;
  * THE SOFTWARE.
  */
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -43,14 +43,14 @@ public class AddOATagTest {
     private static final Path TEST_DIR = Paths.get("testdata/picard/sam/");
     private static final Path OA_TEST_DIR = TEST_DIR.resolve("AddOATag/");
 
-    @DataProvider(name="testOAData")
+    @DataProvider()
     Object[][] testOAData() {
         return new Object[][]{
                 new Object[]{OA_TEST_DIR.resolve("aligned_withoutOA.sam").toFile(), OA_TEST_DIR.resolve("aligned_withOA.sam").toFile()},
         };
     }
 
-    @DataProvider(name="testIntervalListData")
+    @DataProvider()
     Object[][] testIntervalListData() {
         return new Object[][]{
                 new Object[]{TEST_DIR.resolve("aligned.sam").toFile(), null, OA_TEST_DIR.resolve("aligned_no_intervals.sam").toFile()},
@@ -65,7 +65,6 @@ public class AddOATagTest {
         clpOutput.deleteOnExit();
 
         runAddOATag(testSam, clpOutput, null);
-
         validateOATag(clpOutput, truthSam);
     }
 
@@ -75,36 +74,33 @@ public class AddOATagTest {
         clpOutput.deleteOnExit();
 
         runAddOATag(inputSam, clpOutput, intervalList);
-
         validateOATag(clpOutput, truthSam);
     }
 
-    private static void runAddOATag(final File inputSam, final File output, final File intervalList) throws IOException {
+    private static void runAddOATag(final File inputSam, final File output, final File intervalList) {
         final List<String> args = new ArrayList<>(Arrays.asList(
           "INPUT=" + inputSam,
           "OUTPUT=" + output
         ));
+
         if (intervalList != null) {
             args.add("INTERVAL_LIST=" + intervalList);
         }
+
         AddOATag addOATag = new AddOATag();
         Assert.assertEquals(addOATag.instanceMain(args.toArray(new String[0])), 0, "Running addOATag did not succeed");
     }
 
-    private static void validateOATag(final File testSam, final File truthSam) {
+    private static void validateOATag(final File testSam, final File truthSam) throws IOException {
         final ArrayList<String> truthOAValues = new ArrayList<>();
         final ArrayList<String> testOAValues = new ArrayList<>();
 
-        SAMRecordIterator iterator = SamReaderFactory.makeDefault().open(truthSam).iterator();
-        while (iterator.hasNext()) {
-            SAMRecord rec = iterator.next();
-            truthOAValues.add(rec.getStringAttribute(AddOATag.OA));
+        try(SamReader readerPre = SamReaderFactory.makeDefault().open(truthSam)) {
+            readerPre.forEach(rec -> truthOAValues.add(rec.getStringAttribute(SAMTag.OA.name())));
         }
 
-        iterator = SamReaderFactory.makeDefault().open(testSam).iterator();
-        while (iterator.hasNext()) {
-            SAMRecord rec = iterator.next();
-            testOAValues.add(rec.getStringAttribute(AddOATag.OA));
+        try (SamReader readerPost = SamReaderFactory.makeDefault().open(testSam)) {
+            readerPost.forEach(rec -> testOAValues.add(rec.getStringAttribute(SAMTag.OA.name())));
         }
 
         Assert.assertEquals(testOAValues, truthOAValues);

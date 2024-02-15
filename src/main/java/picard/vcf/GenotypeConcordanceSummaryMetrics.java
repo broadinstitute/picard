@@ -2,12 +2,15 @@ package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.variant.variantcontext.VariantContext;
+import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.util.help.HelpConstants;
 
 /**
  * Class that holds summary metrics about Genotype Concordance
  *
  * @author George Grant
  */
+@DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
 public class GenotypeConcordanceSummaryMetrics extends MetricBase {
     /**
      * Empty constructor - needed for unit tests

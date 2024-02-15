@@ -39,7 +39,9 @@ import picard.analysis.MergeableMetricBase;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.DbSnpBitSetUtil;
+import picard.util.help.HelpConstants;
 import picard.vcf.processor.VariantProcessor;
 
 import java.io.File;
@@ -56,21 +58,21 @@ import java.util.Optional;
 public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input vcf file for analysis")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Path (except for the file extension) of output metrics files " +
             "to write.")
     public File OUTPUT;
 
     @Argument(doc = "Reference dbSNP file in dbSNP or VCF format.")
-    public File DBSNP;
+    public PicardHtsPath DBSNP;
 
     @Argument(shortName = "TI", doc = "Target intervals to restrict analysis to.", optional = true)
-    public File TARGET_INTERVALS;
+    public PicardHtsPath TARGET_INTERVALS;
 
     @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true,
             doc = "If present, speeds loading of dbSNP file, will look for dictionary in vcf if not present here.")
-    public File SEQUENCE_DICTIONARY = null;
+    public PicardHtsPath SEQUENCE_DICTIONARY = null;
 
     @Argument(doc = "Set to true if running on a single-sample gvcf.", optional = true)
     public boolean GVCF_INPUT = false;
@@ -80,26 +82,29 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CollectVariantCallingMetrics.class);
 
-    public static void main(final String[] args) {
-        new CollectVariantCallingMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(DBSNP);
-        if (TARGET_INTERVALS != null) IOUtil.assertFileIsReadable(TARGET_INTERVALS);
-        if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY.toPath());
 
-        final boolean requiresIndex = this.TARGET_INTERVALS != null || this.THREAD_COUNT > 1;
-        final VCFFileReader variantReader = new VCFFileReader(INPUT, requiresIndex);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        IOUtil.assertFileIsReadable(DBSNP.toPath());
+
+        if (TARGET_INTERVALS != null) {
+            IOUtil.assertFileIsReadable(TARGET_INTERVALS.toPath());
+        }
+
+        if (SEQUENCE_DICTIONARY != null) {
+            IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY.toPath());
+        }
+
+        final boolean requiresIndex = TARGET_INTERVALS != null || this.THREAD_COUNT > 1;
+        final VCFFileReader variantReader = new VCFFileReader(INPUT.toPath(), requiresIndex);
         final VCFHeader vcfHeader = variantReader.getFileHeader();
         CloserUtil.close(variantReader);
 
         final SAMSequenceDictionary sequenceDictionary =
                 SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT.toPath() : SEQUENCE_DICTIONARY.toPath());
 
-        final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromFile(TARGET_INTERVALS).uniqued();
+        final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromPath(TARGET_INTERVALS.toPath()).uniqued();
 
         log.info("Loading dbSNP file ...");
         final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary, targetIntervals, Optional.of(log));
@@ -137,6 +142,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF). */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class VariantCallingSummaryMetrics extends MergeableMetricBase {
         /** The number of passing bi-allelic SNPs calls (i.e. non-reference genotypes) that were examined */
         @MergeByAdding
@@ -281,6 +287,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample. */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class VariantCallingDetailMetrics extends CollectVariantCallingMetrics.VariantCallingSummaryMetrics {
         /** The name of the sample being assayed */
         @MergeByAssertEquals

@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -40,6 +41,9 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.RExecutor;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -49,14 +53,14 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        summary = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_BRIEF,
-        oneLineSummary = CollectInsertSizeMetrics.USAGE_BRIEF,
+        summary = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_DETAILED,
+        oneLineSummary = CollectInsertSizeMetrics.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
 @DocumentedFeature
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
-    static final String USAGE_BRIEF = "Collect metrics about the insert size distribution of a paired-end library.";
-    static final String USAGE_SUMMARY = "<p>This tool provides useful metrics for validating library construction including " +
+    static final String USAGE_SUMMARY = "Collect metrics about the insert size distribution of a paired-end library. ";
+    static final String USAGE_DETAILED = "This tool provides useful metrics for validating library construction including " +
             "the insert size distribution and read orientation of paired-end libraries.</p>" +
             "" +
             "The expected proportions of these metrics vary depending on the type of library preparation used, resulting from " +
@@ -97,6 +101,10 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "Also, when calculating mean and standard deviation, only bins <= Histogram_WIDTH will be included.", optional=true)
     public Integer HISTOGRAM_WIDTH = null;
 
+    @Argument(shortName="MW", doc="Minimum width of histogram plots. In the case when the histogram would otherwise be" +
+            "truncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum range.", optional=true)
+    public Integer MIN_HISTOGRAM_WIDTH = null;
+
     @Argument(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1).")
     public float MINIMUM_PCT = 0.05f;
@@ -110,11 +118,6 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;
 
-    /** Required main method implementation. */
-    public static void main(final String[] argv) {
-        new CollectInsertSizeMetrics().instanceMainWithExit(argv);
-    }
-
     /**
      * Put any custom command-line validation in an override of this method.
      * clp is initialized at this point and can be used to print usage and access argv.
@@ -125,11 +128,16 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
-         if (MINIMUM_PCT < 0 || MINIMUM_PCT > 0.5) {
-             return new String[]{"MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded."};
-         }
+        final List<String> errorMsgs = new ArrayList<String>();
+        if (MINIMUM_PCT < 0 || MINIMUM_PCT > 0.5) {
+            errorMsgs.add("MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded.");
+        }
 
-         return super.customCommandLineValidation();
+        if (!checkRInstallation(Histogram_FILE != null)) {
+            errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
+        }
+
+        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 
     @Override protected boolean usesNoRefReads() { return false; }
@@ -139,8 +147,8 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(Histogram_FILE);
 
         //Delegate actual collection to InsertSizeMetricCollector
-        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(),
-                                                        MINIMUM_PCT, HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES);
+        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT,
+                HISTOGRAM_WIDTH, MIN_HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES);
     }
 
     @Override protected void acceptRead(final SAMRecord record, final ReferenceSequence ref) {
@@ -163,23 +171,18 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         else  {
             file.write(OUTPUT);
 
-            final int rResult;
-            if(HISTOGRAM_WIDTH == null) {
-                rResult = RExecutor.executeFromClasspath(
-                    Histogram_R_SCRIPT,
-                    OUTPUT.getAbsolutePath(),
-                    Histogram_FILE.getAbsolutePath(),
-                    INPUT.getName());
-            } else {
-                rResult = RExecutor.executeFromClasspath(
-                    Histogram_R_SCRIPT,
-                    OUTPUT.getAbsolutePath(),
-                    Histogram_FILE.getAbsolutePath(),
-                    INPUT.getName(),
-                    String.valueOf(HISTOGRAM_WIDTH) ); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
-                                                         //bin that has data, which may be less than Histogram_WIDTH and confuse the user.
+            final List<String> plotArgs = new ArrayList<>();
+            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
+
+            if (HISTOGRAM_WIDTH != null) {
+                plotArgs.add(String.valueOf(HISTOGRAM_WIDTH));
+            }
+            else if (MIN_HISTOGRAM_WIDTH != null) {
+                final int max = (int) file.getAllHistograms().stream().mapToDouble(Histogram::getMax).max().getAsDouble();
+                plotArgs.add(String.valueOf(Math.max(max, MIN_HISTOGRAM_WIDTH)));
             }
 
+            final int rResult = RExecutor.executeFromClasspath(Histogram_R_SCRIPT, plotArgs.toArray(new String[0]));
             if (rResult != 0) {
                 throw new PicardException("R script " + Histogram_R_SCRIPT + " failed with return code " + rResult);
             }

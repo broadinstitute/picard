@@ -44,9 +44,9 @@ public class TestDataProviders {
     // https://github.com/cbeust/testng/blob/master/src/test/java/test/inject/NoInjectionTest.java
     @Test(dataProvider = "DataprovidersThatDontTestThemselves")
     public void testDataProviderswithDP(@NoInjection final Method method, final Class clazz) throws
-            IllegalAccessException, InstantiationException {
+            IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
 
-        Object instance = clazz.newInstance();
+        Object instance = clazz.getDeclaredConstructor().newInstance();
 
         Set<Method> methodSet = new HashSet<>();
         methodSet.addAll(Arrays.asList(clazz.getDeclaredMethods()));

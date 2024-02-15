@@ -2,6 +2,8 @@ package picard.sam.SamErrorMetric;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator.SAMLocusAndReference;
+import htsjdk.samtools.util.AbstractRecordAndOffset;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -21,8 +23,13 @@ import java.util.stream.IntStream;
 public class ReadBaseStratificationTest {
 
     @BeforeClass
-    public void setup() {
+    public void setupLH() {
         ReadBaseStratification.setLongHomopolymer(6);
+    }
+
+    @BeforeClass
+    public void setupLBS() {
+        ReadBaseStratification.setLocationBinSize(1000);
     }
 
     @DataProvider
@@ -259,6 +266,10 @@ public class ReadBaseStratificationTest {
 
                 {1, false, 93, ReadBaseStratification.flowCellTileStratifier},
 
+                {1, false, 3981 / 1000, ReadBaseStratification.flowCellXStratifier},
+
+                {1, false, 7576 / 1000, ReadBaseStratification.flowCellYStratifier},
+
                 {1, false, "rgID", ReadBaseStratification.readgroupStratifier},
 
                 {1, false, ReadBaseStratification.ReadOrdinality.FIRST, ReadBaseStratification.readOrdinalityStratifier},
@@ -494,5 +505,41 @@ public class ReadBaseStratificationTest {
     @Test(dataProvider = "readsForChimericTest")
     public void testChimericStratifier(final SAMRecord sam, final ReadBaseStratification.ProperPaired type) {
         Assert.assertEquals(ReadBaseStratification.ProperPaired.of(sam), type);
+    }
+
+    private SAMRecord createRecordFromCigar(final String cigar) {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.addFrag("", 0, 100, false, false, "", null, 30);
+        return builder.getRecords().stream().findFirst().get();
+    }
+
+    @DataProvider
+    public Object[][] provideForTestGetIndelElement() {
+        return new Object[][]{
+                {"", 0, AbstractRecordAndOffset.AlignmentType.Insertion, null},
+                {"1M1I", 1, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1I", 0, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1I1M", 0, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1D1M", -1, AbstractRecordAndOffset.AlignmentType.Deletion, CigarOperator.D},
+                {"1S1I1D", 1, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"1S1D1M1I", 0, AbstractRecordAndOffset.AlignmentType.Deletion, CigarOperator.D},
+                {"2D2I1M", 0, AbstractRecordAndOffset.AlignmentType.Insertion, CigarOperator.I},
+                {"2I2D1M", 1, AbstractRecordAndOffset.AlignmentType.Deletion, CigarOperator.D},
+        };
+    }
+
+    @Test(dataProvider = "provideForTestGetIndelElement")
+    public void testGetIndelElement(final String cigar, final int offset, final AbstractRecordAndOffset.AlignmentType operation, final CigarOperator expected) {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.addFrag("", 0, 100, false, false, cigar, null, 30);
+        SAMRecord record = builder.getRecords().stream().findFirst().get();
+        SamLocusIterator.RecordAndOffset rao = new SamLocusIterator.RecordAndOffset(record, offset, operation);
+
+        if (expected == null) {
+            Assert.assertNull(ReadBaseStratification.getIndelElement(rao));
+        }
+        else {
+            Assert.assertEquals(ReadBaseStratification.getIndelElement(rao).getOperator(), expected);
+        }
     }
 }

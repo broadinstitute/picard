@@ -26,8 +26,10 @@ package picard.cmdline;
 import com.intel.gkl.compression.IntelDeflaterFactory;
 import com.intel.gkl.compression.IntelInflaterFactory;
 import htsjdk.samtools.Defaults;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
+import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.Header;
@@ -46,24 +48,24 @@ import org.broadinstitute.barclay.argparser.CommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineParserOptions;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PathProvider;
-import picard.util.PropertyUtils;
+import picard.nio.PicardHtsPath;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -71,7 +73,7 @@ import java.util.stream.Collectors;
  *
  * To use:
  *
- * 1. Extend this class with a concrete class that is annotated with @COmmandLineProgramProperties, and has data members
+ * 1. Extend this class with a concrete class that is annotated with {@link CommandLineProgramProperties}, and has data members
  * annotated with @Argument, @PositionalArguments, and/or @ArgumentCollection annotations.
  *
  * 2. If there is any custom command-line validation, override customCommandLineValidation().  When this method is
@@ -83,11 +85,17 @@ import java.util.stream.Collectors;
  *
  */
 public abstract class CommandLineProgram {
-    // Picard CmdLine properties file resource path, placed at this path by the gradle build script
-    private static String PICARD_CMDLINE_PROPERTIES_FILE = "picard/picardCmdLine.properties";
     private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
+    public static String SYNTAX_TRANSITION_URL =
+            "https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)";
+
+    /**
+     * CommandLineProgramProperties oneLineSummary attribute must be shorted than this in order to maintain
+     * reasonable help output formatting.
+     */
+    public static int MAX_ALLOWABLE_ONE_LINE_SUMMARY_LENGTH = 120;
 
     @Argument(doc="One or more directories with space available to be used by this program for temporary storage of working files",
             common=true, optional=true)
@@ -111,7 +119,7 @@ public abstract class CommandLineProgram {
             "Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
 
-    @Argument(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.", common=true)
+    @Argument(doc = "Whether to create an index when writing VCF or coordinate sorted BAM output.", common=true)
     public Boolean CREATE_INDEX = Defaults.CREATE_INDEX;
 
     @Argument(doc="Whether to create an MD5 digest for any BAM or FASTQ files created.  ", common=true)
@@ -124,12 +132,9 @@ public abstract class CommandLineProgram {
     // after argument parsing using the value established by the user in the referenceSequence argument collection.
     protected File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
-    @Argument(doc="Google Genomics API client_secrets.json file path.", common = true)
-    public String GA4GH_CLIENT_SECRETS="client_secrets.json";
-
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
                 "It is unlikely these will ever need to be accessed by the command line program")
-    public Object specialArgumentsCollection = useLegacyParser(getClass()) ?
+    public Object specialArgumentsCollection = useLegacyParser() ?
             new Object() : // legacy parser does not require these
             new SpecialArgumentsCollection();
 
@@ -140,20 +145,6 @@ public abstract class CommandLineProgram {
     public Boolean USE_JDK_INFLATER = false;
 
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
-
-    static {
-      // Register custom reader factory for reading data from Google Genomics
-      // implementation of GA4GH API.
-      // With this it will be possible to pass these urls as INPUT params.
-      // E.g. java -jar dist/picard.jar ViewSam \
-      //    INPUT=https://www.googleapis.com/genomics/v1beta2/readgroupsets/CK256frpGBD44IWHwLP22R4/ \
-      //    GA4GH_CLIENT_SECRETS=../client_secrets.json
-      if (System.getProperty("samjdk.custom_reader") == null) {
-        System.setProperty("samjdk.custom_reader",
-            "https://www.googleapis.com/genomics," +
-            "com.google.cloud.genomics.gatk.htsjdk.GA4GHReaderFactory");
-      }
-    }
 
     /**
     * Initialized in parseArgs.  Subclasses may want to access this to do their
@@ -201,7 +192,7 @@ public abstract class CommandLineProgram {
                 "********** NOTE: Picard's command line syntax is changing.",
                 "**********",
                 "********** For more information, please see:",
-                "********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)",
+                "********** ", SYNTAX_TRANSITION_URL,
                 "**********",
                 "********** The command line looks like this in the new syntax:",
                 "**********",
@@ -214,25 +205,21 @@ public abstract class CommandLineProgram {
             final String info    = String.format(message, this.getClass().getSimpleName(), syntax);
             Log.getInstance(this.getClass()).info(info);
         }
+
         if (!parseArgs(actualArgs)) {
             return 1;
         }
-
-        // Provide one temp directory if the caller didn't
-        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>();
-        if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
-
+        
         // Build the default headers
         final Date startDate = new Date();
         this.defaultHeaders.add(new StringHeader(commandLine));
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        if (System.getProperty("ga4gh.client_secrets") == null) {
-          System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
-        }
-        SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
+
+        // Set the compression level everywhere we can think of
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
+        IOUtil.setCompressionLevel(COMPRESSION_LEVEL);
 
         if (VALIDATION_STRINGENCY != ValidationStringency.STRICT) VariantContextWriterBuilder.setDefaultOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
 
@@ -240,19 +227,14 @@ public abstract class CommandLineProgram {
             SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         }
 
+        final boolean defaultHTSJDKIndexCreation = SAMFileWriterFactory.getDefaultCreateIndexWhileWriting();
         if (CREATE_INDEX) {
             SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true);
         }
 
-        SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
-
-        for (final File f : TMP_DIR) {
-            // Intentionally not checking the return values, because it may be that the program does not
-            // need a tmp_dir. If this fails, the problem will be discovered downstream.
-            if (!f.exists()) f.mkdirs();
-            f.setReadable(true, false);
-            f.setWritable(true, false);
-            System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
+        final boolean defaultMD5Creation = SAMFileWriterFactory.getDefaultCreateMd5File();
+        if (CREATE_MD5_FILE) {
+            SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
         }
 
         if (!USE_JDK_DEFLATER) {
@@ -262,6 +244,10 @@ public abstract class CommandLineProgram {
         if (!USE_JDK_INFLATER) {
             BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
         }
+
+        // This has to happen after the inflater factory is set because it causes a reinitialization of the static
+        // default reader factory.  At least until https://github.com/samtools/htsjdk/issues/1666 is resolved
+        SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
 
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
@@ -294,6 +280,9 @@ public abstract class CommandLineProgram {
         try {
             ret = doWork();
         } finally {
+            // restore the default to eliminate problems in downstream code caused by setting CREATE_INDEX=true above
+            SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(defaultHTSJDKIndexCreation);
+            SAMFileWriterFactory.setDefaultCreateMd5File(defaultMD5Creation);
             try {
                 // Emit the time even if program throws
                 if (!QUIET) {
@@ -329,14 +318,14 @@ public abstract class CommandLineProgram {
     */
     protected boolean parseArgs(final String[] argv) {
 
-        commandLineParser = getCommandLineParser();
+        commandLineParser = getCommandLineParserForArgs(argv);
 
         boolean ret;
         try {
             ret = commandLineParser.parseArguments(System.err, argv);
         } catch (CommandLineException e) {
             // Barclay command line parser throws on parsing/argument errors
-            System.err.println(commandLineParser.usage(false,false));
+            System.err.println(commandLineParser.usage(true,false));
             System.err.println(e.getMessage());
             ret = false;
         }
@@ -345,11 +334,37 @@ public abstract class CommandLineProgram {
         if (!ret) {
             return false;
         }
-        REFERENCE_SEQUENCE = referenceSequence.getReferenceFile();
+
+        // Set the REFERENCE_SEQUENCE for tools that are not nio-aware and still depend on a File object
+        // (as opposed to using the preferred method of calling referenceSequence.getHtsPath()). Note
+        // that if the URI scheme for the reference is something other than "file", the REFERENCE_SEQUENCE
+        // object created by this code path won't be valid - but we still have to set it here in case
+        // the tool tries to access REFERENCE_SEQUENCE directly (such tools will subsequently fail given
+        // a non-local file anyway, but this prevents them from immediately throwing an NPE).
+        final PicardHtsPath refHtsPath = referenceSequence.getHtsPath();
+        REFERENCE_SEQUENCE = ReferenceArgumentCollection.getFileSafe(refHtsPath, Log.getInstance(this.getClass()));
+
+        // The TMP_DIR setting section below was moved from instanceMain() to here due to timing issues
+        // related to checking whether R is installed. Certain programs, such as CollectInsertSizeMetrics
+        // override the customCommandLineValidation() with a call to RExecutor, which in turn writes an
+        // R script into the tmp directory, which used to be the system default before this change.
+
+        // Provide one temp directory if the caller didn't
+        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<>(); // This line looks redundant due to defaults
+        if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
+
+        for (final File f : TMP_DIR) {
+            // Intentionally not checking the return values, because it may be that the program does not
+            // need a tmp_dir. If this fails, the problem will be discovered downstream.
+            if (!f.exists()) f.mkdirs();
+            f.setReadable(true, false);
+            f.setWritable(true, false);
+            System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
+        }
 
         final String[] customErrorMessages = customCommandLineValidation();
         if (customErrorMessages != null) {
-            System.err.print(commandLineParser.usage(false, false));
+            System.err.print(commandLineParser.usage(true, false));
             for (final String msg : customErrorMessages) {
                 System.err.println(msg);
             }
@@ -372,41 +387,49 @@ public abstract class CommandLineProgram {
         return getCommandLineParser().getStandardUsagePreamble(getClass());
     }
 
-    /**
-     * @return Return the command line parser to be used.
-     */
-    public CommandLineParser getCommandLineParser() {
-        if (commandLineParser == null) {
-            commandLineParser = useLegacyParser(getClass()) ?
-                        new LegacyCommandLineArgumentParser(this) :
-                        new CommandLineArgumentParser(this,
-                            Collections.EMPTY_LIST,
-                            new HashSet<>(Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS)));
+    // If the user-specified args look like legacy-style, override the Barclay parser and use the
+    // legacy parser.
+    public CommandLineParser getCommandLineParserForArgs(String[] argv) {
+        final boolean hasLegacyArgs = CommandLineSyntaxTranslater.isLegacyPicardStyle(argv);
+        if (hasLegacyArgs) {
+            useLegacyParser = true;
+            specialArgumentsCollection = new Object(); // legacy parser does not require these
+            commandLineParser = new LegacyCommandLineArgumentParser(this);
+        } else {
+            commandLineParser = getCommandLineParser();
         }
         return commandLineParser;
     }
 
     /**
-     * Return true if the Picard command line parser should be used in place of the Barclay command line parser,
-     * otherwise, false.
+     * @return Return the command line parser to be used.
+     */
+    public CommandLineParser getCommandLineParser() {
+        if (commandLineParser == null) {
+            commandLineParser = useLegacyParser() ?
+                    new LegacyCommandLineArgumentParser(this) :
+                    new CommandLineArgumentParser(this,
+                        Collections.EMPTY_LIST,
+                        Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS));
+        }
+        return commandLineParser;
+    }
+
+    /**
+     * Return true if the legacy Picard command line parser should be used in place of the Barclay command
+     * line parser, otherwise, false.
      *
-     * The Barclay parser is enabled by opt-in only, via the presence of a (true-valued) boolean property
-     * "picard.useLegacyParser", either as a System property, or property in a file called "picard.properties".
-     * System property value takes precedence.
+     * The legacy parser is enabled by opt-in only, via the presence of a (true-valued) boolean property
+     * "picard.useLegacyParser", either as a System property.
      *
      * @return true if the legacy parser should be used
      */
-    public static boolean useLegacyParser(final Class<?> clazz) {
+    public static boolean useLegacyParser() {
         if (useLegacyParser == null) {
-            String legacyPropertyValue = legacyPropertyValue = System.getProperty(PROPERTY_USE_LEGACY_PARSER);
-            if (null == legacyPropertyValue){
-                final Properties props = PropertyUtils.loadPropertiesFile(PICARD_CMDLINE_PROPERTIES_FILE, clazz);
-                if (props != null) {
-                    legacyPropertyValue = props.getProperty(PROPERTY_USE_LEGACY_PARSER);
-                }
-            }
-            // remember the value so we only have to load the properties file once
-            useLegacyParser = legacyPropertyValue == null ? true : Boolean.parseBoolean(legacyPropertyValue);
+            final String legacyPropertyValue = System.getProperty(PROPERTY_USE_LEGACY_PARSER);
+            useLegacyParser = legacyPropertyValue == null ?
+                    false :
+                    Boolean.parseBoolean(legacyPropertyValue);
         }
         return useLegacyParser;
     }
@@ -425,6 +448,18 @@ public abstract class CommandLineProgram {
     public void setDefaultHeaders(final List<Header> headers) {
         this.defaultHeaders.clear();
         this.defaultHeaders.addAll(headers);
+    }
+
+    public SAMProgramRecord getPGRecord(final SAMFileHeader header) {
+        final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
+
+        final String pgProgramName = getClass().getSimpleName();
+        final SAMProgramRecord programRecord = new SAMProgramRecord(pgIdGenerator.getNonCollidingId(pgProgramName));
+
+        programRecord.setProgramName(pgProgramName);
+        programRecord.setCommandLine(getCommandLine());
+        programRecord.setProgramVersion(getVersion());
+        return programRecord;
     }
 
     public List<Header> getDefaultHeaders() {
@@ -465,5 +500,21 @@ public abstract class CommandLineProgram {
      */
     public static String getFaqLink() {
         return "To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp";
+    }
+
+    /**
+     * Check if R is installed
+     * @param has_chart_output
+     * @return true if R is installed
+     */
+    public static boolean checkRInstallation(final boolean has_chart_output) {
+        if (has_chart_output) {
+            try {
+                RExecutor.executeFromClasspath("picard/analysis/checkRInstallation.R");
+            } catch (htsjdk.samtools.SAMException e) {
+                return false;
+            }
+        }
+        return true;
     }
 }

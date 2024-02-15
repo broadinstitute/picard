@@ -35,11 +35,14 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
 import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.argumentcollections.OutputArgumentCollection;
+import picard.cmdline.argumentcollections.RequiredOutputArgumentCollection;
+import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -53,11 +56,17 @@ import java.util.Collection;
  * @author Tim Fennell
  */
 public abstract class SinglePassSamProgram extends CommandLineProgram {
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM/CRAM file.")
     public File INPUT;
 
-    @Argument(shortName = "O", doc = "File to write the output to.")
-    public File OUTPUT;
+    @ArgumentCollection
+    public OutputArgumentCollection output = getOutputArgumentCollection();
+
+    protected OutputArgumentCollection getOutputArgumentCollection(){
+        return new RequiredOutputArgumentCollection();
+    }
+
+    protected File OUTPUT;
 
     @Argument(doc = "If true (default), then the sort order in the header file will be ignored.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
@@ -81,6 +90,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
      */
     @Override
     protected final int doWork() {
+
         makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, Arrays.asList(this));
         return 0;
     }
@@ -104,8 +114,11 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             walker = new ReferenceSequenceFileWalker(referenceSequence);
 
             if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
-                SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                        walker.getSequenceDictionary());
+                SequenceDictionaryUtils.assertSequenceDictionariesEqual(
+                        in.getFileHeader().getSequenceDictionary(),
+                        input.getAbsolutePath(),
+                        walker.getSequenceDictionary(),
+                        referenceSequence.getAbsolutePath());
             }
         }
 
@@ -126,6 +139,9 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         // Call the abstract setup method!
         boolean anyUseNoRefReads = false;
         for (final SinglePassSamProgram program : programs) {
+            if (program.OUTPUT == null) {
+                program.OUTPUT = program.output.getOutputFile();
+            }
             program.setup(in.getFileHeader(), input);
             anyUseNoRefReads = anyUseNoRefReads || program.usesNoRefReads();
         }

@@ -8,6 +8,6 @@
 ##contig=<ID=chr1,length=1085>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 chr1	361	.	C	T,AC	912	PASS	ReverseComplementedAlleles
-chr1	420	.	ACA	A,ATCA,AT	934	PASS	ReverseComplementedAlleles
 chr1	420	.	A	C,TA	724.43	PASS	ReverseComplementedAlleles
+chr1	421	.	CAA	T,TCAT,TT	934	PASS	ReverseComplementedAlleles
 chr1	481	.	C	AGGGC,T	15676.17	PASS	ReverseComplementedAlleles

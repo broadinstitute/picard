@@ -59,6 +59,7 @@ public class CrosscheckMetric extends MetricBase {
         }
     }
 
+    /** The data type. */
     public enum DataType {
         FILE,
         SAMPLE,
@@ -66,44 +67,46 @@ public class CrosscheckMetric extends MetricBase {
         READGROUP
     }
 
+    /** The LEFT group value. */
     public String LEFT_GROUP_VALUE;
+    /** The RIGHT group value. */
     public String RIGHT_GROUP_VALUE;
 
-    // The overall result of the match
+    /** The overall result of the match. */
     public FingerprintResult RESULT;
-    // The data type that was being compared
+    /** The data type that was being compared. */
     public DataType DATA_TYPE;
 
-    // The resulting LOD score comparing LEFT and RIGHT data
+    /** The resulting LOD score comparing LEFT and RIGHT data. */
     public Double LOD_SCORE;
-    // The resulting LOD score comparing LEFT as tumor and RIGHT as normal
+    /** The resulting LOD score comparing LEFT as tumor and RIGHT as normal. */
     public Double LOD_SCORE_TUMOR_NORMAL;
-    // The resulting LOD score comparing LEFT as normal and RIGHT as tumor
+    /** The resulting LOD score comparing LEFT as normal and RIGHT as tumor. */
     public Double LOD_SCORE_NORMAL_TUMOR;
 
-    // The LEFT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG
+    /** The LEFT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG. */
     public String LEFT_RUN_BARCODE;
-    // The LEFT lane
+    /** The LEFT lane. */
     public Integer LEFT_LANE;
-    // The LEFT molecular (sample) barcode
+    /** The LEFT molecular (sample) barcode. */
     public String LEFT_MOLECULAR_BARCODE_SEQUENCE;
-    // The LEFT library identifier
+    /** The LEFT library identifier. */
     public String LEFT_LIBRARY;
-    // The LEFT sample identifier
+    /** The LEFT sample identifier. */
     public String LEFT_SAMPLE;
-    // The LEFT file from which the fingerprint was obtained
+    /** The LEFT file from which the fingerprint was obtained. */
     public String LEFT_FILE;
 
-    // The RIGHT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG
+    /** The RIGHT run barcode (PU field) expected to look like : D047KACXX110901.1.ACCAACTG. */
     public String RIGHT_RUN_BARCODE;
-    // The LEFT lane
+    /** The RIGHT lane. */
     public Integer RIGHT_LANE;
-    // The LEFT molecular (sample) barcode
+    /** The RIGHT molecular (sample) barcode. */
     public String RIGHT_MOLECULAR_BARCODE_SEQUENCE;
-    // The LEFT library identifier
+    /** The RIGHT library identifier. */
     public String RIGHT_LIBRARY;
-    // The LEFT sample identifier
+    /** The RIGHT sample identifier. */
     public String RIGHT_SAMPLE;
-    // The LEFT file from which the fingerprint was obtained
+    /** The RIGHT file from which the fingerprint was obtained. */
     public String RIGHT_FILE;
 }

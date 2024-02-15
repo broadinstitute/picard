@@ -1,10 +1,10 @@
 package picard.metrics;
 
 import htsjdk.samtools.metrics.MetricBase;
+import org.broadinstitute.barclay.argparser.ClassFinder;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.cmdline.ClassFinder;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;

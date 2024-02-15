@@ -5,7 +5,11 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.*;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.RuntimeIOException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -29,21 +33,31 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
     public Object[][] targetedIntervalDataProvider() {
         final String referenceFile = TEST_DIR + "/chrM.fasta";
         final String intervals = TEST_DIR + "/chrM.interval_list";
+        final String halfIntervals = TEST_DIR + "/chrM_100bp.interval_list";
         final String twoSmallIntervals = TEST_DIR + "/two-small.interval_list";
 
         return new Object[][] {
                 // two reads, each has 100 bases. bases in one read are medium quality (20), in the other read poor quality (10).
                 // test that we exclude half of the bases
-                {TEST_DIR + "/lowbaseq.sam",    intervals, 1, 10, true,  2, 200, 0.5, 0.0, 0.50, 0.0,  1, 200, 1000},
+                {TEST_DIR + "/lowbaseq.sam", intervals, 1, 10, true, 2, 200, 0.5, 0.0, 0.0, 0.50, 0.0, 1, 0, 200, 1000},
                 // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2
-                {TEST_DIR + "/lowmapq.sam",     intervals, 2, 0, true,  2, 202, 0,   0.0, 0.505, 0.0,   1, 202, 1000},
+                {TEST_DIR + "/lowbaseq.sam", halfIntervals, 1, 10, true, 2, 200, 0.5, 0.0, 0.0, 1.0, 0.0, 1, 1, 200, 1000},
+                // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2 with an interval that is completely covered
+                {TEST_DIR + "/lowmapq.sam", intervals, 2, 0, true, 2, 202, 0, 0.0, 0.0, 0.505, 0.0, 1, 0, 202, 1000},
                 // test that we clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true,  2, 202, 0,   0.5, 0.505, 0, 1, 202, 1000},
+                {TEST_DIR + "/lowmapq.sam", halfIntervals, 2, 0, true, 2, 202, 0, 0.0, 0.00495, 1.0, 0.0, 1, 1, 202, 1000},
+                // test that we clip overlapping bases with an interval that is completely covered
+                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, true, 2, 202, 0, 0.5, 0.0, 0.505, 0, 1, 0, 202, 1000},
                 // test that we do not clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, false, 2, 202, 0,   0.0, 0.505, 0.505, 2, 202, 1000},
+                {TEST_DIR + "/overlapping.sam", intervals, 0, 0, false, 2, 202, 0, 0.0, 0.0, 0.505, 0.505, 2, 0, 202, 1000},
+                // test that we exclude half of the bases (due to poor quality) with an interval that is completely covered
+                {TEST_DIR + "/overlapping.sam", halfIntervals, 0, 0, true, 2, 202, 0, 0.5, 0.00495, 1.0, 0, 1, 1, 202, 1000},
+                // test that we do not clip overlapping bases with an interval that is completely covered
+                {TEST_DIR + "/overlapping.sam", halfIntervals, 0, 0, false, 2, 202, 0, 0.0, 0.009901, 1.0, 1.0, 2, 2, 202, 1000},
                 // A read 10 base pairs long. two intervals: one maps identically to the read, other does not overlap at all
-                {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.5, 0.0, 1, 10, 1000 }
-
+                {TEST_DIR + "/single-short-read.sam", twoSmallIntervals, 20, 20, true, 1, 10, 0.0, 0.0, 0.0, 0.5, 0.0, 1, 0, 10, 1000},
+                // test that we can figure out low quality and off target in the same bam (low quality is identified first)
+                {TEST_DIR + "/someLowbaseq.sam", twoSmallIntervals, 0, 21, true, 2, 200, 150D / 200, 0D, 40D / 200, 1 / 2D, 0D, 1, 0, 200, 1000},
         };
     }
 
@@ -69,19 +83,21 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "collectHsMetricsDataProvider")
     public void runCollectHsMetricsTest(final String input,
-                                              final String targetIntervals,
-                                              final int minimumMappingQuality,
-                                              final int minimumBaseQuality,
-                                              final boolean clipOverlappingReads,
-                                              final int totalReads,
-                                              final int pfUqBasesAligned,
-                                              final double pctExcBaseq,
-                                              final double pctExcOverlap,
-                                              final double pctTargetBases1x,
-                                              final double pctTargetBases2x,
-                                              final long maxTargetCoverage,
-                                              final long pfBases,
-                                              final int sampleSize) throws IOException {
+                                        final String targetIntervals,
+                                        final int minimumMappingQuality,
+                                        final int minimumBaseQuality,
+                                        final boolean clipOverlappingReads,
+                                        final int totalReads,
+                                        final int pfUqBasesAligned,
+                                        final double pctExcBaseq,
+                                        final double pctExcOverlap,
+                                        final double pctExcOffTarget,
+                                        final double pctTargetBases1x,
+                                        final double pctTargetBases2x,
+                                        final long maxTargetCoverage,
+                                        final long minTargetCoverage,
+                                        final long pfBases,
+                                        final int sampleSize) throws IOException {
 
         final File outfile = File.createTempFile("CollectHsMetrics", ".hs_metrics", TEST_DIR);
         outfile.deleteOnExit();
@@ -100,14 +116,17 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final HsMetrics metrics = readMetrics(outfile);
-        Assert.assertEquals(metrics.TOTAL_READS, totalReads);
-        Assert.assertEquals(metrics.PF_UQ_BASES_ALIGNED, pfUqBasesAligned);
-        Assert.assertEquals(metrics.PCT_EXC_BASEQ, pctExcBaseq);
-        Assert.assertEquals(metrics.PCT_EXC_OVERLAP, pctExcOverlap);
-        Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
-        Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
-        Assert.assertEquals(metrics.MAX_TARGET_COVERAGE, maxTargetCoverage);
-        Assert.assertEquals(metrics.PF_BASES, pfBases);
+        Assert.assertEquals(metrics.TOTAL_READS, totalReads, "TOTAL_READS");
+        Assert.assertEquals(metrics.PF_UQ_BASES_ALIGNED, pfUqBasesAligned, "PF_UQ_BASES_ALIGNED");
+        Assert.assertEquals(metrics.PCT_EXC_BASEQ, pctExcBaseq, "PCT_EXC_BASEQ");
+        Assert.assertEquals(metrics.PCT_EXC_OVERLAP, pctExcOverlap, "PCT_EXC_OVERLAP");
+        Assert.assertEquals(metrics.PCT_EXC_OFF_TARGET, pctExcOffTarget, "PCT_EXC_OFF_TARGET");
+        Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x, "PCT_TARGET_BASES_1X");
+        Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x, "PCT_TARGET_BASES_2X");
+        Assert.assertEquals(metrics.MAX_TARGET_COVERAGE, maxTargetCoverage, "MAX_TARGET_COVERAGE");
+        Assert.assertEquals(metrics.MIN_TARGET_COVERAGE, minTargetCoverage, "MIN_TARGET_COVERAGE");
+        Assert.assertEquals(metrics.PF_BASES, pfBases, "PF_BASES");
+
     }
 
     @Test
@@ -170,7 +189,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         }
 
         // Write things out to file
-        final File dir = IOUtil.createTempDir("hsmetrics.", ".test");
+        final File dir = IOUtil.createTempDir("hsmetrics.test").toFile();
         final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
         final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
         baits.write(bs);
@@ -196,5 +215,80 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         Assert.assertEquals(insWithoutIndelHandling.PCT_USABLE_BASES_ON_TARGET, 200/250d); // 50/250 inserted bases are not counted as on target
         Assert.assertEquals(insWithIndelHandling.PCT_USABLE_BASES_ON_TARGET,   1.0d);      // inserted bases are counted as on target
+    }
+
+    @Test
+    public void testHsMetricsF80DoesNotUseCovCap() throws IOException {
+        final SAMRecordSetBuilder highCoverage = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final IntervalList targets = new IntervalList(highCoverage.getHeader());
+        final IntervalList baits   = new IntervalList(highCoverage.getHeader());
+        targets.add(new Interval("chr1", 1000, 1199, false, "t1"));
+        baits.add(new Interval("chr1", 950,  1049, false, "b1"));
+        baits.add(new Interval("chr1", 1050, 1149, false, "b2"));
+        baits.add(new Interval("chr1", 1150, 1249, false, "b3"));
+
+        // Generate 100000 reads that fully cover the target in each BAM
+        for (int i=0; i<100000; ++i) {
+            highCoverage.addFrag( "r" + i, 0, 1000, false, false, "100M100M", null, 30);
+        }
+
+        // Write things out to file
+        final File dir = IOUtil.createTempDir("hsmetrics.test").toFile();
+        final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
+        final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
+        baits.write(bs);
+        targets.write(ts);
+        final File withHighCovBam = writeBam(highCoverage, new File(dir, "fold_80.bam"));
+
+        // Now run CollectHsMetrics
+        final File out = Files.createTempFile("hsmetrics_high_coverage.", ".txt").toFile();
+        runPicardCommandLine(Arrays.asList("COVERAGE_CAP=10", "SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withHighCovBam.getAbsolutePath()));
+        final HsMetrics highCoverageMetrics = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
+        // actual coverage should not be impacted by coverage_cap
+        Assert.assertEquals(highCoverageMetrics.MEAN_TARGET_COVERAGE, 100000);
+        Assert.assertEquals(highCoverageMetrics.MEDIAN_TARGET_COVERAGE, 100000);
+        Assert.assertEquals(highCoverageMetrics.FOLD_80_BASE_PENALTY, 1);
+    }
+
+
+    @Test
+    public void testHsMetricsHighTargetCoverage() throws IOException {
+        final SAMRecordSetBuilder highCoverage = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final IntervalList targets = new IntervalList(highCoverage.getHeader());
+        final IntervalList baits   = new IntervalList(highCoverage.getHeader());
+        targets.add(new Interval("chr1", 1000, 1199, false, "t1"));
+        baits.add(new Interval("chr1", 950,  1049, false, "b1"));
+        baits.add(new Interval("chr1", 1050, 1149, false, "b2"));
+        baits.add(new Interval("chr1", 1150, 1249, false, "b3"));
+
+        // Generate 100000 reads that fully cover the the target in each BAM
+        for (int i=0; i<50000; ++i) {
+            highCoverage.addFrag( "r" + i, 0, 1000, false, false, "100M100M", null, 30);
+            highCoverage.addFrag( "d" + i, 0, 1000, false, false, "100M10D90M", null, 30);
+        }
+
+        // Write things out to file
+        final File dir = IOUtil.createTempDir("hsmetrics.test").toFile();
+        final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
+        final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
+        baits.write(bs);
+        targets.write(ts);
+        final File withHighCovBam = writeBam(highCoverage, new File(dir, "high_coverage.bam"));
+
+        // Now run CollectHsMetrics
+        final File out = Files.createTempFile("hsmetrics_high_coverage.", ".txt").toFile();
+        runPicardCommandLine(Arrays.asList("SAMPLE_SIZE=0", "TI="+ts.getPath(), "BI="+bs.getPath(), "O="+out.getPath(), "I="+withHighCovBam.getAbsolutePath()));
+        final HsMetrics highCoverageWithIndel = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
+
+        Assert.assertEquals(highCoverageWithIndel.MEAN_TARGET_COVERAGE, 97500.0);  // Average coverge at 975000 due to deleltion 
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_100X, 1.0);  // 100% of bases covered at 100X coverage
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_1000X, 1.0);  // 100% of bases covered at 1000X coverage
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_10000X, 1.0);  // 100% of bases covered at 10000X coverage
+        Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_100000X, 0.95);  // 95% of bases covered at 100000X coverage due to deletion
+
     }
 }

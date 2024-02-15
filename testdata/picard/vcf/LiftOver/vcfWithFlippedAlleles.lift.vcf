@@ -6,5 +6,5 @@
 ##INFO=<ID=SwappedAlleles,Number=0,Type=Flag,Description="The REF and the ALT alleles have been swapped in liftover due to changes in the reference. It is possible that not all INFO annotations reflect this swap, and in the genotypes, only the GT, PL, and AD fields have been modified. You should check the TAGS_TO_REVERSE parameter that was used during the LiftOver to be sure.">
 ##contig=<ID=chr1,length=1085>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
-chr1	1	.	C	CCCCT	15676.17	PASS	.	GT	0/0
+chr1	1	chr1_1_C_CCCCT	C	CCCCT	15676.17	PASS	.	GT	0/0
 chr1	72	chr1_72_C_A	A	C	100	PASS	SwappedAlleles	GT:AD:PL	0/0:11,10:60,0,50

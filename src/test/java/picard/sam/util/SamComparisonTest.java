@@ -25,11 +25,14 @@ package picard.sam.util;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.SamComparisonMetric;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 
 public class SamComparisonTest {
@@ -38,23 +41,36 @@ public class SamComparisonTest {
     @DataProvider(name="samComparisonTestData")
     public Object[][] samComparisonTestData() {
         return new Object[][]{
-                { "genomic_sorted.sam", "unsorted.sam", 0, 0, 0, 0, 0, 0, 0, false },
-                { "genomic_sorted.sam", "chr21.sam", 0, 0, 0, 0, 0, 0, 0, false },
-                { "genomic_sorted.sam", "bigger_seq_dict.sam", 0, 0, 0, 0, 0, 0, 0, false },
-                { "bigger_seq_dict.sam", "bigger_seq_dict.sam", 2, 0, 0, 0, 0, 0, 0, true },
-                { "genomic_sorted.sam", "genomic_sorted.sam", 2, 0, 0, 0, 0, 0, 0, true },
-                { "genomic_sorted.sam", "has_non_primary.sam", 2, 0, 0, 0, 0, 0, 0, true },
-                { "genomic_sorted_5.sam", "genomic_sorted_5_plus.sam", 3, 2, 0, 0, 0, 3, 0, false },
-                { "genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", 2, 0, 0, 0, 0, 0, 0, false },
-                { "group_same_coord.sam", "group_same_coord_diff_order.sam", 3, 0, 0, 0, 0, 1, 2, false },
-                { "genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", 2, 0, 0, 0, 0, 0, 0, true },
-                { "group_same_coord.sam", "diff_coords.sam", 0, 5, 0, 0, 0, 0, 0, false },
-                { "genomic_sorted.sam", "unmapped_first.sam", 1, 0, 0, 0, 1, 0, 0, false },
-                { "genomic_sorted.sam", "unmapped_second.sam", 1, 0, 0, 0, 1, 0, 0, false },
-                { "unmapped_first.sam", "unmapped_second.sam", 0, 0, 0, 1, 1, 0, 0, false },
-                { "unmapped_first.sam", "unmapped_first.sam", 1, 0, 1, 0, 0, 0, 0, true },
-                { "unsorted.sam", "unsorted.sam", 2, 0, 0, 0, 0, 0, 0, true },
-                { "unsorted.sam", "unsorted2.sam", 0, 1, 0, 0, 0, 0, 1, false }
+                {"genomic_sorted.sam", "unsorted.sam", false, false, 0, 0, 0, 0, 0, 0, 0, 0, false},
+                {"genomic_sorted.sam", "chr21.sam", false, false, 0, 0, 0, 0, 0, 0, 0, 0, false},
+                {"genomic_sorted.sam", "bigger_seq_dict.sam", false, false, 0, 0, 0, 0, 0, 0, 0, 0, false},
+                {"bigger_seq_dict.sam", "bigger_seq_dict.sam", false, false, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"genomic_sorted.sam", "genomic_sorted.sam", false, false, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"genomic_sorted.sam", "has_non_primary.sam", false, false, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"genomic_sorted_5.sam", "genomic_sorted_5_plus.sam", false, false, 3, 2, 0, 0, 0, 3, 0, 0, false},
+                {"genomic_sorted.sam", "genomic_sorted_sam_v1.6.sam", false, false, 2, 0, 0, 0, 0, 0, 0, 0, false},
+                {"group_same_coord.sam", "group_same_coord_diff_order.sam", false, false, 3, 0, 0, 0, 0, 1, 2, 0, false},
+                {"genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", false, false, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"group_same_coord.sam", "diff_coords.sam", false, false, 0, 5, 0, 0, 0, 0, 0, 0, false},
+                {"genomic_sorted.sam", "unmapped_first.sam", false, false, 1, 0, 0, 0, 1, 0, 0, 0, false},
+                {"genomic_sorted.sam", "unmapped_second.sam", false, false, 1, 0, 0, 0, 1, 0, 0, 1, false},
+                {"unmapped_first.sam", "unmapped_second.sam", false, false, 0, 0, 0, 1, 1, 0, 0, 1, false},
+                {"unmapped_first.sam", "unmapped_first.sam", false, false, 1, 0, 1, 0, 0, 0, 0, 0, true},
+                {"unsorted.sam", "unsorted.sam", false, false, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"unsorted.sam", "unsorted2.sam", false, false, 0, 1, 0, 0, 0, 0, 1, 0, false},
+                {"duplicate_base.sam", "duplicate_four_mismatch_strict.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 0, true},
+                {"duplicate_base.sam", "duplicate_four_mismatch_lenient_one_align_differ.sam", true, false, 13, 1, 0, 0, 0, 0, 0, 4, false},
+                {"duplicate_base.sam", "duplicate_two_mismatch_lenient.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 2, false},
+                {"duplicate_base.sam", "duplicate_four_mismatch_lenient.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 4, false},
+                {"duplicate_base.sam", "duplicate_four_mismatch_strict.sam", false, false, 14, 0, 0, 0, 0, 0, 0, 4, false},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_strict_queryname.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 0, true},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_lenient_one_align_differ_queryname.sam", true, false, 13, 1, 0, 0, 0, 0, 0, 4, false},
+                {"duplicate_base_queryname.sam", "duplicate_two_mismatch_lenient_queryname.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 2, false},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_lenient_queryname.sam", true, false, 14, 0, 0, 0, 0, 0, 0, 4, false},
+                {"duplicate_base_queryname.sam", "duplicate_four_mismatch_strict_queryname.sam", false, false, 14, 0, 0, 0, 0, 0, 0, 4, false},
+                {"genomic_sorted.sam", "mq0_2.sam", false, true, 1, 1, 0, 0, 0, 0, 0, 0, false},
+                {"mq0_1.sam", "mq0_2.sam", false, true, 2, 0, 0, 0, 0, 0, 0, 0, true},
+                {"mq0_1.sam", "mq0_2.sam", false, false, 1, 1, 0, 0, 0, 0, 0, 0, false}
         };
     }
 
@@ -62,6 +78,8 @@ public class SamComparisonTest {
     public void testSamComparison(
             final String f1,
             final String f2,
+            final boolean lenientDup,
+            final boolean lenientLowMQAlignment,
             final int expectedMatch,
             final int expectedDiffer,
             final int expectedUnmappedBoth,
@@ -69,23 +87,24 @@ public class SamComparisonTest {
             final int expectedUnmappedRight,
             final int expectedMissingLeft,
             final int expectedMissingRight,
+            final int expectedDupDiffer,
             final boolean areEqual) throws IOException
     {
         // compare forward
         testHelper(
-                f1, f2,
+                f1, f2, lenientDup, lenientLowMQAlignment,
                 expectedMatch, expectedDiffer, expectedUnmappedBoth,
                 expectedUnmappedLeft, expectedUnmappedRight,
-                expectedMissingLeft, expectedMissingRight,
+                expectedMissingLeft, expectedMissingRight, expectedDupDiffer,
                 areEqual
         );
 
         // compare reverse to validate that comparison commutes (swapping inputs and left and right expected values)
         testHelper(
-                f2, f1,
+                f2, f1, lenientDup, lenientLowMQAlignment,
                 expectedMatch, expectedDiffer, expectedUnmappedBoth,
                 expectedUnmappedRight, expectedUnmappedLeft,    // Swap left and right
-                expectedMissingRight, expectedMissingLeft,      // Swap left and right
+                expectedMissingRight, expectedMissingLeft, expectedDupDiffer,      // Swap left and right
                 areEqual
         );
     }
@@ -93,6 +112,8 @@ public class SamComparisonTest {
     private void testHelper(
             final String f1,
             final String f2,
+            final boolean lenientDup,
+            final boolean lenientLowMQAlignment,
             final int expectedMatch,
             final int expectedDiffer,
             final int expectedUnmappedBoth,
@@ -100,12 +121,17 @@ public class SamComparisonTest {
             final int expectedUnmappedRight,
             final int expectedMissingLeft,
             final int expectedMissingRight,
+            final int expectedDupDiffer,
             final boolean areEqual) throws IOException
     {
         try (final SamReader samReader1 = SamReaderFactory.makeDefault().open(new File(TEST_FILES_DIR, f1));
              final SamReader samReader2 = SamReaderFactory.makeDefault().open(new File(TEST_FILES_DIR, f2)))
         {
-            final SamComparison samComparison = new SamComparison(samReader1, samReader2);
+            final SAMComparisonArgumentCollection argumentCollection = new SAMComparisonArgumentCollection();
+            argumentCollection.LENIENT_DUP = lenientDup;
+            argumentCollection.LENIENT_LOW_MQ_ALIGNMENT = lenientLowMQAlignment;
+            final SamComparison samComparison = new SamComparison(samReader1, samReader2,
+                    null, null, argumentCollection);
 
             Assert.assertEquals(areEqual, samComparison.areEqual());
             Assert.assertEquals(expectedMatch, samComparison.getMappingsMatch());
@@ -115,6 +141,25 @@ public class SamComparisonTest {
             Assert.assertEquals(expectedUnmappedRight, samComparison.getUnmappedRight());
             Assert.assertEquals(expectedMissingLeft, samComparison.getMissingLeft());
             Assert.assertEquals(expectedMissingRight, samComparison.getMissingRight());
+            Assert.assertEquals(expectedDupDiffer, samComparison.getDuplicateMarkingsDiffer());
+
+            final File outputFile = File.createTempFile("samComparison", ".txt");
+            outputFile.deleteOnExit();
+            samComparison.writeReport(outputFile);
+            final MetricsFile<SamComparisonMetric, Comparable<?>> metricsOutput = new MetricsFile<>();
+            metricsOutput.read(new FileReader(outputFile));
+            final SamComparisonMetric metric = metricsOutput.getMetrics().get(0);
+
+            Assert.assertEquals(areEqual, metric.ARE_EQUAL);
+            Assert.assertEquals(expectedMatch, metric.MAPPINGS_MATCH);
+            Assert.assertEquals(expectedDiffer, metric.MAPPINGS_DIFFER);
+            Assert.assertEquals(expectedUnmappedBoth, metric.UNMAPPED_BOTH);
+            Assert.assertEquals(expectedUnmappedLeft, metric.UNMAPPED_LEFT);
+            Assert.assertEquals(expectedUnmappedRight, metric.UNMAPPED_RIGHT);
+            Assert.assertEquals(expectedMissingLeft, metric.MISSING_LEFT);
+            Assert.assertEquals(expectedMissingRight, metric.MISSING_RIGHT);
+            Assert.assertEquals(expectedDupDiffer, metric.DUPLICATE_MARKINGS_DIFFER);
+
         }
     }
 

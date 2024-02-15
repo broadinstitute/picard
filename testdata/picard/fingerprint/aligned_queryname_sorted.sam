@@ -84,7 +84,7 @@
 @SQ	SN:GL000225.1	LN:211173	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:63945c3e6962f28ffd469719a747e73c	SP:Homo Sapiens
 @SQ	SN:GL000192.1	LN:547496	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:325ba9e808f669dfeee210fdd7b470ac	SP:Homo Sapiens
 @SQ	SN:NC_007605	LN:171823	AS:NC_007605.1	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:6743bd63b3ff2b5b8985d8933c53290a	SP:Epstein-Barr virus
-RG	ID:0	SM:NA12891	PL:ILLUMINA
+@RG	ID:0	SM:NA12891	PL:ILLUMINA
 @PG	ID:1	PN:Hey!	VN:2.0
 both_reads_align_clip_adapter	99	7	21	255	101M	=	16	96	CAACAGAAGCNGGNATCTGTGTTTGTGTTTCGGATTTCCTGCTGAANNGNTTNTCGNNTCNNNNNNNNATCCCGATTTCNTTCCGCAGCTNACCTCCCAAN	)'.*.+2,))&&'&*/)-&*-)&.-)&)&),/-&&..)./.,.).*&&,&.&&-)&&&0*&&&&&&&&/32/,01460&&/6/*0*/2/283//36868/&	RG:Z:0
 both_reads_align_clip_adapter	147	7	16	255	101M	=	21	-96	CAACAGAAGCNGGNATCTGTGTTTGTGTTTCGGATTTCCTGCTGAANNGNTTNTCGNNTCNNNNNNNNATCCCGATTTCNTTCCGCAGCTNACCTCCCAAN	)'.*.+2,))&&'&*/)-&*-)&.-)&)&),/-&&..)./.,.).*&&,&.&&-)&&&0*&&&&&&&&/32/,01460&&/6/*0*/2/283//36868/&	RG:Z:0

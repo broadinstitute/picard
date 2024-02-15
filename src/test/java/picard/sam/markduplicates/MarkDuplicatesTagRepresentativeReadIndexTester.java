@@ -24,20 +24,23 @@
 
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.sam.DuplicationMetrics;
+import picard.vcf.MakeVcfSampleNameMap;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,10 +52,17 @@ import java.util.Map;
  */
 public class MarkDuplicatesTagRepresentativeReadIndexTester extends AbstractMarkDuplicatesCommandLineProgramTester {
 
-    final public Map<Integer, Integer> expectedRepresentativeIndexMap = new HashMap<>();
+    final public Map<String, String> expectedRepresentativeReadMap = new HashMap<>();
+    final Map<String, Integer> readIndexMap = new HashMap<>();
     final public Map<String, Integer> expectedSetSizeMap = new HashMap<>();
     public boolean testRepresentativeReads = false;
+
     public MarkDuplicatesTagRepresentativeReadIndexTester() {
+        this(SAMFileHeader.SortOrder.coordinate);
+    }
+
+    public MarkDuplicatesTagRepresentativeReadIndexTester(final SAMFileHeader.SortOrder sortOrder) {
+        super(SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY, sortOrder);
 
         addArg("TAGGING_POLICY=All");
         addArg("TAG_DUPLICATE_SET_MEMBERS=true");
@@ -65,61 +75,24 @@ public class MarkDuplicatesTagRepresentativeReadIndexTester extends AbstractMark
     protected CommandLineProgram getProgram() { return new MarkDuplicates(); }
 
     @Override
-    public void test() {
-        try {
-            updateExpectedDuplicationMetrics();
-            // Read the output and check the duplicate flag
-            int outputRecords = 0;
+    void updateExpectationsHook() {
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(fastaFiles.get(samRecordSetBuilder.getHeader())).open(getOutput())) {
             int indexInFile = 0;
-            final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
             for (final SAMRecord record : reader) {
-                outputRecords++;
-
-                final String key = samRecordToDuplicatesFlagsKey(record);
-                Assert.assertTrue(this.duplicateFlags.containsKey(key),"DOES NOT CONTAIN KEY: " + key);
-                final boolean value = this.duplicateFlags.get(key);
-                this.duplicateFlags.remove(key);
-                if (value != record.getDuplicateReadFlag()) {
-                    System.err.println("Mismatching read:");
-                    System.err.print(record.getSAMString());
-                }
-                Assert.assertEquals(record.getDuplicateReadFlag(), value);
-                if (testRepresentativeReads) {
-                    if (expectedRepresentativeIndexMap.containsKey(indexInFile) && expectedSetSizeMap.containsKey(record.getReadName())){
-                        Assert.assertEquals(record.getAttribute("DI"), expectedRepresentativeIndexMap.get(indexInFile));
-                        Assert.assertEquals(record.getAttribute("DS"), expectedSetSizeMap.get(record.getReadName()));
-                    }
-                }
-                indexInFile+=1;
+                // putIfAbsent because we want to use the index of the first read with this readname
+                readIndexMap.putIfAbsent(record.getReadName(), indexInFile);
+                indexInFile++;
             }
-            CloserUtil.close(reader);
+        } catch (final IOException ex) {
+            Assert.fail("Problem updating read file indices", ex);
+        }
+    }
 
-            // Ensure the program output the same number of records as were read in
-            Assert.assertEquals(outputRecords, this.getNumberOfRecords(), ("saw " + outputRecords + " output records, vs. " + this.getNumberOfRecords() + " input records"));
-
-            // Check the values written to metrics.txt against our input expectations
-            final MetricsFile<DuplicationMetrics, Comparable<?>> metricsOutput = new MetricsFile<>();
-            try{
-                metricsOutput.read(new FileReader(metricsFile));
-            }
-            catch (final FileNotFoundException ex) {
-                throw new PicardException("Metrics file not found: " + ex);
-            }
-            final List<DuplicationMetrics> g = metricsOutput.getMetrics();
-            // expect getMetrics to return a collection with a single duplicateMetrics object
-            Assert.assertEquals(metricsOutput.getMetrics().size(), 1);
-            final DuplicationMetrics observedMetrics = metricsOutput.getMetrics().get(0);
-            Assert.assertEquals(observedMetrics.UNPAIRED_READS_EXAMINED, expectedMetrics.UNPAIRED_READS_EXAMINED, "UNPAIRED_READS_EXAMINED does not match expected");
-            Assert.assertEquals(observedMetrics.READ_PAIRS_EXAMINED, expectedMetrics.READ_PAIRS_EXAMINED, "READ_PAIRS_EXAMINED does not match expected");
-            Assert.assertEquals(observedMetrics.UNMAPPED_READS, expectedMetrics.UNMAPPED_READS, "UNMAPPED_READS does not match expected");
-            Assert.assertEquals(observedMetrics.UNPAIRED_READ_DUPLICATES, expectedMetrics.UNPAIRED_READ_DUPLICATES, "UNPAIRED_READ_DUPLICATES does not match expected");
-            Assert.assertEquals(observedMetrics.READ_PAIR_DUPLICATES, expectedMetrics.READ_PAIR_DUPLICATES, "READ_PAIR_DUPLICATES does not match expected");
-            Assert.assertEquals(observedMetrics.READ_PAIR_OPTICAL_DUPLICATES, expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match expected");
-            Assert.assertEquals(observedMetrics.PERCENT_DUPLICATION, expectedMetrics.PERCENT_DUPLICATION, "PERCENT_DUPLICATION does not match expected");
-            Assert.assertEquals(observedMetrics.ESTIMATED_LIBRARY_SIZE, expectedMetrics.ESTIMATED_LIBRARY_SIZE, "ESTIMATED_LIBRARY_SIZE does not match expected");
-            Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
-        } finally {
-            IOUtil.recursiveDelete(getOutputDir().toPath());
+    @Override
+    void testRecordHook(final SAMRecord record){
+        if (expectedRepresentativeReadMap.containsKey(record.getReadName())) {
+            Assert.assertEquals(record.getAttribute("DI"), readIndexMap.get(expectedRepresentativeReadMap.get(record.getReadName())));
+            Assert.assertEquals(record.getAttribute("DS"), expectedSetSizeMap.get(record.getReadName()));
         }
     }
 

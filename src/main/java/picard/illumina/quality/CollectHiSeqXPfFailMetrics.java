@@ -40,15 +40,10 @@ import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.help.HelpConstants;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -179,20 +174,15 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
     }
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new CollectHiSeqXPfFailMetrics().instanceMainWithExit(args);
-    }
-
     @Override
     protected int doWork() {
 
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, READ_STRUCTURE,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
-                IlluminaDataType.BaseCalls,
-                IlluminaDataType.PF,
-                IlluminaDataType.QualityScores,
-                IlluminaDataType.Position);
+                new HashSet<>(Arrays.asList(IlluminaDataType.BaseCalls,
+                    IlluminaDataType.PF,
+                    IlluminaDataType.QualityScores,
+                    IlluminaDataType.Position)));
 
         final File summaryMetricsFileName = new File(OUTPUT + summaryMetricsExtension);
         final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);
@@ -319,7 +309,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
             this.pWriteDetailed = pWriteDetailed;
-            this.provider = factory.makeDataProvider(Arrays.asList(tile));
+            this.provider = factory.makeDataProvider(tile);
         }
 
         public Exception getException() { return this.exception; }
@@ -427,6 +417,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
     }
 
     /** a metric class for describing FP failing reads from an Illumina HiSeqX lane * */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class PFFailDetailedMetric extends MetricBase {
         /** The Tile that is described by this metric */
         public Integer TILE;
@@ -469,6 +460,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
      * Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
      * cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)
      */
+    @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
     public static class PFFailSummaryMetric extends MetricBase {
         /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
         public String TILE = null;

@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.1
 ##contig=<ID=chr1,length=501>
-##contig=<ID=chr2,length=101>
-##contig=<ID=chr3,length=101>
+##contig=<ID=chr2,length=501>
+##contig=<ID=chr3,length=501>
 ##contig=<ID=chr4,length=101>
 ##contig=<ID=chr5,length=101>
 ##contig=<ID=chr6,length=101>

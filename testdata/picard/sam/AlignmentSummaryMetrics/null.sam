@@ -1,0 +1,5 @@
+@HD	VN:1.6	GO:none	SO:queryname
+@RG	ID:test	SM:test_sample	LB:test_lib	PL:ILLUMINA	PU:my_platform	CN:BI	DT:2023-01-01T00:00:00-0500	DS:description
+aln1	516	*	0	0	*	*	0	0	AGCTACTG	99999999	RG:Z:test
+aln2	516	*	0	0	*	*	0	0	GTCAGTCA	99999999	RG:Z:test
+aln3	516	*	0	0	*	*	0	0	CCTTGGAA	99999999	RG:Z:test

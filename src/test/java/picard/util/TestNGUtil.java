@@ -1,15 +1,19 @@
 package picard.util;
 
+import org.broadinstitute.barclay.argparser.ClassFinder;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.collections.Sets;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
-
-import org.testng.Assert;
-import org.testng.collections.Sets;
-import picard.cmdline.ClassFinder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.Math.abs;
 
@@ -18,11 +22,24 @@ import static java.lang.Math.abs;
  */
 public class TestNGUtil {
 
+    // Not actually the smallest possible value on purpose, since that would be indistinguishable from 0 and then useless.
+    // This is small enough to be meaningless, but representable.
     static final double EPSILON = 1e-300; //a constant near the smallest possible positive value representable in double,
 
-     // not actually the smallest possible value on purpose, since that would be indistinguishable from 0 and then useless.
-    // This is small enough to be meaningless, but representable.
+    // A method that takes two Object[][] (normally from two data providers) and creates a third of all possible combinations
+    public static Iterator<Object[]> interaction(final Object[][] dataprovider1, final Object[][] dataprovider2) {
+        final List<Object[]> testcases = new ArrayList<>(dataprovider1.length * dataprovider2.length);
 
+        for (final Object[] objects1 : dataprovider1) {
+            for (final Object[] objects2 : dataprovider2) {
+                final Object[] objects = new Object[objects1.length + objects2.length];
+                System.arraycopy(objects1, 0, objects, 0, objects1.length);
+                System.arraycopy(objects2, 0, objects, objects1.length, objects2.length);
+                testcases.add(objects);
+            }
+        }
+        return testcases.iterator();
+    }
 
     public static abstract class SingleTestUnitTest<TestClazz extends TestNGParameterizable> {
         @DataProvider(name = "testcases")

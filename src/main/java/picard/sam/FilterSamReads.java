@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2011-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -100,8 +100,8 @@ import java.util.stream.Collectors;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class FilterSamReads extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Subsets reads from a SAM or BAM file by applying one of several filters.";
-    static final String USAGE_DETAILS = "\nTakes a SAM or BAM file and subsets it by either excluding or " +
+    static final String USAGE_SUMMARY = "Subsets reads from a SAM/BAM/CRAM file by applying one of several filters.";
+    static final String USAGE_DETAILS = "\nTakes a SAM/BAM/CRAM file and subsets it by either excluding or " +
             "only including certain reads such as aligned or unaligned reads, specific reads based on a list of reads names, " +
             "an interval list, by Tag Values (type Z / String values only), or using a JavaScript script.\n" +
             "<br />" +
@@ -156,15 +156,15 @@ public class FilterSamReads extends CommandLineProgram {
 
     @VisibleForTesting
     protected enum Filter implements CommandLineParser.ClpEnum {
-        includeAligned("Output aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)"),
-        excludeAligned("Output Unmapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from OUTPUT.)"),
+        includeAligned("Output aligned reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of paired reads must both be aligned to be included in OUTPUT.)"),
+        excludeAligned("Output Unmapped reads only. INPUT SAM/BAM/CRAM must be in queryname SortOrder. (Note: first and second of pair must both be aligned to be excluded from OUTPUT.)"),
         includeReadList("Output reads with names contained in READ_LIST_FILE. See READ_LIST_FILE for more detail."),
         excludeReadList("Output reads with names *not* contained in READ_LIST_FILE. See READ_LIST_FILE for more detail."),
         includeJavascript("Output reads that have been accepted by the JAVASCRIPT_FILE script, that is, reads for which the value of the script is true. " +
                 "See the JAVASCRIPT_FILE argument for more detail. "),
         includePairedIntervals("Output reads that overlap with an interval from INTERVAL_LIST (and their mate). INPUT must be coordinate sorted."),
-        includeTagValues("OUTPUT SAM/BAM will contain reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
-        excludeTagValues("OUTPUT SAM/BAM will contain reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES");
+        includeTagValues("Output reads that have a value of tag TAG that is contained in the values for TAG_VALUES"),
+        excludeTagValues("Output reads that do not have a value of tag TAG that is contained in the values for TAG_VALUES");
        private final String description;
 
         Filter(final String description) {
@@ -177,19 +177,19 @@ public class FilterSamReads extends CommandLineProgram {
         }
     }
 
-    @Argument(doc = "The SAM or BAM file that will be filtered.",
+    @Argument(doc = "The SAM/BAM/CRAM file that will be filtered.",
             shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
     @Argument(doc = "Which filter to use.")
     public Filter FILTER = null;
 
-    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM or BAM file, when using FILTER=includeReadList or FILTER=includeReadList.",
+    @Argument(doc = "File containing reads that will be included in or excluded from the OUTPUT SAM/BAM/CRAM file, when using FILTER=includeReadList or FILTER=excludeReadList.",
             optional = true,
             shortName = "RLF")
     public File READ_LIST_FILE;
 
-    @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals",
+   @Argument(doc = "Interval List File containing intervals that will be included in the OUTPUT when using FILTER=includePairedIntervals",
             optional = true,
             shortName = "IL")
     public File INTERVAL_LIST;
@@ -210,7 +210,7 @@ public class FilterSamReads extends CommandLineProgram {
             shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
-    @Argument(doc = "SAM or BAM file for resulting reads.",
+    @Argument(doc = "SAM/BAM/CRAM file for resulting reads.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
@@ -223,6 +223,14 @@ public class FilterSamReads extends CommandLineProgram {
                     + "A record is accepted if the last value of the script evaluates to true.",
             optional = true)
     public File JAVASCRIPT_FILE = null;
+
+    /**
+     * This method should be used only for testing needs
+     * @param referenceSequence
+     */
+	void setReferenceSequence(File referenceSequence) {
+        this.REFERENCE_SEQUENCE = referenceSequence;
+    }
 
     @Argument(
             doc = "Create <OUTPUT>.reads file containing names of reads from INPUT and OUTPUT (for debugging purposes.)",
@@ -247,7 +255,7 @@ public class FilterSamReads extends CommandLineProgram {
                 OUTPUT.getName() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
 
         // create OUTPUT file
-        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(fileHeader, presorted, OUTPUT);
+        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeWriter(fileHeader, presorted, OUTPUT, REFERENCE_SEQUENCE);
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
 
@@ -265,7 +273,7 @@ public class FilterSamReads extends CommandLineProgram {
     /**
      * Write out a file of read names for debugging purposes.
      *
-     * @param samOrBamFile The SAM or BAM file for which we are going to write out a file of its
+     * @param samOrBamFile The SAM/BAM/CRAM file for which we are going to write out a file of its
      *                     containing read names
      */
     private void writeReadsFile(final File samOrBamFile) throws IOException {

@@ -30,18 +30,18 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
 
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Field;
 
-/**
- * @author George Grant
- */
+
 public class UpdateVcfSequenceDictionaryTest {
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
-    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("UpdateVcfSequenceDictionaryTest", null);
+    private static final File INPUT_FILE = new File(TEST_DATA_PATH, "vcfFormatTest.vcf");
+
+    // vcfFormatTest.bad_dict.vcf is a vcf with two (2) ##contig lines deleted
+    private final File SAM_SEQUENCE_DICTIONARY_VCF = new File(TEST_DATA_PATH, "vcfFormatTest.bad_dict.vcf");
+
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("UpdateVcfSequenceDictionaryTest.tmp").toFile();
     private static final File STD_OUT_FILE = new File(OUTPUT_DATA_PATH, "stdout.vcf");
     private static final String STD_OUT_NAME = "/dev/stdout";
 
@@ -54,23 +54,41 @@ public class UpdateVcfSequenceDictionaryTest {
     public static Object[][] outputFies() {
 
         return new Object[][] {
-                {OUTPUT_DATA_PATH + "updateVcfSequenceDictionaryTest-delete-me.vcf"},
+                {OUTPUT_DATA_PATH + "updateVcfSequenceDictionaryTest-delete-me"  + IOUtil.COMPRESSED_VCF_FILE_EXTENSION},
+                {OUTPUT_DATA_PATH + "updateVcfSequenceDictionaryTest-delete-me" + IOUtil.VCF_FILE_EXTENSION},
                 {STD_OUT_NAME}
         };
     }
 
+    /**
+     * Utility for unzipping a zipped file's contents into a human readable, unzipped file
+     *
+     * @param zippedFile    input zipped file
+     * @param unzippedFile  unzipped file
+     * @throws IOException
+     */
+    private void unzipFile(final File zippedFile, final File unzippedFile) throws IOException {
+        final InputStream gzInputStream = IOUtil.openFileForReading(zippedFile);
+        final FileOutputStream fileOutputStream = new FileOutputStream(unzippedFile.getAbsolutePath());
+        final byte[] buffer = new byte[1024];
+        int len;
+        while ((len = gzInputStream.read(buffer)) > 0) {
+            fileOutputStream.write(buffer, 0, len);
+        }
+        gzInputStream.close();
+        fileOutputStream.close();
+    }
+
     @Test(dataProvider = "OutputFiles")
     public void testUpdateVcfSequenceDictionary(final String outputFileName) throws IOException, NoSuchFieldException, IllegalAccessException {
-        File input = new File(TEST_DATA_PATH, "vcfFormatTest.vcf");
-        // vcfFormatTest.bad_dict.vcf is a vcf with two (2) ##contig lines deleted
-        final File samSequenceDictionaryVcf = new File(TEST_DATA_PATH, "vcfFormatTest.bad_dict.vcf");
         File outputFile = new File(outputFileName);
         outputFile.deleteOnExit();
 
         final UpdateVcfSequenceDictionary updateVcfSequenceDictionary = new UpdateVcfSequenceDictionary();
 
+        updateVcfSequenceDictionary.INPUT = INPUT_FILE;
+        updateVcfSequenceDictionary.SEQUENCE_DICTIONARY = SAM_SEQUENCE_DICTIONARY_VCF;
         if (outputFileName.equals(STD_OUT_NAME)) {
-
             final FileOutputStream stream = new FileOutputStream(STD_OUT_FILE);
 
             // Ugliness required to write to a stream given as a string on the commandline.
@@ -80,25 +98,67 @@ public class UpdateVcfSequenceDictionaryTest {
             final Field fdField = FileDescriptor.class.getDeclaredField("fd");
             fdField.setAccessible(true);
             updateVcfSequenceDictionary.OUTPUT = new File("/dev/fd/" + fdField.getInt(stream.getFD()));
-
         } else {
-            final FileOutputStream stream = null;
             updateVcfSequenceDictionary.OUTPUT = outputFile;
         }
-        updateVcfSequenceDictionary.INPUT = input;
-        updateVcfSequenceDictionary.SEQUENCE_DICTIONARY = samSequenceDictionaryVcf;
 
         Assert.assertEquals(updateVcfSequenceDictionary.instanceMain(new String[0]), 0);
 
         if (outputFileName.equals(STD_OUT_NAME)) {
             outputFile = STD_OUT_FILE;
         }
+        else if (outputFileName.endsWith(IOUtil.COMPRESSED_VCF_FILE_EXTENSION)) {
+            // Output is a gzipped vcf, unzip it
+            File unzippedOutputFile = new File(OUTPUT_DATA_PATH + ".out.vcf");
+            unzippedOutputFile.deleteOnExit();
+            unzipFile(outputFile, unzippedOutputFile);
+            outputFile = unzippedOutputFile;
+        }
 
-        IOUtil.assertFilesEqual(samSequenceDictionaryVcf, outputFile);
+        IOUtil.assertFilesEqual(SAM_SEQUENCE_DICTIONARY_VCF, outputFile);
 
         // A little extra checking.
-        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(input.toPath()).size(), 84);
-        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(samSequenceDictionaryVcf.toPath()).size(), 82);
+        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(INPUT_FILE.toPath()).size(), 84);
+        Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(SAM_SEQUENCE_DICTIONARY_VCF.toPath()).size(), 82);
         Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(outputFile.toPath()).size(), 82);
+    }
+
+
+    private String classPath = "\"" + System.getProperty("java.class.path") + "\" ";
+
+    @Test
+    public void testCaptureStdout() throws IOException {
+        final File outputFile = File.createTempFile("UpdateVcfSequenceDictionaryTest.output.", ".vcf");
+        outputFile.deleteOnExit();
+
+        String[] command = {
+                "/bin/bash",
+                "-c",
+                "java -Dpicard.useLegacyParser=false -classpath " +
+                        classPath +
+                        "picard.cmdline.PicardCommandLine " +
+                        "UpdateVcfSequenceDictionary " +
+                        "-I " + INPUT_FILE.getAbsolutePath() + " " +
+                        "-O /dev/stdout " +
+                        "-SD " + SAM_SEQUENCE_DICTIONARY_VCF.getAbsolutePath()
+        };
+
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.inheritIO();
+            processBuilder.redirectOutput(outputFile);
+
+            Process process = processBuilder.start();
+            Assert.assertEquals(process.waitFor(), 0);
+
+            IOUtil.assertFilesEqual(SAM_SEQUENCE_DICTIONARY_VCF, outputFile);
+
+            // A little extra checking.
+            Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(INPUT_FILE.toPath()).size(), 84);
+            Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(SAM_SEQUENCE_DICTIONARY_VCF.toPath()).size(), 82);
+            Assert.assertEquals(SAMSequenceDictionaryExtractor.extractDictionary(outputFile.toPath()).size(), 82);
+        } catch (Exception e) {
+            Assert.fail("Failure executing UpdateVcfSequenceDictionary", e);
+        }
     }
 }

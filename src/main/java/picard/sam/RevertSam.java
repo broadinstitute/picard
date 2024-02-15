@@ -33,6 +33,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -56,6 +57,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.File;
@@ -112,7 +114,7 @@ import java.util.*;
         programGroup = ReadDataManipulationProgramGroup.class)
 @DocumentedFeature
 public class RevertSam extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Reverts SAM or BAM files to a previous state.  ";
+    static final String USAGE_SUMMARY = "Reverts SAM/BAM/CRAM files to a previous state.  ";
     static final String USAGE_DETAILS = "This tool removes or restores certain properties of the SAM records, including alignment " +
             "information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of " +
             "restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if the" +
@@ -136,16 +138,16 @@ public class RevertSam extends CommandLineProgram {
             "     OUTPUT_BY_READGROUP=true \\\n" +
             "     O=/write/reverted/read/group/bams/in/this/dir\n" +
             "\n" +
-            "Will output a BAM file per read group." +
+            "Will output one file per read group." +
             " Output format can be overridden with the OUTPUT_BY_READGROUP_FILE_FORMAT option.\n" +
-            "Note: If the program fails due to a SAM validation error, consider setting the VALIDATION_STRINGENCY option to " +
+            "Note: If the program fails due to a validation error, consider setting the VALIDATION_STRINGENCY option to " +
             "LENIENT or SILENT if the failures are expected to be obviated by the reversion process " +
             "(e.g. invalid alignment information will be obviated when the REMOVE_ALIGNMENT_INFORMATION option is used).\n" +
             "";
-    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
-    public File INPUT;
+    @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM/CRAM file to revert the state of.")
+    public PicardHtsPath INPUT;
 
-    @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
+    @Argument(mutex = {"OUTPUT_MAP"}, shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output SAM/BAM/CRAM file to create, or an output directory if OUTPUT_BY_READGROUP is true.")
     public File OUTPUT;
 
     @Argument(mutex = {"OUTPUT"}, shortName = "OM", doc = "Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.")
@@ -153,6 +155,9 @@ public class RevertSam extends CommandLineProgram {
 
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
+
+    @Argument(shortName = "RHC", doc = "When true, restores reads and qualities of records with hard-clips containing XB and XQ tags.")
+    public boolean RESTORE_HARDCLIPS = true;
 
     public static enum FileType implements CommandLineParser.ClpEnum {
         sam("Generate SAM files."),
@@ -200,13 +205,19 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.AS.name());
     }};
 
+    @Argument(shortName="RV", doc="Attributes on negative strand reads that need to be reversed.", optional = true)
+    public Set<String> ATTRIBUTE_TO_REVERSE = new LinkedHashSet<>(SAMRecord.TAGS_TO_REVERSE);
+
+    @Argument(shortName="RC", doc="Attributes on negative strand reads that need to be reverse complemented.", optional = true)
+    public Set<String> ATTRIBUTE_TO_REVERSE_COMPLEMENT = new LinkedHashSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
+
     @Argument(doc = "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
             "a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing " +
             "mates, duplicated records, records with mismatches in length of bases and qualities. This option can " +
             "only be enabled if the output sort order is queryname and will always cause sorting to occur.")
     public boolean SANITIZE = false;
 
-    @Argument(doc = "If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then" +
+    @Argument(doc = "If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then " +
             "the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.")
     public double MAX_DISCARD_FRACTION = 0.01;
 
@@ -245,11 +256,11 @@ public class RevertSam extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
         ValidationUtil.assertWritable(OUTPUT, OUTPUT_BY_READGROUP);
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(VALIDATION_STRINGENCY).open(INPUT.toPath());
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
@@ -282,6 +293,10 @@ public class RevertSam extends CommandLineProgram {
         } else {
             outputMap = null;
             headerMap = null;
+        }
+
+        if (RESTORE_HARDCLIPS && !REMOVE_ALIGNMENT_INFORMATION) {
+            throw new PicardException("Cannot revert sam file when RESTORE_HARDCLIPS is true and REMOVE_ALIGNMENT_INFORMATION is false.");
         }
 
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
@@ -318,8 +333,14 @@ public class RevertSam extends CommandLineProgram {
             out.close();
         } else {
             final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
+            final Path referenceSequencePath;
             try {
-                readGroupToFormat = createReadGroupFormatMap(inHeader, REFERENCE_SEQUENCE, VALIDATION_STRINGENCY, INPUT, RESTORE_ORIGINAL_QUALITIES);
+                if (REFERENCE_SEQUENCE != null) {
+                    referenceSequencePath = REFERENCE_SEQUENCE.toPath();
+                } else {
+                    referenceSequencePath = null;
+                }
+                readGroupToFormat = createReadGroupFormatMap(inHeader, referenceSequencePath, VALIDATION_STRINGENCY, INPUT.toPath(), RESTORE_ORIGINAL_QUALITIES);
             } catch (final PicardException e) {
                 log.error(e.getMessage());
                 return -1;
@@ -375,7 +396,7 @@ public class RevertSam extends CommandLineProgram {
 
         if (REMOVE_ALIGNMENT_INFORMATION) {
             if (rec.getReadNegativeStrandFlag()) {
-                rec.reverseComplement(true);
+                rec.reverseComplement(ATTRIBUTE_TO_REVERSE_COMPLEMENT, ATTRIBUTE_TO_REVERSE, true);
                 rec.setReadNegativeStrandFlag(false);
             }
 
@@ -395,6 +416,20 @@ public class RevertSam extends CommandLineProgram {
             rec.setMateNegativeStrandFlag(false);
             rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
             rec.setMateUnmappedFlag(rec.getReadPairedFlag());
+
+            if (RESTORE_HARDCLIPS) {
+                String hardClippedBases = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG);
+                String hardClippedQualities = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG);
+                if (hardClippedBases != null && hardClippedQualities != null) {
+                    // Record has already been reverse complemented if this was on the negative strand
+                    rec.setReadString(rec.getReadString() + hardClippedBases);
+                    rec.setBaseQualities(SAMUtils.fastqToPhred(SAMUtils.phredToFastq(rec.getBaseQualities()) + hardClippedQualities));
+
+                    // Remove hard clipping storage tags
+                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG, null);
+                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG, null);
+                }
+            }
 
             // And then remove any tags that are calculated from the alignment
             ATTRIBUTE_TO_CLEAR.forEach(tag -> rec.setAttribute(tag, null));
@@ -591,9 +626,9 @@ public class RevertSam extends CommandLineProgram {
 
     private Map<SAMReadGroupRecord, FastqQualityFormat> createReadGroupFormatMap(
             final SAMFileHeader inHeader,
-            final File referenceSequence,
+            final Path referenceSequence,
             final ValidationStringency validationStringency,
-            final File input,
+            final Path input,
             final boolean restoreOriginalQualities) {
 
         final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat = new HashMap<>();
