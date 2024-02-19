@@ -66,7 +66,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
     private static final byte MAX_QUAL = 100;
     private final Log log = Log.getInstance(CollectQualityYieldMetricsFlow.class);
 
-    private static final int CYCLE_SIZE = 4;
+    private static final int CYCLE_LENGTH = 4;
     private QualityYieldMetricsCollectorFlow collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "QUAL_COUNT");
     private Vector<SeriesStats> flowQualityStats = new Vector<>();
@@ -90,7 +90,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 
-    @Argument(doc = "Determines whether to include the base quality histogram in the metrics file.")
+    @Argument(doc = "Determines whether to include the flow quality histogram in the metrics file.")
     public boolean INCLUDE_BQ_HISTOGRAM = false;
 
     @ArgumentCollection(doc = "flow based args")
@@ -166,6 +166,9 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
 
             // convert to a flow based read
             FlowBasedReadUtils.ReadGroupInfo info = FlowBasedReadUtils.getReadGroupInfo(rec.getHeader(), rec);
+            if ( !info.isFlowPlatform ) {
+                throw new PicardException("Reads should originate from a flow based platform");
+            }
             FlowBasedRead fread = new FlowBasedRead(rec, info.flowOrder, info.maxClass, fbargs);
             metrics.PF_READS++;
             metrics.PF_FLOWS += fread.getKey().length;
@@ -174,7 +177,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             final byte[] quals = getFlowQualities(fread);
 
             // allocate cycle qual accounting
-            int cycleCount = INCLUDE_BQ_HISTOGRAM ? (int)Math.ceil((float)quals.length / CYCLE_SIZE) : 0;
+            int cycleCount = INCLUDE_BQ_HISTOGRAM ? (int)Math.ceil((float)quals.length / CYCLE_LENGTH) : 0;
             int cycleQualCount[] = INCLUDE_BQ_HISTOGRAM ? new int[cycleCount] : null;
             int cycleQualSum[] = INCLUDE_BQ_HISTOGRAM ? new int[cycleCount] : null;
 
@@ -197,7 +200,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
                     qualityHistogram.increment(qual);
 
                     // enter quality into cycle stats
-                    final int cycle = flow / CYCLE_SIZE;
+                    final int cycle = flow / CYCLE_LENGTH;
                     cycleQualCount[cycle]++;
                     cycleQualSum[cycle] += qual;
                 }

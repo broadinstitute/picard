@@ -24,9 +24,5 @@ public class FlowBasedArgumentCollection implements Serializable {
     @Argument(fullName = FILLING_VALUE_LONG_NAME, doc = "Value to fill the zeros of the matrix with", optional=true)
     public double fillingValue = DEFAULT_FILLING_VALUE;
 
-    @Advanced
-    @Argument(fullName=FLOW_KEEP_BOUNDARY_FLOWS_LONG_NAME, doc="prevent spreading of boundary flows.", optional = true)
-    public boolean keepBoundaryFlows = DEFAULT_FLOW_KEEP_BOUNDARY_FLOWS;
-
     public FlowBasedArgumentCollection() {}
 }

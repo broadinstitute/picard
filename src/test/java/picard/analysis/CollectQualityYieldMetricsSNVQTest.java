@@ -69,8 +69,8 @@ public class CollectQualityYieldMetricsSNVQTest extends CommandLineProgramTest {
         Assert.assertTrue(metrics.Q20_BASES > 0);
         Assert.assertTrue(metrics.PF_Q20_BASES > 0);
         Assert.assertTrue(metrics.PF_Q30_BASES > 0);
-        Assert.assertTrue(metrics.Q40_BASES > 0);
-        Assert.assertTrue(metrics.PF_Q40_BASES > 0);
+        Assert.assertTrue(metrics.Q40_BASES == 0);
+        Assert.assertTrue(metrics.PF_Q40_BASES == 0);
         Assert.assertTrue(metrics.TOTAL_SNVQ > 0);
         Assert.assertTrue(metrics.PF_SNVQ > 0);
         Assert.assertTrue(metrics.Q20_SNVQ > 0);

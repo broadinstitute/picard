@@ -82,9 +82,8 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
             "<hr />";
 
     @Argument(shortName = StandardOptionDefinitions.USE_ACTUAL_BASE_QUALITIES_SHORT_NAME,
-            doc = "Use the actual base quality (QUAL) scores " +
-                    "as inputs instead of the quality scores in the BQ field.")
-    public boolean USE_ACTUAL_ORIGINAL_QUALITIES = false;
+            doc = "Use the contents of BQ tag instead of base quality (QUAL) scores ")
+    public boolean USE_BQ_FOR_BASE_QUALITIES = false;
 
     @Argument(doc = "If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting " +
             "of bases if there are secondary alignments in the input file.")
@@ -108,7 +107,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        this.collector = new QualityYieldMetricsCollector(USE_ACTUAL_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
+        this.collector = new QualityYieldMetricsCollector(USE_BQ_FOR_BASE_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
     }
 
     @Override
@@ -132,7 +131,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
     public class QualityYieldMetricsCollector {
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
-        private final boolean useActualBaseQualities;
+        private final boolean useBQForBaseQualities;
 
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
@@ -145,13 +144,13 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
         // The metrics to be accumulated
         private final QualityYieldMetrics metrics;
 
-        public QualityYieldMetricsCollector(final boolean useActualBaseQualities,
+        public QualityYieldMetricsCollector(final boolean useBQForBaseQualities,
                                             final boolean includeSecondaryAlignments,
                                             final boolean includeSupplementalAlignments) {
-            this.useActualBaseQualities = useActualBaseQualities;
+            this.useBQForBaseQualities = useBQForBaseQualities;
             this.includeSecondaryAlignments = includeSecondaryAlignments;
             this.includeSupplementalAlignments = includeSupplementalAlignments;
-            this.metrics = new QualityYieldMetrics(useActualBaseQualities);
+            this.metrics = new QualityYieldMetrics(useBQForBaseQualities);
         }
 
         public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
@@ -170,7 +169,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
 
             // access regular quality
             final byte[] quals;
-            if (!this.useActualBaseQualities) {
+            if (this.useBQForBaseQualities) {
                 byte[] tmp = rec.getStringAttribute(SAMTag.BQ).getBytes();
                 if (tmp == null) {
                     // fall back on base queslities
@@ -184,6 +183,9 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
                 quals = tmp;
             } else {
                 quals = rec.getBaseQualities();
+            }
+            if ( quals.length != rec.getReadBases().length ) {
+                throw new PicardException("quality string length does not match bases string");
             }
 
             // access snv qualities
@@ -315,9 +317,9 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
             this(false);
         }
 
-        public QualityYieldMetrics(final boolean useOriginalQualities) {
+        public QualityYieldMetrics(final boolean useBQForBaseQualities) {
             super();
-            this.useOriginalQualities = useOriginalQualities;
+            this.useBQForBaseQualities = useBQForBaseQualities;
         }
 
         /**
@@ -507,7 +509,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
         public double PCT_PF_Q40_SNVQ = 0;
 
         @MergeByAssertEquals
-        protected final boolean useOriginalQualities;
+        protected final boolean useBQForBaseQualities;
 
         @Override
         public void calculateDerivedFields() {

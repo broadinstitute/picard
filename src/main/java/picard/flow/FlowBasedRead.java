@@ -79,13 +79,11 @@ public class FlowBasedRead {
 
         //Spread boundary flow probabilities when the read is unclipped
         //in this case the value of the hmer is uncertain
-        if (!fbargs.keepBoundaryFlows) {
-            if (samRecord.getReadUnmappedFlag() || (samRecord.getCigar().getFirstCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getFirstCigarElement().getLength() > 0)) {
-                spreadFlowLengthProbsAcrossCountsAtFlow(findFirstNonZero(key));
-            }
-            if (samRecord.getReadUnmappedFlag() || (samRecord.getCigar().getLastCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getLastCigarElement().getLength() > 0)) {
-                spreadFlowLengthProbsAcrossCountsAtFlow(findLastNonZero(key));
-            }
+        if (samRecord.getReadUnmappedFlag() || (samRecord.getCigar().getFirstCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getFirstCigarElement().getLength() > 0)) {
+            spreadFlowLengthProbsAcrossCountsAtFlow(findFirstNonZero(key));
+        }
+        if (samRecord.getReadUnmappedFlag() || (samRecord.getCigar().getLastCigarElement().getOperator() == CigarOperator.HARD_CLIP && samRecord.getCigar().getLastCigarElement().getLength() > 0)) {
+            spreadFlowLengthProbsAcrossCountsAtFlow(findLastNonZero(key));
         }
 
 

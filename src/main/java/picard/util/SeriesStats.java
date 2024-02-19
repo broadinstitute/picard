@@ -1,3 +1,8 @@
+/*
+ * SeriesStats - gather statistics on a series of numbers and perform standard statistical measurements.
+ *
+ * This class is useful for generating histograms, calculating percentiles, etc.
+ */
 package picard.util;
 
 import java.util.Map;
@@ -6,6 +11,9 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+/*
+ * Series statistics - main class
+ */
 public class SeriesStats {
 
     // local state
@@ -16,6 +24,9 @@ public class SeriesStats {
     private double max = Double.NaN;
     private SortedMap<Double, AtomicLong> bins = new TreeMap<>();
 
+    /*
+     * add a number to series
+     */
     public void add(double v) {
 
         // save in simple values
@@ -65,6 +76,9 @@ public class SeriesStats {
         return getPercentile(50);
     }
 
+    /*
+     * get the series value at a given precentile
+     */
     public double getPercentile(double precentile) {
         if ( count == 0 ) {
             return Double.NaN;
@@ -87,6 +101,9 @@ public class SeriesStats {
         }
     }
 
+    /*
+     * get standard deviation
+     */
     public double getStd() {
 
         if (count == 0) {

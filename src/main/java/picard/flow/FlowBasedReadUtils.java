@@ -63,15 +63,13 @@ public class FlowBasedReadUtils {
 
     static public class ReadGroupInfo {
         private static final String PLATFORM_ULTIMA = "ULTIMA";
-        private static final String PLATFORM_LS454 = "LS454";
-
 
         final public String  flowOrder;
         final public int     maxClass;
         final public boolean isFlowPlatform;
 
         public ReadGroupInfo(final SAMReadGroupRecord readGroup) {
-            isFlowPlatform = PLATFORM_ULTIMA.equals(readGroup.getPlatform()) || PLATFORM_LS454.equals(readGroup.getPlatform());
+            isFlowPlatform = PLATFORM_ULTIMA.equals(readGroup.getPlatform());
 
             if (isFlowPlatform) {
                 this.flowOrder = readGroup.getFlowOrder();
