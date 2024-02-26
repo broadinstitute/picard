@@ -593,4 +593,42 @@ public class RevertSamTest extends CommandLineProgramTest {
             }
         }
     }
+
+    final String testSmall = "gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam";
+    final String testMedium = "gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam";
+
+    @Test
+    public void testCloud() {
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "INPUT=" + testMedium,
+                "OUTPUT=" + "gs://hellbender/test/resources/picard/bam/",
+                "OUTPUT_BY_READGROUP=true"));
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        int d = 3;
+    }
+
+    @Test
+    public void testCloud2() {
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "INPUT=" + testMedium,
+                "OUTPUT=" + "gs://hellbender-test-logs/staging/picard/test/reverted.bam",
+                "OUTPUT_BY_READGROUP=false"));
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        int d = 3;
+    }
+
+    @Test
+    public void testCloud3() {
+        // The read groups for this file comes from gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam
+        final String testGroupMapFile = "gs://hellbender/test/resources/picard/revertSam/test_group_map_file.txt";
+        final String testGroupMapFileLocal = "/Users/tsato/workspace/picard/test_group_map_file.txt";
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "INPUT=" + testMedium,
+                "OUTPUT_MAP=" + testGroupMapFile,
+                "OUTPUT_BY_READGROUP=true"));
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        int d = 3;
+
+        // tsato: Clean up the output as needed
+    }
 }

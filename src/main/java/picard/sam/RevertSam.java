@@ -574,7 +574,7 @@ public class RevertSam extends CommandLineProgram {
 
         final Map<String, Path> outputMap;
         if (outputMapFile != null) {
-            outputMap = createOutputMapFromFile(outputMapFile);
+            outputMap = createOutputMapFromFile(outputMapFile); // tsato: need to investigate this path too
         } else {
             outputMap = createOutputMap(readGroups, outputDir, defaultExtension);
         }
@@ -587,7 +587,7 @@ public class RevertSam extends CommandLineProgram {
             for (final TabbedTextFileWithHeaderParser.Row row : parser) {
                 final String id = row.getField("READ_GROUP_ID");
                 final String output = row.getField("OUTPUT");
-                final Path outputPath = Paths.get(output);
+                final Path outputPath = new PicardHtsPath(output).toPath();
                 outputMap.put(id, outputPath);
             }
             CloserUtil.close(parser);
@@ -606,7 +606,7 @@ public class RevertSam extends CommandLineProgram {
         for (final SAMReadGroupRecord readGroup : readGroups) {
             final String id = readGroup.getId();
             final String fileName = id + extension;
-            final Path outputPath = Paths.get(outputDir.toString(), fileName);
+            final Path outputPath = outputDir.resolve(fileName);
             outputMap.put(id, outputPath);
         }
         return outputMap;
