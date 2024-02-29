@@ -1035,10 +1035,10 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             // access to the index-in-file of the records (e.g. SPARK implmentations)
 
             if (compareDifference == 0) {
-                compareDifference = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
+                compareDifference = Long.compare(lhs.read1IndexInFile, rhs.read1IndexInFile);
             }
             if (compareDifference == 0) {
-                compareDifference = (int) (lhs.read2IndexInFile - rhs.read2IndexInFile);
+                compareDifference = Long.compare(lhs.read2IndexInFile, rhs.read2IndexInFile);
             }
 
             return compareDifference;
