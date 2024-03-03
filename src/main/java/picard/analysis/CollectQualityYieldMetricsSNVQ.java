@@ -81,7 +81,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
             "the QualityYieldMetrics documentation</a> for details and explanations of the output metrics." +
             "<hr />";
 
-    @Argument(shortName = StandardOptionDefinitions.USE_ACTUAL_BASE_QUALITIES_SHORT_NAME,
+    @Argument(shortName = StandardOptionDefinitions.USE_BQ_FOR_BASE_QUALITIES_SHORT_NAME,
             doc = "Use the contents of BQ tag instead of base quality (QUAL) scores ")
     public boolean USE_BQ_FOR_BASE_QUALITIES = false;
 
