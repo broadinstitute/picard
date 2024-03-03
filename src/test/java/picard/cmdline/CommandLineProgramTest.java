@@ -21,7 +21,6 @@ public abstract class CommandLineProgramTest {
     public static final File CHR_M_REFERENCE = new File(REFERENCE_TEST_DIR,"chrM.reference.fasta");
     public static final File CHR_M_DICT = new File(REFERENCE_TEST_DIR,"chrM.reference.dict");
 
-
     // A per-test-class directory that will be deleted after the tests are complete.
     private File tempOutputDir;
 

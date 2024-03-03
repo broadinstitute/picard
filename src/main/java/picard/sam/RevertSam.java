@@ -24,6 +24,7 @@
 
 package picard.sam;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
@@ -57,6 +58,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.TabbedTextFileWithHeaderParser;
 
@@ -64,7 +66,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -152,6 +153,10 @@ public class RevertSam extends CommandLineProgram {
 
     @Argument(mutex = {"OUTPUT"}, shortName = "OM", doc = "Tab separated file with two columns, READ_GROUP_ID and OUTPUT, providing file mapping only used if OUTPUT_BY_READGROUP is true.")
     public PicardHtsPath OUTPUT_MAP;
+
+    public static final String READ_GROUP_ID_COLUMN_NAME = "READ_GROUP_ID";
+    public static final String OUTPUT_COLUMN_NAME = "OUTPUT";
+
 
     @Argument(shortName = "OBR", doc = "When true, outputs each read group in a separate file.")
     public boolean OUTPUT_BY_READGROUP = false;
@@ -246,7 +251,7 @@ public class RevertSam extends CommandLineProgram {
         final List<String> errors = new ArrayList<>();
         ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
         // tsato: can output or output map be null, and can I streamline this code?
-        ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT == null ? null : OUTPUT.toPath(), OUTPUT_MAP == null ? null : OUTPUT_MAP.toPath(), errors);
+        ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
 
         if (!SANITIZE && KEEP_FIRST_DUPLICATE) errors.add("KEEP_FIRST_DUPLICATE cannot be used without SANITIZE");
 
@@ -585,8 +590,8 @@ public class RevertSam extends CommandLineProgram {
         final Map<String, Path> outputMap = new HashMap<>();
         try (final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMapFile)) {
             for (final TabbedTextFileWithHeaderParser.Row row : parser) {
-                final String id = row.getField("READ_GROUP_ID");
-                final String output = row.getField("OUTPUT");
+                final String id = row.getField(READ_GROUP_ID_COLUMN_NAME);
+                final String output = row.getField(OUTPUT_COLUMN_NAME);
                 final Path outputPath = new PicardHtsPath(output).toPath();
                 outputMap.put(id, outputPath);
             }
@@ -803,7 +808,14 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
-        static void validateOutputParams(final boolean outputByReadGroup, final Path output, final Path outputMap, final List<String> errors) {
+        /**
+         *
+         * @param outputByReadGroup
+         * @param output Points to the BAM output. May be null.
+         * @param outputMap Points to the tsv-file containing the (read group, output path) pair in each row. May be null.
+         * @param errors
+         */
+        static void validateOutputParams(final boolean outputByReadGroup, final IOPath output, final IOPath outputMap, final List<String> errors) {
             if (outputByReadGroup) {
                 validateOutputParamsByReadGroup(output, outputMap, errors);
             } else {
@@ -811,9 +823,9 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
-        static void validateOutputParamsByReadGroup(final Path output, final Path outputMap, final List<String> errors) {
+        static void validateOutputParamsByReadGroup(final IOPath output, final IOPath outputMap, final List<String> errors) {
             if (output != null) {
-                if (!Files.isDirectory(output)) {
+                if (! PicardBucketUtils.isGcsUrl(output) && !Files.isDirectory(output.toPath())) {
                     errors.add("When OUTPUT_BY_READGROUP=true and OUTPUT is provided, it must be a directory: " + output);
                 }
                 return;
@@ -823,23 +835,21 @@ public class RevertSam extends CommandLineProgram {
                 errors.add("Must provide either OUTPUT or OUTPUT_MAP when OUTPUT_BY_READGROUP=true.");
                 return;
             }
-            if (!Files.isReadable(outputMap)) {
+            if (!Files.isReadable(outputMap.toPath())) {
                 errors.add("Cannot read OUTPUT_MAP " + outputMap);
                 return;
             }
 
-            try (final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMap)){
+            try (final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMap.toPath())){
                 if (!ValidationUtil.isOutputMapHeaderValid(parser.columnLabelsList())) {
                     errors.add("Invalid header: " + outputMap + ". Must be a tab-separated file with READ_GROUP_ID as first column and OUTPUT as second column.");
                 }
             } catch (IOException e){
                 throw new PicardException("Encountered an exception while parsing the output map", e);
             }
-
-
         }
 
-        static void validateOutputParamsNotByReadGroup(final Path output, final Path outputMap, final List<String> errors) {
+        static void validateOutputParamsNotByReadGroup(final IOPath output, final IOPath outputMap, final List<String> errors) {
             if (outputMap != null) {
                 errors.add("Cannot provide OUTPUT_MAP when OUTPUT_BY_READGROUP=false. Provide OUTPUT instead.");
             }
@@ -847,7 +857,7 @@ public class RevertSam extends CommandLineProgram {
                 errors.add("OUTPUT is required when OUTPUT_BY_READGROUP=false");
                 return;
             }
-            if (Files.isDirectory(output)) {
+            if (Files.isDirectory(output.toPath())) {
                 errors.add("OUTPUT " + output + " should not be a directory when OUTPUT_BY_READGROUP=false");
             }
         }
@@ -906,8 +916,8 @@ public class RevertSam extends CommandLineProgram {
 
         static boolean isOutputMapHeaderValid(final List<String> columnLabels) {
             return columnLabels.size() >= 2 &&
-                    "READ_GROUP_ID".equals(columnLabels.get(0)) &&
-                    "OUTPUT".equals(columnLabels.get(1));
+                    READ_GROUP_ID_COLUMN_NAME.equals(columnLabels.get(0)) &&
+                    OUTPUT_COLUMN_NAME.equals(columnLabels.get(1));
         }
     }
 }
