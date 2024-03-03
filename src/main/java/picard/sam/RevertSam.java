@@ -62,7 +62,6 @@ import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.TabbedTextFileWithHeaderParser;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -250,7 +249,6 @@ public class RevertSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<>();
         ValidationUtil.validateSanitizeSortOrder(SANITIZE, SORT_ORDER, errors);
-        // tsato: can output or output map be null, and can I streamline this code?
         ValidationUtil.validateOutputParams(OUTPUT_BY_READGROUP, OUTPUT, OUTPUT_MAP, errors);
 
         if (!SANITIZE && KEEP_FIRST_DUPLICATE) errors.add("KEEP_FIRST_DUPLICATE cannot be used without SANITIZE");
@@ -263,7 +261,9 @@ public class RevertSam extends CommandLineProgram {
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT.toPath());
-        // ValidationUtil.assertWritable(OUTPUT, OUTPUT_BY_READGROUP); // tsato: figure this out later
+        if (OUTPUT != null && !PicardBucketUtils.isGcsUrl(OUTPUT)) {
+            ValidationUtil.assertWritable(OUTPUT.toPath(), OUTPUT_BY_READGROUP);
+        }
 
         final boolean sanitizing = SANITIZE;
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(INPUT.toPath());
@@ -579,7 +579,7 @@ public class RevertSam extends CommandLineProgram {
 
         final Map<String, Path> outputMap;
         if (outputMapFile != null) {
-            outputMap = createOutputMapFromFile(outputMapFile); // tsato: need to investigate this path too
+            outputMap = createOutputMapFromFile(outputMapFile);
         } else {
             outputMap = createOutputMap(readGroups, outputDir, defaultExtension);
         }
@@ -605,7 +605,6 @@ public class RevertSam extends CommandLineProgram {
 
     }
 
-    // tsato: some of this can be IOPath or PicardHtsPath
     private static Map<String, Path> createOutputMap(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension) {
         final Map<String, Path> outputMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : readGroups) {
@@ -800,7 +799,7 @@ public class RevertSam extends CommandLineProgram {
     /**
      * Methods used for validating parameters to RevertSam.
      */
-    static class ValidationUtil {
+    static class ValidationUtil { // tsato: I vote that we rename this to avoid mixing it up with htsjdk ValidationUtils
 
         static void validateSanitizeSortOrder(final boolean sanitize, final SAMFileHeader.SortOrder sortOrder, final List<String> errors) {
             if (sanitize && sortOrder != SAMFileHeader.SortOrder.queryname) {
@@ -894,7 +893,7 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
-        static void assertWritable(final File output, final boolean outputByReadGroup) {
+        static void assertWritable(final Path output, final boolean outputByReadGroup) {
             if (outputByReadGroup) {
                 if (output != null) {
                     IOUtil.assertDirectoryIsWritable(output);

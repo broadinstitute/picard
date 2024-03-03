@@ -59,15 +59,15 @@ import java.util.Optional;
  * To change this template use File | Settings | File Templates.
  */
 public class RevertSamTest extends CommandLineProgramTest {
-    private static final String basicSamToRevert = "testdata/picard/sam/revert_sam_basic.sam"; // tsato: move these to MergeSam subdirectorty
-    private static final String sampleLibraryOverrideSam = "testdata/picard/sam/revert_sam_sample_library_override.sam";
-    private static final File validOutputMap = new File("testdata/picard/sam/revert_sam_valid_output_map.txt");
-    private static final File nonExistentOutputMap = new File("testdata/picard/sam/revert_sam_does_not_exist.txt");
-    private static final File badHeaderOutputMap = new File("testdata/picard/sam/revert_sam_bad_header_output_map.txt");
+    private static final String basicSamToRevert = "testdata/picard/sam/RevertSam/revert_sam_basic.sam";
+    private static final String sampleLibraryOverrideSam = "testdata/picard/sam/RevertSam/revert_sam_sample_library_override.sam";
+    private static final File validOutputMap = new File("testdata/picard/sam/RevertSam/revert_sam_valid_output_map.txt");
+    private static final File nonExistentOutputMap = new File("testdata/picard/sam/RevertSam/revert_sam_does_not_exist.txt");
+    private static final File badHeaderOutputMap = new File("testdata/picard/sam/RevertSam/revert_sam_bad_header_output_map.txt");
     private static final File samTestData = new File("testdata/picard/sam");
-    private static final File writablePath = new File("testdata/picard/sam/revert_sam_writable.bam");
+    private static final File writablePath = new File("testdata/picard/sam/RevertSam/revert_sam_writable.bam");
     private static final File referenceFasta = new File("testdata/picard/reference/test.fasta");
-    private static final String singleEndSamToRevert = "testdata/picard/sam/revert_sam_single_end.sam";
+    private static final String singleEndSamToRevert = "testdata/picard/sam/RevertSam/revert_sam_single_end.sam";
     private static final File hardClipFasta = new File("testdata/picard/sam/MergeBamAlignment/cliptest.fasta");
     private static final File hardClippedAlignedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.aligned.sam");
     private static final File hardClippedUnmappedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.unmapped.sam");
@@ -480,12 +480,12 @@ public class RevertSamTest extends CommandLineProgramTest {
         final SAMReadGroupRecord rg2 = new SAMReadGroupRecord("rg2");
 
         final Map<String, Path> outputMap = RevertSam.createOutputMap(null, new File("/foo/bar").toPath(), ".bam", Arrays.asList(rg1, rg2));
-        Assert.assertEquals(outputMap.get("rg1"), new File("/foo/bar/rg1.bam").toPath()); // tsato: questionable wrapping but ok for now
+        Assert.assertEquals(outputMap.get("rg1"), new File("/foo/bar/rg1.bam").toPath());
         Assert.assertEquals(outputMap.get("rg2"), new File("/foo/bar/rg2.bam").toPath());
     }
 
     @Test
-    public void testFilePathsWithMapFile() { // tsato: perhaps best to use PicardHtsPath instead of putting File.toPath everywhere
+    public void testFilePathsWithMapFile() {
         final Map<String, Path> outputMap = RevertSam.createOutputMap(validOutputMap.toPath(), null, ".bam", Collections.emptyList());
         Assert.assertEquals(outputMap.get("rg1"), new File("/path/to/my_rg_1.ubam").toPath());
         Assert.assertEquals(outputMap.get("rg2"), new File("/path/to/my_rg_2.ubam").toPath());
