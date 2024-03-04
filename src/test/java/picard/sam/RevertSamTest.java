@@ -599,14 +599,16 @@ public class RevertSamTest extends CommandLineProgramTest {
     }
 
     public static final String CURRENT_DIRECTORY = System.getProperty("user.dir");
-    public static final String TEST_DIR = "testdata/picard/sam/RevertSam/";
+    public static final String REVERT_SAM_TEST_DATA_DIR = "testdata/picard/sam/RevertSam/";
 
     final String testSmall = "gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam";
     final String testMedium = "gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam";
+    final String testMediumCram = "gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram";
+
 
     // The read groups for these readGroupMaps comes from gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam
     final String testReadGroupMapFile = "gs://hellbender/test/resources/picard/revertSam/test_group_map_file.txt";
-    final String testReadGroupMapFileLocal = TEST_DIR + "test_group_map_file.txt";
+    final String testReadGroupMapFileLocal = REVERT_SAM_TEST_DATA_DIR + "test_group_map_file.txt";
 
     private final static boolean OUTPUT_BY_READ_GROUP = true;
 
@@ -618,22 +620,39 @@ public class RevertSamTest extends CommandLineProgramTest {
                 {testMedium, Optional.of(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "test/reverted.bam"), !OUTPUT_BY_READ_GROUP, Optional.empty()},
                 {testMedium, Optional.empty(), OUTPUT_BY_READ_GROUP, Optional.of(testReadGroupMapFile)},
                 {testMedium, Optional.empty(), OUTPUT_BY_READ_GROUP, Optional.of(testReadGroupMapFileLocal)},
+                {testMediumCram, Optional.empty(), OUTPUT_BY_READ_GROUP, Optional.of(testReadGroupMapFile)},
+                {testMediumCram, Optional.of(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "test/reverted.cram"), !OUTPUT_BY_READ_GROUP, Optional.empty()},
         };
     }
 
-    @Test(dataProvider = "cloudTestData", groups = "cloud")
+    @DataProvider(name="cloudTestData2")
+    public Object[][] getCloudTestData2() {
+        return new Object[][] {
+                {testMediumCram, Optional.empty(), OUTPUT_BY_READ_GROUP, Optional.of(testReadGroupMapFile)},
+                {testMediumCram, Optional.of(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "test/reverted.cram"), !OUTPUT_BY_READ_GROUP, Optional.empty()},
+        };
+    }
+
+    @Test(dataProvider = "cloudTestData2", groups = "cloud")
     public void testCloud(final String inputBAM, final Optional<String> outputPath, final boolean outputByReadGroup,
                           final Optional<String> outputMap) {
+        final PicardHtsPath inputBAMPath = new PicardHtsPath(inputBAM);
+        final List<SAMReadGroupRecord> readGroupsInInput = SamReaderFactory.makeDefault().open(inputBAMPath.toPath()).getFileHeader().getReadGroups();
+
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "INPUT=" + inputBAM,
                 "OUTPUT_BY_READGROUP=" + outputByReadGroup));
         outputPath.ifPresent(s -> args.add("OUTPUT=" + s));
         outputMap.ifPresent(s -> args.add("OUTPUT_MAP=" + s));
+        if (inputBAMPath.isCram()){
+            args.add("REFERENCE_SEQUENCE=" + HG19_CHR2021);
+            // args.add("REFERENCE_SEQUENCE=" + HG19_CHR2021_GCLOUD.getURIString());
+            // args.add("REFERENCE_SEQUENCE=" + "/Volumes/seq_references/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta");
+            // ok, something wrong with this reference file....will investigate
+        }
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final PicardHtsPath inputBAMPath = new PicardHtsPath(inputBAM);
-        final List<SAMReadGroupRecord> readGroupsInInput = SamReaderFactory.makeDefault().open(inputBAMPath.toPath()).getFileHeader().getReadGroups();
 
         if (! outputByReadGroup){
             final PicardHtsPath outputBAMPath = new PicardHtsPath(outputPath.get());

@@ -5,7 +5,6 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.utils.ValidationUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -58,10 +57,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     final int DEFAULT_RANDOM_SEED = 42;
     private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
     private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-
-    // These are the hg19 references with chromosome names "1" (rather than "chr1")
-    private static final PicardHtsPath HG19_REFERENCE_GCLOUD = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
-    private static final PicardHtsPath HG19_CHR2021_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/references/human_g1k_v37.20.21.fasta");
 
     @Override
     public String getCommandLineProgramName() {
