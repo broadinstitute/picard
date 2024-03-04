@@ -625,15 +625,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         };
     }
 
-    @DataProvider(name="cloudTestData2")
-    public Object[][] getCloudTestData2() {
-        return new Object[][] {
-                {testMediumCram, Optional.empty(), OUTPUT_BY_READ_GROUP, Optional.of(testReadGroupMapFile)},
-                {testMediumCram, Optional.of(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "test/reverted.cram"), !OUTPUT_BY_READ_GROUP, Optional.empty()},
-        };
-    }
-
-    @Test(dataProvider = "cloudTestData2", groups = "cloud")
+    @Test(dataProvider = "cloudTestData", groups = "cloud")
     public void testCloud(final String inputBAM, final Optional<String> outputPath, final boolean outputByReadGroup,
                           final Optional<String> outputMap) {
         final PicardHtsPath inputBAMPath = new PicardHtsPath(inputBAM);
@@ -646,9 +638,6 @@ public class RevertSamTest extends CommandLineProgramTest {
         outputMap.ifPresent(s -> args.add("OUTPUT_MAP=" + s));
         if (inputBAMPath.isCram()){
             args.add("REFERENCE_SEQUENCE=" + HG19_CHR2021);
-            // args.add("REFERENCE_SEQUENCE=" + HG19_CHR2021_GCLOUD.getURIString());
-            // args.add("REFERENCE_SEQUENCE=" + "/Volumes/seq_references/Homo_sapiens_assembly19/v1/Homo_sapiens_assembly19.fasta");
-            // ok, something wrong with this reference file....will investigate
         }
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
