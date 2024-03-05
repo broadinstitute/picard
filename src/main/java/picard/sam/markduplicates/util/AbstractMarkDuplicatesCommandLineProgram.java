@@ -41,6 +41,7 @@ import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.nio.PicardHtsPath;
 import picard.sam.DuplicationMetrics;
 import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.MarkDuplicatesForFlowHelper;
@@ -67,15 +68,15 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input SAM, BAM or CRAM files to analyze. Must be coordinate sorted.")
-    public List<String> INPUT;
+    public List<PicardHtsPath> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The output file to write marked records to")
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "M",
             doc = "File to write duplication metrics to")
-    public File METRICS_FILE;
+    public PicardHtsPath METRICS_FILE;
 
     @Argument(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
