@@ -658,12 +658,12 @@ public class RevertSamTest extends CommandLineProgramTest {
                 final List<SAMReadGroupRecord> readGroups = SamReaderFactory.makeDefault().open(entry.getValue()).getFileHeader().getReadGroups();
                 Assert.assertEquals(readGroups.size(), 1);
                 Assert.assertEquals(readGroups.get(0).getId(), entry.getKey());
-                // Clean up
-                try {
-                    Files.delete(entry.getValue());
-                } catch (IOException e) {
-                    throw new PicardException("Unable to delete a cloud file:" + entry.getValue().toUri().toString(), e);
-                }
+                // Clean up (temporarily disable)
+//                try {
+//                    Files.delete(entry.getValue());
+//                } catch (IOException e) {
+//                    throw new PicardException("Unable to delete a cloud file:" + entry.getValue().toUri().toString(), e);
+//                }
             }
         } else {
             // OutputByReadGroup is true and outputMap is not empty
@@ -681,8 +681,8 @@ public class RevertSamTest extends CommandLineProgramTest {
                     Assert.assertEquals(readGroupsInOutput.size(), 1);
                     Assert.assertEquals(readGroupsInOutput.get(0).getId(), readGroup);
 
-                    // Clean up the output
-                    Files.delete(outputForReadGroupPath.toPath());
+                    // Clean up the output (disable temporarily)
+                    // Files.delete(outputForReadGroupPath.toPath());
                 }
             } catch (IOException e){
                 throw new PicardException("Encountered an exception while parsing the output map", e);
