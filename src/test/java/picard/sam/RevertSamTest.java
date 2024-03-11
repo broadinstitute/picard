@@ -675,7 +675,7 @@ public class RevertSamTest extends CommandLineProgramTest {
                     final String readGroup = row.getField(RevertSam.READ_GROUP_ID_COLUMN_NAME);
                     final String outputForReadGroup = row.getField(RevertSam.OUTPUT_COLUMN_NAME);
                     final PicardHtsPath outputForReadGroupPath = new PicardHtsPath(outputForReadGroup);
-                    Assert.assertTrue(Files.exists(outputForReadGroupPath.toPath()));
+                    Assert.assertTrue(Files.exists(outputForReadGroupPath.toPath()), "The expected output file does not exist: " +  outputForReadGroup);
 
                     final List<SAMReadGroupRecord> readGroupsInOutput = SamReaderFactory.makeDefault().open(outputForReadGroupPath.toPath()).getFileHeader().getReadGroups();
                     Assert.assertEquals(readGroupsInOutput.size(), 1);
