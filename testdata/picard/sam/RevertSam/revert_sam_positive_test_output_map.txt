@@ -1,0 +1,4 @@
+READ_GROUP_ID	OUTPUT
+0	my_rg_1.sam
+1	my_rg_2.sam
+2	my_rg_3.bam

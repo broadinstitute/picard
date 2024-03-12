@@ -111,7 +111,7 @@ public class PicardHtsPath extends HtsPath {
      */
     public static PicardHtsPath fromPath(final Path path){
         Objects.requireNonNull(path);
-        return new PicardHtsPath(new HtsPath(path.toUri().toString()));
+        return new PicardHtsPath(path.toUri().toString());
     }
 
     /**
