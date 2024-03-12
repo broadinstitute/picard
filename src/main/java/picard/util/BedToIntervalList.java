@@ -118,8 +118,13 @@ public class BedToIntervalList extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
+        if(INPUT.getPath().equals("/dev/stdin")) {
+            throw new IllegalArgumentException("BedToIntervalList does not support reading from standard input - a file must be provided.");
+        }
+
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
+
         try {
             // create a new header that we will assign the dictionary provided by the SAMSequenceDictionaryExtractor to.
             final SAMFileHeader header = new SAMFileHeader();
