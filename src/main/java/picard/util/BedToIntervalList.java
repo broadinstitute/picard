@@ -119,7 +119,7 @@ public class BedToIntervalList extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         if(INPUT.getPath().equals("/dev/stdin")) {
-            throw new IllegalArgumentException("BedToIntervalList cannot read from /dev/stdin.");
+            throw new IllegalArgumentException("BedToIntervalList does not support reading from standard input - a file must be provided.");
         }
 
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);

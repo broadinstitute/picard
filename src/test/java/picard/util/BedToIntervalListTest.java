@@ -61,6 +61,18 @@ public class BedToIntervalListTest {
         doTest(inputBed, "header.sam", false);
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testRejectStdin() throws IOException {
+        final BedToIntervalList program = new BedToIntervalList();
+        final File outputFile  = File.createTempFile("bed_to_interval_list_test.", ".interval_list");
+        outputFile.deleteOnExit();
+        program.OUTPUT = outputFile;
+        program.SEQUENCE_DICTIONARY = new File(TEST_DATA_DIR, "header.sam");
+        program.UNIQUE = true;
+        program.INPUT = new File("/dev/stdin");
+        program.doWork();
+    }
+
     @DataProvider
     public Object[][] testBedToIntervalListDataProvider() {
         return new Object[][]{
