@@ -75,7 +75,7 @@ public class BuildBamIndex extends CommandLineProgram {
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
                     "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     /**
      * Main method for the program.  Checks that all input files are present and
@@ -91,20 +91,17 @@ public class BuildBamIndex extends CommandLineProgram {
             final String baseFileName = inputPath.getFileName().toString();
 
             // only BAI indices can be created for now, although CSI indices can be read as well
-            if (baseFileName.endsWith(FileExtensions.BAM)) {
+            if (INPUT.hasExtension(FileExtensions.BAM)) {
 
                 final int index = baseFileName.lastIndexOf('.');
-                OUTPUT = new File(baseFileName.substring(0, index) + FileExtensions.BAI_INDEX);
-
+                final String outputIndexFileName = baseFileName.substring(0, index) + FileExtensions.BAI_INDEX;
+                OUTPUT = new PicardHtsPath(inputPath.resolveSibling(outputIndexFileName).toUri().toString());
             } else {
-                OUTPUT = new File(baseFileName + FileExtensions.BAI_INDEX);
+                OUTPUT = new PicardHtsPath(inputPath.resolveSibling(baseFileName + FileExtensions.BAI_INDEX).toUri().toString());
             }
         }
 
-        IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader bam;
-
-
         bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
                 .disable(SamReaderFactory.Option.EAGERLY_DECODE)
                 .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
@@ -118,7 +115,7 @@ public class BuildBamIndex extends CommandLineProgram {
             throw new SAMException("Input bam file must be sorted by coordinate");
         }
 
-        BAMIndexer.createIndex(bam, OUTPUT);
+        BAMIndexer.createIndex(bam, OUTPUT.toPath());
 
         log.info("Successfully wrote bam index file " + OUTPUT);
         CloserUtil.close(bam);
