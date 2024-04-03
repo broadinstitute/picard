@@ -40,6 +40,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     private final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private final File HAPLOTYPE_MAP_SHORT = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.short_dictionary.txt");
     private final File HAPLOTYPE_MAP_FOR_CRAMS = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.txt");
 
     private final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
@@ -200,6 +201,31 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
         doTest(args.toArray(new String[0]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
+
+    @Test(dataProvider = "bamFilesRGs")
+    public void testCrossCheckRGs_with_short_dictionary(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics) throws IOException {
+
+        File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
+        metrics.deleteOnExit();
+
+        final List<String> args = new ArrayList<>(Arrays.asList("INPUT=" + file1.getAbsolutePath(),
+                "INPUT=" + file2.getAbsolutePath(),
+                "OUTPUT=" + metrics.getAbsolutePath(),
+                "LOD_THRESHOLD=" + -2.0,
+                "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch)
+        );
+
+        if (file1.getName().endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
+            args.add("R=" + referenceForCrams);
+            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS);
+        } else {
+            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_SHORT);
+        }
+
+        doTest(args.toArray(new String[0]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
+    }
+
+
 
     @DataProvider(name = "cramsWithNoReference")
     public Object[][] cramsWithNoReference() {
