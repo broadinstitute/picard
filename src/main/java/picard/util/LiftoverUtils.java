@@ -372,15 +372,15 @@ public class LiftoverUtils {
 
         // 1. while changes in alleles do
         while (changesInAlleles) {
+            final int oldStart = theStart;
+            final int oldEnd = theEnd;
 
-            changesInAlleles = false;
             // 2. if alleles end with the same nucleotide then
             if (alleleBasesMap.values().stream()
                     .collect(Collectors.groupingBy(a -> a[a.length - 1], Collectors.toSet()))
                     .size() == 1 && theEnd > 1) {
                 // 3. truncate rightmost nucleotide of each allele
                 alleleBasesMap.replaceAll((a, v) -> truncateBase(alleleBasesMap.get(a), true));
-                changesInAlleles = true;
                 theEnd--;
                 // 4. end if
             }
@@ -390,20 +390,29 @@ public class LiftoverUtils {
                     .map(a -> a.length)
                     .anyMatch(l -> l == 0)) {
                 // 6. extend alleles 1 nucleotide to the left
+
+
+                final byte extraBase;
+                final boolean extendLeft;
+                if (theStart > 1) {
+                    extraBase = referenceSequence.getBases()[theStart - 2];
+                    extendLeft = true;
+                    theStart--;
+                } else {
+                    extraBase = referenceSequence.getBases()[theEnd];
+                    extendLeft = false;
+                    theEnd++;
+                }
+
                 for (final Allele allele : alleleBasesMap.keySet()) {
                     // the first -1 for zero-base (getBases) versus 1-based (variant position)
                     // another   -1 to get the base prior to the location of the start of the allele
-                    final byte extraBase = (theStart > 1) ?
-                            referenceSequence.getBases()[theStart - 2] :
-                            referenceSequence.getBases()[theEnd];
-
-                    alleleBasesMap.put(allele, extendOneBase(alleleBasesMap.get(allele), extraBase));
+                    alleleBasesMap.put(allele, extendOneBase(alleleBasesMap.get(allele), extraBase, extendLeft));
                 }
-                changesInAlleles = true;
-                theStart--;
 
                 // 7. end if
             }
+            changesInAlleles = theStart!=oldStart && theEnd != oldEnd;
         }
 
         // 8. while leftmost nucleotide of each allele are the same and all alleles have length 2 or more do
@@ -451,12 +460,16 @@ public class LiftoverUtils {
                 truncateRightmost ? allele.length - 1 : allele.length);
     }
 
-    //creates a new byte array with the base added at the beginning
     private static byte[] extendOneBase(final byte[] bases, final byte base) {
+        return extendOneBase(bases, base, true);
+    }
+
+    //creates a new byte array with the base added at the beginning
+    private static byte[] extendOneBase(final byte[] bases, final byte base, final boolean extendLeft) {
         final byte[] newBases = new byte[bases.length + 1];
 
-        System.arraycopy(bases, 0, newBases, 1, bases.length);
-        newBases[0] = base;
+        System.arraycopy(bases, 0, newBases, extendLeft ? 1 : 0, bases.length);
+        newBases[extendLeft ? 0 : bases.length] = base;
 
         return newBases;
     }
