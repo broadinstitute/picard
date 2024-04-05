@@ -181,15 +181,23 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
     }
 
     private Object[][] haplotypeMaps(){
-        return new Object[][]{{HAPLOTYPE_MAP}, {HAPLOTYPE_MAP_SHORT}};
+        return new Object[][]{
+                {HAPLOTYPE_MAP, HAPLOTYPE_MAP_FOR_CRAMS},
+                {HAPLOTYPE_MAP_SHORT, HAPLOTYPE_MAP_FOR_CRAMS_SHORT}};
     }
     @DataProvider(name = "bamFilesRGs")
     public Iterator<Object[]> bamFilesRGsAndHapMaps(){
-        return TestNGUtil.interaction(bamAndCramFilesRGs(),haplotypeMaps());
+        return TestNGUtil.interaction(bamAndCramFilesRGs(), haplotypeMaps());
     }
 
     @Test(dataProvider = "bamFilesRGs")
-    public void testCrossCheckRGs(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics, final File haplotypeMap) throws IOException {
+    public void testCrossCheckRGs(final File file1,
+                                  final File file2,
+                                  final boolean expectAllMatch,
+                                  final int expectedRetVal,
+                                  final int expectedNMetrics,
+                                  final File haplotypeMap,
+                                  final File haplotypeMapForCram) throws IOException {
 
         final File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
         metrics.deleteOnExit();
@@ -203,37 +211,13 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
         if (file1.getName().endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
             args.add("R=" + referenceForCrams);
-            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS);
+            args.add("HAPLOTYPE_MAP=" + haplotypeMapForCram.getAbsolutePath());
         } else {
             args.add("HAPLOTYPE_MAP=" + haplotypeMap.getAbsolutePath());
         }
 
         doTest(args.toArray(new String[0]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
-
-    @Test(dataProvider = "bamFilesRGs")
-    public void testCrossCheckRGs_with_short_dictionary(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics) throws IOException {
-
-        final File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
-        metrics.deleteOnExit();
-
-        final List<String> args = new ArrayList<>(Arrays.asList("INPUT=" + file1.getAbsolutePath(),
-                "INPUT=" + file2.getAbsolutePath(),
-                "OUTPUT=" + metrics.getAbsolutePath(),
-                "LOD_THRESHOLD=" + -2.0,
-                "EXPECT_ALL_GROUPS_TO_MATCH=" + expectAllMatch)
-        );
-
-        if (file1.getName().endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
-            args.add("R=" + referenceForCrams);
-            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS);
-        } else {
-            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_SHORT);
-        }
-
-        doTest(args.toArray(new String[0]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
-    }
-
 
 
     @DataProvider(name = "cramsWithNoReference")
