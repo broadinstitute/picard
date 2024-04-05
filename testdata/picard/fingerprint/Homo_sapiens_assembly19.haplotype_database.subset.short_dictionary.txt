@@ -1,0 +1,11 @@
+@HD	VN:1.4	GO:none	SO:coordinate
+@SQ	SN:1	LN:249250621	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:1b22b98cdeb4a9304cb5d48026a85128	SP:Homo Sapiens
+@SQ	SN:2	LN:243199373	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:a0d9851da00400dec1098a9255ac712e	SP:Homo Sapiens
+@SQ	SN:3	LN:198022430	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:fdfd811849cc2fadebc929bb925902e5	SP:Homo Sapiens
+@SQ	SN:4	LN:191154276	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:23dccd106897542ad87d2765d28a19a1	SP:Homo Sapiens
+@SQ	SN:5	LN:180915260	AS:GRCh37	UR:http://www.broadinstitute.org/ftp/pub/seq/references/Homo_sapiens_assembly19.fasta	M5:0740173db9ffd264d728f32784845cd7	SP:Homo Sapiens
+#CHROMOSOME	POSITION	NAME	MAJOR_ALLELE	MINOR_ALLELE	MAF	ANCHOR_SNP	PANELS
+1	14804874	rs7555566	A	G	0.223794		
+3	17077268	rs17272796	C	T	0.623026		
+4	57194525	rs6834736	C	G	0.512884		
+5	156355375	rs2862058	A	G	0.349127		

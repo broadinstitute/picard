@@ -1,0 +1,10 @@
+@HD	VN:1.5
+@SQ	SN:1	LN:1001	M5:af506819d4b9357827ce128b6c83a816	UR:file:reference.shifted.for.crams.fasta
+@SQ	SN:3	LN:2001	M5:bfecd72141fd7c10b33f04958736baef	UR:file:reference.shifted.for.crams.fasta
+@SQ	SN:4	LN:1001	M5:ac7d9a3274b2f1fa8eac3f01b3ff9b43	UR:file:reference.shifted.for.crams.fasta
+@SQ	SN:5	LN:1001	M5:468698a81368c9d42bd876a2dae5c330	UR:file:reference.shifted.for.crams.fasta
+#CHROMOSOME	POSITION	NAME	MAJOR_ALLELE	MINOR_ALLELE	MAF	ANCHOR_SNP	PANELS
+1	251	rs7555566	A	G	0.223794		
+3	251	rs17272796	C	T	0.623026		
+4	251	rs6834736	C	G	0.512884		
+5	251	rs2862058	A	G	0.349127		

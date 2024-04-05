@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.TabbedTextFileWithHeaderParser;
+import picard.util.TestNGUtil;
 import picard.vcf.SamTestUtils;
 import picard.vcf.VcfTestUtils;
 
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -40,7 +40,10 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     private final File TEST_DATA_DIR = new File("testdata/picard/fingerprint/");
     private final File HAPLOTYPE_MAP = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+    private final File HAPLOTYPE_MAP_SHORT = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.short_dictionary.txt");
     private final File HAPLOTYPE_MAP_FOR_CRAMS = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.txt");
+
+    private final File HAPLOTYPE_MAP_FOR_CRAMS_SHORT = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.shifted.for.crams.short_dictionary.txt");
 
     private final File NA12891_r1_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r1.sam");
     private final File NA12891_r2_sam = new File(TEST_DATA_DIR, "NA12891.over.fingerprints.r2.sam");
@@ -148,7 +151,6 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         return CrosscheckFingerprints.class.getSimpleName();
     }
 
-    @DataProvider(name = "bamFilesRGs")
     public Object[][] bamAndCramFilesRGs() {
         return new Object[][] {
                 {NA12891_r1, NA12891_r2, false, 0, (NA12891_r1_RGs + NA12891_r2_RGs) * (NA12891_r1_RGs + NA12891_r2_RGs )},
@@ -178,10 +180,26 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         };
     }
 
-    @Test(dataProvider = "bamFilesRGs")
-    public void testCrossCheckRGs(final File file1, final File file2, final boolean expectAllMatch, final int expectedRetVal, final int expectedNMetrics) throws IOException {
+    private Object[][] haplotypeMaps(){
+        return new Object[][]{
+                {HAPLOTYPE_MAP, HAPLOTYPE_MAP_FOR_CRAMS},
+                {HAPLOTYPE_MAP_SHORT, HAPLOTYPE_MAP_FOR_CRAMS_SHORT}};
+    }
+    @DataProvider(name = "bamFilesRGs")
+    public Iterator<Object[]> bamFilesRGsAndHapMaps(){
+        return TestNGUtil.interaction(bamAndCramFilesRGs(), haplotypeMaps());
+    }
 
-        File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
+    @Test(dataProvider = "bamFilesRGs")
+    public void testCrossCheckRGs(final File file1,
+                                  final File file2,
+                                  final boolean expectAllMatch,
+                                  final int expectedRetVal,
+                                  final int expectedNMetrics,
+                                  final File haplotypeMap,
+                                  final File haplotypeMapForCram) throws IOException {
+
+        final File metrics = File.createTempFile("Fingerprinting", "NA1291.RG.crosscheck_metrics");
         metrics.deleteOnExit();
 
         final List<String> args = new ArrayList<>(Arrays.asList("INPUT=" + file1.getAbsolutePath(),
@@ -193,13 +211,14 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
         if (file1.getName().endsWith(SamReader.Type.CRAM_TYPE.fileExtension())) {
             args.add("R=" + referenceForCrams);
-            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS);
+            args.add("HAPLOTYPE_MAP=" + haplotypeMapForCram.getAbsolutePath());
         } else {
-            args.add("HAPLOTYPE_MAP=" + HAPLOTYPE_MAP);
+            args.add("HAPLOTYPE_MAP=" + haplotypeMap.getAbsolutePath());
         }
 
         doTest(args.toArray(new String[0]), metrics, expectedRetVal, expectedNMetrics, CrosscheckMetric.DataType.READGROUP, expectAllMatch);
     }
+
 
     @DataProvider(name = "cramsWithNoReference")
     public Object[][] cramsWithNoReference() {
@@ -212,7 +231,7 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "cramsWithNoReference")
     public void testCramsWithNoReference(final File file1, final File file2) throws IOException {
-        File metrics = File.createTempFile("Fingerprinting", "NA12891.RG.crosscheck_metrics");
+        final File metrics = File.createTempFile("Fingerprinting", "NA12891.RG.crosscheck_metrics");
         metrics.deleteOnExit();
 
         final String[] args = {"INPUT=" + file1.getAbsolutePath(),
@@ -225,8 +244,11 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         Assert.assertEquals(crossChecker.instanceMain(args), 1);
     }
 
-    @DataProvider(name = "cramBamComparison")
-    public Object[][] cramBamComparison() {
+    private Object[][] haplotypeMapsForCram(){
+        return new Object[][]{{HAPLOTYPE_MAP_FOR_CRAMS}, {HAPLOTYPE_MAP_FOR_CRAMS_SHORT}};
+    }
+
+    private  Object[][] cramBamComparison() {
         return new Object[][]{
                 {NA12891_r1_shifted_bam, NA12891_r2_shifted_bam, NA12891_r1_cram, NA12891_r2_cram},
                 {NA12891_r1_shifted_bam, NA12892_r1_shifted_bam, NA12891_r1_cram, NA12892_r1_cram},
@@ -237,25 +259,30 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
         };
     }
 
+    @DataProvider(name = "cramBamComparison")
+    public Iterator<Object[]> cramBamComparisonWithHapMap() {
+        return TestNGUtil.interaction(cramBamComparison(), haplotypeMapsForCram());
+    }
+
     @Test(dataProvider = "cramBamComparison")
-    public void testCramBamComparison(final File bam1, final File bam2, final File cram1, final File cram2) throws IOException {
-        File metricsBam = File.createTempFile("Fingerprinting.bam.comparison", "crosscheck_metrics");
+    public void testCramBamComparison(final File bam1, final File bam2, final File cram1, final File cram2, final File haplotypeMap) throws IOException {
+        final File metricsBam = File.createTempFile("Fingerprinting.bam.comparison", "crosscheck_metrics");
         metricsBam.deleteOnExit();
-        File metricsCram = File.createTempFile("Fingerprinting.cram.comparison", "crosscheck_metrics");
+        final File metricsCram = File.createTempFile("Fingerprinting.cram.comparison", "crosscheck_metrics");
         metricsCram.deleteOnExit();
 
         final List<String> argsBam = new ArrayList<>(Arrays.asList("INPUT=" + bam1.getAbsolutePath(),
                 "INPUT=" + bam2.getAbsolutePath(),
                 "OUTPUT=" + metricsBam.getAbsolutePath(),
                 "LOD_THRESHOLD=" + -2.0,
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS)
+                "HAPLOTYPE_MAP=" + haplotypeMap.getAbsolutePath())
         );
 
         final List<String> argsCram = new ArrayList<>(Arrays.asList("INPUT=" + cram1.getAbsolutePath(),
                 "INPUT=" + cram2.getAbsolutePath(),
                 "OUTPUT=" + metricsCram.getAbsolutePath(),
                 "LOD_THRESHOLD=" + -2.0,
-                "HAPLOTYPE_MAP=" + HAPLOTYPE_MAP_FOR_CRAMS,
+                "HAPLOTYPE_MAP=" + haplotypeMap.getAbsolutePath(),
                 "R=" + referenceForCrams)
         );
 
@@ -416,10 +443,10 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "bamFilesSMs")
     public void testCrossCheckSMs(final File file1, final File file2, final int expectedRetVal, final int numberOfSamples) throws IOException {
-        File metrics = File.createTempFile("Fingerprinting", "NA1291.SM.crosscheck_metrics");
+        final File metrics = File.createTempFile("Fingerprinting", "NA1291.SM.crosscheck_metrics");
         metrics.deleteOnExit();
 
-        File matrix = File.createTempFile("Fingerprinting", "NA1291.SM.matrix");
+        final File matrix = File.createTempFile("Fingerprinting", "NA1291.SM.matrix");
         matrix.deleteOnExit();
 
         final String[] args = new String[]{

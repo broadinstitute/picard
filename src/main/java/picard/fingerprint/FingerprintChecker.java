@@ -535,7 +535,15 @@ public class FingerprintChecker {
             log.info(String.format("Reading an indexed file (%s)", samFile.toUri().toString()));
         }
 
-        final SamLocusIterator iterator = new SamLocusIterator(in, this.haplotypes.getIntervalList(), in.hasIndex());
+        // fingerprinting allows that headers differ, but SamLocusIterator doesn't allow the dictionary of the query
+        // interval list to differ from that of the samfile, leading to an exception thrown.
+        // At this point we already know that the dictionary of the haplotypes is a proper prefix of that of the sam file
+        // So we just swap out the header in the interval list.
+        final IntervalList il = this.haplotypes.getIntervalList();
+        final IntervalList newIl = new IntervalList(in.getFileHeader());
+        newIl.addall(il.getIntervals());
+
+        final SamLocusIterator iterator = new SamLocusIterator(in, newIl, in.hasIndex());
         iterator.setEmitUncoveredLoci(true);
         iterator.setMappingQualityScoreCutoff(this.minimumMappingQuality);
         iterator.setQualityScoreCutoff(this.minimumBaseQuality);
