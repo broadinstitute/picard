@@ -412,7 +412,7 @@ public class LiftoverUtils {
 
                 // 7. end if
             }
-            changesInAlleles = theStart!=oldStart && theEnd != oldEnd;
+            changesInAlleles = theStart!=oldStart || theEnd != oldEnd;
         }
 
         // 8. while leftmost nucleotide of each allele are the same and all alleles have length 2 or more do
