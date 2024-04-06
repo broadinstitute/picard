@@ -55,8 +55,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
     // Cloud-related test data
     final int DEFAULT_RANDOM_SEED = 42;
-    private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
-    private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
 
     @Override
     public String getCommandLineProgramName() {

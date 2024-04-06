@@ -50,6 +50,7 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
+import htsjdk.utils.ValidationUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -62,7 +63,11 @@ import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.TabbedTextFileWithHeaderParser;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -600,9 +605,32 @@ public class RevertSam extends CommandLineProgram {
         } catch (IOException e){
             throw new PicardException("Encountered an error while creating an output map", e);
         }
+    }
 
+    // This probably is the fastest/cleanest way
+    public static void writeOutputMapToFile(final Path outputTablePath, final List<String> readNames, final List<String> outputFiles) {
+        ValidationUtils.validateArg(readNames.size() == outputFiles.size(), "readNames and output files must be the same size but got: " + readNames.size() + " and " + outputFiles.size());
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputTablePath))) {
+            // Write header
+            writeRow(writer, READ_GROUP_ID_COLUMN_NAME, OUTPUT_COLUMN_NAME);
 
+            for (int i = 0; i < readNames.size(); i++){
+                writeRow(writer, readNames.get(i), outputFiles.get(i));
+            }
+        } catch (IOException e) {
+            throw new PicardException("Error writing a tsv file to " + outputTablePath, e);
+        }
+    }
 
+    private static void writeRow(final PrintWriter writer, final String... row) {
+        for (int j = 0; j < row.length; j++){
+            writer.write(row[j]);
+            if (j < row.length - 1) {
+                writer.write('\t');
+            } else {
+                writer.println();
+            }
+        }
     }
 
     private static Map<String, Path> createOutputMap(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension) {
