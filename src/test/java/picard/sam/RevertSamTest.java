@@ -25,6 +25,7 @@ package picard.sam;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.utils.ValidationUtils;
 import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -64,20 +65,21 @@ import java.util.stream.Stream;
  * To change this template use File | Settings | File Templates.
  */
 public class RevertSamTest extends CommandLineProgramTest {
-    private static final String basicSamToRevert = "testdata/picard/sam/RevertSam/revert_sam_basic.sam";
-    private static final String sampleLibraryOverrideSam = "testdata/picard/sam/RevertSam/revert_sam_sample_library_override.sam";
-    private static final File validOutputMap = new File("testdata/picard/sam/RevertSam/revert_sam_valid_output_map.txt");
-    private static final File nonExistentOutputMap = new File("testdata/picard/sam/RevertSam/revert_sam_does_not_exist.txt");
-    private static final File badHeaderOutputMap = new File("testdata/picard/sam/RevertSam/revert_sam_bad_header_output_map.txt");
+    private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT, "test/RevertSam");
+    public static final String REVERT_SAM_LOCAL_TEST_DATA_DIR = "testdata/picard/sam/RevertSam/";
+    private static final String basicSamToRevert = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_basic.sam";
+    private static final String sampleLibraryOverrideSam = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_sample_library_override.sam";
+    private static final File validOutputMap = new File(REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_valid_output_map.txt");
+    private static final File nonExistentOutputMap = new File(REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_does_not_exist.txt");
+    private static final File badHeaderOutputMap = new File(REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_bad_header_output_map.txt");
     private static final File samTestData = new File("testdata/picard/sam");
-    private static final File writablePath = new File("testdata/picard/sam/RevertSam/revert_sam_writable.bam");
+    private static final File writablePath = new File(REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_writable.bam");
     private static final File referenceFasta = new File("testdata/picard/reference/test.fasta");
-    private static final String singleEndSamToRevert = "testdata/picard/sam/RevertSam/revert_sam_single_end.sam";
+    private static final String singleEndSamToRevert = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_single_end.sam";
     private static final File hardClipFasta = new File("testdata/picard/sam/MergeBamAlignment/cliptest.fasta");
     private static final File hardClippedAlignedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.aligned.sam");
     private static final File hardClippedUnmappedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.unmapped.sam");
-    public static final String REVERT_SAM_LOCAL_TEST_DATA_DIR = "testdata/picard/sam/RevertSam/";
-    private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT, "test/RevertSam");
+
 
 
     private static final String revertedQualities =
@@ -618,15 +620,15 @@ public class RevertSamTest extends CommandLineProgramTest {
                 // Output by read group without the output map, write output bams in the cloud
                 // Since the output file names are determined within RevertSam, we can't designate the output files to be temp files.
                 // So we will clean these up manually at the end of tests, and in order to avoid collisions, there cannot be another test case with the same BAM and output options.
-                {NA12878_MEDIUM, Optional.of(DEFAULT_CLOUD_TEST_OUTPUT_DIR), OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP },
+                {NA12878_MEDIUM, DEFAULT_CLOUD_TEST_OUTPUT_DIR, OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP },
                 // Output by read group using the output map, write output bams in the cloud
-                {NA12878_MEDIUM, Optional.empty(), OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP }, // Optional.of(testReadGroupMapFile)},
+                {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP },
                 // Output by read group using the local output map, write output bams in the cloud
-                {NA12878_MEDIUM, Optional.empty(), OUTPUT_BY_READ_GROUP, OutputMapOptions.LOCAL_OUTPUT_MAP }, // Optional.of(testReadGroupMapFileLocal)},
+                {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.LOCAL_OUTPUT_MAP },
                 // Cram input, create a cram for each read group
-                {NA12878_MEDIUM_CRAM, Optional.empty(), OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP }, // Optional.of(testReadGroupMapFile)},
+                {NA12878_MEDIUM_CRAM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP },
                 // Cram input, single output cram
-                {NA12878_MEDIUM_CRAM, Optional.of(tempCramOutputPath), !OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP }};
+                {NA12878_MEDIUM_CRAM, tempCramOutputPath, !OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP }};
     }
 
     /**
@@ -671,18 +673,21 @@ public class RevertSamTest extends CommandLineProgramTest {
     /***
      *
      * @param inputSAM The path to the input SAM file
-     * @param outputPath (Optional) The path to the single output SAM file, when output by read group is turned off
+     * @param outputPath The path to the single output SAM file, when output by read group is turned off. May be null.
      * @param outputByReadGroup Whether to output by read group
      * @param outputMapOptions Dictates whether to dynamically create an output map and where (local or cloud)
      */
     @Test(dataProvider = "cloudTestData", groups = "cloud")
-    public void testCloud(final PicardHtsPath inputSAM, final Optional<PicardHtsPath> outputPath, final boolean outputByReadGroup,
+    public void testCloud(final PicardHtsPath inputSAM, final PicardHtsPath outputPath, final boolean outputByReadGroup,
                           final OutputMapOptions outputMapOptions) {
         final List<SAMReadGroupRecord> readGroupsInInput = SamReaderFactory.makeDefault().open(inputSAM.toPath()).getFileHeader().getReadGroups();
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "INPUT=" + inputSAM.getURIString(),
                 "OUTPUT_BY_READGROUP=" + outputByReadGroup));
-        outputPath.ifPresent(s -> args.add("OUTPUT=" + s.getURIString()));
+
+        if (outputPath != null){
+            args.add("OUTPUT=" + outputPath.getURIString());
+        }
 
         final boolean createOutputMap = outputMapOptions != OutputMapOptions.NO_OUTPUT_MAP;
         PicardHtsPath outputMap = null;
@@ -702,16 +707,16 @@ public class RevertSamTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
 
-        if (! outputByReadGroup){
-            final PicardHtsPath outputBAMPath = outputPath.get();
-            final List<SAMReadGroupRecord> readGroupsInOutput = SamReaderFactory.makeDefault().open(outputBAMPath.toPath()).getFileHeader().getReadGroups();
+        if (!outputByReadGroup){
+            ValidationUtils.validateArg(outputPath != null, "outputPath must be provided and point to a SAM file to be created.");
+            final List<SAMReadGroupRecord> readGroupsInOutput = SamReaderFactory.makeDefault().open(outputPath.toPath()).getFileHeader().getReadGroups();
             // Or the list version of equals....
             Assert.assertEquals(readGroupsInOutput, readGroupsInInput);
         } else if (!createOutputMap){
             // OutputByReadGroup is true, but the outputMap was not used.
-            // Confirm that the expected output files have been created in the output directory
-            final PicardHtsPath outputDirectory = outputPath.get();
-            final Map<String, Path> expectedOutputPaths = RevertSam.createOutputMap(null, outputDirectory.toPath(), RevertSam.getDefaultExtension(inputSAM.getURIString()), readGroupsInInput);
+            // Confirm that the expected output files have been created in the directory specified by outputPath
+            ValidationUtils.validateArg(outputPath != null, "outputPath must be provided and must point to a directory.");
+            final Map<String, Path> expectedOutputPaths = RevertSam.createOutputMap(null, outputPath.toPath(), RevertSam.getDefaultExtension(inputSAM.getURIString()), readGroupsInInput);
             for (Map.Entry<String, Path> entry : expectedOutputPaths.entrySet()){
                 final Path outputFile = entry.getValue();
                 Assert.assertTrue(Files.exists(outputFile));
@@ -723,7 +728,6 @@ public class RevertSamTest extends CommandLineProgramTest {
                 if (Files.exists(entry.getValue())){
                     PicardIOUtils.deleteOnExit(outputFile);
                 }
-
             }
         } else {
             // OutputByReadGroup is true and outputMap was provided
