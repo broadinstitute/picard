@@ -16,6 +16,7 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
 import picard.nio.PicardHtsPath;
+import picard.nio.PicardIOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -686,7 +687,8 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         final RevertSam revertSam = new RevertSam();
 
         revertSam.INPUT = file;
-        final PicardHtsPath fileUnaligned = new PicardHtsPath(newTempSamFile("unaligned")); // tsato: replace with the picardBucketutils
+        final PicardHtsPath fileUnaligned = new PicardHtsPath(newTempSamFile("unaligned"));
+
         revertSam.OUTPUT = fileUnaligned;
 
         revertSam.SANITIZE = false;
@@ -700,7 +702,7 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         MergeBamAlignment mergeBamAlignment = new MergeBamAlignment();
 
         mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file.toPath().toFile()); // TODO update to use Path when MergeBamAlignment is updated to use Path
-        mergeBamAlignment.UNMAPPED_BAM = fileUnaligned.toPath().toFile(); // tsato: see TODO above
+        mergeBamAlignment.UNMAPPED_BAM = fileUnaligned.toPath().toFile(); // Also need to be updated to use Path
         mergeBamAlignment.UNMAP_CONTAMINANT_READS = true;
 
         //yuck!

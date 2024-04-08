@@ -80,8 +80,6 @@ public class RevertSamTest extends CommandLineProgramTest {
     private static final File hardClippedAlignedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.aligned.sam");
     private static final File hardClippedUnmappedSam = new File("testdata/picard/sam/MergeBamAlignment/hardclip.unmapped.sam");
 
-
-
     private static final String revertedQualities =
             "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
 
@@ -91,7 +89,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         return RevertSam.class.getSimpleName();
     }
 
-    @Test(dataProvider = "positiveTestData")
+    @Test(dataProvider="positiveTestData")
     public void basicPositiveTests(final SAMFileHeader.SortOrder so, final boolean removeDuplicates, final boolean removeAlignmentInfo, final boolean restoreHardClips,
                                    final boolean restoreOriginalQualities, final boolean outputByReadGroup, final String sample, final String library,
                                    final List<String> attributesToClear) throws Exception {
@@ -207,7 +205,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     public void testSingleEnd() throws Exception {
         final File output = File.createTempFile("single_end_reverted", ".sam");
         output.deleteOnExit();
-        final String args[] = {"INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath()};
+        final String args[] = { "INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath() };
         runPicardCommandLine(args);
         final ValidateSamFile validator = new ValidateSamFile();
         validator.INPUT = new PicardHtsPath(output);
@@ -221,7 +219,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     public void testSingleEndSanitize() throws Exception {
         final File output = File.createTempFile("single_end_reverted", ".sam");
         output.deleteOnExit();
-        final String args[] = {"INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath(), "SANITIZE=true"};
+        final String args[] = { "INPUT=" + singleEndSamToRevert, "OUTPUT=" + output.getAbsolutePath(), "SANITIZE=true"};
         Assert.assertEquals(runPicardCommandLine(args), 0, "Sanitation of single-end sample failed.");
     }
 
@@ -573,11 +571,11 @@ public class RevertSamTest extends CommandLineProgramTest {
         final File outputMBA = File.createTempFile("test-output-hard-clipped-round-trip-mba", ".sam");
         outputMBA.deleteOnExit();
         final String[] mergeBamAlignmentsArgs = new String[]{
-                "UNMAPPED_BAM=" + hardClippedUnmappedSam.getAbsolutePath(),
-                "ALIGNED_BAM=" + hardClippedAlignedSam.getAbsolutePath(),
-                "OUTPUT=" + outputMBA.getAbsolutePath(),
-                "REFERENCE_SEQUENCE=" + hardClipFasta.getAbsolutePath(),
-                "HARD_CLIP_OVERLAPPING_READS=true"
+            "UNMAPPED_BAM=" + hardClippedUnmappedSam.getAbsolutePath(),
+            "ALIGNED_BAM=" + hardClippedAlignedSam.getAbsolutePath(),
+            "OUTPUT=" + outputMBA.getAbsolutePath(),
+            "REFERENCE_SEQUENCE=" + hardClipFasta.getAbsolutePath(),
+            "HARD_CLIP_OVERLAPPING_READS=true"
         };
         Assert.assertEquals(runPicardCommandLine("MergeBamAlignment", mergeBamAlignmentsArgs), 0);
 
@@ -619,7 +617,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         return new Object[][]{
                 // Output by read group without the output map, write output bams in the cloud
                 // Since the output file names are determined within RevertSam, we can't designate the output files to be temp files.
-                // So we will clean these up manually at the end of tests, and in order to avoid collisions, there cannot be another test case with the same BAM and output options.
+                // So we mark these files to be deleted. In order to avoid collisions, there cannot be another test case with the same BAM and output options.
                 {NA12878_MEDIUM, DEFAULT_CLOUD_TEST_OUTPUT_DIR, OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP },
                 // Output by read group using the output map, write output bams in the cloud
                 {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP },
@@ -637,9 +635,8 @@ public class RevertSamTest extends CommandLineProgramTest {
      *
      * @param sam        The read names in the header of this sam file will be used as rows
      * @param outputBase The directory where the per read group output files will live
-     *
-     *
-     * @return The PicardHtsPath to the tsv with each row a pair (read name, output), where output is a random path
+     * @return The PicardHtsPath to the tsv with each row a pair (read name, output), where output points to a temp file
+o     * created in the directory specified in outputBase.
      */
     private PicardHtsPath getTestReadGroupMapFile(final PicardHtsPath sam, final String outputBase) {
         final String samExtension = sam.isBam() ? ".bam" : ".cram";
@@ -710,7 +707,6 @@ public class RevertSamTest extends CommandLineProgramTest {
         if (!outputByReadGroup){
             ValidationUtils.validateArg(outputPath != null, "outputPath must be provided and point to a SAM file to be created.");
             final List<SAMReadGroupRecord> readGroupsInOutput = SamReaderFactory.makeDefault().open(outputPath.toPath()).getFileHeader().getReadGroups();
-            // Or the list version of equals....
             Assert.assertEquals(readGroupsInOutput, readGroupsInInput);
         } else if (!createOutputMap){
             // OutputByReadGroup is true, but the outputMap was not used.
@@ -748,15 +744,5 @@ public class RevertSamTest extends CommandLineProgramTest {
                 throw new PicardException("Encountered an exception while parsing the output map", e);
             }
         }
-    }
-
-    @AfterTest
-    public void cleanUp(){
-        try (Stream<Path> stream = Files.list(DEFAULT_CLOUD_TEST_OUTPUT_DIR.toPath())){
-            int d = 3; List<Path> files = stream.toList();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 }

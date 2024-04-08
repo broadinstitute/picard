@@ -30,12 +30,11 @@ public abstract class CommandLineProgramTest {
 
     public static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
     public static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-    public static final PicardHtsPath NA12878_MEDIUM = new PicardHtsPath("gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam");
-    public static final PicardHtsPath NA12878_MEDIUM_CRAM = new PicardHtsPath("gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
+    public static final PicardHtsPath NA12878_MEDIUM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam");
+    public static final PicardHtsPath NA12878_MEDIUM_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
 
     // A per-test-class directory that will be deleted after the tests are complete.
     private File tempOutputDir;
-
 
     /**
      * returns an directory designated for output which will be deleted after the test class is tested
