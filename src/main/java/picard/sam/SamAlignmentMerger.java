@@ -39,13 +39,13 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      *  Constructor with a default value for unmappingReadStrategy
      *
      */
-    public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
+    public SamAlignmentMerger(final Path unmappedBamFile, final Path targetBamFile, final Path referenceFasta,
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
                               final boolean alignedReadsOnly,
-                              final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
+                              final List<Path> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
                               final List<String> attributesToRemove,
                               final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                              final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
+                              final List<Path> read1AlignedSamFile, final List<Path> read2AlignedSamFile,
                               final List<SamPairUtil.PairOrientation> expectedOrientations,
                               final SortOrder sortOrder,
                               final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
@@ -190,9 +190,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
     @Override
     protected SAMSequenceDictionary getDictionaryForMergedBam() {
-        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta.toPath());
+        SAMSequenceDictionary referenceDict = SAMSequenceDictionaryExtractor.extractDictionary(referenceFasta);
         if (referenceDict == null) {
-            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
+            throw new PicardException("No sequence dictionary found for " + referenceFasta.toUri() +
                     ".  Use Picard's CreateSequenceDictionary to create a sequence dictionary.");
         }
         return SAMSequenceDictionary.mergeDictionaries(alignedSamDictionary, referenceDict, requiredMatchingDictionaryTags);
@@ -210,7 +210,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         if (alignedSamFile != null && !alignedSamFile.isEmpty()) {
             final List<SAMFileHeader> headers = new ArrayList<>(alignedSamFile.size());
             final List<SamReader> readers = new ArrayList<>(alignedSamFile.size());
-            for (final File f : this.alignedSamFile) {
+            for (final Path f : this.alignedSamFile) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
                 readers.add(r);
@@ -318,16 +318,16 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         private final PeekableIterator<SAMRecord> read2Iterator;
         private final SAMFileHeader header;
 
-        public SeparateEndAlignmentIterator(final List<File> read1Alignments, final List<File> read2Alignments, File referenceFasta) {
+        public SeparateEndAlignmentIterator(final List<Path> read1Alignments, final List<Path> read2Alignments, final Path referenceFasta) {
             final List<SAMFileHeader> headers = new ArrayList<>();
             final List<SamReader> read1 = new ArrayList<>(read1Alignments.size());
             final List<SamReader> read2 = new ArrayList<>(read2Alignments.size());
-            for (final File f : read1Alignments) {
+            for (final Path f : read1Alignments) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
                 read1.add(r);
             }
-            for (final File f : read2Alignments) {
+            for (final Path f : read2Alignments) {
                 final SamReader r = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
                 headers.add(r.getFileHeader());
                 read2.add(r);

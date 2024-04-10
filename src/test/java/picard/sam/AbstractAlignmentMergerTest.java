@@ -699,8 +699,8 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
 
         MergeBamAlignment mergeBamAlignment = new MergeBamAlignment();
 
-        mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file.toPath().toFile()); // TODO update to use Path when MergeBamAlignment is updated to use Path
-        mergeBamAlignment.UNMAPPED_BAM = fileUnaligned;
+        mergeBamAlignment.ALIGNED_BAM = Collections.singletonList(file);
+        mergeBamAlignment.UNMAPPED_BAM = new PicardHtsPath(fileUnaligned);
         mergeBamAlignment.UNMAP_CONTAMINANT_READS = true;
 
         //yuck!
@@ -708,9 +708,9 @@ public class AbstractAlignmentMergerTest extends CommandLineProgramTest {
         requiredReferenceArgumentCollection.REFERENCE_SEQUENCE = new PicardHtsPath(reference);
         mergeBamAlignment.referenceSequence = requiredReferenceArgumentCollection;
 
-        final File fileMerged = newTempSamFile("merged");
+        final File fileMerged = newTempSamFile("merged"); // tsato: use PicardBucketUtils
 
-        mergeBamAlignment.OUTPUT = fileMerged;
+        mergeBamAlignment.OUTPUT = new PicardHtsPath(fileMerged);
 
         // merge file with itself.
         Assert.assertEquals(mergeBamAlignment.doWork(), 0);

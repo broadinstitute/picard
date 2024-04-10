@@ -330,8 +330,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         final File target = File.createTempFile("target", "bam");
         target.deleteOnExit();
-        final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped, target, fasta, null, true, false,
-                false, Collections.singletonList(aligned), 1, null, null, null, null, null, null,
+        final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped.toPath(), target.toPath(), fasta.toPath(), null, true, false,
+                false, Collections.singletonList(aligned.toPath()), 1, null, null, null, null, null, null,
                 Collections.singletonList(SamPairUtil.PairOrientation.FR),
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
                 new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30);
