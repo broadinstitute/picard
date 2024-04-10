@@ -1017,7 +1017,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         VariantContext newVc = builder.make();
         final String refString = StringUtil.bytesToString(REFERENCE_WITH_REPEATS.getBases(), newVc.getStart() - 1, newVc.getEnd() - newVc.getStart() + 1);
 
-        Assert.assertEquals(refString,"CGTC");
+        Assert.assertEquals(refString, "CGTC");
     }
 
 

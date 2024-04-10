@@ -357,8 +357,6 @@ public class LiftoverUtils {
             throw new IllegalArgumentException(String.format("Reference allele doesn't match reference at %s:%d-%d", referenceSequence.getName(), start, end));
         }
 
-        boolean changesInAlleles = true;
-
         final Map<Allele, byte[]> alleleBasesMap = new HashMap<>();
 
         // Put each allele into the alleleBasesMap unless it is a spanning deletion.
@@ -370,10 +368,24 @@ public class LiftoverUtils {
         int theStart = start;
         int theEnd = end;
 
-        // 1. while changes in alleles do
-        while (changesInAlleles) {
-            final int oldStart = theStart;
-            final int oldEnd = theEnd;
+        /** the algorithm below is an implementation of the pseudo-code provided here:
+         * https://genome.sph.umich.edu/wiki/Variant_Normalization
+         *
+         * The numbers in the comments match with the numbers in the pseudo-code in this image:
+         * https://genome.sph.umich.edu/wiki/File:Variant_normalization_algorithm.png
+         */
+
+        int oldStart, oldEnd;
+
+        // while changes in alleles do
+        do {
+            oldStart = theStart;
+            oldEnd = theEnd;
+
+            // this block will convert
+            // REF = "ACG", ALT="ATG"
+            // to
+            // REF = "AC",  ALT="AT"
 
             // 2. if alleles end with the same nucleotide then
             if (alleleBasesMap.values().stream()
@@ -385,16 +397,27 @@ public class LiftoverUtils {
                 // 4. end if
             }
 
+            // This block will extend all the alleles if one of them is empty:
+            // REF: "" ALT: "A"
+            // to
+            // REF: "G" ALT: "GA" (assuming there's previous base in the reference, and it is G)
+            // or
+            // REF: "T" ALT: "AT" (if the A was inserted before the first base in the reference sequence, "T" , we anchor on the "T")
+
             // 5. if there exists an empty allele then
             if (alleleBasesMap.values().stream()
                     .map(a -> a.length)
                     .anyMatch(l -> l == 0)) {
                 // 6. extend alleles 1 nucleotide to the left
 
+                // The comment above says to extend to the left, but this isn't always possible. The following block
+                // decides where to extend and with which base.
 
                 final byte extraBase;
                 final boolean extendLeft;
                 if (theStart > 1) {
+                    // the first -1 for zero-base (getBases) versus 1-based (variant position)
+                    // another   -1 to get the base prior to the location of the start of the allele
                     extraBase = referenceSequence.getBases()[theStart - 2];
                     extendLeft = true;
                     theStart--;
@@ -404,18 +427,16 @@ public class LiftoverUtils {
                     theEnd++;
                 }
 
+                // This block actually updates the alleles according (by adding the base to the left or right)
                 for (final Allele allele : alleleBasesMap.keySet()) {
-                    // the first -1 for zero-base (getBases) versus 1-based (variant position)
-                    // another   -1 to get the base prior to the location of the start of the allele
                     alleleBasesMap.put(allele, extendOneBase(alleleBasesMap.get(allele), extraBase, extendLeft));
                 }
 
-                // 7. end if
-            }
-            changesInAlleles = theStart!=oldStart || theEnd != oldEnd;
-        }
+            } // 7. end if
+        // 8. end while (when alleles change either the start or the end should change)
+        } while (theStart != oldStart || theEnd != oldEnd);
 
-        // 8. while leftmost nucleotide of each allele are the same and all alleles have length 2 or more do
+        // 9. while leftmost nucleotide of each allele are the same and all alleles have length 2 or more do
         while (alleleBasesMap.values().stream()
                 .allMatch(a -> a.length >= 2) &&
 
@@ -424,10 +445,10 @@ public class LiftoverUtils {
                         .size() == 1
         ) {
 
-            //9. truncate the leftmost base of the alleles
+            // 10. truncate the leftmost base of the alleles
             alleleBasesMap.replaceAll((a, v) -> truncateBase(alleleBasesMap.get(a), false));
             theStart++;
-        }
+        } // 11. end while.
 
         builder.start(theStart);
         builder.stop(theEnd);
@@ -440,7 +461,7 @@ public class LiftoverUtils {
         // a special case here.
         fixedAlleleMap.put(Allele.SPAN_DEL, Allele.SPAN_DEL);
 
-        // symbolic alleles cannot be left-aligned so they need to be put
+        // symbolic alleles cannot be left-aligned, so they need to be put
         // into the map directly
         alleles.stream()
                 .filter(Allele::isSymbolic)
