@@ -55,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by IntelliJ IDEA.
@@ -656,15 +655,6 @@ o     * created in the directory specified in outputBase.
     private List<SAMReadGroupRecord> getReadGroups(final Path sam){
         final List<SAMReadGroupRecord> readGroupsInInput = SamReaderFactory.makeDefault().open(sam).getFileHeader().getReadGroups();
         return readGroupsInInput;
-    }
-
-
-    @DataProvider(name="cloudTestDataMini")
-    public Object[][] getCloudTestDataMini() {
-        return new Object[][] {
-                {NA12878_MEDIUM, Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_STR, "RevertSam", ".bam")), !OUTPUT_BY_READ_GROUP, Optional.empty()},
-                {NA12878_MEDIUM, Optional.of(PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT, "test/reverted")), OUTPUT_BY_READ_GROUP, Optional.empty()},
-        };
     }
 
     /***
