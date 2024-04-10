@@ -24,6 +24,7 @@
 
 package picard.sam.markduplicates.util;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
@@ -36,24 +37,31 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.sam.DuplicationMetrics;
 import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.MarkDuplicatesForFlowHelper;
 import picard.sam.util.PGTagArgumentCollection;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
@@ -168,7 +176,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      *                           added to the header when {@link CommandLineProgram#getMetricsFile()} is called.
      * @param outputFile         The file to write the metrics to
      */
-    static public void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator, final MetricsFile<DuplicationMetrics, Double> metricsFile, final File outputFile) {
+    static public void finalizeAndWriteMetrics(final LibraryIdGenerator libraryIdGenerator, final MetricsFile<DuplicationMetrics, Double> metricsFile, final Path outputFile) {
         final Map<String, DuplicationMetrics> metricsByLibrary = libraryIdGenerator.getMetricsByLibraryMap();
         final Histogram<Short> opticalDuplicatesByLibraryId = libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap();
         final Map<String, Short> libraryIds = libraryIdGenerator.getLibraryIdsMap();
@@ -202,7 +210,11 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         metricsFile.addHistogram(libraryIdGenerator.getOpticalDuplicateCountHist());
         metricsFile.addHistogram(libraryIdGenerator.getNonOpticalDuplicateCountHist());
 
-        metricsFile.write(outputFile);
+        try(final BufferedWriter writer = Files.newBufferedWriter(outputFile)){
+            metricsFile.write(writer);
+        } catch (IOException e){
+            throw new PicardException("Encountered an error while writing metrics to " + outputFile.toUri(), e);
+        }
     }
 
     public static DuplicationMetrics addReadToLibraryMetrics(final SAMRecord rec, final SAMFileHeader header, final LibraryIdGenerator libraryIdGenerator, final boolean flowMetrics) {
@@ -239,12 +251,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         final List<SAMFileHeader> headers = new ArrayList<>(INPUT.size());
         final List<SamReader> readers = new ArrayList<>(INPUT.size());
 
-        for (final String input : INPUT) {
+        for (final PicardHtsPath input : INPUT) {
             final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
             if (eagerlyDecode) {
                 readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE);
             }
-            final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(input));
+            final SamReader reader = readerFactory.referenceSequence(referenceSequence.getReferencePath()).open(SamInputResource.of(input.toPath()));
             final SAMFileHeader header = reader.getFileHeader();
             headers.add(header);
             readers.add(reader);
@@ -374,6 +386,18 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
         if (optDupCnt > 0) {
             opticalDuplicatesCountHist.increment((double) (optDupCnt + 1.0));
+        }
+    }
+
+    // tsato: interesting --- can't use List<IOPath> here...
+    public static void checkInput(final List<PicardHtsPath> input, final IOPath output, final IOPath metricsFile){
+        IOUtil.assertInputsAreValid(input.stream().map(IOPath::getURIString).collect(Collectors.toList()));
+        if (!PicardBucketUtils.isGcsUrl(output)){
+            IOUtil.assertFileIsWritable(output.toPath());
+        }
+
+        if (!PicardBucketUtils.isGcsUrl(metricsFile)){
+            IOUtil.assertFileIsWritable(metricsFile.toPath());
         }
     }
 }

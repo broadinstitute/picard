@@ -24,6 +24,7 @@
 
 package picard.sam.markduplicates;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.DuplicateSet;
 import htsjdk.samtools.DuplicateSetIterator;
 import htsjdk.samtools.SAMFileHeader;
@@ -38,6 +39,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
 import picard.sam.DuplicationMetrics;
 import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram;
@@ -50,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This is a simple tool to mark duplicates using the DuplicateSetIterator, DuplicateSet, and SAMRecordDuplicateComparator.
@@ -87,9 +90,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
      * Main work method.
      */
     protected int doWork() {
-        IOUtil.assertInputsAreValid(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(METRICS_FILE);
+        checkInput(INPUT, OUTPUT, METRICS_FILE);
 
         // Open the inputs
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
@@ -110,8 +111,8 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         // Open the output
         final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader,
                 false,
-                OUTPUT,
-                REFERENCE_SEQUENCE);
+                OUTPUT.toPath(),
+                referenceSequence.getReferencePath());
 
         final SAMRecordDuplicateComparator comparator = new SAMRecordDuplicateComparator(Collections.singletonList(headerAndIterator.header));
         comparator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
@@ -222,7 +223,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         log.info("Marking " + numDuplicates + " records as duplicates.");
 
         // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
+        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE.toPath());
 
         return 0;
     }

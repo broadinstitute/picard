@@ -100,6 +100,6 @@ public class CollectDuplicateMetrics extends SinglePassSamProgram {
     @Override
     protected void finish() {
         // Write out the metrics
-        AbstractMarkDuplicatesCommandLineProgram.finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
+        AbstractMarkDuplicatesCommandLineProgram.finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE.toPath());
     }
 }

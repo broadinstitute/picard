@@ -24,6 +24,7 @@
 
 package picard.sam.markduplicates;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.*;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.util.*;
@@ -33,16 +34,19 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
 import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.*;
 import picard.sam.util.RepresentativeReadIndexer;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A better duplication marking algorithm that handles all cases including clipped
@@ -254,9 +258,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
      * input file and writing it out with duplication flags set correctly.
      */
     protected int doWork() {
-        IOUtil.assertInputsAreValid(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(METRICS_FILE);
+        checkInput(INPUT, OUTPUT, METRICS_FILE); // tsato: perhaps validate input
 
         final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
@@ -307,7 +309,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         // Key: previous PG ID on a SAM Record (or null).  Value: New PG ID to replace it.
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
 
-        try (SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader, true, OUTPUT,REFERENCE_SEQUENCE)){
+        try (SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader, true, OUTPUT.toPath(), referenceSequence.getReferencePath())){
 
             // Now copy over the file while marking all the necessary indexes as duplicates
             long recordInFileIndex = 0;
@@ -445,7 +447,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         reportMemoryStats("After output close");
 
         // Write out the metrics
-        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
+        finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE.toPath());
 
         return 0;
     }

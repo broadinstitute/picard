@@ -32,9 +32,15 @@ import htsjdk.samtools.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -115,7 +121,7 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
 
     // The UMI_METRICS file provides various statistical measurements collected about the UMIs during deduplication.
     @Argument(shortName = "UMI_METRICS", doc = "UMI Metrics")
-    public File UMI_METRICS_FILE;
+    public PicardHtsPath UMI_METRICS_FILE;
 
     @Argument(shortName = "UMI_TAG_NAME", doc = "Tag name to use for UMI", optional = true)
     public String UMI_TAG_NAME = "RX";
@@ -132,7 +138,9 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
     @Override
     protected int doWork() {
         // Before we do anything, make sure the UMI_METRICS_FILE can be written to.
-        IOUtil.assertFileIsWritable(UMI_METRICS_FILE);
+        if (PicardBucketUtils.isGcsUrl(UMI_METRICS_FILE)){
+            IOUtil.assertFileIsWritable(UMI_METRICS_FILE.toPath());
+        }
 
         // Perform Mark Duplicates work
         final int retval = super.doWork();
@@ -143,7 +151,12 @@ public class UmiAwareMarkDuplicatesWithMateCigar extends SimpleMarkDuplicatesWit
             metricsFile.addMetric(metric);
         }
 
-        metricsFile.write(UMI_METRICS_FILE);
+        try (BufferedWriter writer = Files.newBufferedWriter(UMI_METRICS_FILE.toPath())){
+            metricsFile.write(writer);
+        } catch (IOException e){
+            throw new PicardException("Encountered an error while writing UMI metrics to " + UMI_METRICS_FILE.getURIString(), e);
+        }
+
         return retval;
     }
 

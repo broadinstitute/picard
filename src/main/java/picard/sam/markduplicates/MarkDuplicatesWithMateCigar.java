@@ -116,9 +116,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
      * Main work method.
      */
     protected int doWork() {
-        IOUtil.assertInputsAreValid(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(METRICS_FILE);
+        checkInput(INPUT, OUTPUT, METRICS_FILE);
 
         // Open the inputs
         final SamHeaderAndIterator headerAndIterator = openInputs(true);
@@ -142,8 +140,8 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         // Open the output
         final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(outputHeader,
                 true,
-                OUTPUT,
-                REFERENCE_SEQUENCE);
+                OUTPUT.toPath(),
+                referenceSequence.getReferencePath());
 
         // Create the mark duplicate iterator.  The duplicate marking is handled by the iterator, conveniently.
         final MarkDuplicatesWithMateCigarIterator iterator = new MarkDuplicatesWithMateCigarIterator(headerAndIterator.header,
@@ -188,7 +186,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         log.info("Found " + ((long) opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters."); // cast as long due to returning a double
 
         // Write out the metrics
-        finalizeAndWriteMetrics(iterator.getLibraryIdGenerator(), getMetricsFile(), METRICS_FILE);
+        finalizeAndWriteMetrics(iterator.getLibraryIdGenerator(), getMetricsFile(), METRICS_FILE.toPath());
 
         return 0;
     }

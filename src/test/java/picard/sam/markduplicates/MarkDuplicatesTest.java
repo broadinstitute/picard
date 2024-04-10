@@ -39,6 +39,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.util.*;
@@ -178,7 +179,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test(dataProvider = "testOpticalDuplicateDetectionDataProvider")
     public void testOpticalDuplicateDetection(final File sam, final long expectedNumOpticalDuplicates) {
         final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".tmp").toFile();
-        outputDir.deleteOnExit();
+        outputDir.deleteOnExit(); // tsato: are these deleteOnExit necessary...
         final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
         outputSam.deleteOnExit();
         final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
@@ -187,9 +188,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         // record creation according to suppressPg.
         final MarkDuplicates markDuplicates = new MarkDuplicates();
         markDuplicates.setupOpticalDuplicateFinder();
-        markDuplicates.INPUT = CollectionUtil.makeList(sam.getAbsolutePath());
-        markDuplicates.OUTPUT = outputSam;
-        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.INPUT = List.of(new PicardHtsPath(sam)); // CollectionUtil.makeList(sam.getAbsolutePath());
+        markDuplicates.OUTPUT = new PicardHtsPath(outputSam);
+        markDuplicates.METRICS_FILE = new PicardHtsPath(metricsFile);
         markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
         // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
         markDuplicates.PROGRAM_RECORD_ID = null;
