@@ -38,6 +38,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 import picard.sam.util.PGTagArgumentCollection;
 
 import java.io.File;
@@ -154,29 +155,29 @@ public class MergeBamAlignment extends CommandLineProgram {
 
     @Argument(shortName = "UNMAPPED",
             doc = "Original SAM or BAM file of unmapped reads, which must be in queryname order.  Reads MUST be unmapped.")
-    public File UNMAPPED_BAM;
+    public PicardHtsPath UNMAPPED_BAM;
 
     @Argument(shortName = "ALIGNED",
             doc = "SAM or BAM file(s) with alignment data.",
             mutex = {"READ1_ALIGNED_BAM", "READ2_ALIGNED_BAM"},
             optional = true)
-    public List<File> ALIGNED_BAM;
+    public List<PicardHtsPath> ALIGNED_BAM;
 
     @Argument(shortName = "R1_ALIGNED",
             doc = "SAM or BAM file(s) with alignment data from the first read of a pair.",
             mutex = {"ALIGNED_BAM"},
             optional = true)
-    public List<File> READ1_ALIGNED_BAM;
+    public List<PicardHtsPath> READ1_ALIGNED_BAM;
 
     @Argument(shortName = "R2_ALIGNED",
             doc = "SAM or BAM file(s) with alignment data from the second read of a pair.",
             mutex = {"ALIGNED_BAM"},
             optional = true)
-    public List<File> READ2_ALIGNED_BAM;
+    public List<PicardHtsPath> READ2_ALIGNED_BAM;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "Merged SAM or BAM file to write to.")
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
             doc = "The program group ID of the aligner (if not supplied by the aligned file).",
@@ -356,11 +357,11 @@ public class MergeBamAlignment extends CommandLineProgram {
             EXPECTED_ORIENTATIONS = Collections.singletonList(SamPairUtil.PairOrientation.FR);
         }
 
-        final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
-                referenceSequence.getReferenceFile(), prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
-                ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
+        final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM.toPath(), OUTPUT.toPath(),
+                referenceSequence.getReferencePath(), prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
+                ALIGNED_READS_ONLY, PicardHtsPath.toPaths(ALIGNED_BAM), MAX_INSERTIONS_OR_DELETIONS,
                 ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
-                READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
+                PicardHtsPath.toPaths(READ1_ALIGNED_BAM), PicardHtsPath.toPaths(READ2_ALIGNED_BAM), EXPECTED_ORIENTATIONS, SORT_ORDER,
                 PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR, UNMAP_CONTAMINANT_READS,
                 MIN_UNCLIPPED_BASES, UNMAPPED_READ_STRATEGY, MATCHING_DICTIONARY_TAGS);
 

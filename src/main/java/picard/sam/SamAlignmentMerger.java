@@ -8,6 +8,7 @@ import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import picard.PicardException;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,9 +25,9 @@ import java.util.List;
 public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
     private final Log log = Log.getInstance(SamAlignmentMerger.class);
-    private final List<File> alignedSamFile;
-    private final List<File> read1AlignedSamFile;
-    private final List<File> read2AlignedSamFile;
+    private final List<Path> alignedSamFile;
+    private final List<Path> read1AlignedSamFile;
+    private final List<Path> read2AlignedSamFile;
     private final int maxGaps;
     private final int minUnclippedBases;
     private boolean forceSort = false;
@@ -124,13 +125,13 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
          * @param requiredMatchingDictionaryTags            A list of SAMSequenceRecord tags that must be equal (if present) in the aligned bam and the reference dictionary.
          *                                          Program will issue a warning about other tags, if present in both files and are different.
          */
-    public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
+    public SamAlignmentMerger(final Path unmappedBamFile, final Path targetBamFile, final Path referenceFasta,
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
                               final boolean alignedReadsOnly,
-                              final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
+                              final List<Path> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
                               final List<String> attributesToRemove,
                               final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                              final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
+                              final List<Path> read1AlignedSamFile, final List<Path> read2AlignedSamFile,
                               final List<SamPairUtil.PairOrientation> expectedOrientations,
                               final SortOrder sortOrder,
                               final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,

@@ -40,6 +40,7 @@ import htsjdk.samtools.util.CigarUtil;
 import picard.PicardException;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -78,8 +79,8 @@ public abstract class AbstractAlignmentMerger {
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Merged", "records");
 
-    private final File unmappedBamFile;
-    private final File targetBamFile;
+    private final Path unmappedBamFile; // tsato: IOPath?
+    private final Path targetBamFile;
     private ReferenceSequenceFileWalker refSeq = null;
     private final boolean clipAdapters;
     private final boolean bisulfiteSequence;
@@ -90,7 +91,7 @@ public abstract class AbstractAlignmentMerger {
     private final List<String> attributesToRemove = new ArrayList<>();
     private Set<String> attributesToReverse = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE);
     private Set<String> attributesToReverseComplement = new TreeSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
-    protected final File referenceFasta;
+    protected final Path referenceFasta; // tsato: how does this interact with ReferenceArgumentCollection...
     private final Integer read1BasesTrimmed;
     private final Integer read2BasesTrimmed;
     private final List<SamPairUtil.PairOrientation> expectedOrientations;
@@ -202,8 +203,8 @@ public abstract class AbstractAlignmentMerger {
      *
      *
      */
-    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
-                                   final File referenceFasta, final boolean clipAdapters,
+    public AbstractAlignmentMerger(final Path unmappedBamFile, final Path targetBamFile,
+                                   final Path referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean alignedReadsOnly,
                                    final SAMProgramRecord programRecord, final List<String> attributesToRetain,
                                    final List<String> attributesToRemove,
@@ -267,8 +268,8 @@ public abstract class AbstractAlignmentMerger {
      * @param unmappingReadsStrategy            An enum describing how to deal with reads whose mapping information are being removed (currently this happens due to cross-species
      *                                          contamination). Ignored unless unmapContaminantReads is true.
      */
-    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
-                                   final File referenceFasta, final boolean clipAdapters,
+    public AbstractAlignmentMerger(final Path unmappedBamFile, final Path targetBamFile,
+                                   final Path referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean alignedReadsOnly,
                                    final SAMProgramRecord programRecord, final List<String> attributesToRetain,
                                    final List<String> attributesToRemove,
