@@ -377,4 +377,12 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.addArg("DUPLEX_UMI=" + duplexUmi);
         tester.runTest();
     }
+
+    @Test
+    public void testCloud(){
+        What will this even mean....
+        Need...ones that don't have duplicates marked....
+    or is it sufficient to "copy"' one of the tests....or add one cloud input...
+
+    }
 }
