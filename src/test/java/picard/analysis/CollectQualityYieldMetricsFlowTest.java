@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2024 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,13 +63,12 @@ public class CollectQualityYieldMetricsFlowTest extends CommandLineProgramTest {
         final CollectQualityYieldMetricsFlow.QualityYieldMetricsFlow metrics = output.getMetrics().get(0);
         Assert.assertEquals(metrics.TOTAL_READS, 56);
         Assert.assertEquals(metrics.PF_READS, 56);
-        Assert.assertEquals(metrics.MEAN_READ_LENGTH_IN_FLOWS, 375);
+        Assert.assertEquals(metrics.MEAN_PF_READ_NUMBER_OF_FLOWS, 375);
         Assert.assertEquals(metrics.PF_FLOWS, 21053);
         Assert.assertEquals(metrics.PF_Q20_FLOWS, 20667);
         Assert.assertTrue(metrics.PCT_PF_Q20_FLOWS > 0);
         Assert.assertEquals(metrics.PF_Q30_FLOWS, 20256);
         Assert.assertTrue(metrics.PCT_PF_Q30_FLOWS > 0);
-        Assert.assertEquals(metrics.Q20_EQUIVALENT_YIELD, 41177);
         Assert.assertEquals(metrics.PF_Q20_EQUIVALENT_YIELD, 41177);
     }
 }

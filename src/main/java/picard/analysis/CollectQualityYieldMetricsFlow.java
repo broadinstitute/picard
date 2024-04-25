@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2024 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -184,8 +184,6 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             // add up quals, and quals >= 20
             int flow = 0;
             for (final int qual : quals) {
-                metrics.Q20_EQUIVALENT_YIELD += qual;
-
                 metrics.PF_Q20_EQUIVALENT_YIELD += qual;
                 if (qual >= 30) {
                     metrics.PF_Q20_FLOWS++;
@@ -276,7 +274,6 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         }
 
         public void finish() {
-            metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
             metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
             metrics.calculateDerivedFields();
         }
@@ -327,10 +324,10 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         public long PF_READS = 0;
 
         /**
-         * The average read length of all the reads
+         * The average number of flows in PF reads
          */
         @NoMergingIsDerived
-        public int MEAN_READ_LENGTH_IN_FLOWS = 0;
+        public int MEAN_PF_READ_NUMBER_OF_FLOWS = 0;
 
         /**
          * The total number of flows in all PF reads
@@ -363,12 +360,6 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         public double PCT_PF_Q30_FLOWS = 0;
 
         /**
-         * The sum of quality scores of all flows divided by 20
-         */
-        @MergeByAdding
-        public long Q20_EQUIVALENT_YIELD = 0;
-
-        /**
          * The sum of quality scores of all flows in PF reads divided by 20
          */
         @MergeByAdding
@@ -377,7 +368,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
         @Override
         public void calculateDerivedFields() {
             super.calculateDerivedFields();
-            this.MEAN_READ_LENGTH_IN_FLOWS = this.PF_READS == 0 ? 0 : (int) (this.PF_FLOWS / this.PF_READS);
+            this.MEAN_PF_READ_NUMBER_OF_FLOWS = this.PF_READS == 0 ? 0 : (int) (this.PF_FLOWS / this.PF_READS);
             this.PCT_PF_Q20_FLOWS = this.PF_FLOWS == 0 ? 0 : (double)this.PF_Q20_FLOWS / this.PF_FLOWS;
             this.PCT_PF_Q30_FLOWS = this.PF_FLOWS == 0 ? 0 : (double)this.PF_Q30_FLOWS / this.PF_FLOWS;
         }

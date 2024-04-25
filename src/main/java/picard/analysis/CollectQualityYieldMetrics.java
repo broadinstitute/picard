@@ -33,6 +33,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
+import picard.cmdline.PicardCommandLine;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.help.HelpConstants;
@@ -92,6 +93,9 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 
+    @Argument(doc = "Obsolete. FLOW_MODE support now provided by CollectQualityYieldMetricsFlow")
+    public boolean FLOW_MODE = false;
+
     /**
      * Ensure that we get all reads regardless of alignment status.
      */
@@ -102,6 +106,9 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
+        if ( FLOW_MODE ) {
+            throw new PicardException("FLOW_MODE is obsolete. Flow support now provided by CollectQualityYieldMetricsFlow");
+        }
         IOUtil.assertFileIsWritable(OUTPUT);
         this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
     }

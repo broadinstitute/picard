@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2024 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ package picard.analysis;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Histogram;
@@ -56,14 +57,16 @@ import java.util.Vector;
 )
 @DocumentedFeature
 public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
+    public static final String SNVQ_BASE_ORDER = "ACGT";
+
     private QualityYieldMetricsCollector collector = null;
     public Histogram<Integer> qualityHistogram = new Histogram<>("KEY", "BQ_COUNT");
     private Vector<SeriesStats> readPositionQualityStats = new Vector<>();
     public Histogram<Integer> snvqHistogram = new Histogram<>("KEY", "SNVQ_COUNT");
     private Vector<SeriesStats> readPositionSnvqStats = new Vector<>();
-    final byte[] baseOrder = "ACGT".getBytes();
+    final byte[] baseOrder = SNVQ_BASE_ORDER.getBytes();
 
-    static final String USAGE_SUMMARY = "Collect SNVQ metrics about reads that pass quality thresholds and Illumina-specific filters.  ";
+    static final String USAGE_SUMMARY = "Collect SNVQ metrics about reads that pass quality thresholds and other filters (such as vendor fail, etc).  ";
     static final String USAGE_DETAILS = "This tool evaluates the overall SNVQ quality of reads within a bam file containing one read group. " +
             "The output indicates the total numbers of bases within a read group that pass a minimum base quality score threshold and " +
             "(in the case of Illumina data) pass Illumina quality filters as described in the " +
@@ -81,9 +84,9 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
             "the QualityYieldMetrics documentation</a> for details and explanations of the output metrics." +
             "<hr />";
 
-    @Argument(shortName = StandardOptionDefinitions.USE_BQ_FOR_BASE_QUALITIES_SHORT_NAME,
-            doc = "Use the contents of BQ tag instead of base quality (QUAL) scores ")
-    public boolean USE_BQ_FOR_BASE_QUALITIES = false;
+    @Argument(shortName = StandardOptionDefinitions.ALTERNATE_QUALITY_ATTRIBUTE_SHORT_NAME,
+            doc = "Use an alternative  tag instead of base quality (QUAL) scores ", optional = true)
+    public String ALTERNATE_QUALITY_ATTRIBUTE = null;
 
     @Argument(doc = "If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting " +
             "of bases if there are secondary alignments in the input file.")
@@ -107,7 +110,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        this.collector = new QualityYieldMetricsCollector(USE_BQ_FOR_BASE_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
+        this.collector = new QualityYieldMetricsCollector(ALTERNATE_QUALITY_ATTRIBUTE, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
     }
 
     @Override
@@ -129,9 +132,8 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
     }
 
     public class QualityYieldMetricsCollector {
-        // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
-        // of bases if there are secondary alignments in the input file.
-        private final boolean useBQForBaseQualities;
+        // optional attribute name to retrieve quality from (instead of standard QUAL string)
+        private final String alternateQualityAttribute;
 
         // If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting
         // of bases if there are secondary alignments in the input file.
@@ -144,13 +146,13 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
         // The metrics to be accumulated
         private final QualityYieldMetrics metrics;
 
-        public QualityYieldMetricsCollector(final boolean useBQForBaseQualities,
+        public QualityYieldMetricsCollector(final String alternateQualityAttribute,
                                             final boolean includeSecondaryAlignments,
                                             final boolean includeSupplementalAlignments) {
-            this.useBQForBaseQualities = useBQForBaseQualities;
+            this.alternateQualityAttribute = alternateQualityAttribute;
             this.includeSecondaryAlignments = includeSecondaryAlignments;
             this.includeSupplementalAlignments = includeSupplementalAlignments;
-            this.metrics = new QualityYieldMetrics(useBQForBaseQualities);
+            this.metrics = new QualityYieldMetrics(alternateQualityAttribute);
         }
 
         public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
@@ -169,16 +171,13 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
 
             // access regular quality
             final byte[] quals;
-            if (this.useBQForBaseQualities) {
-                byte[] tmp = rec.getStringAttribute(SAMTag.BQ).getBytes();
+            if (alternateQualityAttribute != null) {
+                byte[] tmp = rec.getStringAttribute(alternateQualityAttribute).getBytes();
                 if (tmp == null) {
                     // fall back on base queslities
                     tmp = rec.getBaseQualities();
                 } else {
-                    // zero base bq values
-                    for ( int i = 0 ; i < tmp.length ; i++ ) {
-                        tmp[i] -= 33;
-                    }
+                    SAMUtils.fastqToPhred(tmp);
                 }
                 quals = tmp;
             } else {
@@ -229,7 +228,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
                 for ( int i = 0 ; i < baseOrder.length ; i++ ) {
                     if ( base != baseOrder[i] ) {
 
-                        int q = snvq[i][readPosition] - 33;
+                        int q = SAMUtils.fastqToPhred((char)snvq[i][readPosition]);
                         metrics.TOTAL_SNVQ++;
                         if ( isPfRead )
                             metrics.PF_SNVQ++;
@@ -314,12 +313,12 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
     public static class QualityYieldMetrics extends MergeableMetricBase {
 
         public QualityYieldMetrics() {
-            this(false);
+            this(null);
         }
 
-        public QualityYieldMetrics(final boolean useBQForBaseQualities) {
+        public QualityYieldMetrics(final String alternateQualityAttribute) {
             super();
-            this.useBQForBaseQualities = useBQForBaseQualities;
+            this.alternateQualityAttribute = alternateQualityAttribute;
         }
 
         /**
@@ -509,7 +508,7 @@ public class CollectQualityYieldMetricsSNVQ extends SinglePassSamProgram {
         public double PCT_PF_Q40_SNVQ = 0;
 
         @MergeByAssertEquals
-        protected final boolean useBQForBaseQualities;
+        protected final String  alternateQualityAttribute;
 
         @Override
         public void calculateDerivedFields() {

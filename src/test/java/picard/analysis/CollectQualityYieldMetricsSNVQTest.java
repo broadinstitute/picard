@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The Broad Institute
+ * Copyright (c) 2024 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,7 @@ import java.io.IOException;
  */
 public class CollectQualityYieldMetricsSNVQTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
+    private static final double DOUBLE_EQUALS_EPSILON = 0.001;
 
     public String getCommandLineProgramName() {
         return CollectQualityYieldMetricsSNVQ.class.getSimpleName();
@@ -62,28 +63,31 @@ public class CollectQualityYieldMetricsSNVQTest extends CommandLineProgramTest {
 
         final CollectQualityYieldMetricsSNVQ.QualityYieldMetrics metrics = output.getMetrics().get(0);
         Assert.assertEquals(metrics.TOTAL_READS, 26577);
-        Assert.assertTrue(metrics.PF_READS > 0);
-        Assert.assertTrue(metrics.READ_LENGTH > 0);
-        Assert.assertTrue(metrics.TOTAL_BASES > 0);
-        Assert.assertTrue(metrics.PF_BASES > 0);
-        Assert.assertTrue(metrics.Q20_BASES > 0);
-        Assert.assertTrue(metrics.PF_Q20_BASES > 0);
-        Assert.assertTrue(metrics.PF_Q30_BASES > 0);
-        Assert.assertTrue(metrics.Q40_BASES == 0);
-        Assert.assertTrue(metrics.PF_Q40_BASES == 0);
-        Assert.assertTrue(metrics.TOTAL_SNVQ > 0);
-        Assert.assertTrue(metrics.PF_SNVQ > 0);
-        Assert.assertTrue(metrics.Q20_SNVQ > 0);
-        Assert.assertTrue(metrics.PF_Q20_SNVQ > 0);
-        Assert.assertTrue(metrics.Q30_SNVQ > 0);
-        Assert.assertTrue(metrics.PF_Q30_SNVQ > 00);
-        Assert.assertTrue(metrics.Q40_SNVQ > 0);
-        Assert.assertTrue(metrics.PF_Q40_SNVQ > 0);
-        Assert.assertTrue(metrics.PCT_Q20_SNVQ > 0);
-        Assert.assertTrue(metrics.PCT_Q30_SNVQ > 0);
-        Assert.assertTrue(metrics.PCT_Q40_SNVQ > 0);
-        Assert.assertTrue(metrics.PCT_PF_Q20_SNVQ > 00);
-        Assert.assertTrue(metrics.PCT_PF_Q30_SNVQ > 0);
-        Assert.assertTrue(metrics.PCT_PF_Q40_SNVQ > 0);
+        Assert.assertEquals(metrics.PF_READS, 26577);
+        Assert.assertEquals(metrics.READ_LENGTH, 173);
+        Assert.assertEquals(metrics.TOTAL_BASES, 4605838);
+        Assert.assertEquals(metrics.PF_BASES, 4605838);
+        Assert.assertEquals(metrics.Q20_BASES, 4450324);
+        Assert.assertEquals(metrics.PF_Q20_BASES, 4450324);
+        Assert.assertEquals(metrics.PF_Q30_BASES, 4069304);
+        Assert.assertEquals(metrics.Q40_BASES, 0);
+        Assert.assertEquals(metrics.PF_Q40_BASES, 0);
+        Assert.assertEquals(metrics.PCT_PF_Q20_BASES, 0.966235, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_PF_Q30_BASES, 0.88351, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_PF_Q40_BASES, 0.0, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.TOTAL_SNVQ, 13817514);
+        Assert.assertEquals(metrics.PF_SNVQ, 13817514);
+        Assert.assertEquals(metrics.Q20_SNVQ, 13816364);
+        Assert.assertEquals(metrics.PF_Q20_SNVQ, 13816364);
+        Assert.assertEquals(metrics.Q30_SNVQ, 13816364);
+        Assert.assertEquals(metrics.PF_Q30_SNVQ, 13816364);
+        Assert.assertEquals(metrics.Q40_SNVQ, 13816364);
+        Assert.assertEquals(metrics.PF_Q40_SNVQ, 13816364);
+        Assert.assertEquals(metrics.PCT_Q20_SNVQ, 0.999917, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_Q30_SNVQ, 0.999917, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_Q40_SNVQ, 0.999917, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_PF_Q20_SNVQ, 0.999917, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_PF_Q30_SNVQ, 0.999917, DOUBLE_EQUALS_EPSILON);
+        Assert.assertEquals(metrics.PCT_PF_Q40_SNVQ, 0.999917, DOUBLE_EQUALS_EPSILON);
     }
 }
