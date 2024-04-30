@@ -121,7 +121,7 @@ public class FlowBasedRead {
         perHmerMinErrorProbability = totalMinErrorProbability / getMaxHmer();
 
         // generate flow key
-        key = FlowBasedReadUtils.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
+        key = FlowBasedKeyCodec.baseArrayToKey(samRecord.getReadBases(), _flowOrder);
 
         // initialize matrix
         flowMatrix = new double[maxHmer + 1][key.length];

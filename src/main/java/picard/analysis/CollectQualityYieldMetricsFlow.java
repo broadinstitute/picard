@@ -40,7 +40,8 @@ import picard.PicardException;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.flow.FlowBasedArgumentCollection;
 import picard.flow.FlowBasedRead;
-import picard.flow.FlowBasedReadUtils;
+import picard.flow.FlowBasedKeyCodec;
+import picard.flow.FlowReadGroupInfo;
 import picard.util.SeriesStats;
 import picard.util.help.HelpConstants;
 
@@ -165,7 +166,7 @@ public class CollectQualityYieldMetricsFlow extends SinglePassSamProgram {
             // NOTE: code below runs only isPfRead reads
 
             // convert to a flow based read
-            FlowBasedReadUtils.ReadGroupInfo info = FlowBasedReadUtils.getReadGroupInfo(rec.getHeader(), rec);
+            FlowReadGroupInfo info = FlowBasedKeyCodec.getReadGroupInfo(rec.getHeader(), rec);
             if ( !info.isFlowPlatform ) {
                 throw new PicardException("Reads should originate from a flow based platform");
             }
