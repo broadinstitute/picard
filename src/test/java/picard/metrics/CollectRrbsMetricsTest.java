@@ -66,11 +66,11 @@ public class CollectRrbsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.READS_ALIGNED.intValue(), 5);
         Assert.assertEquals(metrics.NON_CPG_BASES.intValue(), 15);
         Assert.assertEquals(metrics.NON_CPG_CONVERTED_BASES.intValue(), 11);
-        Assert.assertEquals(metrics.PCT_NON_CPG_BASES_CONVERTED, 0.733333);
+        Assert.assertEquals(metrics.PCT_NON_CPG_BASES_CONVERTED.doubleValue(), 0.733333);
         Assert.assertEquals(metrics.CPG_BASES_SEEN.intValue(), 5);
         Assert.assertEquals(metrics.CPG_BASES_CONVERTED.intValue(), 1);
-        Assert.assertEquals(metrics.PCT_CPG_BASES_CONVERTED, 0.2);
-        Assert.assertEquals(metrics.MEAN_CPG_COVERAGE, 1.666667);
+        Assert.assertEquals(metrics.PCT_CPG_BASES_CONVERTED.doubleValue(), 0.2);
+        Assert.assertEquals(metrics.MEAN_CPG_COVERAGE.doubleValue(), 1.666667);
         Assert.assertEquals(metrics.MEDIAN_CPG_COVERAGE.intValue(), 2);
         Assert.assertEquals(metrics.READS_WITH_NO_CPG.intValue(), 1);
         Assert.assertEquals(metrics.READS_IGNORED_SHORT.intValue(), 1);

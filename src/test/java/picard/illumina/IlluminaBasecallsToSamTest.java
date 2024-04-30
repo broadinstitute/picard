@@ -312,7 +312,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                         final MetricsFile<BarcodeMetric, Integer> metrics = new MetricsFile<>();
                         metrics.read(new FileReader(metricsFile));
                         Assert.assertEquals(metrics.getMetrics().get(3).PERFECT_MATCHES, expectedPfMatches);
-                        Assert.assertEquals(metrics.getMetrics().get(3).PCT_MATCHES, expectedPctMatches);
+                        Assert.assertEquals(metrics.getMetrics().get(3).PCT_MATCHES, expectedPctMatches.doubleValue());
                     }
                 } finally {
                     IOUtil.recursiveDelete(outputDir);

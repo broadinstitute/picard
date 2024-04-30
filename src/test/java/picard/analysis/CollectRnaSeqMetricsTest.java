@@ -520,7 +520,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
 
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
 
-        Assert.assertEquals(metrics.PCT_RIBOSOMAL_BASES, 0.4);
+        Assert.assertEquals(metrics.PCT_RIBOSOMAL_BASES.doubleValue(), 0.4);
     }
 
     public File getRefFlatFile(String sequence, String txStart, String txEnd, String cdsStart, String cdsEnd, String exonCount, String exonStarts, String exonEnds) throws Exception {
