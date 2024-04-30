@@ -24,7 +24,7 @@ public class InfiniumVcfFieldsTest {
             Assert.assertEquals(InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(header, InfiniumVcfFields.PIPELINE_VERSION), "IlluminaGenotypingArray_v1.5");
             Assert.assertEquals(InfiniumVcfFields.getIntegerFromVcfOtherHeaderLine(header, InfiniumVcfFields.ANALYSIS_VERSION_NUMBER).intValue(), 1);
             Assert.assertEquals(InfiniumVcfFields.getValueFromVcfOtherHeaderLine(header, InfiniumVcfFields.EXTENDED_ILLUMINA_MANIFEST_VERSION), "1.3");
-            Assert.assertEquals(InfiniumVcfFields.getOptionalDoubleFromVcfOtherHeaderLine(header, InfiniumVcfFields.GTC_CALL_RATE).doubleValue(), 0.985);
+            Assert.assertEquals(InfiniumVcfFields.getOptionalDoubleFromVcfOtherHeaderLine(header, InfiniumVcfFields.GTC_CALL_RATE), 0.985);
             Assert.assertEquals(InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(header, InfiniumVcfFields.AUTOCALL_GENDER), "M");
             Assert.assertNull(InfiniumVcfFields.getOptionalValueFromVcfOtherHeaderLine(header, "nothing"));
             Assert.assertNull(InfiniumVcfFields.getOptionalIntegerFromVcfOtherHeaderLine(header, "nothing"));

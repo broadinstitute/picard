@@ -71,15 +71,15 @@ public class TheoreticalSensitivityTest {
         final List<ArrayList<Double>> proportions = TheoreticalSensitivity.proportionsAboveThresholds(sums, thresholds);
         Assert.assertEquals(proportions.size(), 3);
 
-        Assert.assertEquals(proportions.get(0).get(0).doubleValue(), (double) 3 / 3);
-        Assert.assertEquals(proportions.get(0).get(1).doubleValue(), (double) 0 / 3);
-        Assert.assertEquals(proportions.get(0).get(2).doubleValue(), (double) 0 / 3);
-        Assert.assertEquals(proportions.get(1).get(0).doubleValue(), (double) 2 / 2);
-        Assert.assertEquals(proportions.get(1).get(1).doubleValue(), (double) 2 / 2);
-        Assert.assertEquals(proportions.get(1).get(2).doubleValue(), (double) 2 / 2);
-        Assert.assertEquals(proportions.get(2).get(0).doubleValue(), (double) 3 / 4);
-        Assert.assertEquals(proportions.get(2).get(1).doubleValue(), (double) 3 / 4);
-        Assert.assertEquals(proportions.get(2).get(2).doubleValue(), (double) 1 / 4);
+        Assert.assertEquals(proportions.get(0).get(0), (double) 3 / 3);
+        Assert.assertEquals(proportions.get(0).get(1), (double) 0 / 3);
+        Assert.assertEquals(proportions.get(0).get(2), (double) 0 / 3);
+        Assert.assertEquals(proportions.get(1).get(0), (double) 2 / 2);
+        Assert.assertEquals(proportions.get(1).get(1), (double) 2 / 2);
+        Assert.assertEquals(proportions.get(1).get(2), (double) 2 / 2);
+        Assert.assertEquals(proportions.get(2).get(0), (double) 3 / 4);
+        Assert.assertEquals(proportions.get(2).get(1), (double) 3 / 4);
+        Assert.assertEquals(proportions.get(2).get(2), (double) 1 / 4);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class TheoreticalSensitivityTest {
 
                 final long binomialCoefficient = CombinatoricsUtils.binomialCoefficient(n, m);
 
-                Assert.assertEquals(distribution.get(n).get(m).doubleValue(), binomialCoefficient * Math.pow(p, n));
+                Assert.assertEquals(distribution.get(n).get(m), binomialCoefficient * Math.pow(p, n));
             }
         }
     }

@@ -200,13 +200,13 @@ public class MergeableMetricBaseTest {
         Assert.assertEquals(metric1.boxedInt, (Integer) 2);
         Assert.assertEquals(metric1.unboxedInt, 4);
 
-        Assert.assertEquals(metric1.boxedDouble.doubleValue(), 6D);
+        Assert.assertEquals(metric1.boxedDouble, 6D);
         Assert.assertEquals(metric1.unboxedDouble, 8D);
 
         Assert.assertEquals(metric1.boxedLong, (Long) 10L);
         Assert.assertEquals(metric1.unboxedLong, 12L);
 
-        Assert.assertEquals(metric1.boxedFloat.floatValue(), 14F);
+        Assert.assertEquals(metric1.boxedFloat, 14F);
         Assert.assertEquals(metric1.unboxedFloat, 16F);
 
         Assert.assertEquals(metric1.boxedShort, (Short) (short) 18);
