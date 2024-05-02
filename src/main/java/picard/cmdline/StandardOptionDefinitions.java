@@ -46,4 +46,5 @@ public class StandardOptionDefinitions {
     public static final String MINIMUM_LOD_SHORT_NAME = "LOD";
     public static final String SORT_ORDER_SHORT_NAME = "SO";
     public static final String USE_ORIGINAL_QUALITIES_SHORT_NAME = "OQ";
+    public static final String ALTERNATE_QUALITY_ATTRIBUTE_SHORT_NAME = "AQA";
 }

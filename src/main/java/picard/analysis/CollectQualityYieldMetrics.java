@@ -33,6 +33,7 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
+import picard.cmdline.PicardCommandLine;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.util.help.HelpConstants;
@@ -92,7 +93,7 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 
-    @Argument(doc = "If true, calculates flow-specific READ_LENGTH_AVG_Q metrics.")
+    @Argument(doc = "Obsolete. FLOW_MODE support now provided by CollectQualityYieldMetricsFlow")
     public boolean FLOW_MODE = false;
 
     /**
@@ -105,8 +106,11 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
+        if ( FLOW_MODE ) {
+            throw new PicardException("FLOW_MODE is obsolete. Flow support now provided by CollectQualityYieldMetricsFlow");
+        }
         IOUtil.assertFileIsWritable(OUTPUT);
-        this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS, FLOW_MODE);
+        this.collector = new QualityYieldMetricsCollector(USE_ORIGINAL_QUALITIES, INCLUDE_SECONDARY_ALIGNMENTS, INCLUDE_SUPPLEMENTAL_ALIGNMENTS);
     }
 
     @Override
@@ -135,30 +139,16 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         // of bases if there are supplemental alignments in the input file.
         public final boolean includeSupplementalAlignments;
 
-        // If true collects RLQ25/RLQ30
-        private final boolean flowMode;
         // The metrics to be accumulated
         private final QualityYieldMetrics metrics;
 
         public QualityYieldMetricsCollector(final boolean useOriginalQualities,
                                             final boolean includeSecondaryAlignments,
-                                            final boolean includeSupplementalAlignments){
-            this(useOriginalQualities, includeSecondaryAlignments, includeSupplementalAlignments, false);
-        }
-
-        public QualityYieldMetricsCollector(final boolean useOriginalQualities,
-                                            final boolean includeSecondaryAlignments,
-                                            final boolean includeSupplementalAlignments,
-                                            final boolean flowMode) {
+                                            final boolean includeSupplementalAlignments) {
             this.useOriginalQualities = useOriginalQualities;
             this.includeSecondaryAlignments = includeSecondaryAlignments;
             this.includeSupplementalAlignments = includeSupplementalAlignments;
-            this.flowMode = flowMode;
-            if (flowMode){
-                this.metrics = new QualityYieldMetricsFlow(useOriginalQualities);
-            } else {
-                this.metrics = new QualityYieldMetrics(useOriginalQualities);
-            }
+            this.metrics = new QualityYieldMetrics(useOriginalQualities);
         }
 
         public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
@@ -205,10 +195,6 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
                     }
                 }
             }
-
-            if (flowMode) {
-                ((QualityYieldMetricsFlow)metrics).addRecordToHistogramGenerator(rec);
-            }
         }
 
         public void finish() {
@@ -222,54 +208,6 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         }
     }
 
-    public static class QualityYieldMetricsFlow extends QualityYieldMetrics{
-        /** The length of the longest interval on the reads where the average quality per-base is above (Q30) */
-        @NoMergingIsDerived
-        public long READ_LENGTH_AVG_Q_ABOVE_30 = 0;
-
-        /** The length of the longest interval on the reads where the average quality per-base is above (Q25) */
-        @NoMergingIsDerived
-        public long READ_LENGTH_AVG_Q_ABOVE_25 = 0;
-
-        @MergingIsManual
-        protected final HistogramGenerator histogramGenerator;
-
-        public QualityYieldMetricsFlow(){
-            this(false);
-        }
-
-        public QualityYieldMetricsFlow(final boolean useOriginalBaseQualities){
-
-            super(useOriginalBaseQualities);
-            histogramGenerator=new HistogramGenerator(useOriginalQualities);
-        }
-
-        public QualityYieldMetricsFlow(final boolean useOriginalBaseQualities, final HistogramGenerator hg) {
-            histogramGenerator=hg;
-        }
-
-        @Override
-        public void calculateDerivedFields() {
-            super.calculateDerivedFields();
-            this.READ_LENGTH_AVG_Q_ABOVE_25 = histogramGenerator.calculateLQ(25, 1, 5);
-            this.READ_LENGTH_AVG_Q_ABOVE_30 = histogramGenerator.calculateLQ(30, 1, 5);
-        }
-
-        @Override
-        public MergeableMetricBase merge(final MergeableMetricBase other) {
-            if (!(other instanceof QualityYieldMetricsFlow)){
-                throw new PicardException("Only objects of the same type can be merged");
-            }
-            this.histogramGenerator.addOtherHistogramGenerator(((QualityYieldMetricsFlow)other).histogramGenerator);
-            super.merge(other);
-            return this;
-        }
-
-        protected void addRecordToHistogramGenerator(final SAMRecord rec) {
-            histogramGenerator.addRecord(rec);
-        }
-
-    }
     /**
      * A set of metrics used to describe the general quality of a BAM file
      */
