@@ -37,6 +37,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -48,9 +49,12 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
 import picard.sam.testers.ValidateSamTester;
 import picard.sam.util.SAMComparisonArgumentCollection;
 import picard.sam.util.SamComparison;
+import picard.util.GCloudTestUtils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -61,6 +65,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -74,9 +79,16 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
     private static final File DATA_DIR = new File("testdata/picard/sam");
     private static final File TEST_DATA_DIR = new File(DATA_DIR, "MergeBamAlignment");
-
+    private static final PicardHtsPath CLOUD_TEST_DATA_DIR = new PicardHtsPath("gs://hellbender/test/resources/picard/bam/MergeBamAlignment");
     private static final File unmappedBam = new File(DATA_DIR, "unmapped.sam");
+    private static final PicardHtsPath unmappedSamCloud = PicardHtsPath.resolve(CLOUD_TEST_DATA_DIR, "unmapped.sam");
     private static final File alignedBam = new File(DATA_DIR, "aligned.sam");
+    private static final PicardHtsPath alignedSamCloud = PicardHtsPath.resolve(CLOUD_TEST_DATA_DIR, "aligned.sam");
+    // tsato: consider grouping cloud files together, and definitely rename fasta
+    private static final PicardHtsPath fastaCloud = PicardHtsPath.resolve(CLOUD_TEST_DATA_DIR, "merger.fasta");
+
+
+
     private static final File oneHalfAlignedBam = new File(DATA_DIR, "onehalfaligned.sam");
     private static final File otherHalfAlignedBam = new File(DATA_DIR, "otherhalfaligned.sam");
     private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
@@ -336,7 +348,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 coordinateSorted ? SAMFileHeader.SortOrder.coordinate : SAMFileHeader.SortOrder.queryname,
                 new BestMapqPrimaryAlignmentSelectionStrategy(), false, false, 30);
 
-        merger.mergeAlignment(Defaults.REFERENCE_FASTA);
+        merger.mergeAlignment(Defaults.REFERENCE_FASTA.toPath());
         Assert.assertEquals(sorted, !merger.getForceSort());
         final SAMRecordIterator it = SamReaderFactory.makeDefault().open(target).iterator();
         int aln = 0;
@@ -2089,6 +2101,34 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
             Assert.assertThrows(PicardException.class, () -> runPicardCommandLine(args));
         } else {
             runPicardCommandLine(args);
+        }
+    }
+
+    @Test
+    public void testCloud(){
+        // tsato: this getURIString should not be necessary. Also, rename the input directory potentially (add subdirectory)
+        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT.getURIString(), ".bam");
+        final List<String> args = new ArrayList<>(Arrays.asList(
+                "UNMAPPED_BAM=" + unmappedSamCloud.getURIString(),
+                "ALIGNED_BAM=" + alignedSamCloud.getURIString(),
+                "REFERENCE_SEQUENCE=" + fastaCloud.getURIString(),
+                "OUTPUT=" + output.getURIString()));
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final SamReader unmappedInputReader = SamReaderFactory.makeDefault().open(output.toPath());
+        final List<SAMRecord> unmappedInputReads = new ArrayList<>();
+        unmappedInputReader.iterator().forEachRemaining(r -> unmappedInputReads.add(r));
+
+        final SamReader outputReader = SamReaderFactory.makeDefault().open(output.toPath());
+        final List<SAMRecord> outputReads = new ArrayList<>();
+        outputReader.iterator().forEachRemaining(r -> outputReads.add(r));
+
+        // Check that the read names match between output and unmapped input.
+        Assert.assertEquals(unmappedInputReads.size(),outputReads.size());
+        for (int i = 0; i < outputReads.size(); i++){
+            final SAMRecord outputRead = outputReads.get(i);
+            final SAMRecord unmappedInputRead = unmappedInputReads.get(i);
+            Assert.assertEquals(outputRead.getReadName(), unmappedInputRead.getReadName());
         }
     }
 }

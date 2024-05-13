@@ -368,7 +368,7 @@ public abstract class AbstractAlignmentMerger {
     /**
      * Merges the alignment data with the non-aligned records from the source BAM file.
      */
-    public void mergeAlignment(final File referenceFasta) {
+    public void mergeAlignment(final Path referenceFasta) {
         // Open the file of unmapped records and write the read groups to the the header for the merged file
         final SamReader unmappedSam = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(this.unmappedBamFile);
 

@@ -177,7 +177,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * that the alignment records are pre-sorted.  If not, catches the exception, forces a sort, and
      * tries again.
      */
-    public void mergeAlignment(final File referenceFasta) {
+    public void mergeAlignment(final Path referenceFasta) {
         try {
             super.mergeAlignment(referenceFasta);
         } catch (final IllegalStateException ise) {

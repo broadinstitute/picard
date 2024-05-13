@@ -373,7 +373,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         merger.setAttributesToReverse(ATTRIBUTES_TO_REVERSE);
         merger.setAttributesToReverseComplement(ATTRIBUTES_TO_REVERSE_COMPLEMENT);
         merger.setAddPGTagToReads(pgTagArgumentCollection.ADD_PG_TAG_TO_READS);
-        merger.mergeAlignment(referenceSequence.getReferenceFile());
+        merger.mergeAlignment(referenceSequence.getReferencePath());
         merger.close();
 
         return 0;
