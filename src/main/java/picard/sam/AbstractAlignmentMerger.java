@@ -637,7 +637,7 @@ public abstract class AbstractAlignmentMerger {
         if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
             out.add(rec);
             if (this.progress.record(rec) && crossSpeciesReads > 0) {
-                log.info(String.format("%d Reads have been unmapped due to being suspected of being Cross-species contamination.", crossSpeciesReads));
+                log.info(String.format("%d Reads have been unmapped due to suspicion of Cross-species contamination.", crossSpeciesReads));
             }
         }
     }
