@@ -25,6 +25,7 @@
 package picard.fingerprint;
 
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Locatable;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.Allele;
 
@@ -36,7 +37,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
-public class Snp implements Comparable<Snp> {
+public class Snp implements Comparable<Snp>, Locatable {
     private final String name;
     private final String chrom;
     private final int pos;
@@ -123,5 +124,20 @@ public class Snp implements Comparable<Snp> {
     @Override
     public String toString() {
         return this.chrom + ":" + this.pos;
+    }
+
+    @Override
+    public String getContig() {
+        return chrom;
+    }
+
+    @Override
+    public int getStart() {
+        return pos;
+    }
+
+    @Override
+    public int getEnd() {
+        return pos;
     }
 }

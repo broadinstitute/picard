@@ -16,7 +16,6 @@ import picard.vcf.VcfTestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -214,7 +213,7 @@ public class CheckFingerprintTest extends CommandLineProgramTest {
         tempFile.deleteOnExit();
 
         FingerprintUtils.writeFingerPrint(fingerprint, tempFile, SHIFTED_REFERENCE,
-                "NA12892", null);
+                "NA12892", null, true);
 
         final Fingerprint NA12892FromVCF = checker.fingerprintFiles(Collections.singleton(tempFile.toPath()), 1, 1, TimeUnit.DAYS)
                 .values().stream()
