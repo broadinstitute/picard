@@ -65,8 +65,8 @@ public class FingerprintUtils {
      * @param referenceSequenceFileName the reference sequence (file)
      * @param sample                    the sample name to use in the vcf
      * @param source                    a "source" comment to use in the VCF
-     * @param representativeOnly
-     * @throws IOException
+     * @param representativeOnly        whether to extract only the representative snps
+     * @throws IOException if two snps in the haplotype map have the same "name"
      */
     public static void writeFingerPrint(final Fingerprint fingerprint,
                                         final File outputFile,
@@ -137,7 +137,7 @@ public class FingerprintUtils {
 
         // convert all the haplotypes to variant contexts and add them to the set.
         fingerPrint.values().stream()
-                .map(hp -> getVariantContext(reference, sample, hp, representativeOnly))
+                .flatMap(hp -> getVariantContext(reference, sample, hp, representativeOnly))
                 .forEach(variantContexts::add);
 
         return variantContexts;

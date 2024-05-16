@@ -82,6 +82,11 @@ public class ExtractFingerprint extends CommandLineProgram {
     @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
     public boolean TEST_INPUT_READABILITY = true;
 
+
+    @Hidden
+    @Argument(doc = "When false, code will extract variants for every snp in the haplotype database, not only the representative one.")
+    public boolean EXTRACT_REPRESENTATIVES_ONLY = true;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -133,7 +138,8 @@ public class ExtractFingerprint extends CommandLineProgram {
         final String sampleToUse = getSampleToUse(soleEntry.getKey());
 
         try {
-            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(), sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION, true);
+            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(),
+                    sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION, EXTRACT_REPRESENTATIVES_ONLY);
         } catch (Exception e) {
             log.error(e);
         }
