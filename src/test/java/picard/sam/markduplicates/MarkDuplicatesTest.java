@@ -179,7 +179,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
     @Test(dataProvider = "testOpticalDuplicateDetectionDataProvider")
     public void testOpticalDuplicateDetection(final File sam, final long expectedNumOpticalDuplicates) {
         final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".tmp").toFile();
-        outputDir.deleteOnExit(); // tsato: are these deleteOnExit necessary...
+        outputDir.deleteOnExit();
         final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
         outputSam.deleteOnExit();
         final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
@@ -380,6 +380,9 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
 
     @Test
     public void testCloud(){
+        // First, understand all this abstractMarkDuplicates stuff
+        // Then,
+
         return; // tsato: to be implemented
     }
 }

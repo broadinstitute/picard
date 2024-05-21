@@ -357,7 +357,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
      */
     public void runTest(final String inputExtension) {
         try {
-            final File input = createInputFile(inputExtension);
+            final File input = createInputFile(inputExtension); // tsato: can I turn this in to Path etc?
 
             output = new File(outputDir, "output.sam");
             args.add("INPUT=" + input.getAbsoluteFile());
