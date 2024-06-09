@@ -9,6 +9,7 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.tribble.IntervalList.IntervalListCodec;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.RnaSeqMetrics;
@@ -18,13 +19,17 @@ import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
 import picard.util.MathUtil;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqMetrics, Integer> {
@@ -76,7 +81,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
         if (ribosomalIntervalsFile != null) {
 
-            final IntervalList ribosomalIntervals = IntervalList.fromFile(ribosomalIntervalsFile);
+            final IntervalList ribosomalIntervals = loadIntervalList(ribosomalIntervalsFile, header);
             if (ribosomalIntervals.size() == 0) {
                 log.warn("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " does not contain intervals");
             }
@@ -91,6 +96,45 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
         }
         return ribosomalSequenceOverlapDetector;
+    }
+
+    private static IntervalList loadIntervalList(File ribosomalIntervalsFile, final SAMFileHeader header) {
+
+        boolean headerFound = false;
+
+        // Read a first time the begginning of the file to look for SAM header
+        try (final BufferedReader in = new BufferedReader(new FileReader(ribosomalIntervalsFile))) {
+            String line = in.readLine();
+            if (line == null || line.startsWith("@")) {
+                headerFound = true;
+            }
+
+        } catch (final IOException ioe) {
+            throw new SAMException("Error parsing interval list.", ioe);
+        }
+
+        // Use SAM header in ribosomalIntervalsFile
+        if (headerFound) {
+            return IntervalList.fromFile(ribosomalIntervalsFile);
+        }
+
+        // No header found, use BAM header for the IntervalList
+        try (final BufferedReader in = new BufferedReader(new FileReader(ribosomalIntervalsFile))) {
+            IntervalList list = new IntervalList(header);
+            IntervalListCodec codec = new IntervalListCodec(header.getSequenceDictionary());
+
+            String line = null;
+            while ((line = in.readLine()) != null) {
+                // final Optional<Interval> maybeInterval = Optional.ofNullable(codec.decode(line));
+                // maybeInterval.ifPresent(list::add);
+                Optional.ofNullable(codec.decode(line)).ifPresent(list::add);
+            }
+
+            return list;
+
+        } catch (final IOException ioe) {
+            throw new SAMException("Error parsing interval list.", ioe);
+        }
     }
 
     public static HashSet<Integer> makeIgnoredSequenceIndicesSet(final SAMFileHeader header, final Set<String> ignoredSequence) {
