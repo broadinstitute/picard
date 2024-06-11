@@ -126,10 +126,6 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
         this(new TabbedInputParser(false, file));
     }
 
-    public TabbedTextFileWithHeaderParser(final Path file) throws IOException {
-        this(new TabbedInputParser(false, Files.newInputStream(file)));
-    }
-
     public TabbedTextFileWithHeaderParser(final File file, final String[] columnHeaders) {
         parser = new TabbedInputParser(false, file);
         if (!parser.hasNext()) {

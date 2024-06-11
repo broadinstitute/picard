@@ -50,7 +50,6 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
-import htsjdk.utils.ValidationUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineParser;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -61,10 +60,10 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
+import picard.util.TabbedInputParser;
 import picard.util.TabbedTextFileWithHeaderParser;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -242,6 +241,9 @@ public class RevertSam extends CommandLineProgram {
             "same library name.", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
     public String LIBRARY_NAME;
 
+    @Argument(doc = "The prefix to be prepended to the output files, when OUTPUT_BY_READ_GROUP is true but the OUTPUT_MAP was not provided", optional = true)
+    public String PREFIX = null;
+
     private final static Log log = Log.getInstance(RevertSam.class);
 
     /**
@@ -263,7 +265,8 @@ public class RevertSam extends CommandLineProgram {
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT.toPath());
-        if (OUTPUT != null && !PicardBucketUtils.isGcsUrl(OUTPUT)) {
+        // Writability check is done for local files only
+        if (OUTPUT != null && OUTPUT.getScheme().equals(PicardBucketUtils.FILE_SCHEME)) {
             ValidationUtil.assertWritable(OUTPUT.toPath(), OUTPUT_BY_READGROUP);
         }
 
@@ -295,7 +298,11 @@ public class RevertSam extends CommandLineProgram {
                 defaultExtension = "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
             }
 
-            outputMap = createOutputMap(OUTPUT_MAP == null ? null : OUTPUT_MAP.toPath(), OUTPUT == null ? null : OUTPUT.toPath(), defaultExtension, inHeader.getReadGroups());
+            outputMap = createOutputMap(OUTPUT_MAP == null ? null : OUTPUT_MAP.toPath(),
+                    OUTPUT == null ? null : OUTPUT.toPath(),
+                    defaultExtension,
+                    inHeader.getReadGroups(),
+                    PREFIX);
             ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
             headerMap = createHeaderMap(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
         } else {
@@ -308,7 +315,7 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
-        final RevertSamWriter out = new RevertSamWriter(OUTPUT_BY_READGROUP, headerMap, outputMap, singleOutHeader, OUTPUT == null ? null : OUTPUT.toPath(), presorted, factory, referenceSequence.getReferencePath()); // tsato: flagging another null pattern
+        final RevertSamWriter out = new RevertSamWriter(OUTPUT_BY_READGROUP, headerMap, outputMap, singleOutHeader, OUTPUT == null ? null : OUTPUT.toPath(), presorted, factory, referenceSequence.getReferencePath());
 
         ////////////////////////////////////////////////////////////////////////////
         // Build a sorting collection to use if we are sanitizing
@@ -343,8 +350,8 @@ public class RevertSam extends CommandLineProgram {
             final Map<SAMReadGroupRecord, FastqQualityFormat> readGroupToFormat;
             final Path referenceSequencePath;
             try {
-                if (REFERENCE_SEQUENCE != null) {
-                    referenceSequencePath = REFERENCE_SEQUENCE.toPath();
+                if (referenceSequence.getReferencePath() != null) {
+                    referenceSequencePath = referenceSequence.getReferencePath();
                 } else {
                     referenceSequencePath = null;
                 }
@@ -567,31 +574,35 @@ public class RevertSam extends CommandLineProgram {
 
     /**
      *
-     * @param outputMapFile may be null
-     * @param outputDir
-     * @param defaultExtension
-     * @param readGroups
+     * @param outputMapFile May be null.
+     * @param outputDir The output map will contain paths to files in this directory if outputMapFile is null. May be null.
+     * @param extension Self-explanatory.
+     * @param readGroups Self-explanatory.
+     * @param prefix The prefix to be prepended to output files when OUTPUT is a directory and OUTPUT_BY_READ_GROUP = true. May be null
      * @return
      */
     static Map<String, Path> createOutputMap(
             final Path outputMapFile,
             final Path outputDir,
-            final String defaultExtension,
-            final List<SAMReadGroupRecord> readGroups) {
+            final String extension,
+            final List<SAMReadGroupRecord> readGroups,
+            final String prefix) {
 
         final Map<String, Path> outputMap;
         if (outputMapFile != null) {
             outputMap = createOutputMapFromFile(outputMapFile);
         } else {
-            outputMap = createOutputMap(readGroups, outputDir, defaultExtension);
+            outputMap = createOutputMapFromDirectory(readGroups, outputDir, extension, prefix);
         }
         return outputMap;
     }
 
     private static Map<String, Path> createOutputMapFromFile(final Path outputMapFile) {
         final Map<String, Path> outputMap = new HashMap<>();
-        try (final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMapFile)) {
-            for (final TabbedTextFileWithHeaderParser.Row row : parser) {
+
+        try (final TabbedInputParser intermediateParser = new TabbedInputParser(false, Files.newInputStream(outputMapFile));
+             final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediateParser)){
+            for(final TabbedTextFileWithHeaderParser.Row row : parser) {
                 final String id = row.getField(READ_GROUP_ID_COLUMN_NAME);
                 final String output = row.getField(OUTPUT_COLUMN_NAME);
                 final Path outputPath = new PicardHtsPath(output).toPath();
@@ -604,37 +615,13 @@ public class RevertSam extends CommandLineProgram {
         }
     }
 
-    // This probably is the fastest/cleanest way
-    public static void writeOutputMapToFile(final Path outputTablePath, final List<String> readNames, final List<String> outputFiles) {
-        ValidationUtils.validateArg(readNames.size() == outputFiles.size(), "readNames and output files must be the same size but got: " + readNames.size() + " and " + outputFiles.size());
-        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputTablePath))) {
-            // Write header
-            writeRow(writer, READ_GROUP_ID_COLUMN_NAME, OUTPUT_COLUMN_NAME);
-
-            for (int i = 0; i < readNames.size(); i++){
-                writeRow(writer, readNames.get(i), outputFiles.get(i));
-            }
-        } catch (IOException e) {
-            throw new PicardException("Error writing a tsv file to " + outputTablePath, e);
-        }
-    }
-
-    private static void writeRow(final PrintWriter writer, final String... row) {
-        for (int j = 0; j < row.length; j++){
-            writer.write(row[j]);
-            if (j < row.length - 1) {
-                writer.write('\t');
-            } else {
-                writer.println();
-            }
-        }
-    }
-
-    private static Map<String, Path> createOutputMap(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension) {
+    // Create an output map file to be written to a specified directory
+    private static Map<String, Path> createOutputMapFromDirectory(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension,
+                                                                  final String prefix) {
         final Map<String, Path> outputMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : readGroups) {
             final String id = readGroup.getId();
-            final String fileName = id + extension;
+            final String fileName = prefix == null ? id + extension : prefix + "_" + id + extension;
             final Path outputPath = outputDir.resolve(fileName);
             outputMap.put(id, outputPath);
         }
@@ -824,7 +811,7 @@ public class RevertSam extends CommandLineProgram {
     /**
      * Methods used for validating parameters to RevertSam.
      */
-    static class ValidationUtil { // tsato: I vote that we rename this to avoid mixing it up with htsjdk ValidationUtils
+    static class ValidationUtil {
 
         static void validateSanitizeSortOrder(final boolean sanitize, final SAMFileHeader.SortOrder sortOrder, final List<String> errors) {
             if (sanitize && sortOrder != SAMFileHeader.SortOrder.queryname) {
@@ -847,11 +834,14 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
+        // This method assumes that the caller has checked that OUTPUT_BY_READGROUP is true.
         static void validateOutputParamsByReadGroup(final IOPath output, final IOPath outputMap, final List<String> errors) {
             if (output != null) {
-                if (! PicardBucketUtils.isGcsUrl(output) && !Files.isDirectory(output.toPath())) {
+                // If the file is local, check that OUTPUT is a directory
+                if (output.getScheme().equals(PicardBucketUtils.FILE_SCHEME) && !Files.isDirectory(output.toPath())) {
                     errors.add("When OUTPUT_BY_READGROUP=true and OUTPUT is provided, it must be a directory: " + output);
                 }
+
                 return;
             }
             // output is null if we reached here
@@ -864,7 +854,8 @@ public class RevertSam extends CommandLineProgram {
                 return;
             }
 
-            try (final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMap.toPath())){
+            try (final TabbedInputParser intermediaryParser = new TabbedInputParser(false, Files.newInputStream(outputMap.toPath()));
+                 final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediaryParser)){
                 if (!ValidationUtil.isOutputMapHeaderValid(parser.columnLabelsList())) {
                     errors.add("Invalid header: " + outputMap + ". Must be a tab-separated file with READ_GROUP_ID as first column and OUTPUT as second column.");
                 }

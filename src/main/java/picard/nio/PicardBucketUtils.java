@@ -67,9 +67,17 @@ public class PicardBucketUtils {
         }
     }
 
+    public static PicardHtsPath getTempFilePath(final PicardHtsPath directory, String prefix, final String extension){
+        return getTempFilePath(directory.getURIString(), prefix, extension);
+    }
+
     // For local temp file, directory should be null.
     public static PicardHtsPath getTempFilePath(String directory, String extension){
         return getTempFilePath(directory, "", extension);
+    }
+
+    public static PicardHtsPath getLocalTempFilePath(final String prefix, final String extension){
+        return getTempFilePath((String) null, prefix, extension);
     }
 
     /**

@@ -27,8 +27,8 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.utils.ValidationUtils;
 import org.broadinstitute.barclay.argparser.CommandLineException;
+import org.broadinstitute.http.nio.utils.Utils;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
@@ -38,7 +38,10 @@ import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
 import picard.nio.PicardIOUtils;
 import picard.util.GCloudTestUtils;
+import picard.util.TabbedInputParser;
 import picard.util.TabbedTextFileWithHeaderParser;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +56,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +66,7 @@ import java.util.stream.Collectors;
  * To change this template use File | Settings | File Templates.
  */
 public class RevertSamTest extends CommandLineProgramTest {
-    private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT, "test/RevertSam");
+    private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT, "test/RevertSam/");
     public static final String REVERT_SAM_LOCAL_TEST_DATA_DIR = "testdata/picard/sam/RevertSam/";
     private static final String basicSamToRevert = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_basic.sam";
     private static final String sampleLibraryOverrideSam = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_sample_library_override.sam";
@@ -486,14 +488,14 @@ public class RevertSamTest extends CommandLineProgramTest {
         final SAMReadGroupRecord rg1 = new SAMReadGroupRecord("rg1");
         final SAMReadGroupRecord rg2 = new SAMReadGroupRecord("rg2");
 
-        final Map<String, Path> outputMap = RevertSam.createOutputMap(null, Paths.get("/foo/bar"), ".bam", Arrays.asList(rg1, rg2));
+        final Map<String, Path> outputMap = RevertSam.createOutputMap(null, Paths.get("/foo/bar"), ".bam", Arrays.asList(rg1, rg2), null);
         Assert.assertEquals(outputMap.get("rg1"), Paths.get("/foo/bar/rg1.bam"));
         Assert.assertEquals(outputMap.get("rg2"), Paths.get("/foo/bar/rg2.bam"));
     }
 
     @Test
     public void testFilePathsWithMapFile() {
-        final Map<String, Path> outputMap = RevertSam.createOutputMap(validOutputMap.toPath(), null, ".bam", Collections.emptyList());
+        final Map<String, Path> outputMap = RevertSam.createOutputMap(validOutputMap.toPath(), null, ".bam", Collections.emptyList(), null);
         Assert.assertEquals(outputMap.get("rg1"), Paths.get("/path/to/my_rg_1.ubam"));
         Assert.assertEquals(outputMap.get("rg2"), Paths.get("/path/to/my_rg_2.ubam"));
     }
@@ -607,49 +609,92 @@ public class RevertSamTest extends CommandLineProgramTest {
 
 
     private final static boolean OUTPUT_BY_READ_GROUP = true;
-    // LOCAL_OUTPUT_MAP means the output map file itself is stored locally. The output SAM files will always be in the cloud.
-    private enum OutputMapOptions { LOCAL_OUTPUT_MAP, CLOUD_OUTPUT_MAP, NO_OUTPUT_MAP }
+
+    // Specifies the location of the dynamically created output map
+    private enum OutputMapOptions { LOCAL_OUTPUT_MAP,
+        CLOUD_OUTPUT_MAP,
+        NO_OUTPUT_MAP }
+
 
     @DataProvider(name = "cloudTestData")
     public Object[][] getCloudTestData() {
-        final PicardHtsPath tempCramOutputPath = PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_STR, "RevertSam", ".cram");
+        final PicardHtsPath tempCloudCram = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR, "RevertSam", ".cram");
+        final PicardHtsPath tempLocalCram = PicardBucketUtils.getLocalTempFilePath("RevertSam", ".cram");
         return new Object[][]{
-                // Output by read group without the output map, write output bams in the cloud
-                // Since the output file names are determined within RevertSam, we can't designate the output files to be temp files.
-                // So we mark these files to be deleted. In order to avoid collisions, there cannot be another test case with the same BAM and output options.
-                {NA12878_MEDIUM, DEFAULT_CLOUD_TEST_OUTPUT_DIR, OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP },
+                // Output by read group without the output map, write output bams in the cloud.
+                {NA12878_MEDIUM, DEFAULT_CLOUD_TEST_OUTPUT_DIR, OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP, null },
                 // Output by read group using the output map, write output bams in the cloud
-                {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP },
+                {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP, null },
                 // Output by read group using the local output map, write output bams in the cloud
-                {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.LOCAL_OUTPUT_MAP },
-                // Cram input, create a cram for each read group
-                {NA12878_MEDIUM_CRAM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP },
-                // Cram input, single output cram
-                {NA12878_MEDIUM_CRAM, tempCramOutputPath, !OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP }};
+                {NA12878_MEDIUM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.LOCAL_OUTPUT_MAP, null},
+                // Cram input, output a CRAM for each read group
+                {NA12878_MEDIUM_CRAM, null, OUTPUT_BY_READ_GROUP, OutputMapOptions.CLOUD_OUTPUT_MAP, HG19_CHR2021 },
+                // Cram input in the cloud, single cloud cram output
+                {NA12878_MEDIUM_CRAM, tempCloudCram, !OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP, HG19_CHR2021 },
+                // Cram input in the cloud, single local cram output
+                {NA12878_MEDIUM_CRAM, tempLocalCram, !OUTPUT_BY_READ_GROUP, OutputMapOptions.NO_OUTPUT_MAP, HG19_CHR2021 }};
     }
 
     /**
      *
-     * Write the output map for Revert Sam based on the read groups present in the header file of the given SAM file.
+     * Write the output map for RevertSam based on the read groups present in the header file of the given SAM file.
      *
      * @param sam        The read names in the header of this sam file will be used as rows
-     * @param outputBase The directory where the per read group output files will live
+     * @param perReadGroupPathBase This path will be the base name of the SAM files listed in the outputMap table.
+     *                   Not to be confused with the location of the table file (the return value of this method).
      * @return The PicardHtsPath to the tsv with each row a pair (read name, output), where output points to a temp file
-o     * created in the directory specified in outputBase.
+     * created in the directory specified in outputBase.
      */
-    private PicardHtsPath getTestReadGroupMapFile(final PicardHtsPath sam, final String outputBase) {
-        final String samExtension = sam.isBam() ? ".bam" : ".cram";
-        final PicardHtsPath result = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), ".txt");
+    private PicardHtsPath getTmpTestReadGroupMapTable(final PicardHtsPath sam, final String perReadGroupPathBase) {
+        ValidationUtils.validateArg(sam.getExtension().isPresent(), "The variable sam must be a SAM file but is missing an extension: " + sam.getURIString());
+
+        final String samExtension = sam.getExtension().get();
+        final PicardHtsPath perReadGroupTableFile = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), ".txt");
         final List<String> readGroups = getReadGroups(sam.toPath()).stream().map(rg -> rg.getId()).collect(Collectors.toList());
         final List<String> readGroupOutput = new ArrayList<>();
 
         for (String readGroup : readGroups){
-            final PicardHtsPath readGroupOutputPath = PicardBucketUtils.getTempFilePath(outputBase, readGroup, samExtension);
+            final PicardHtsPath readGroupOutputPath = PicardBucketUtils.getTempFilePath(perReadGroupPathBase, readGroup, samExtension);
             readGroupOutput.add(readGroupOutputPath.getURIString());
         }
 
-        RevertSam.writeOutputMapToFile(result.toPath(), readGroups, readGroupOutput);
-        return result;
+        writeOutputMapToFile(perReadGroupTableFile.toPath(), readGroups, readGroupOutput);
+        return perReadGroupTableFile;
+    }
+
+    /**
+     *
+     * Write an output map i.e. tab-delimited pairs (read name, file name) to outputTablePath
+     *
+     * @param outputTablePath The Path to the file where the table is to be written.
+     * @param readNames The list of ordered read names, to be matched with the output files by index.
+     * @param outputFiles The list of ordered names of the output files.
+     */
+    private static void writeOutputMapToFile(final Path outputTablePath, final List<String> readNames, final List<String> outputFiles) {
+        ValidationUtils.validateArg(readNames.size() == outputFiles.size(), "readNames and output files must be the same size but got: " + readNames.size() + " and " + outputFiles.size());
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputTablePath))) {
+            // Write header
+            writeRow(writer, RevertSam.READ_GROUP_ID_COLUMN_NAME, RevertSam.OUTPUT_COLUMN_NAME);
+
+            for (int i = 0; i < readNames.size(); i++){
+                writeRow(writer, readNames.get(i), outputFiles.get(i));
+            }
+        } catch (IOException e) {
+            throw new PicardException("Error writing a tsv file to " + outputTablePath, e);
+        }
+    }
+
+    // Write to a file (writer) the given array of strings as a tab-delimited row
+    private static void writeRow(final PrintWriter writer, final String... row) {
+        final int delimiter = '\t';
+        for (int j = 0; j < row.length; j++){
+            writer.write(row[j]);
+            if (j < row.length - 1) {
+                writer.write(delimiter);
+            } else {
+                writer.println();
+            }
+        }
     }
 
     private List<SAMReadGroupRecord> getReadGroups(final Path sam){
@@ -660,35 +705,45 @@ o     * created in the directory specified in outputBase.
     /***
      *
      * @param inputSAM The path to the input SAM file
-     * @param outputPath The path to the single output SAM file, when output by read group is turned off. May be null.
+     * @param outputPath The path to a directory, when output by read group is true and the map isn't provided.
+     *                   The path to a single output SAM file, when output by read group is turned off. May be null.
      * @param outputByReadGroup Whether to output by read group
      * @param outputMapOptions Dictates whether to dynamically create an output map and where (local or cloud)
      */
     @Test(dataProvider = "cloudTestData", groups = "cloud")
     public void testCloud(final PicardHtsPath inputSAM, final PicardHtsPath outputPath, final boolean outputByReadGroup,
-                          final OutputMapOptions outputMapOptions) {
+                          final OutputMapOptions outputMapOptions, final PicardHtsPath reference) {
         final List<SAMReadGroupRecord> readGroupsInInput = SamReaderFactory.makeDefault().open(inputSAM.toPath()).getFileHeader().getReadGroups();
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "INPUT=" + inputSAM.getURIString(),
                 "OUTPUT_BY_READGROUP=" + outputByReadGroup));
 
+        // Add a prefix to avoid name collisions across PRs etc.
+        String prefix = null;
         if (outputPath != null){
             args.add("OUTPUT=" + outputPath.getURIString());
+            if (outputByReadGroup){
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss.SSS");
+                prefix = now.format(formatter);
+                args.add("PREFIX=" + prefix);
+            }
         }
 
         final boolean createOutputMap = outputMapOptions != OutputMapOptions.NO_OUTPUT_MAP;
         PicardHtsPath outputMap = null;
         if (createOutputMap){
-            // If these conditions are met, we dynamically create the output map file based on the read groups in inputSAM
             final String outputMapDir = outputMapOptions == OutputMapOptions.CLOUD_OUTPUT_MAP ?
                     DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString() :
                     REVERT_SAM_LOCAL_TEST_DATA_DIR;
-            outputMap = getTestReadGroupMapFile(inputSAM, outputMapDir);
+            // Dynamically create a temporary output map file based on the read groups in inputSAM.
+            outputMap = getTmpTestReadGroupMapTable(inputSAM, outputMapDir);
             args.add("OUTPUT_MAP=" + outputMap.getURIString());
         }
 
         if (inputSAM.isCram()){
-            args.add("REFERENCE_SEQUENCE=" + HG19_CHR2021);
+            Utils.nonNull(reference, () -> "A reference must also be supplied with a CRAM input");
+            args.add("REFERENCE_SEQUENCE=" + reference.getURIString());
         }
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -702,7 +757,7 @@ o     * created in the directory specified in outputBase.
             // OutputByReadGroup is true, but the outputMap was not used.
             // Confirm that the expected output files have been created in the directory specified by outputPath
             ValidationUtils.validateArg(outputPath != null, "outputPath must be provided and must point to a directory.");
-            final Map<String, Path> expectedOutputPaths = RevertSam.createOutputMap(null, outputPath.toPath(), RevertSam.getDefaultExtension(inputSAM.getURIString()), readGroupsInInput);
+            final Map<String, Path> expectedOutputPaths = RevertSam.createOutputMap(null, outputPath.toPath(), RevertSam.getDefaultExtension(inputSAM.getURIString()), readGroupsInInput, prefix);
             for (Map.Entry<String, Path> entry : expectedOutputPaths.entrySet()){
                 final Path outputFile = entry.getValue();
                 Assert.assertTrue(Files.exists(outputFile));
@@ -717,7 +772,8 @@ o     * created in the directory specified in outputBase.
             }
         } else {
             // OutputByReadGroup is true and outputMap was provided
-            try (final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(outputMap.toPath())){
+            try (final TabbedInputParser intermediateParser = new TabbedInputParser(false, Files.newInputStream(outputMap.toPath()));
+                 final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediateParser)){
                 final Iterator<TabbedTextFileWithHeaderParser.Row> rowIterator = parser.iterator();
                 while (rowIterator.hasNext()){
                     final TabbedTextFileWithHeaderParser.Row row = rowIterator.next();
