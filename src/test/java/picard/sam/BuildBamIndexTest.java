@@ -2,7 +2,10 @@ package picard.sam;
 
 import htsjdk.beta.io.IOPathUtils;
 import htsjdk.io.IOPath;
+import htsjdk.samtools.CRAMCRAIIndexer;
 import htsjdk.samtools.SAMException;
+import htsjdk.samtools.cram.CRAIEntry;
+import htsjdk.samtools.cram.CRAIIndex;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -29,7 +32,12 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
     private static final PicardHtsPath INPUT_UNSORTED_SAM_CLOUD = new PicardHtsPath(CLOUD_TEST_DATA_DIR, "index_test.sam");
 
     // tsato: replace with variables defined in the other branches once they merge
-    private static final PicardHtsPath SORTED_CRAM_CLOUD = new PicardHtsPath("gs://hellbender/test/resources/picard/BuildBamIndex/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+    private static final PicardHtsPath SORTED_CRAM_CLOUD = new PicardHtsPath("gs://hellbender/test/resources/picard/BuildBamIndex/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
+    // tsato: this directory missing a crai...
+    private static final PicardHtsPath SORTED_CRAM = new PicardHtsPath("/Users/tsato/workspace/picard/testdata/picard/test/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
+    private static final PicardHtsPath SORTED_CRAM2 = new PicardHtsPath("/Users/tsato/workspace/picard/testdata/picard/test/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
+
+
 
     public String getCommandLineProgramName() { return BuildBamIndex.class.getSimpleName(); }
 
@@ -96,29 +104,53 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
         runPicardCommandLine(args);
     }
 
-    @Test()
-    public void testCloudCram() throws IOException {
-        final List<String> args = new ArrayList<>();
-        args.add("INPUT=" + SORTED_CRAM_CLOUD);
-        args.add("REFERENCE_SEQUENCE=" + "gs://hellbender/test/resources/picard/references/human_g1k_v37.20.21.fasta"); // tsato: replace with variable
+    @DataProvider(name = "cramTestData")
+    public Object[][] getCramTestData(){
+        // tsato: replace with variable
+        final PicardHtsPath localRef = new PicardHtsPath("/Users/tsato/workspace/picard/testdata/picard/reference/human_g1k_v37.20.21.fasta");
+        final PicardHtsPath cloudRef = new PicardHtsPath("gs://hellbender/test/resources/picard/references/human_g1k_v37.20.21.fasta");
 
-        final boolean specifyOutput = false; // for now
+        return new Object[][]{
+                {SORTED_CRAM, localRef}};
+                // {SORTED_CRAM, cloudRef}}; // ,
+                // {SORTED_CRAM_CLOUD, localRef}, // tsato: these are too slow, disable for now.
+                // {SORTED_CRAM_CLOUD, cloudRef},
+    }
+
+    @Test(dataProvider = "cramTestData")
+    public void testCram(final PicardHtsPath cram, final PicardHtsPath reference) throws IOException {
+        final List<String> args = new ArrayList<>();
+        args.add("INPUT=" + cram);
+        args.add("REFERENCE_SEQUENCE=" + reference);
 
         final PicardHtsPath indexOutput;
         final String prefix = "BuildBamIndex_cram_test";
+
+        final boolean specifyOutput = false; // for now
         if (specifyOutput) {
             indexOutput = PicardBucketUtils.getTempFilePath(CLOUD_TEST_OUTPUT_DIR, prefix, ".crai");
             args.add("OUTPUT=" + indexOutput);
         } else {
-            indexOutput = PicardHtsPath.replaceExtension(SORTED_CRAM_CLOUD, ".crai", false);
+            indexOutput = PicardHtsPath.replaceExtension(cram, ".crai", false);
             // tsato: temporarily disable while investigating cram index created this way
             // PicardIOUtils.deleteOnExit(indexOutput.toPath());
         }
 
         runPicardCommandLine(args);
-        // tsato: gotta fix the suffix of this file...or not?
-        final PicardHtsPath expectedCramIndex = new PicardHtsPath("gs://hellbender/test/resources/picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram.bai");
-        int d = 3;
-        // Assert.assertEquals(Files.readAllBytes(indexOutput.toPath()), Files.readAllBytes(new File("/Users/tsato/workspace/picard/testdata/picard/test.index").toPath()));
+
+        final CRAIIndex craiIndex = CRAMCRAIIndexer.readIndex(Files.newInputStream(indexOutput.toPath()));
+        final List<CRAIEntry> entries = craiIndex.getCRAIEntries();
+        // Let's start with this
+
+        // *** CORRECT ONES ***
+        final CRAIIndex craiIndex2 = CRAMCRAIIndexer.readIndex(
+                Files.newInputStream(new File("/Users/tsato/workspace/picard/testdata/picard/test/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram.crai.samtools_save").toPath()));
+        final List<CRAIEntry> entries2 = craiIndex2.getCRAIEntries();
+        // *** END CORRECT ONES ***
+
+        Assert.assertEquals(entries, entries2); // better test but uses a premade samtools index
+        Assert.assertEquals(entries.size(), 2); // tsato: more crude test;
+
+        Files.delete(indexOutput.toPath()); // tsato: temporary
     }
 }
