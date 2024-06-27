@@ -308,8 +308,6 @@ publishing {
         picard(MavenPublication) {
             from components.java
 
-            artifact sourcesJar
-            artifact javadocJar
             pom {
                 name = 'Picard'
                 packaging = 'jar'
