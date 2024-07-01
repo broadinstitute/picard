@@ -10,9 +10,12 @@ public final class GCloudTestUtils {
      */
     public static final PicardHtsPath REQUESTER_PAYS_BUCKET_DEFAULT = new PicardHtsPath("gs://hellbender-requester-pays-test/");
 
-    public static final PicardHtsPath TEST_INPUTS_DEFAULT = new PicardHtsPath("gs://hellbender/test/resources/");
-    public static final PicardHtsPath TEST_STAGING_DEFAULT = new PicardHtsPath("gs://hellbender-test-logs/staging/");
-    public static final PicardHtsPath TEST_PROJECT_DEFAULT = new PicardHtsPath("broad-dsde-dev/");
+    public static final String TEST_INPUTS_DEFAULT_STR = "gs://hellbender/test/resources/";
+    public static final String TEST_STAGING_DEFAULT_STR = "gs://hellbender-test-logs/staging/";
+    public static final String TEST_PROJECT_DEFAULT_STR = "broad-dsde-dev";
+    public static final String TEST_OUTPUT_DEFAULT_STR = TEST_STAGING_DEFAULT_STR + "picard/";
+    public static final PicardHtsPath TEST_INPUTS_DEFAULT = new PicardHtsPath(TEST_INPUTS_DEFAULT_STR);
+    public static final PicardHtsPath TEST_STAGING_DEFAULT = new PicardHtsPath(TEST_STAGING_DEFAULT_STR);
     public static final PicardHtsPath TEST_OUTPUT_DEFAULT = PicardHtsPath.resolve(TEST_STAGING_DEFAULT, "picard/");
 
     /**
@@ -34,10 +37,10 @@ public final class GCloudTestUtils {
     /**
      * name of the google cloud project that stores the data and will run the code
      *
-     * @return PICARD_TEST_PROJECT env. var if defined or {@value #TEST_PROJECT_DEFAULT.getURIString()}
+     * @return PICARD_TEST_PROJECT env. var if defined or {@value TEST_PROJECT_DEFAULT_STR}
      */
     public static String getTestProject() {
-        return getSystemProperty("PICARD_TEST_PROJECT", TEST_PROJECT_DEFAULT.getURIString());
+        return getSystemProperty("PICARD_TEST_PROJECT", TEST_PROJECT_DEFAULT_STR);
     }
 
     /**
