@@ -27,6 +27,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
@@ -156,7 +157,7 @@ public class SortSam extends CommandLineProgram {
             IOUtil.assertFileIsWritable(OUTPUT.toPath());
         }
 
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).open(INPUT.toPath());
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).open(SamInputResource.of(INPUT.toPath())); // tsato: needs to be wrapped in SamInputResource.of() ??
 
         reader.getFileHeader().setSortOrder(SORT_ORDER.getSortOrder());
         final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), false, OUTPUT.toPath(), referenceSequence.getReferencePath());
