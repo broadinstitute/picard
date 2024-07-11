@@ -16,7 +16,9 @@ import picard.nio.PicardIOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,5 +154,12 @@ public class BuildBamIndexTest extends CommandLineProgramTest {
         Assert.assertEquals(entries.size(), 2); // tsato: more crude test;
 
         Files.delete(indexOutput.toPath()); // tsato: temporary
+    }
+
+    // From https://github.com/samtools/htsjdk/issues/1084
+    @Test
+    public void testStdin() throws IOException {
+        final InputStream inputStream = Files.newInputStream(Paths.get("/dev/stdin/"));
+        inputStream.available();
     }
 }
