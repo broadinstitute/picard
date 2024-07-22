@@ -5,10 +5,8 @@ import com.google.cloud.storage.contrib.nio.CloudStoragePath;
 import htsjdk.io.IOPath;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.utils.ValidationUtils;
-import picard.PicardException;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -67,17 +65,44 @@ public class PicardBucketUtils {
         }
     }
 
+    /**
+     * This overload of getTempFilePath takes the directory of type PicardHtsPath instead of String.
+     */
     public static PicardHtsPath getTempFilePath(final PicardHtsPath directory, String prefix, final String extension){
         return getTempFilePath(directory.getURIString(), prefix, extension);
     }
 
-    // For local temp file, directory should be null.
+    /**
+     * Calls getTempFilePath without the prefix.
+     */
     public static PicardHtsPath getTempFilePath(String directory, String extension){
         return getTempFilePath(directory, "", extension);
     }
 
     public static PicardHtsPath getLocalTempFilePath(final String prefix, final String extension){
         return getTempFilePath((String) null, prefix, extension);
+    }
+
+    // Move to BucktUtils
+    // "directory"
+    // Signaled by the trailing "/"
+    // Shouldn't be used for other FileSystems
+
+    /**
+     * Creates a path to a "directory" on a Google Cloud System filesystem with a randomly generated URI.
+     * Since the notion of directories does not exist in GCS, it creates a path to a URI ending in "/".
+     * Calling this method will not create a directory/file on GCS. It merely returns a path to a non-directory.
+     *
+     *
+     * See: https://stackoverflow.com/questions/51892343/google-gsutil-create-folder
+     *
+     * @param parentDir The root path where the new "directory" is to live e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/".
+     * @return A PicardHtsPath object pointing to e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
+     */
+    public static PicardHtsPath getGCSTempDirectory(final PicardHtsPath parentDir){
+        ValidationUtils.validateArg(parentDir.getScheme().equals(PicardBucketUtils.GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME), "This method is supported only for a GCS path: " + parentDir.getURIString());
+        ValidationUtils.validateArg(parentDir.getURIString().endsWith("/"), "parentDir must end in backslash '/': " + parentDir.getURIString());
+        return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(parentDir.getURIString(), "", "/"));
     }
 
     /**
@@ -87,7 +112,7 @@ public class PicardBucketUtils {
      * @param prefix The beginning of the file name
      * @param suffix The end of the file name, e.g. ".tmp"
      */
-    private static Path randomRemotePath(String stagingLocation, String prefix, String suffix) {
+    public static Path randomRemotePath(String stagingLocation, String prefix, String suffix) {
         if (isGcsUrl(stagingLocation)) {
             return getPathOnGcs(stagingLocation).resolve(prefix + UUID.randomUUID() + suffix);
         } else if (isHadoopUrl(stagingLocation)) {

@@ -35,6 +35,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -241,8 +242,8 @@ public class RevertSam extends CommandLineProgram {
             "same library name.", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
     public String LIBRARY_NAME;
 
-    @Argument(doc = "The prefix to be prepended to the output files, when OUTPUT_BY_READ_GROUP is true but the OUTPUT_MAP was not provided", optional = true)
-    public String PREFIX = null;
+//    @Argument(doc = "The prefix to be prepended to the output files, when OUTPUT_BY_READ_GROUP is true but the OUTPUT_MAP was not provided", optional = true)
+//    public String PREFIX = null;
 
     private final static Log log = Log.getInstance(RevertSam.class);
 
@@ -271,7 +272,7 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(INPUT.toPath());
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath())); // tsato: confirm this won't break piped
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
@@ -298,11 +299,12 @@ public class RevertSam extends CommandLineProgram {
                 defaultExtension = "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
             }
 
-            outputMap = createOutputMap(OUTPUT_MAP == null ? null : OUTPUT_MAP.toPath(),
-                    OUTPUT == null ? null : OUTPUT.toPath(),
-                    defaultExtension,
-                    inHeader.getReadGroups(),
-                    PREFIX);
+            if (OUTPUT_MAP != null){
+                outputMap = readOutputMap(OUTPUT_MAP.toPath());
+            } else {
+                outputMap = createOutputMapFromReadGroups(inHeader.getReadGroups(), OUTPUT.toPath(), defaultExtension);
+            }
+
             ValidationUtil.assertAllReadGroupsMapped(outputMap, inHeader.getReadGroups());
             headerMap = createHeaderMap(inHeader, SORT_ORDER, REMOVE_ALIGNMENT_INFORMATION);
         } else {
@@ -572,32 +574,7 @@ public class RevertSam extends CommandLineProgram {
         readGroups.forEach(rg -> rg.setLibrary(libraryName));
     }
 
-    /**
-     *
-     * @param outputMapFile May be null.
-     * @param outputDir The output map will contain paths to files in this directory if outputMapFile is null. May be null.
-     * @param extension Self-explanatory.
-     * @param readGroups Self-explanatory.
-     * @param prefix The prefix to be prepended to output files when OUTPUT is a directory and OUTPUT_BY_READ_GROUP = true. May be null
-     * @return
-     */
-    static Map<String, Path> createOutputMap(
-            final Path outputMapFile,
-            final Path outputDir,
-            final String extension,
-            final List<SAMReadGroupRecord> readGroups,
-            final String prefix) {
-
-        final Map<String, Path> outputMap;
-        if (outputMapFile != null) {
-            outputMap = createOutputMapFromFile(outputMapFile);
-        } else {
-            outputMap = createOutputMapFromDirectory(readGroups, outputDir, extension, prefix);
-        }
-        return outputMap;
-    }
-
-    private static Map<String, Path> createOutputMapFromFile(final Path outputMapFile) {
+    public static Map<String, Path> readOutputMap(final Path outputMapFile) {
         final Map<String, Path> outputMap = new HashMap<>();
 
         try (final TabbedInputParser intermediateParser = new TabbedInputParser(false, Files.newInputStream(outputMapFile));
@@ -616,12 +593,12 @@ public class RevertSam extends CommandLineProgram {
     }
 
     // Create an output map file to be written to a specified directory
-    private static Map<String, Path> createOutputMapFromDirectory(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension,
-                                                                  final String prefix) {
+    // tsto: remove prefix?
+    public static Map<String, Path> createOutputMapFromReadGroups(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension) {
         final Map<String, Path> outputMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : readGroups) {
             final String id = readGroup.getId();
-            final String fileName = prefix == null ? id + extension : prefix + "_" + id + extension;
+            final String fileName = id + extension;
             final Path outputPath = outputDir.resolve(fileName);
             outputMap.put(id, outputPath);
         }

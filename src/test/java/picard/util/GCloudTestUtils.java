@@ -10,13 +10,12 @@ public final class GCloudTestUtils {
      */
     public static final PicardHtsPath REQUESTER_PAYS_BUCKET_DEFAULT = new PicardHtsPath("gs://hellbender-requester-pays-test/");
 
-    public static final String TEST_INPUTS_DEFAULT_STR = "gs://hellbender/test/resources/";
-    public static final String TEST_STAGING_DEFAULT_STR = "gs://hellbender-test-logs/staging/";
-    public static final String TEST_PROJECT_DEFAULT_STR = "broad-dsde-dev";
-    public static final String TEST_OUTPUT_DEFAULT_STR = TEST_STAGING_DEFAULT_STR + "picard/";
-    public static final PicardHtsPath TEST_INPUTS_DEFAULT = new PicardHtsPath(TEST_INPUTS_DEFAULT_STR);
-    public static final PicardHtsPath TEST_STAGING_DEFAULT = new PicardHtsPath(TEST_STAGING_DEFAULT_STR);
-    public static final PicardHtsPath TEST_OUTPUT_DEFAULT = PicardHtsPath.resolve(TEST_STAGING_DEFAULT, "picard/");
+    public static final String TEST_INPUTS_DEFAULT_GCLOUD_STR = "gs://hellbender/test/resources/";
+    public static final String TEST_STAGING_DEFAULT_GCLOUD_STR = "gs://hellbender-test-logs/staging/";
+    public static final String TEST_GCLOUD_PROJECT_DEFAULT_STR = "broad-dsde-dev";
+    public static final PicardHtsPath TEST_INPUTS_DEFAULT_GCLOUD = new PicardHtsPath(TEST_INPUTS_DEFAULT_GCLOUD_STR);
+    public static final PicardHtsPath TEST_STAGING_DEFAULT_GCLOUD = new PicardHtsPath(TEST_STAGING_DEFAULT_GCLOUD_STR);
+    public static final PicardHtsPath TEST_OUTPUT_DEFAULT_GCLOUD = PicardHtsPath.resolve(TEST_STAGING_DEFAULT_GCLOUD, "picard/");
 
     /**
      * A publicly readable GCS bucket set as requester pays, this should not be owned by the same project that is set
@@ -37,10 +36,10 @@ public final class GCloudTestUtils {
     /**
      * name of the google cloud project that stores the data and will run the code
      *
-     * @return PICARD_TEST_PROJECT env. var if defined or {@value TEST_PROJECT_DEFAULT_STR}
+     * @return PICARD_TEST_PROJECT env. var if defined or {@value TEST_GCLOUD_PROJECT_DEFAULT_STR}
      */
     public static String getTestProject() {
-        return getSystemProperty("PICARD_TEST_PROJECT", TEST_PROJECT_DEFAULT_STR);
+        return getSystemProperty("PICARD_TEST_PROJECT", TEST_GCLOUD_PROJECT_DEFAULT_STR);
     }
 
     /**
@@ -50,7 +49,7 @@ public final class GCloudTestUtils {
      * @return PICARD_TEST_STAGING env. var if defined, or {@value #TEST_STAGING_DEFAULT.getURIString()}
      */
     public static String getTestStaging() {
-        return getSystemProperty("PICARD_TEST_STAGING", TEST_STAGING_DEFAULT.getURIString());
+        return getSystemProperty("PICARD_TEST_STAGING", TEST_STAGING_DEFAULT_GCLOUD.getURIString());
     }
 
     /**
@@ -60,7 +59,7 @@ public final class GCloudTestUtils {
      * @return PICARD_TEST_INPUTS env. var if defined or {@value #TEST_INPUTS_DEFAULT.getURIString()}.
      */
     public static String getTestInputPath() {
-        return getSystemProperty("PICARD_TEST_INPUTS", TEST_INPUTS_DEFAULT.getURIString());
+        return getSystemProperty("PICARD_TEST_INPUTS", TEST_INPUTS_DEFAULT_GCLOUD.getURIString());
     }
 
 }

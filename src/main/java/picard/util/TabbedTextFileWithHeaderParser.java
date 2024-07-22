@@ -26,12 +26,7 @@ package picard.util;
 import htsjdk.samtools.util.CloseableIterator;
 import picard.PicardException;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
