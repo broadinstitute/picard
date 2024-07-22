@@ -704,7 +704,7 @@ public class RevertSamTest extends CommandLineProgramTest {
      * @param outputByReadGroup Whether to output by read group
      * @param outputMapDir The location for a dynamically created output map file. Maybe null.
      */
-    @Test(dataProvider = "cloudTestData2", groups = "cloud")
+    @Test(dataProvider = "cloudTestData", groups = "cloud")
     public void testCloud(final PicardHtsPath inputSAM, final PicardHtsPath outputPath, final boolean outputByReadGroup,
                           final String outputMapDir, final PicardHtsPath reference) {
         final List<String> args = new ArrayList<>(Arrays.asList(
