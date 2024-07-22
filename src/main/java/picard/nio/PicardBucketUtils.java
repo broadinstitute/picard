@@ -93,7 +93,7 @@ public class PicardBucketUtils {
      * @param parentDir The root path where the new "directory" is to live e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/".
      * @return A PicardHtsPath object pointing to e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
      */
-    public static PicardHtsPath getGCSTempDirectory(final PicardHtsPath parentDir){
+    public static PicardHtsPath getRandomGCSDirectory(final PicardHtsPath parentDir){
         ValidationUtils.validateArg(parentDir.getScheme().equals(PicardBucketUtils.GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME), "This method is supported only for a GCS path: " + parentDir.getURIString());
         ValidationUtils.validateArg(parentDir.getURIString().endsWith("/"), "parentDir must end in backslash '/': " + parentDir.getURIString());
         return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(parentDir.getURIString(), "", "/"));

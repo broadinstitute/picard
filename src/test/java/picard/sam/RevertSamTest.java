@@ -40,8 +40,6 @@ import picard.nio.PicardIOUtils;
 import picard.util.GCloudTestUtils;
 import picard.util.TabbedInputParser;
 import picard.util.TabbedTextFileWithHeaderParser;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import java.io.File;
 import java.io.IOException;
@@ -614,7 +612,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         final PicardHtsPath tempLocalCram = PicardBucketUtils.getLocalTempFilePath("RevertSam", ".cram");
         return new Object[][]{
                 // Output by read group without the output map, write output bams in the cloud.
-                {NA12878_MEDIUM_GCLOUD, PicardBucketUtils.getGCSTempDirectory(DEFAULT_CLOUD_TEST_OUTPUT_DIR), OUTPUT_BY_READ_GROUP, null, null },
+                {NA12878_MEDIUM_GCLOUD, PicardBucketUtils.getRandomGCSDirectory(DEFAULT_CLOUD_TEST_OUTPUT_DIR), OUTPUT_BY_READ_GROUP, null, null },
                 // Output by read group using the output map, write output bams in the cloud
                 {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), null },
                 // Output by read group using the local output map, write output bams in the cloud
