@@ -83,16 +83,10 @@ public class PicardBucketUtils {
         return getTempFilePath((String) null, prefix, extension);
     }
 
-    // Move to BucktUtils
-    // "directory"
-    // Signaled by the trailing "/"
-    // Shouldn't be used for other FileSystems
-
     /**
      * Creates a path to a "directory" on a Google Cloud System filesystem with a randomly generated URI.
      * Since the notion of directories does not exist in GCS, it creates a path to a URI ending in "/".
      * Calling this method will not create a directory/file on GCS. It merely returns a path to a non-directory.
-     *
      *
      * See: https://stackoverflow.com/questions/51892343/google-gsutil-create-folder
      *

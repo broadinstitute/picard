@@ -702,7 +702,7 @@ public class RevertSamTest extends CommandLineProgramTest {
      * @param outputPath The path to a directory, when output by read group is true and the map isn't provided.
      *                   The path to a single output SAM file, when output by read group is turned off. May be null.
      * @param outputByReadGroup Whether to output by read group
-     * @param outputMapDir The location for a dynamically created output map file. Maybe null.
+     * @param outputMapDir The location for a dynamically created output map file. May be null.
      */
     @Test(dataProvider = "cloudTestData", groups = "cloud")
     public void testCloud(final PicardHtsPath inputSAM, final PicardHtsPath outputPath, final boolean outputByReadGroup,

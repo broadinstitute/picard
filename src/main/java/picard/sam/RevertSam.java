@@ -242,9 +242,6 @@ public class RevertSam extends CommandLineProgram {
             "same library name.", shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional = true)
     public String LIBRARY_NAME;
 
-//    @Argument(doc = "The prefix to be prepended to the output files, when OUTPUT_BY_READ_GROUP is true but the OUTPUT_MAP was not provided", optional = true)
-//    public String PREFIX = null;
-
     private final static Log log = Log.getInstance(RevertSam.class);
 
     /**
@@ -272,7 +269,7 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath())); // tsato: confirm this won't break piped
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath())); // tsato: confirm this won't break piped input
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
@@ -593,7 +590,6 @@ public class RevertSam extends CommandLineProgram {
     }
 
     // Create an output map file to be written to a specified directory
-    // tsto: remove prefix?
     public static Map<String, Path> createOutputMapFromReadGroups(final List<SAMReadGroupRecord> readGroups, final Path outputDir, final String extension) {
         final Map<String, Path> outputMap = new HashMap<>();
         for (final SAMReadGroupRecord readGroup : readGroups) {
