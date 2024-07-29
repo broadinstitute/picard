@@ -27,7 +27,7 @@ public class PicardBucketUtils {
     private PicardBucketUtils(){} //private so that no one will instantiate this class
 
     /**
-     * Get a temporary file path based on the prefix and extension provided
+     * Get a temporary file path based on the prefix and extension provided.
      * This file (and possible indexes associated with it) will be scheduled for deletion on shutdown.
      *
      * @param directory the directory where the temporary fill will be placed. May be null.
@@ -67,26 +67,41 @@ public class PicardBucketUtils {
 
     /**
      * This overload of getTempFilePath takes the directory of type PicardHtsPath instead of String.
+     *
+     * @see #getTempFilePath(String, String, String)
+     *
      */
     public static PicardHtsPath getTempFilePath(final PicardHtsPath directory, String prefix, final String extension){
         return getTempFilePath(directory.getURIString(), prefix, extension);
     }
 
     /**
-     * Calls getTempFilePath without the prefix.
+     * Calls getTempFilePath with the empty string as the prefix.
+     *
+     * @see #getTempFilePath(String, String, String)
      */
     public static PicardHtsPath getTempFilePath(String directory, String extension){
         return getTempFilePath(directory, "", extension);
     }
 
+    /**
+     *
+     * Creates a temporary file on the local temporary file.
+     *
+     * @see #getTempFilePath(String, String, String)
+     */
     public static PicardHtsPath getLocalTempFilePath(final String prefix, final String extension){
         return getTempFilePath((String) null, prefix, extension);
     }
 
     /**
-     * Creates a path to a "directory" on a Google Cloud System filesystem with a randomly generated URI.
-     * Since the notion of directories does not exist in GCS, it creates a path to a URI ending in "/".
-     * Calling this method will not create a directory/file on GCS. It merely returns a path to a non-directory.
+     * Creates a PicardHtsPath object to a "directory" on a Google Cloud System filesystem with a randomly generated URI.
+     *
+     * Note that the notion of directories does not exist in GCS. Thus, by "directory,"
+     * we mean a path object with a randomly generated URI ending in "/", which
+     * the caller can use as a root URI/path for other files to be created e.g. via PicardHtsPath::resolve.
+     *
+     * Note that this method does *not* create an actual directory/file on GCS that one can write to, delete, or manipulate otherwise.
      *
      * See: https://stackoverflow.com/questions/51892343/google-gsutil-create-folder
      *
