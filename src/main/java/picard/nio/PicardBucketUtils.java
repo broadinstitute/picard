@@ -71,7 +71,7 @@ public class PicardBucketUtils {
      * @see #getTempFilePath(String, String, String)
      *
      */
-    public static PicardHtsPath getTempFilePath(final PicardHtsPath directory, String prefix, final String extension){
+    public static PicardHtsPath getTempFilePath(final IOPath directory, String prefix, final String extension){
         return getTempFilePath(directory.getURIString(), prefix, extension);
     }
 
@@ -105,13 +105,14 @@ public class PicardBucketUtils {
      *
      * See: https://stackoverflow.com/questions/51892343/google-gsutil-create-folder
      *
-     * @param parentDir The root path where the new "directory" is to live e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/".
-     * @return A PicardHtsPath object pointing to e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
+     * @param relativePath The relative location for the new "directory" under the harcoded staging bucket with a TTL set e.g. "test/RevertSam/".
+     * @return A PicardHtsPath object to a randomly generated "directory" e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
      */
-    public static PicardHtsPath getRandomGCSDirectory(final PicardHtsPath parentDir){
-        ValidationUtils.validateArg(parentDir.getScheme().equals(PicardBucketUtils.GOOGLE_CLOUD_STORAGE_FILESYSTEM_SCHEME), "This method is supported only for a GCS path: " + parentDir.getURIString());
-        ValidationUtils.validateArg(parentDir.getURIString().endsWith("/"), "parentDir must end in backslash '/': " + parentDir.getURIString());
-        return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(parentDir.getURIString(), "", "/"));
+    public static PicardHtsPath getRandomGCSDirectory(final String relativePath){
+        ValidationUtils.validateArg(relativePath.endsWith("/"), "relativePath must end in backslash '/': " + relativePath);
+        // This Picard test staging bucket has a TTL of 180 days (DeleteAction with Age = 180)
+        final String stagingDirectory = "gs://hellbender-test-logs/staging/picard/";
+        return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(stagingDirectory + relativePath, "", "/"));
     }
 
     /**

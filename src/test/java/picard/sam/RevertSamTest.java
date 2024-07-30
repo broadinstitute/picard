@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.utils.ValidationUtils;
@@ -64,7 +65,8 @@ import java.util.stream.Collectors;
  * To change this template use File | Settings | File Templates.
  */
 public class RevertSamTest extends CommandLineProgramTest {
-    private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD, "test/RevertSam/");
+    private final static String DEFAULT_CLOUD_TEST_OUTPUT_RELATIVE_PATH = "test/RevertSam/";
+    private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD, DEFAULT_CLOUD_TEST_OUTPUT_RELATIVE_PATH);
     public static final String REVERT_SAM_LOCAL_TEST_DATA_DIR = "testdata/picard/sam/RevertSam/";
     private static final String basicSamToRevert = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_basic.sam";
     private static final String sampleLibraryOverrideSam = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_sample_library_override.sam";
@@ -612,7 +614,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         final PicardHtsPath tempLocalCram = PicardBucketUtils.getLocalTempFilePath("RevertSam", ".cram");
         return new Object[][]{
                 // Output by read group without the output map, write output bams in the cloud.
-                {NA12878_MEDIUM_GCLOUD, PicardBucketUtils.getRandomGCSDirectory(DEFAULT_CLOUD_TEST_OUTPUT_DIR), OUTPUT_BY_READ_GROUP, null, null },
+                {NA12878_MEDIUM_GCLOUD, PicardBucketUtils.getRandomGCSDirectory(DEFAULT_CLOUD_TEST_OUTPUT_RELATIVE_PATH), OUTPUT_BY_READ_GROUP, null, null },
                 // Output by read group using the output map, write output bams in the cloud
                 {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), null },
                 // Output by read group using the local output map, write output bams in the cloud
@@ -637,7 +639,7 @@ public class RevertSamTest extends CommandLineProgramTest {
      *
      * Also see RevertSam::createOutputMapFromReadGroups(), which does part of what this method does (creates a dictionary rather than two lists).
      */
-    private PicardHtsPath getTmpTestReadGroupMapTable(final PicardHtsPath sam, final String perReadGroupPathBase) {
+    private PicardHtsPath getTmpTestReadGroupMapTable(final IOPath sam, final String perReadGroupPathBase) {
         ValidationUtils.validateArg(sam.getExtension().isPresent(), "The variable sam must be a SAM file but is missing an extension: " + sam.getURIString());
 
         final String samExtension = sam.getExtension().get();
