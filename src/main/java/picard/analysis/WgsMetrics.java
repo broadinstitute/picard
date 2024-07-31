@@ -320,7 +320,7 @@ public class WgsMetrics extends MergeableMetricBase {
         PCT_90X  = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
         PCT_100X = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
 
-        private final Histogram<Integer> highQualitDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
+        final Histogram<Integer> highQualitDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
         long maxDepth = 0;
         for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
             maxDepth = Math.max((int) bin.getIdValue(), maxDepth);
