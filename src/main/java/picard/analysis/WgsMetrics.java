@@ -72,6 +72,7 @@ public class WgsMetrics extends MergeableMetricBase {
     public WgsMetrics() {
         intervals                           = null;
         highQualityDepthHistogram           = null;
+        highQualityDepthHistogramNonZero    = null;
         unfilteredDepthHistogram            = null;
         unfilteredBaseQHistogram            = null;
         theoreticalHetSensitivitySampleSize = -1;
