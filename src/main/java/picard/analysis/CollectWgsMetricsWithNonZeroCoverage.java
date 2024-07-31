@@ -171,7 +171,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     @Override
     protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
                                             final Histogram<Integer> highQualityDepthHistogram,
-                                            final Histogram<Integer> highQualitDepthHistogramNonZero,
+                                            final Histogram<Integer> highQualityDepthHistogramNonZero,
                                             final Histogram<Integer> unfilteredDepthHistogram,
                                             final double pctExcludedByAdapter,
                                             final double pctExcludedByMapq,
@@ -187,6 +187,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         return new WgsMetricsWithNonZeroCoverage(
                 intervals,
                 highQualityDepthHistogram,
+                highQualityDepthHistogramNonZeroFinal,
                 unfilteredDepthHistogram,
                 pctExcludedByAdapter,
                 pctExcludedByMapq,
