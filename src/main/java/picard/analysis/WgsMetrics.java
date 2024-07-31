@@ -78,6 +78,7 @@ public class WgsMetrics extends MergeableMetricBase {
     /**
      * Create an instance of this metric that is mergeable.
      *
+     * @param highQualityDepthHistogramNonZero the count of genomic positions observed for each observed depth. Excludes bases with quality below MINIMUM_BASE_QUALITY or with 0 coverage.
      * @param highQualityDepthHistogram the count of genomic positions observed for each observed depth. Excludes bases with quality below MINIMUM_BASE_QUALITY.
      * @param unfilteredDepthHistogram the depth histogram that includes all but quality 2 bases.
      * @param pctExcludedByAdapter the fraction of aligned bases that were filtered out because they were in reads with 0 mapping quality that looked like adapter sequence.
