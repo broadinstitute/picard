@@ -320,12 +320,21 @@ public class WgsMetrics extends MergeableMetricBase {
         PCT_90X  = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
         PCT_100X = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
 
-
+        private final Histogram<Integer> highQualitDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
+        long maxDepth = 0;
+        for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
+            maxDepth = Math.max((int) bin.getIdValue(), maxDepth);
+            final int depth = bin.getIdValue()
+            if (depth > 0) {
+                highQualitDepthHistogramNonZero.increment(depth,bin.getValue());
+            }
+        }
+        LongStream.range(1, maxDepth).forEach(i -> highQualityDepthHistogramNonZero.increment((int) i, 0));
         // This roughly measures by how much we must over-sequence so that xx% of bases have coverage at least as deep as the current mean coverage:
-        if (highQualityDepthHistogram.getCount() > 0) {
-            FOLD_80_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
-            FOLD_90_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.1);
-            FOLD_95_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.05);
+        if (highQualityDepthHistogramNonZero.getCount() > 0) {
+            FOLD_80_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.2);
+            FOLD_90_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.1);
+            FOLD_95_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.05);
         } else {
             FOLD_80_BASE_PENALTY = 0;
             FOLD_90_BASE_PENALTY = 0;

@@ -128,7 +128,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     // histogram of depths. does not include bases with quality less than MINIMUM_BASE_QUALITY (default 20) or bases with zero coverage.
     // we use this for the calculation of the FOLD_80_BASE_PENALTY metric
-    private final Histogram<Integer> highQualityFilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
+    private final Histogram<Integer> highQualitDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
 
     // histogram of base qualities. includes all but quality 2 bases. we use this histogram to calculate theoretical het sensitivity.
     private final Histogram<Integer> unfilteredDepthHistogram = new Histogram<>("coverage_or_base_quality", "unfiltered_coverage_count");
@@ -712,7 +712,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         private void calculateTargetCoverageMetrics() {
 
             LongStream.range(0, hqMaxDepth).forEach(i -> highQualityDepthHistogram.increment((int) i, 0));
-            LongStream.range(1, hqMaxDepth).forEach(i -> highQualityFilteredDepthHistogram.increment((int) i, 0));
+            LongStream.range(1, hqMaxDepth).forEach(i -> highQualityDepthHistogramNonZero.increment((int) i, 0));
 
             int zeroCoverageTargets = 0;
 
@@ -744,7 +744,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     highQualityDepthHistogram.increment(depth, 1);
                     minDepth = Math.min(minDepth, depth);
                     if (depth > 0) {
-                        highQualityFilteredDepthHistogram.increment(depth, 1);
+                        highQualityDepthHistogramNonZero.increment(depth, 1);
                     }
                     // Add to the "how many target bases at at-least X" calculations.
                     for (int i = 0; i < targetBasesDepth.length; i++) {
@@ -766,7 +766,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             // compute the coverage value such that 80% of target bases have better coverage than it i.e. 20th percentile
             // this roughly measures how much we must sequence extra such that 80% of target bases have coverage at least as deep as the current mean coverage
-            metrics.FOLD_80_BASE_PENALTY = highQualityFilteredDepthHistogram.getMean() / highQualityFilteredDepthHistogram.getPercentile(0.2);
+            metrics.FOLD_80_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.2);
             metrics.ZERO_CVG_TARGETS_PCT = zeroCoverageTargets / (double) allTargets.getIntervals().size();
 
             // Store the "how many bases at at-least X" calculations.
