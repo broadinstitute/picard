@@ -31,6 +31,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.util.MathUtil;
 import picard.util.help.HelpConstants;
+import java.util.stream.LongStream;
 
 /** Metrics for evaluating the performance of whole genome sequencing experiments. */
 @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
@@ -92,6 +93,7 @@ public class WgsMetrics extends MergeableMetricBase {
      * @param theoreticalHetSensitivitySampleSize the sample size used for theoretical het sensitivity sampling.
      */
     public WgsMetrics(final IntervalList intervals,
+                      final Histogram<Integer> highQualityDepthHistogramNonZero,
                       final Histogram<Integer> highQualityDepthHistogram,
                       final Histogram<Integer> unfilteredDepthHistogram,
                       final double pctExcludedByAdapter,
@@ -107,6 +109,7 @@ public class WgsMetrics extends MergeableMetricBase {
                       final int theoreticalHetSensitivitySampleSize) {
         this.intervals      = intervals.uniqued();
         this.highQualityDepthHistogram = highQualityDepthHistogram;
+        this.highQualityDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
         this.unfilteredDepthHistogram = unfilteredDepthHistogram;
         this.unfilteredBaseQHistogram = unfilteredBaseQHistogram;
         this.coverageCap    = coverageCap;
@@ -320,7 +323,7 @@ public class WgsMetrics extends MergeableMetricBase {
         PCT_90X  = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
         PCT_100X = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
 
-        final Histogram<Integer> highQualitDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
+        
         long maxDepth = 0;
         for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
             maxDepth = Math.max((int) bin.getIdValue(), maxDepth);
