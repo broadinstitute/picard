@@ -324,7 +324,7 @@ public class WgsMetrics extends MergeableMetricBase {
         long maxDepth = 0;
         for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
             maxDepth = Math.max((int) bin.getIdValue(), maxDepth);
-            final int depth = bin.getIdValue()
+            final int depth = bin.getIdValue();
             if (depth > 0) {
                 highQualitDepthHistogramNonZero.increment(depth,bin.getValue());
             }
