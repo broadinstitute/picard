@@ -47,6 +47,9 @@ public class WgsMetrics extends MergeableMetricBase {
     @MergingIsManual
     protected final Histogram<Integer> highQualityDepthHistogram;
 
+    /** Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY and 0 coverage.*/
+    @MergingIsManual
+    protected final Histogram<Integer> highQualityDepthHistogramNonZero;
     /** Count of sites with a given depth of coverage. Includes all but quality 2 bases */
     @MergingIsManual
     protected final Histogram<Integer> unfilteredDepthHistogram;
