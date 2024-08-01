@@ -286,10 +286,10 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     // This is a copy of gs://hellbender/test/resources/hg19mini.fasta. Using the original file in the original location is
     // undesirable because an accompanying dictionary already exists in the same directory. So we copied it to picard/references
     // where the dictionary does not exist.
-    final PicardHtsPath HG19_MINI = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "picard/references/hg19mini.fasta");
+    final PicardHtsPath HG19_MINI = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT_GCLOUD, "picard/references/hg19mini.fasta");
     final PicardHtsPath HG19_MINI_LOCAL = new PicardHtsPath("testdata/picard/reference/hg19mini.fasta");
 
-    final PicardHtsPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_STAGING_DEFAULT, "picard/");
+    final PicardHtsPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_STAGING_DEFAULT_GCLOUD, "picard/");
 
     @DataProvider
     public Object[][] cloudTestData() {
@@ -310,7 +310,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         };
 
         // This is the "original" dictionary that lives in gs://hellbender/test/resources/
-        final PicardHtsPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT, "hg19mini.dict");
+        final PicardHtsPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT_GCLOUD, "hg19mini.dict");
         Assert.assertEquals(runPicardCommandLine(argv), 0);
         final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(expectedOutputPath.toPath());
         final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(output.toPath());

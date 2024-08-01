@@ -5,7 +5,6 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.utils.ValidationUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -56,12 +55,6 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
     // Cloud-related test data
     final int DEFAULT_RANDOM_SEED = 42;
-    private static final PicardHtsPath NA12878_MINI = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
-    private static final PicardHtsPath NA12878_MINI_CRAM = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-
-    // These are the hg19 references with chromosome names "1" (rather than "chr1")
-    private static final PicardHtsPath HG19_REFERENCE_GCLOUD = new PicardHtsPath("gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta");
-    private static final PicardHtsPath HG19_CHR2021_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/references/human_g1k_v37.20.21.fasta");
 
     @Override
     public String getCommandLineProgramName() {
@@ -259,27 +252,27 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @DataProvider(name="testCloudBamDataProvider")
     public Object[][] testCloudBamDataProvider() {
         return new Object[][] {
-                {NA12878_MINI, true, true},
-                {NA12878_MINI, true, false},
-                {NA12878_MINI, false, true},
-                {NA12878_MINI, false, false},
+                {NA12878_MINI_GCLOUD, true, true},
+                {NA12878_MINI_GCLOUD, true, false},
+                {NA12878_MINI_GCLOUD, false, true},
+                {NA12878_MINI_GCLOUD, false, false},
         };
     }
 
     @DataProvider(name="testCloudCramDataProvider")
     public Object[][] testCloudCramDataProvider() {
         return new Object[][] {
-                {NA12878_MINI_CRAM, true, HG19_CHR2021_GCLOUD}
+                {NA12878_MINI_CRAM_GCLOUD, true, HG19_CHR2021_GCLOUD}
         };
     }
 
     @Test(groups = "cloud", dataProvider = "testCloudBamDataProvider")
     public void testCloudBam(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
         final Optional<PicardHtsPath> output = outputInCloud ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", ".bam")) :
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD + "downsample", ".bam")) :
                 Optional.empty();
         final Optional<PicardHtsPath> metricsFile = createMetrics ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "metrics", ".txt")) :
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD + "metrics", ".txt")) :
                 Optional.empty();
         testDownsampleWorker(inputSAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, metricsFile, Optional.empty());
     }
@@ -288,7 +281,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     @Test(groups = "cloud", dataProvider = "testCloudCramDataProvider")
     public void testCloudCram(final PicardHtsPath inputCRAM, final boolean outputInCloud, final PicardHtsPath reference) throws IOException {
         final Optional<PicardHtsPath> output = outputInCloud ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT + "downsample", ".cram")) :
+                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD + "downsample", ".cram")) :
                 Optional.empty();
         testDownsampleWorker(inputCRAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, Optional.empty(), Optional.of(reference));
     }

@@ -1,0 +1,17 @@
+READ_GROUP_ID	OUTPUT
+20FUK.1	gs://hellbender-test-logs/staging/picard/test/20FUK.1_reverted.bam
+20FUK.2	gs://hellbender-test-logs/staging/picard/test/20FUK.2_reverted.bam
+20FUK.3	gs://hellbender-test-logs/staging/picard/test/20FUK.3_reverted.bam
+20FUK.4	gs://hellbender-test-logs/staging/picard/test/20FUK.4_reverted.bam
+20FUK.5	gs://hellbender-test-logs/staging/picard/test/20FUK.5_reverted.bam
+20FUK.6	gs://hellbender-test-logs/staging/picard/test/20FUK.6_reverted.bam
+20FUK.7	gs://hellbender-test-logs/staging/picard/test/20FUK.7_reverted.bam
+20FUK.8	gs://hellbender-test-logs/staging/picard/test/20FUK.8_reverted.bam
+20GAV.1	gs://hellbender-test-logs/staging/picard/test/20GAV.1_reverted.bam
+20GAV.2	gs://hellbender-test-logs/staging/picard/test/20GAV.2_reverted.bam
+20GAV.3	gs://hellbender-test-logs/staging/picard/test/20GAV.3_reverted.bam
+20GAV.4	gs://hellbender-test-logs/staging/picard/test/20GAV.4_reverted.bam
+20GAV.5	gs://hellbender-test-logs/staging/picard/test/20GAV.5_reverted.bam
+20GAV.6	gs://hellbender-test-logs/staging/picard/test/20GAV.6_reverted.bam
+20GAV.7	gs://hellbender-test-logs/staging/picard/test/20GAV.7_reverted.bam
+20GAV.8	gs://hellbender-test-logs/staging/picard/test/20GAV.8_reverted.bam

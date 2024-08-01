@@ -5,10 +5,8 @@ import com.google.cloud.storage.contrib.nio.CloudStoragePath;
 import htsjdk.io.IOPath;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.utils.ValidationUtils;
-import picard.PicardException;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -25,11 +23,14 @@ public class PicardBucketUtils {
     public static final String HDFS_SCHEME = "hdfs";
     public static final String FILE_SCHEME = "file";
 
+    // This Picard test staging bucket has a TTL of 180 days (DeleteAction with Age = 180)
+    public static final String GCLOUD_PICARD_STAGING_DIRECTORY = "gs://hellbender-test-logs/staging/picard/";
+
     // slashes omitted since hdfs paths seem to only have 1 slash which would be weirder to include than no slashes
     private PicardBucketUtils(){} //private so that no one will instantiate this class
 
     /**
-     * Get a temporary file path based on the prefix and extension provided
+     * Get a temporary file path based on the prefix and extension provided.
      * This file (and possible indexes associated with it) will be scheduled for deletion on shutdown.
      *
      * @param directory the directory where the temporary fill will be placed. May be null.
@@ -67,9 +68,52 @@ public class PicardBucketUtils {
         }
     }
 
-    // For local temp file, directory should be null.
+    /**
+     * This overload of getTempFilePath takes the directory of type PicardHtsPath instead of String.
+     *
+     * @see #getTempFilePath(String, String, String)
+     *
+     */
+    public static PicardHtsPath getTempFilePath(final IOPath directory, String prefix, final String extension){
+        return getTempFilePath(directory.getURIString(), prefix, extension);
+    }
+
+    /**
+     * Calls getTempFilePath with the empty string as the prefix.
+     *
+     * @see #getTempFilePath(String, String, String)
+     */
     public static PicardHtsPath getTempFilePath(String directory, String extension){
         return getTempFilePath(directory, "", extension);
+    }
+
+    /**
+     * Creates a temporary file in a local directory.
+     *
+     * @see #getTempFilePath(String, String, String)
+     */
+    public static PicardHtsPath getLocalTempFilePath(final String prefix, final String extension){
+        return getTempFilePath((String) null, prefix, extension);
+    }
+
+    /**
+     * Creates a PicardHtsPath object to a "directory" on a Google Cloud System filesystem with a randomly generated URI.
+     *
+     * Note that the notion of directories does not exist in GCS. Thus, by "directory,"
+     * we mean a path object with a randomly generated URI ending in "/", which
+     * the caller can use as a root URI/path for other files to be created e.g. via PicardHtsPath::resolve.
+     *
+     * Note that this method does *not* create an actual directory/file on GCS that one can write to, delete, or otherwise manipulate.
+     *
+     * See: https://stackoverflow.com/questions/51892343/google-gsutil-create-folder
+     *
+     * @param relativePath The relative location for the new "directory" under the harcoded staging bucket with a TTL set e.g. "test/RevertSam/".
+     * @return A PicardHtsPath object to a randomly generated "directory" e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
+     */
+    public static PicardHtsPath getRandomGCSDirectory(final String relativePath){
+        ValidationUtils.validateArg(relativePath.endsWith("/"), "relativePath must end in backslash '/': " + relativePath);
+
+        return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(GCLOUD_PICARD_STAGING_DIRECTORY + relativePath, "", "/"));
     }
 
     /**
@@ -79,7 +123,7 @@ public class PicardBucketUtils {
      * @param prefix The beginning of the file name
      * @param suffix The end of the file name, e.g. ".tmp"
      */
-    private static Path randomRemotePath(String stagingLocation, String prefix, String suffix) {
+    public static Path randomRemotePath(String stagingLocation, String prefix, String suffix) {
         if (isGcsUrl(stagingLocation)) {
             return getPathOnGcs(stagingLocation).resolve(prefix + UUID.randomUUID() + suffix);
         } else if (isHadoopUrl(stagingLocation)) {
