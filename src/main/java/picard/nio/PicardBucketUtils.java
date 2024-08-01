@@ -111,7 +111,7 @@ public class PicardBucketUtils {
      * @return A PicardHtsPath object to a randomly generated "directory" e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
      */
     public static PicardHtsPath getRandomGCSDirectory(final String relativePath){
-        ValidationUtils.validateArg(relativePath.endsWith("/"), "relativePath must end in backslash '/': " + relativePath)
+        ValidationUtils.validateArg(relativePath.endsWith("/"), "relativePath must end in backslash '/': " + relativePath);
 
         return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(GCLOUD_PICARD_STAGING_DIRECTORY + relativePath, "", "/"));
     }
