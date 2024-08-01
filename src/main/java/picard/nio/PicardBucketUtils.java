@@ -23,6 +23,9 @@ public class PicardBucketUtils {
     public static final String HDFS_SCHEME = "hdfs";
     public static final String FILE_SCHEME = "file";
 
+    // This Picard test staging bucket has a TTL of 180 days (DeleteAction with Age = 180)
+    public static final String GCLOUD_PICARD_STAGING_DIRECTORY = "gs://hellbender-test-logs/staging/picard/";
+
     // slashes omitted since hdfs paths seem to only have 1 slash which would be weirder to include than no slashes
     private PicardBucketUtils(){} //private so that no one will instantiate this class
 
@@ -85,8 +88,7 @@ public class PicardBucketUtils {
     }
 
     /**
-     *
-     * Creates a temporary file on the local temporary file.
+     * Creates a temporary file in a local directory.
      *
      * @see #getTempFilePath(String, String, String)
      */
@@ -101,7 +103,7 @@ public class PicardBucketUtils {
      * we mean a path object with a randomly generated URI ending in "/", which
      * the caller can use as a root URI/path for other files to be created e.g. via PicardHtsPath::resolve.
      *
-     * Note that this method does *not* create an actual directory/file on GCS that one can write to, delete, or manipulate otherwise.
+     * Note that this method does *not* create an actual directory/file on GCS that one can write to, delete, or otherwise manipulate.
      *
      * See: https://stackoverflow.com/questions/51892343/google-gsutil-create-folder
      *
@@ -109,10 +111,9 @@ public class PicardBucketUtils {
      * @return A PicardHtsPath object to a randomly generated "directory" e.g. "gs://hellbender-test-logs/staging/picard/test/RevertSam/{randomly-generated-string}/"
      */
     public static PicardHtsPath getRandomGCSDirectory(final String relativePath){
-        ValidationUtils.validateArg(relativePath.endsWith("/"), "relativePath must end in backslash '/': " + relativePath);
-        // This Picard test staging bucket has a TTL of 180 days (DeleteAction with Age = 180)
-        final String stagingDirectory = "gs://hellbender-test-logs/staging/picard/";
-        return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(stagingDirectory + relativePath, "", "/"));
+        ValidationUtils.validateArg(relativePath.endsWith("/"), "relativePath must end in backslash '/': " + relativePath)
+
+        return PicardHtsPath.fromPath(PicardBucketUtils.randomRemotePath(GCLOUD_PICARD_STAGING_DIRECTORY + relativePath, "", "/"));
     }
 
     /**
