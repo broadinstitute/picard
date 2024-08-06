@@ -269,7 +269,7 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath())); // tsato: confirm this won't break piped input
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath()));
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 

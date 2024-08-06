@@ -77,7 +77,6 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
     public static final File unmappedBam = new File(DATA_DIR, "unmapped.sam");
     private static final File alignedBam = new File(DATA_DIR, "aligned.sam");
-    public static final File alignedQuerySortedBam = new File(DATA_DIR, "aligned_query_name_sorted.sam");
     private static final File oneHalfAlignedBam = new File(DATA_DIR, "onehalfaligned.sam");
     private static final File otherHalfAlignedBam = new File(DATA_DIR, "otherhalfaligned.sam");
     private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
