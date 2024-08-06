@@ -75,8 +75,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File DATA_DIR = new File("testdata/picard/sam");
     private static final File TEST_DATA_DIR = new File(DATA_DIR, "MergeBamAlignment");
 
-    private static final File unmappedBam = new File(DATA_DIR, "unmapped.sam");
+    public static final File unmappedBam = new File(DATA_DIR, "unmapped.sam");
     private static final File alignedBam = new File(DATA_DIR, "aligned.sam");
+    public static final File alignedQuerySortedBam = new File(DATA_DIR, "aligned_query_name_sorted.sam");
     private static final File oneHalfAlignedBam = new File(DATA_DIR, "onehalfaligned.sam");
     private static final File otherHalfAlignedBam = new File(DATA_DIR, "otherhalfaligned.sam");
     private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
@@ -87,8 +88,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
-    private static final File alignedQuerynameSortedBam = new File(DATA_DIR, "aligned_queryname_sorted.sam");
-    private static final File fasta = new File(DATA_DIR, "merger.fasta");
+    public static final File alignedQuerynameSortedBam = new File(DATA_DIR, "aligned_queryname_sorted.sam");
+    public static final File fasta = new File(DATA_DIR, "merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
     private static final File sequenceDict = new File(DATA_DIR, "merger.dict");
     private static final File sequenceDict2 = new File(DATA_DIR, "merger.2.dict");
