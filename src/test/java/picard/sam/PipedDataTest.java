@@ -16,7 +16,7 @@ import static picard.sam.MergeBamAlignmentTest.unmappedBam;
 public class PipedDataTest {
     private static final String classPath = "\"" + System.getProperty("java.class.path") + "\" ";
     private static final String picardCommandlinePreamble = "java -classpath " + classPath + "picard.cmdline.PicardCommandLine ";
-    private static final String TEST_BAM = "testdata/picard/sam/test.bam";
+    private static final String testBam = "testdata/picard/sam/test.bam";
 
     /**
      * Creates the command line argument to be used for piped (/dev/stdin) input tests.
@@ -41,7 +41,7 @@ public class PipedDataTest {
         final String[] sortSamCommand = {
                 "/bin/bash",
                 "-c",
-                getViewSamPicardCommand(TEST_BAM) +
+                getViewSamPicardCommand(testBam) +
                 "| " +
                 picardCommandlinePreamble +
                 "SortSam " +
@@ -55,7 +55,7 @@ public class PipedDataTest {
         final String[] revertSamCommand = {
             "/bin/bash",
             "-c",
-            getViewSamPicardCommand(TEST_BAM) +
+            getViewSamPicardCommand(testBam) +
             "| " +
             picardCommandlinePreamble +
             "RevertSam " +
