@@ -269,7 +269,13 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath())); // tsato: confirm this won't break piped input
+
+        // Wrap the INPUT.toPath() inside SamInputResource.of() as a workaround for the Illegal Seek error.
+        // For details, see:
+        //   https://github.com/broadinstitute/picard/pull/1974
+        //   https://github.com/samtools/htsjdk/pull/1124
+        //   https://github.com/samtools/htsjdk/issues/1084
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).validationStringency(VALIDATION_STRINGENCY).open(SamInputResource.of(INPUT.toPath()));
         final SAMFileHeader inHeader = in.getFileHeader();
         ValidationUtil.validateHeaderOverrides(inHeader, SAMPLE_ALIAS, LIBRARY_NAME);
 
