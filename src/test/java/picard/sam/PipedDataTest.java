@@ -49,7 +49,7 @@ public class PipedDataTest {
         final String[] revertSamCommand = {
             "/bin/bash",
             "-c",
-            getViewSamPicardCommand("testdata/picard/sam/test.bam") + // tsato: this has to be a "+", not ",". Best to extract a method "piped input argument builder" or something
+            getViewSamPicardCommand("testdata/picard/sam/test.bam") +
             "| " +
             picardCommandlinePreamble +
             "RevertSam " +
