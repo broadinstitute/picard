@@ -24,19 +24,19 @@ public abstract class CommandLineProgramTest {
     public static final File CHR_M_DICT = new File(REFERENCE_TEST_DIR,"chrM.reference.dict");
 
     // These are the hg19 references with chromosome names "1" (rather than "chr1")
-    public static final PicardHtsPath HG19_CHR2021_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/references/human_g1k_v37.20.21.fasta");
+    public static final PicardHtsPath HG19_CHR2021_GCLOUD = PicardHtsPath.resolve(GCloudTestUtils.getTestInputPath(), "picard/references/human_g1k_v37.20.21.fasta");
     public static final PicardHtsPath HG19_CHR2021 = new PicardHtsPath("testdata/picard/reference/human_g1k_v37.20.21.fasta.gz");
 
-    public static final PicardHtsPath NA12878_MINI_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
-    public static final PicardHtsPath NA12878_MINI_CRAM_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
-    public static final PicardHtsPath NA12878_MEDIUM_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam");
-    public static final PicardHtsPath NA12878_MEDIUM_CRAM_GCLOUD = new PicardHtsPath(GCloudTestUtils.getTestInputPath() + "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
+    public static final PicardHtsPath NA12878_MINI_GCLOUD = PicardHtsPath.resolve(GCloudTestUtils.getTestInputPath(), "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.bam");
+    public static final PicardHtsPath NA12878_MINI_CRAM_GCLOUD = PicardHtsPath.resolve(GCloudTestUtils.getTestInputPath(), "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n100.cram");
+    public static final PicardHtsPath NA12878_MEDIUM_GCLOUD = PicardHtsPath.resolve(GCloudTestUtils.getTestInputPath(), "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.bam");
+    public static final PicardHtsPath NA12878_MEDIUM_CRAM_GCLOUD = PicardHtsPath.resolve(GCloudTestUtils.getTestInputPath(), "picard/bam/CEUTrio.HiSeq.WGS.b37.NA12878.20.21_n10000.cram");
 
     // A per-test-class directory that will be deleted after the tests are complete.
     private File tempOutputDir;
 
     /**
-     * returns an directory designated for output which will be deleted after the test class is tested
+     * returns a directory designated for output which will be deleted after the test class is tested
      */
     public File getTempOutputDir() {
         if (tempOutputDir == null) {

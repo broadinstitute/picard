@@ -1,5 +1,7 @@
 package picard.nio;
 
+import htsjdk.io.HtsPath;
+import htsjdk.io.IOPath;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -23,32 +25,28 @@ public class PicardBucketUtilsTest {
 
     // Check that the extension scheme is consistent for cloud and local files
     @Test(dataProvider = "testGetTempFilePathDataProvider", groups = "cloud")
-    public void testGetTempFilePath(final String directory, final String prefix, final String extension){
-        PicardHtsPath path = PicardBucketUtils.getTempFilePath(directory, prefix, extension);
+    public void testGetTempFilePath(final IOPath directory, final String prefix, final String extension){
+        final IOPath path = PicardBucketUtils.getTempFilePath(directory, prefix, extension);
         Assert.assertTrue(path.hasExtension(extension));
         if (directory != null){
-            Assert.assertTrue(path.getURIString().startsWith(directory));
-        }
-
-        if (directory == null){
-            Assert.assertEquals(path.getScheme(), "file");
+            Assert.assertTrue(path.getURIString().startsWith(directory.getURIString()));
+        } else {
+            Assert.assertEquals(path.getScheme(), PicardBucketUtils.FILE_SCHEME);
         }
     }
 
     @DataProvider
     public Object[][] getVariousPathsForPrefetching(){
         return new Object[][]{
-                {"file:///local/file", false},
-                {"gs://abucket/bucket", true},
-                {"gs://abucket_with_underscores", true},
+                {new HtsPath("file:///local/file"), false},
+                {new HtsPath("gs://abucket/bucket"), true},
+                {new HtsPath("gs://abucket_with_underscores"), true},
         };
     }
 
     @Test(groups="bucket", dataProvider = "getVariousPathsForPrefetching")
-    public void testIsEligibleForPrefetching(String path, boolean isPrefetchable){
-        final URI uri = URI.create(path);
-        final Path uriPath = Paths.get(uri);
-        Assert.assertEquals(PicardBucketUtils.isEligibleForPrefetching(uriPath), isPrefetchable);
+    public void testIsEligibleForPrefetching(final IOPath path, boolean isPrefetchable){
+        Assert.assertEquals(PicardBucketUtils.isEligibleForPrefetching(path), isPrefetchable);
     }
 
 }

@@ -610,17 +610,17 @@ public class RevertSamTest extends CommandLineProgramTest {
     private final static boolean OUTPUT_BY_READ_GROUP = true;
     @DataProvider(name = "cloudTestData")
     public Object[][] getCloudTestData() {
-        final PicardHtsPath tempCloudCram = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR, "RevertSam", ".cram");
-        final PicardHtsPath tempLocalCram = PicardBucketUtils.getLocalTempFilePath("RevertSam", ".cram");
+        final IOPath tempCloudCram = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR, "RevertSam", ".cram");
+        final IOPath tempLocalCram = PicardBucketUtils.getLocalTempFilePath("RevertSam", ".cram");
         return new Object[][]{
                 // Output by read group without the output map, write output bams in the cloud.
                 {NA12878_MEDIUM_GCLOUD, PicardBucketUtils.getRandomGCSDirectory(DEFAULT_CLOUD_TEST_OUTPUT_RELATIVE_PATH), OUTPUT_BY_READ_GROUP, null, null },
                 // Output by read group using the output map, write output bams in the cloud
-                {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), null },
+                {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR, null },
                 // Output by read group using the local output map, write output bams in the cloud
-                {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, REVERT_SAM_LOCAL_TEST_DATA_DIR, null },
+                {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, new PicardHtsPath(REVERT_SAM_LOCAL_TEST_DATA_DIR), null }, // tsato: relative local dir...just wrap it in PicardHtsPath to see what happens
                 // Cram input, output a CRAM for each read group
-                {NA12878_MEDIUM_CRAM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), HG19_CHR2021 },
+                {NA12878_MEDIUM_CRAM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR, HG19_CHR2021 },
                 // Cram input in the cloud, single cloud cram output
                 {NA12878_MEDIUM_CRAM_GCLOUD, tempCloudCram, !OUTPUT_BY_READ_GROUP, null, HG19_CHR2021 },
                 // Cram input in the cloud, single local cram output
@@ -639,16 +639,16 @@ public class RevertSamTest extends CommandLineProgramTest {
      *
      * Also see RevertSam::createOutputMapFromReadGroups(), which does part of what this method does (creates a dictionary rather than two lists).
      */
-    private PicardHtsPath getTmpTestReadGroupMapTable(final IOPath sam, final String perReadGroupPathBase) {
+    private IOPath getTmpTestReadGroupMapTable(final IOPath sam, final IOPath perReadGroupPathBase) {
         ValidationUtils.validateArg(sam.getExtension().isPresent(), "The variable sam must be a SAM file but is missing an extension: " + sam.getURIString());
 
         final String samExtension = sam.getExtension().get();
-        final PicardHtsPath perReadGroupTableFile = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR.getURIString(), ".txt");
+        final IOPath perReadGroupTableFile = PicardBucketUtils.getTempFilePath(DEFAULT_CLOUD_TEST_OUTPUT_DIR, "", ".txt");
         final List<String> readGroups = getReadGroups(sam.toPath()).stream().map(rg -> rg.getId()).collect(Collectors.toList());
         final List<String> readGroupOutput = new ArrayList<>();
 
         for (String readGroup : readGroups){
-            final PicardHtsPath readGroupOutputPath = PicardBucketUtils.getTempFilePath(perReadGroupPathBase, readGroup, samExtension);
+            final IOPath readGroupOutputPath = PicardBucketUtils.getTempFilePath(perReadGroupPathBase, readGroup, samExtension);
             readGroupOutput.add(readGroupOutputPath.getURIString());
         }
 
@@ -705,8 +705,8 @@ public class RevertSamTest extends CommandLineProgramTest {
      * @param outputMapDir The location for a dynamically created output map file. May be null.
      */
     @Test(dataProvider = "cloudTestData", groups = "cloud")
-    public void testCloud(final PicardHtsPath inputSAM, final PicardHtsPath outputPath, final boolean outputByReadGroup,
-                          final String outputMapDir, final PicardHtsPath reference) {
+    public void testCloud(final IOPath inputSAM, final IOPath outputPath, final boolean outputByReadGroup,
+                          final IOPath outputMapDir, final IOPath reference) {
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "INPUT=" + inputSAM.getURIString(),
                 "OUTPUT_BY_READGROUP=" + outputByReadGroup));
@@ -715,7 +715,7 @@ public class RevertSamTest extends CommandLineProgramTest {
             args.add("OUTPUT=" + outputPath.getURIString());
         }
 
-        PicardHtsPath outputMap = null;
+        IOPath outputMap = null;
         if (outputMapDir != null){
             // Dynamically create a temporary output map file based on the read groups in inputSAM.
             outputMap = getTmpTestReadGroupMapTable(inputSAM, outputMapDir);
