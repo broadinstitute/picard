@@ -1,15 +1,10 @@
 package picard.nio;
 
-import htsjdk.io.HtsPath;
 import htsjdk.io.IOPath;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.util.GCloudTestUtils;
-
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PicardBucketUtilsTest {
 
@@ -38,9 +33,9 @@ public class PicardBucketUtilsTest {
     @DataProvider
     public Object[][] getVariousPathsForPrefetching(){
         return new Object[][]{
-                {new HtsPath("file:///local/file"), false},
-                {new HtsPath("gs://abucket/bucket"), true},
-                {new HtsPath("gs://abucket_with_underscores"), true},
+                {new PicardHtsPath("file:///local/file"), false},
+                {new PicardHtsPath("gs://abucket/bucket"), true},
+                {new PicardHtsPath("gs://abucket_with_underscores"), true},
         };
     }
 

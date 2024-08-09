@@ -618,7 +618,7 @@ public class RevertSamTest extends CommandLineProgramTest {
                 // Output by read group using the output map, write output bams in the cloud
                 {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR, null },
                 // Output by read group using the local output map, write output bams in the cloud
-                {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, new PicardHtsPath(REVERT_SAM_LOCAL_TEST_DATA_DIR), null }, // tsato: relative local dir...just wrap it in PicardHtsPath to see what happens
+                {NA12878_MEDIUM_GCLOUD, null, OUTPUT_BY_READ_GROUP, new PicardHtsPath(REVERT_SAM_LOCAL_TEST_DATA_DIR), null },
                 // Cram input, output a CRAM for each read group
                 {NA12878_MEDIUM_CRAM_GCLOUD, null, OUTPUT_BY_READ_GROUP, DEFAULT_CLOUD_TEST_OUTPUT_DIR, HG19_CHR2021 },
                 // Cram input in the cloud, single cloud cram output

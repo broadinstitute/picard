@@ -1,15 +1,11 @@
 package picard.nio;
 
-import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
-import com.google.cloud.storage.contrib.nio.CloudStoragePath;
-import htsjdk.io.HtsPath;
 import htsjdk.io.IOPath;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.utils.ValidationUtils;
 import picard.PicardException;
 
 import java.util.UUID;
-
 
 /**
  * Derived from BucketUtils.java in GATK
@@ -143,6 +139,9 @@ public class PicardBucketUtils {
     }
 
     /**
+     * As of August 2024, we only support Google Cloud.
+     * Will add other filesystems (e.g. Azure, AWS) when ready.
+     *
      * @return whether the cloud filesystem is currently supported by Picard.
      */
     public static boolean isSupportedCloudFilesystem(final IOPath path){
