@@ -61,7 +61,7 @@ public class PanelMetricsBase extends MultilevelMetrics {
     /** The number of PF aligned bases that mapped to a targeted region of the genome. */
     public long ON_TARGET_BASES;
 
-    //metrics below here are derived after collection
+    // Metrics below here are derived after collection
 
     /** The fraction of reads passing filter, PF_READS/TOTAL_READS.   */
     public double PCT_PF_READS;
@@ -151,7 +151,7 @@ public class PanelMetricsBase extends MultilevelMetrics {
     /**
      * A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
      * we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
-     * AT DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
+     * AT_DROPOUT is then sum(a-b if a-b > 0 else 0). E.g. if the value is 5%, this implies that 5% of total
      * reads that should have mapped to GC<=50% regions mapped elsewhere.
      */
     public double AT_DROPOUT;
@@ -159,7 +159,7 @@ public class PanelMetricsBase extends MultilevelMetrics {
     /**
      * A measure of how undercovered >= 50% GC regions are relative to the mean. For each GC bin [50..100]
      * we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
-     * GC DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
+     * GC_DROPOUT is then sum(a-b if a-b > 0 else 0). E.g. if the value is 5% this implies that 5% of total
      * reads that should have mapped to GC>=50% regions mapped elsewhere.
      */
     public double GC_DROPOUT;
