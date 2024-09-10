@@ -86,7 +86,7 @@ public class MarkDuplicatesForFlowHelperTest {
                             new TestRecordInfo(76, 12, null, false, null, null),
                             new TestRecordInfo(74, 12, null, true, null, null)
                     },
-                    new String[] { "USE_END_IN_UNPAIRED_READS=false" }, null
+                    new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=false" }, null
                 },
 
                 // testUSE_END_IN_UNPAIRED_READS: End location is significant
@@ -96,7 +96,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, null, false, null, null),
                                 new TestRecordInfo(74, 12, null, false, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true" }, null
                 },
 
                 // testUSE_UNPAIRED_CLIPPED_END: Do not use clipped locations (meaning, use unclipped)
@@ -106,7 +106,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, "1S76M", false, null, null),
                                 new TestRecordInfo(74, 12, "74M", false, null, null)
                         },
-                        new String[] { "USE_UNPAIRED_CLIPPED_END=false" }, null
+                        new String[] { "FLOW_USE_UNPAIRED_CLIPPED_END=false" }, null
                 },
 
                 // testUSE_UNPAIRED_CLIPPED_END: Use clipped locations (meaning, use clipped)
@@ -116,7 +116,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, "1S76M", false, null, null),
                                 new TestRecordInfo(74, 12, "74M", true, null, null)
                         },
-                        new String[] { "USE_UNPAIRED_CLIPPED_END=true" }, null
+                        new String[] { "FLOW_USE_UNPAIRED_CLIPPED_END=true" }, null
                 },
 
                 // testUSE_UNPAIRED_CLIPPED_END: Use clipped locations (meaning, use clipped)
@@ -126,7 +126,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, "1S76M1S", true, null, null),
                                 new TestRecordInfo(78, 11, "78M", false, null, null)
                         },
-                        new String[] { "USE_UNPAIRED_CLIPPED_END=false", "USE_END_IN_UNPAIRED_READS=true" }, null
+                        new String[] { "FLOW_USE_UNPAIRED_CLIPPED_END=false", "FLOW_USE_END_IN_UNPAIRED_READS=true" }, null
                 },
 
                 // testUSE_UNPAIRED_CLIPPED_END: Use clipped locations (meaning, use clipped)
@@ -136,7 +136,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, "1S76M1S", false, null, null),
                                 new TestRecordInfo(78, 11, "78M", false, null, null)
                         },
-                        new String[] { "USE_UNPAIRED_CLIPPED_END=true", "USE_END_IN_UNPAIRED_READS=true" }, null
+                        new String[] { "FLOW_USE_UNPAIRED_CLIPPED_END=true", "FLOW_USE_END_IN_UNPAIRED_READS=true" }, null
                 },
 
                 // testFLOW_SKIP_FIRST_N_FLOWS: Do not use clipped locations (meaning, use unclipped)
@@ -146,7 +146,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12,"76M", false, "ACGTT", "TTGCA"),
                                 new TestRecordInfo(76, 12, "76M", true, "ACGGT", "TGGCA")
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "FLOW_SKIP_FIRST_N_FLOWS=0" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true", "FLOW_SKIP_FIRST_N_FLOWS=0" }, null
                 },
 
                 // testFLOW_SKIP_FIRST_N_FLOWS: Do not use clipped locations (meaning, use unclipped)
@@ -156,7 +156,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12,"76M", false, "ACGTT", "TTGCA"),
                                 new TestRecordInfo(76, 12, "76M", false, "CCGGT", "TGGCA")
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "FLOW_SKIP_FIRST_N_FLOWS=3" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true", "FLOW_SKIP_FIRST_N_FLOWS=3" }, null
                 },
 
                 // testFLOW_QUALITY_SUM_STRATEGY: normal sum
@@ -226,7 +226,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(84, 12, null, true, null, null),
                                 new TestRecordInfo(94, 12, null, false, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "UNPAIRED_END_UNCERTAINTY=10" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true", "FLOW_UNPAIRED_END_UNCERTAINTY=10" }, null
                 },
 
                 // testUNPAIRED_START_UNCERTAINTY: End location is significant and uncertain, end sorted
@@ -237,7 +237,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(64, 22, null, true, null, null),
                                 new TestRecordInfo(54, 32, null, true, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "UNPAIRED_START_UNCERTAINTY=10" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true", "FLOW_UNPAIRED_START_UNCERTAINTY=10" }, null
                 },
 
                 // testUNPAIRED_END_UNCERTAINTY: End location is significant and uncertain, end not sorted
@@ -248,7 +248,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(194, 12, null, false, null, null),
                                 new TestRecordInfo(184, 12, null, true, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "UNPAIRED_END_UNCERTAINTY=10" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true", "FLOW_UNPAIRED_END_UNCERTAINTY=10" }, null
                 },
 
                 // testUNPAIRED_END_UNCERTAINTY: End location is significant and uncertain, end not sorted, multiple non-dup
@@ -259,7 +259,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(294, 12, null, false, null, null),
                                 new TestRecordInfo(184, 12, null, false, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=true", "UNPAIRED_END_UNCERTAINTY=10" }, null
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=true", "FLOW_UNPAIRED_END_UNCERTAINTY=10" }, null
                 },
                 // Barcode
                 {
@@ -268,7 +268,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, null, false, null, null),
                                 new TestRecordInfo(74, 12, null, true, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=false", "BARCODE_TAG=BC" },
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=false", "BARCODE_TAG=BC" },
                         new TesterModifier() {
                             @Override
                             public void modify(final AbstractMarkDuplicatesCommandLineProgramTester tester) {
@@ -285,7 +285,7 @@ public class MarkDuplicatesForFlowHelperTest {
                                 new TestRecordInfo(76, 12, null, false, null, null),
                                 new TestRecordInfo(74, 12, null, false, null, null)
                         },
-                        new String[] { "USE_END_IN_UNPAIRED_READS=false", "BARCODE_TAG=BC" },
+                        new String[] { "FLOW_USE_END_IN_UNPAIRED_READS=false", "BARCODE_TAG=BC" },
                         new TesterModifier() {
                             @Override
                             public void modify(final AbstractMarkDuplicatesCommandLineProgramTester tester) {

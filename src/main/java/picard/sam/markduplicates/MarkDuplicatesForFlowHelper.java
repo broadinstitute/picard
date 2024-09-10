@@ -71,7 +71,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
     }
 
     private void validateFlowParameteres() {
-        if ( md.flowBasedArguments.UNPAIRED_END_UNCERTAINTY != 0 && !md.flowBasedArguments.USE_END_IN_UNPAIRED_READS ) {
+        if ( md.flowBasedArguments.FLOW_UNPAIRED_END_UNCERTAINTY != 0 && !md.flowBasedArguments.FLOW_USE_END_IN_UNPAIRED_READS) {
             throw new IllegalArgumentException("Invalid parameter combination. UNPAIRED_END_UNCERTAINTY can not be specified when USE_END_IN_UNPAIRED_READS not specified");
         }
     }
@@ -175,7 +175,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
 
         // adjust start/end coordinates
         ends.read1Coordinate = getReadEndCoordinate(rec, !rec.getReadNegativeStrandFlag(), true, md.flowBasedArguments);
-        if (md.flowBasedArguments.USE_END_IN_UNPAIRED_READS) {
+        if (md.flowBasedArguments.FLOW_USE_END_IN_UNPAIRED_READS) {
             ends.read2Coordinate = getReadEndCoordinate(rec, rec.getReadNegativeStrandFlag(), false, md.flowBasedArguments);
         }
 
@@ -235,12 +235,12 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
 
         if (areComparable) {
             areComparable = endCoorInRangeWithUncertainty(lhsRead1Coordinate1Min, lhsRead1Coordinate1Max,
-                    rhs.read1Coordinate, md.flowBasedArguments.UNPAIRED_START_UNCERTAINTY);
+                    rhs.read1Coordinate, md.flowBasedArguments.FLOW_UNPAIRED_START_UNCERTAINTY);
         }
         if (areComparable) {
             areComparable = (!endCoorSignificant(lhs.read2Coordinate, rhs.read2Coordinate) ||
                     endCoorInRangeWithUncertainty(lhsRead1Coordinate2Min, lhsRead1Coordinate2Max,
-                            rhs.read2Coordinate, md.flowBasedArguments.UNPAIRED_END_UNCERTAINTY));
+                            rhs.read2Coordinate, md.flowBasedArguments.FLOW_UNPAIRED_END_UNCERTAINTY));
         }
 
         return areComparable;
@@ -377,7 +377,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         if ( flowOrder.isValid() ) {
 
             // simple case
-            if ( flowBasedArguments.USE_UNPAIRED_CLIPPED_END ) {
+            if ( flowBasedArguments.FLOW_USE_UNPAIRED_CLIPPED_END) {
                 return alignmentCoor;
             }
 
@@ -412,7 +412,7 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
                     }
                 }
                 final int coor = unclippedCoor + (startEnd ? hmerSize : -hmerSize);
-                return flowBasedArguments.USE_UNPAIRED_CLIPPED_END
+                return flowBasedArguments.FLOW_USE_UNPAIRED_CLIPPED_END
                         ? (startEnd ? Math.max(coor, alignmentCoor) : Math.min(coor, alignmentCoor))
                         : coor;
             }
