@@ -462,11 +462,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             }
         } else if ( getCommandLineParser() instanceof LegacyCommandLineArgumentParser ) {
             final LegacyCommandLineArgumentParser parser = (LegacyCommandLineArgumentParser)getCommandLineParser();
-            for ( final String name : parser.getArgv() ) {
-                if (!name.startsWith("FLOW_MODE") && name.startsWith("FLOW_")) {
-                    throw new PicardException(name + " specified, but no FLOW_MODE");
+            if ( parser.getArgv() != null ) {
+                for ( final String name : parser.getArgv() ) {
+                    if (!name.startsWith("FLOW_MODE") && name.startsWith("FLOW_")) {
+                        throw new PicardException(name + " specified, but no FLOW_MODE");
+                    }
                 }
-
             }
 
         }
