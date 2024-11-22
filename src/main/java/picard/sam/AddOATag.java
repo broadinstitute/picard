@@ -24,6 +24,16 @@
 
 package picard.sam;
 
+import htsjdk.beta.codecs.reads.cram.CRAMDecoderOptions;
+import htsjdk.beta.codecs.reads.cram.CRAMEncoderOptions;
+import htsjdk.beta.exception.HtsjdkException;
+import htsjdk.beta.plugin.reads.ReadsDecoder;
+import htsjdk.beta.plugin.reads.ReadsDecoderOptions;
+import htsjdk.beta.plugin.reads.ReadsEncoder;
+import htsjdk.beta.plugin.reads.ReadsEncoderOptions;
+import htsjdk.beta.plugin.registry.HtsCodecRegistry;
+import htsjdk.beta.plugin.registry.HtsCodecResolver;
+import htsjdk.beta.plugin.registry.HtsDefaultRegistry;
 import htsjdk.io.IOPath;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
@@ -75,19 +85,27 @@ public class AddOATag extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).open(INPUT.toPath());
-             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, OUTPUT.toPath(), referenceSequence.getReferencePath())) {
-                writer.setProgressLogger(
-                        new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
+        ReadsDecoderOptions readsDecoderOptions = new ReadsDecoderOptions()
+                .setCRAMDecoderOptions(new CRAMDecoderOptions()
+                        .setReferencePath(referenceSequence.getHtsPath()));
+        ReadsEncoderOptions readsEncoderOptions = new ReadsEncoderOptions()
+                .setPreSorted(true)
+                .setCRAMEncoderOptions(new CRAMEncoderOptions()
+                        .setReferencePath(referenceSequence.getHtsPath()));
+
+        try (ReadsDecoder reader = HtsDefaultRegistry.getReadsResolver().getReadsDecoder(INPUT, readsDecoderOptions);
+             ReadsEncoder writer = HtsDefaultRegistry.getReadsResolver().getReadsEncoder(OUTPUT, readsEncoderOptions)) {
+              // unsupported  writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
+                writer.setHeader(reader.getHeader());
 
                 final OverlapDetector<?> overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST);
                 for (final SAMRecord rec : reader) {
                     if (overlapDetector == null || overlapDetector.overlapsAny(rec)) {
                         setOATag(rec);
                     }
-                    writer.addAlignment(rec);
+                    writer.write(rec);
                 }
-        } catch (IOException e) {
+        } catch (HtsjdkException e) {
             log.error(e);
             return 1;
         }
