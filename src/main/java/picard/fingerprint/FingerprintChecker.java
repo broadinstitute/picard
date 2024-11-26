@@ -526,14 +526,16 @@ public class FingerprintChecker {
 
     public Map<FingerprintIdDetails, Fingerprint> fingerprintSamFile(final Path samFile, final Path indexPath, final boolean forceIndex,
                                                                      final Function<HaplotypeBlock, HaplotypeProbabilities> blockToProbMapper) {
+
         final SamReader in = getSamReader(samFile, indexPath, forceIndex);
-        checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
         if (!in.hasIndex()) {
             log.warn(String.format("Operating without an index! We could be here for a while. (%s)", samFile.toUri().toString()));
         } else {
             log.info(String.format("Reading an indexed file (%s)", samFile.toUri().toString()));
         }
+
+        checkDictionaryGoodForFingerprinting(in.getFileHeader().getSequenceDictionary());
 
         // fingerprinting allows that headers differ, but SamLocusIterator doesn't allow the dictionary of the query
         // interval list to differ from that of the samfile, leading to an exception thrown.
@@ -712,12 +714,16 @@ public class FingerprintChecker {
                 } else if (indexPath != null) {
                     log.info("Using explicit index provided for " + p);
                 }
-
-                // Perform fingerprinting on SAM or VCF file
-                if (CheckFingerprint.fileContainsReads(p)) {
-                    oneFileFingerprints = fingerprintSamFile(p, indexPath, forceIndex, HaplotypeProbabilitiesFromSequence::new);
-                } else {
-                    oneFileFingerprints = fingerprintVcf(p, indexPath, forceIndex);
+                try {
+                    // Perform fingerprinting on SAM or VCF file
+                    if (CheckFingerprint.fileContainsReads(p)) {
+                        oneFileFingerprints = fingerprintSamFile(p, indexPath, forceIndex, HaplotypeProbabilitiesFromSequence::new);
+                    } else {
+                        oneFileFingerprints = fingerprintVcf(p, indexPath, forceIndex);
+                    }
+                } catch (SequenceUtil.SequenceListsDifferException e){
+                  log.error("file %s caused an exception".formatted(p));
+                  throw e;
                 }
 
                 if (oneFileFingerprints.isEmpty()) {
