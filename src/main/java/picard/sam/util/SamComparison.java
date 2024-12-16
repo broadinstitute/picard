@@ -580,35 +580,35 @@ public final class SamComparison {
         reportDifference(o1.toString(), o2.toString(), label);
     }
 
-    public int getMappingsMatch() {
+    public long getMappingsMatch() {
         return comparisonMetric.MAPPINGS_MATCH;
     }
 
-    public int getUnmappedBoth() {
+    public long getUnmappedBoth() {
         return comparisonMetric.UNMAPPED_BOTH;
     }
 
-    public int getUnmappedLeft() {
+    public long getUnmappedLeft() {
         return comparisonMetric.UNMAPPED_LEFT;
     }
 
-    public int getUnmappedRight() {
+    public long getUnmappedRight() {
         return comparisonMetric.UNMAPPED_RIGHT;
     }
 
-    public int getMappingsDiffer() {
+    public long getMappingsDiffer() {
         return comparisonMetric.MAPPINGS_DIFFER;
     }
 
-    public int getMissingLeft() {
+    public long getMissingLeft() {
         return comparisonMetric.MISSING_LEFT;
     }
 
-    public int getMissingRight() {
+    public long getMissingRight() {
         return comparisonMetric.MISSING_RIGHT;
     }
 
-    public int getDuplicateMarkingsDiffer() {
+    public long getDuplicateMarkingsDiffer() {
         return comparisonMetric.DUPLICATE_MARKINGS_DIFFER;
     }
 
