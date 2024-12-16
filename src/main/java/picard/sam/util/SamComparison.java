@@ -374,8 +374,8 @@ public final class SamComparison {
         }
     }
 
-    private int countRemaining(final SecondaryOrSupplementarySkippingIterator it) {
-        int i;
+    private long countRemaining(final SecondaryOrSupplementarySkippingIterator it) {
+        long i;
         for (i = 0; it.hasCurrent(); ++i) {
             it.advance();
         }
