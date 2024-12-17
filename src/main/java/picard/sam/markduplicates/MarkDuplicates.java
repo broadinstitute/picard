@@ -479,8 +479,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         } else {
             sizeInBytes = ReadEndsForMarkDuplicates.getSizeOf();
         }
-        MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2;
-        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
+        MAX_RECORDS_IN_RAM = Math.min((int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2, Integer.MAX_VALUE - 32);
+        final int maxInMemory = Math.min((int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes), Integer.MAX_VALUE - 32);
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
         final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
@@ -719,7 +719,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             entryOverhead = SortingLongCollection.SIZEOF;
         }
         // Keep this number from getting too large even if there is a huge heap.
-        int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / entryOverhead, (double) (Integer.MAX_VALUE - 5));
+        int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / entryOverhead, (double) (Integer.MAX_VALUE - 32));
         // If we're also tracking optical duplicates, reduce maxInMemory, since we'll need two sorting collections
         if (indexOpticalDuplicates) {
             maxInMemory /= ((entryOverhead + SortingLongCollection.SIZEOF) / entryOverhead);
