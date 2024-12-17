@@ -425,7 +425,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         } else {
             sizeInBytes = PairedReadSequence.getSizeInBytes();
         }
-        MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2;
+        MAX_RECORDS_IN_RAM = Math.min((int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2, Integer.MAX_VALUE - 32);
     }
 
     /**

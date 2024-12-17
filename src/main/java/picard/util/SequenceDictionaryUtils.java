@@ -190,7 +190,7 @@ public class SequenceDictionaryUtils {
                 String.class,
                 new StringCodec(),
                 String::compareTo,
-                (int) Math.min(maxNamesInRam, Integer.MAX_VALUE),
+                (int) Math.min(maxNamesInRam, Integer.MAX_VALUE - 32),
                 tmpDir.toPath()
         );
     }
