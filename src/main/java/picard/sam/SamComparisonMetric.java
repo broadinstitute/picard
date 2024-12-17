@@ -28,37 +28,37 @@ public class SamComparisonMetric extends MetricBase {
      * all records which are mapped in both files with mapping quality at most equal to LOW_MQ_THRESHOLD are counted as matching. If
      * running with LENIENT_255_MQ_ALIGNMENT=true, all records which are mapped in both files with mapping quality 255 are counted as matches.
      */
-    public int MAPPINGS_MATCH;
+    public long MAPPINGS_MATCH;
 
     /**
      * The number of primary records which are mapped in both files but do not meet criteria to be counted in MAPPINGS_MATCH.
      */
-    public int MAPPINGS_DIFFER;
+    public long MAPPINGS_DIFFER;
 
     /**
      * The number of primary records which are not mapped in either file.
      */
-    public int UNMAPPED_BOTH;
+    public long UNMAPPED_BOTH;
 
     /**
      * The number of primary records which are mapped in right file and found but not mapped in left file
      */
-    public int UNMAPPED_LEFT;
+    public long UNMAPPED_LEFT;
 
     /**
      * The number of primary records which are mapped in left file and found but not mapped in right file
      */
-    public int UNMAPPED_RIGHT;
+    public long UNMAPPED_RIGHT;
 
     /**
      * The number of primary records which are found in right file but not found in left file
      */
-    public int MISSING_LEFT;
+    public long MISSING_LEFT;
 
     /**
      * The number of primary records which are found in left file but not found in right file
      */
-    public int MISSING_RIGHT;
+    public long MISSING_RIGHT;
 
     /**
      * The number of primary records for which duplicate markings are different.  If running in strict duplicate
@@ -68,7 +68,7 @@ public class SamComparisonMetric extends MetricBase {
      * metric is counted on a per read basis, so a paired end fragment which differs in duplicate marking between the two
      * files will increment this metric by 2.
      */
-    public int DUPLICATE_MARKINGS_DIFFER;
+    public long DUPLICATE_MARKINGS_DIFFER;
 
     /**
      * Whether or not to consider the two input files equal.  The two input files are considered equal iff
