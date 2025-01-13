@@ -196,7 +196,7 @@ public class CheckFingerprint extends CommandLineProgram {
     public String EXPECTED_SAMPLE_ALIAS;
 
     @Argument(shortName = "H", doc = "The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
-            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
+            "https://gatk.broadinstitute.org/hc/en-us/articles/360035531672-Haplotype-map-format for details.")
     public File HAPLOTYPE_MAP;
 
     @Argument(shortName = "LOD", doc = "When counting haplotypes checked and matching, count only haplotypes " +
