@@ -55,7 +55,7 @@ public class IdentifyContaminant extends CommandLineProgram {
     public File OUTPUT;
 
     @Argument(shortName = "H", doc = "A file of haplotype information. The file lists a set of SNPs, optionally arranged in high-LD blocks, to be used for fingerprinting. See " +
-            "https://software.broadinstitute.org/gatk/documentation/article?id=9526 for details.")
+            "https://gatk.broadinstitute.org/hc/en-us/articles/360035531672-Haplotype-map-format for details.")
     public File HAPLOTYPE_MAP;
 
     @Argument(shortName = "C", doc = "A value of estimated contamination in the input. ", minValue = 0D, maxValue = 1D)
