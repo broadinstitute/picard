@@ -196,12 +196,14 @@ public class SortVcf extends CommandLineProgram {
         if (CREATE_INDEX) {
             PicardHtsPath indexPath = deriveIndexPath(OUTPUT);
             // Manually making IOPathResource objects out of these because using the constructor that accepts paths will fail if the output path is something like /dev/null
+            // variantsBundle = new VariantsBundle(OUTPUT, indexPath);
             IOPathResource outputPathResource = new IOPathResource(OUTPUT, BundleResourceType.CT_VARIANT_CONTEXTS);
             IOPathResource indexPathResource = new IOPathResource(indexPath, BundleResourceType.CT_VARIANTS_INDEX);
             variantsBundle = new VariantsBundle(List.of(outputPathResource, indexPathResource));
         }
         else {
             // Manually making IOPathResource out of this because using the constructor that accepts paths will fail if the output path is something like /dev/null
+            // variantsBundle = new VariantsBundle(OUTPUT);
             IOPathResource outputPathResource = new IOPathResource(OUTPUT, BundleResourceType.CT_VARIANT_CONTEXTS);
             variantsBundle = new VariantsBundle(List.of(outputPathResource));
         }
