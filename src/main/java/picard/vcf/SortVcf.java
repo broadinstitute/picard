@@ -1,13 +1,29 @@
 package picard.vcf;
 
+import htsjdk.beta.codecs.reads.cram.CRAMDecoderOptions;
+import htsjdk.beta.codecs.variants.vcf.VCFDecoder;
+import htsjdk.beta.codecs.variants.vcf.vcfv4_2.VCFCodecV4_2;
+import htsjdk.beta.io.IOPathUtils;
+import htsjdk.beta.io.bundle.BundleResourceType;
+import htsjdk.beta.io.bundle.IOPathResource;
+import htsjdk.beta.plugin.reads.ReadsDecoder;
+import htsjdk.beta.plugin.reads.ReadsDecoderOptions;
+import htsjdk.beta.plugin.variants.VariantsBundle;
+import htsjdk.beta.plugin.variants.VariantsDecoder;
+import htsjdk.beta.plugin.variants.VariantsEncoder;
+import htsjdk.beta.plugin.variants.VariantsEncoderOptions;
+import htsjdk.io.IOPath;
+import htsjdk.beta.plugin.registry.HtsDefaultRegistry;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -22,8 +38,10 @@ import picard.cmdline.CommandLineProgram;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -56,17 +74,17 @@ public class SortVcf extends CommandLineProgram {
             "</pre>" +
             "<hr />" ;
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)")
-    public List<File> INPUT;
+    public List<PicardHtsPath> INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true)
-    public File SEQUENCE_DICTIONARY;
+    public PicardHtsPath SEQUENCE_DICTIONARY;
 
     private final Log log = Log.getInstance(SortVcf.class);
 
-    private final List<VCFFileReader> inputReaders = new ArrayList<VCFFileReader>();
+    private final List<VariantsDecoder> inputReaders = new ArrayList<VariantsDecoder>();
     private final List<VCFHeader> inputHeaders = new ArrayList<VCFHeader>();
 
     // Overrides the option default, including in the help message. Option remains settable on commandline.
@@ -78,13 +96,13 @@ public class SortVcf extends CommandLineProgram {
     protected int doWork() {
         final List<String> sampleList = new ArrayList<String>();
 
-        for (final File input : INPUT) IOUtil.assertFileIsReadable(input);
+        for (final PicardHtsPath input : INPUT) IOUtil.assertFileIsReadable(input.toPath());
 
-        if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
+        if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY.toPath());
 
         SAMSequenceDictionary samSequenceDictionary = null;
         if (SEQUENCE_DICTIONARY != null) {
-            samSequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY).getSequenceDictionary();
+            samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
             CloserUtil.close(SEQUENCE_DICTIONARY);
         }
 
@@ -104,13 +122,13 @@ public class SortVcf extends CommandLineProgram {
     }
 
     private void collectFileReadersAndHeaders(final List<String> sampleList, SAMSequenceDictionary samSequenceDictionary) {
-        for (final File input : INPUT) {
-            final VCFFileReader in = new VCFFileReader(input, false);
-            final VCFHeader header = in.getFileHeader();
-            final SAMSequenceDictionary dict = in.getFileHeader().getSequenceDictionary();
+        for (final PicardHtsPath input : INPUT) {
+            final VariantsDecoder in = HtsDefaultRegistry.getVariantsResolver().getVariantsDecoder(input);
+            final VCFHeader header = in.getHeader();
+            final SAMSequenceDictionary dict = in.getHeader().getSequenceDictionary();
             if (dict == null || dict.isEmpty()) {
                 if (null == samSequenceDictionary) {
-                    throw new IllegalArgumentException("Sequence dictionary was missing or empty for the VCF: " + input.getAbsolutePath() + " Please add a sequence dictionary to this VCF or specify SEQUENCE_DICTIONARY.");
+                    throw new IllegalArgumentException("Sequence dictionary was missing or empty for the VCF: " + input.getURIString() + " Please add a sequence dictionary to this VCF or specify SEQUENCE_DICTIONARY.");
                 }
                 header.setSequenceDictionary(samSequenceDictionary);
             } else {
@@ -128,7 +146,7 @@ public class SortVcf extends CommandLineProgram {
                 sampleList.addAll(header.getSampleNamesInOrder());
             } else {
                 if (!sampleList.equals(header.getSampleNamesInOrder())) {
-                    throw new IllegalArgumentException("Input file " + input.getAbsolutePath() + " has sample names that don't match the other files.");
+                    throw new IllegalArgumentException("Input file " + input.getURIString() + " has sample names that don't match the other files.");
                 }
             }
             inputReaders.add(in);
@@ -143,23 +161,23 @@ public class SortVcf extends CommandLineProgram {
      * Here, we are assuming inputs are unsorted, and so adding their VariantContexts iteratively is fine for now.
      * MergeVcfs exists for simple merging of presorted inputs.
      *
-     * @param readers      - a list of VCFFileReaders, one for each input VCF
+     * @param readers      - a list of VCFDecoders, one for each input VCF
      * @param outputHeader - The merged header whose information we intend to use in the final output file
      */
-    private SortingCollection<VariantContext> sortInputs(final List<VCFFileReader> readers, final VCFHeader outputHeader) {
+    private SortingCollection<VariantContext> sortInputs(final List<VariantsDecoder> readers, final VCFHeader outputHeader) {
         final ProgressLogger readProgress = new ProgressLogger(log, 25000, "read", "records");
 
         // NB: The default MAX_RECORDS_IN_RAM may not be appropriate here. VariantContexts are smaller than SamRecords
         // We would have to play around empirically to find an appropriate value. We are not performing this optimization at this time.
         final SortingCollection<VariantContext> sorter =
-                SortingCollection.newInstance(
+                SortingCollection.newInstanceFromPaths(
                         VariantContext.class,
                         new VCFRecordCodec(outputHeader, VALIDATION_STRINGENCY != ValidationStringency.STRICT),
                         outputHeader.getVCFRecordComparator(),
                         MAX_RECORDS_IN_RAM,
-                        TMP_DIR);
+                        IOUtil.filesToPaths(TMP_DIR));
         int readerCount = 1;
-        for (final VCFFileReader reader : readers) {
+        for (final VariantsDecoder reader : readers) {
             log.info("Reading entries from input file " + readerCount);
             for (final VariantContext variantContext : reader) {
                 sorter.add(variantContext);
@@ -173,16 +191,39 @@ public class SortVcf extends CommandLineProgram {
 
     private void writeSortedOutput(final VCFHeader outputHeader, final SortingCollection<VariantContext> sortedOutput) {
         final ProgressLogger writeProgress = new ProgressLogger(log, 25000, "wrote", "records");
-        final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
-        final VariantContextWriter out = new VariantContextWriterBuilder().
-                setReferenceDictionary(outputHeader.getSequenceDictionary()).
-                setOptions(options).
-                setOutputFile(OUTPUT).build();
-        out.writeHeader(outputHeader);
+        //final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
+        VariantsBundle variantsBundle;
+        if (CREATE_INDEX) {
+            PicardHtsPath indexPath = deriveIndexPath(OUTPUT);
+            // Manually making IOPathResource objects out of these because using the constructor that accepts paths will fail if the output path is something like /dev/null
+            IOPathResource outputPathResource = new IOPathResource(OUTPUT, BundleResourceType.CT_VARIANT_CONTEXTS);
+            IOPathResource indexPathResource = new IOPathResource(indexPath, BundleResourceType.CT_VARIANTS_INDEX);
+            variantsBundle = new VariantsBundle(List.of(outputPathResource, indexPathResource));
+        }
+        else {
+            // Manually making IOPathResource out of this because using the constructor that accepts paths will fail if the output path is something like /dev/null
+            IOPathResource outputPathResource = new IOPathResource(OUTPUT, BundleResourceType.CT_VARIANT_CONTEXTS);
+            variantsBundle = new VariantsBundle(List.of(outputPathResource));
+        }
+        final VariantsEncoder encoder = HtsDefaultRegistry.getVariantsResolver().getVariantsEncoder(
+            variantsBundle, new VariantsEncoderOptions(), BundleResourceType.FMT_VARIANTS_VCF, VCFCodecV4_2.VCF_V42_VERSION
+            );
+        encoder.setHeader(outputHeader);
+
         for (final VariantContext variantContext : sortedOutput) {
-            out.add(variantContext);
+            encoder.write(variantContext);
             writeProgress.record(variantContext.getContig(), variantContext.getStart());
         }
-        out.close();
+        encoder.close();
+    }
+
+    private PicardHtsPath deriveIndexPath(final PicardHtsPath output) {
+        // If the output file is block compressed, the index file should be a tabix index (.tbi)
+        if (IOUtil.hasBlockCompressedExtension(output.toPath())) {
+            return IOPathUtils.appendExtension(output, FileExtensions.TABIX_INDEX, PicardHtsPath::new);
+        }
+        // If it's not a block compressed file, the index file should be a Tribble index (.idx)
+        return IOPathUtils.appendExtension(output, FileExtensions.TRIBBLE_INDEX, PicardHtsPath::new);
+
     }
 }
