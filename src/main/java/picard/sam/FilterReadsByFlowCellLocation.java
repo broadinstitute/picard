@@ -15,9 +15,9 @@ import java.io.IOException;
         oneLineSummary = "Removes reads from specific flowcell positions from BAM/CRAM files",
         programGroup = ReadDataManipulationProgramGroup.class
 )
-public class FilterFlowCellEdgeReads extends CommandLineProgram {
+public class FilterReadsByFlowCellLocation extends CommandLineProgram {
     // Initialize logger
-    private static final Log logger = Log.getInstance(FilterFlowCellEdgeReads.class);
+    private static final Log logger = Log.getInstance(FilterReadsByFlowCellLocation.class);
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Input BAM/CRAM file")
@@ -101,6 +101,6 @@ public class FilterFlowCellEdgeReads extends CommandLineProgram {
     }
 
     public static void main(String[] args) {
-        new FilterFlowCellEdgeReads().instanceMain(args);
+        new FilterReadsByFlowCellLocation().instanceMain(args);
     }
 }

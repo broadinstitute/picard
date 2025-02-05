@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * Unit tests for FilterFlowCellEdgeReads using TestNG.
  */
-public class FilterFlowCellEdgeReadsTest {
+public class FilterReadsByFlowCellLocationTest {
 
     // Temporary files for input and output.
     private File inputSam;
@@ -95,7 +95,7 @@ public class FilterFlowCellEdgeReadsTest {
         outputSam = File.createTempFile("FilterFlowCellEdgeReadsTest_output", ".sam");
         outputSam.deleteOnExit();
 
-        FilterFlowCellEdgeReads tool = new FilterFlowCellEdgeReads();
+        FilterReadsByFlowCellLocation tool = new FilterReadsByFlowCellLocation();
         tool.INPUT = inputSam.getAbsolutePath();
         tool.OUTPUT = outputSam.getAbsolutePath();
         // Use default X_COORD=1000, Y_COORD=1000
@@ -122,7 +122,7 @@ public class FilterFlowCellEdgeReadsTest {
         outputSam = File.createTempFile("FilterFlowCellEdgeReadsTest_output", ".sam");
         outputSam.deleteOnExit();
 
-        FilterFlowCellEdgeReads tool = new FilterFlowCellEdgeReads();
+        FilterReadsByFlowCellLocation tool = new FilterReadsByFlowCellLocation();
         tool.INPUT = inputSam.getAbsolutePath();
         tool.OUTPUT = outputSam.getAbsolutePath();
         // Defaults are used.
@@ -148,7 +148,7 @@ public class FilterFlowCellEdgeReadsTest {
         outputSam = File.createTempFile("FilterFlowCellEdgeReadsTest_output", ".sam");
         outputSam.deleteOnExit();
 
-        FilterFlowCellEdgeReads tool = new FilterFlowCellEdgeReads();
+        FilterReadsByFlowCellLocation tool = new FilterReadsByFlowCellLocation();
         tool.INPUT = inputSam.getAbsolutePath();
         tool.OUTPUT = outputSam.getAbsolutePath();
         // Defaults: X_COORD=1000, Y_COORD=1000
