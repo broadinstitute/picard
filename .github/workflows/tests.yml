@@ -50,7 +50,7 @@ jobs:
           java -jar build/libs/picard.jar MarkDuplicates -I testdata/picard/sam/aligned_queryname_sorted.bam -O out.bam --METRICS_FILE out.metrics
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.Java }}-barclay-${{ matrix.run_barclay_tests}}
           path: build/reports/tests

@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cloud-test-results-${{ matrix.Java }}-barclay-${{ matrix.run_barclay_tests}}
           path: build/reports/tests
