@@ -6,7 +6,9 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
-import htsjdk.samtools.util.Log;  // Added this import
+import htsjdk.samtools.util.Log;
+import picard.sam.util.ReadNameParser;
+import picard.sam.util.PhysicalLocation;
 import java.io.File;
 import java.io.IOException;
 
@@ -16,7 +18,6 @@ import java.io.IOException;
         programGroup = ReadDataManipulationProgramGroup.class
 )
 public class FilterReadsByFlowCellLocation extends CommandLineProgram {
-    // Initialize logger
     private static final Log logger = Log.getInstance(FilterReadsByFlowCellLocation.class);
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -37,24 +38,76 @@ public class FilterReadsByFlowCellLocation extends CommandLineProgram {
             optional = true)
     public int Y_COORD = 1000;
 
-    private boolean hasFlowcellCoordinates(String readName) {
-        // Parse Illumina read name format
-        // Example format: @HWUSI-EAS100R:6:73:941:1973#0/1
-        // or: @EAS139:136:FC706VJ:2:2104:15343:197393
-        try {
-            String[] parts = readName.split(":");
-            if (parts.length >= 6) {  // Ensure we have enough parts
-                // The last two numbers are typically X and Y coordinates
-                int x = Integer.parseInt(parts[parts.length-2]);
-                int y = Integer.parseInt(parts[parts.length-1].split("[#/]")[0]);  // Remove any trailing /1 or #0
+    private final ReadNameParser readNameParser = new ReadNameParser(ReadNameParser.DEFAULT_READ_NAME_REGEX);
 
-                return x == X_COORD && y == Y_COORD;
+    private boolean hasFlowcellCoordinates(String readName) {
+        class ReadLocation implements PhysicalLocation {
+            private short libraryId;
+            private int x = -1, y = -1; // Default to invalid values
+            private short tile;
+
+            @Override
+            public void setLibraryId(short libraryId) {
+                this.libraryId = libraryId;
             }
-        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-            // If we can't parse the coordinates, assume it doesn't match
-            return false;
+
+            @Override
+            public short getLibraryId() {
+                return libraryId;
+            }
+
+            @Override
+            public void setX(int x) {
+                this.x = x;
+            }
+
+            @Override
+            public int getX() {
+                return x;
+            }
+
+            @Override
+            public void setY(int y) {
+                this.y = y;
+            }
+
+            @Override
+            public int getY() {
+                return y;
+            }
+
+            @Override
+            public void setReadGroup(short readGroup) {}
+
+            @Override
+            public short getReadGroup() {
+                return 0;
+            }
+
+            @Override
+            public void setTile(short tile) {
+                this.tile = tile;
+            }
+
+            @Override
+            public short getTile() {
+                return tile;
+            }
         }
-        return false;
+
+        ReadLocation location = new ReadLocation();
+        try {
+            readNameParser.addLocationInformation(readName, location);
+        } catch (Exception e) {
+            logger.warn("Failed to parse read name: " + readName, e);
+            return false;  // Keep the read if parsing fails
+        }
+
+        if (location.getX() == -1 || location.getY() == -1) {
+            return false;  // Keep the read if coordinates are invalid
+        }
+
+        return location.getX() == X_COORD && location.getY() == Y_COORD;
     }
 
     @Override
@@ -67,21 +120,16 @@ public class FilterReadsByFlowCellLocation extends CommandLineProgram {
         final SAMFileWriter writer = new SAMFileWriterFactory()
                 .makeWriter(header, true, new File(OUTPUT), REFERENCE_SEQUENCE);
 
-        // Process reads
         int totalReads = 0;
         int filteredReads = 0;
 
         try {
             for (final SAMRecord read : reader) {
                 totalReads++;
-
-                // Check if read has the specified flowcell coordinates
                 if (hasFlowcellCoordinates(read.getReadName())) {
                     filteredReads++;
-                    continue; // Skip this read
+                    continue;
                 }
-
-                // Write read to output if it doesn't match filter criteria
                 writer.addAlignment(read);
             }
         } finally {
