@@ -380,6 +380,7 @@ public class FingerprintCheckerTest {
         }
     }
 
+
     @DataProvider()
     Object[][] mergeIsSafeProvider() {
         final HaplotypeProbabilitiesFromSequence hp1 = new HaplotypeProbabilitiesFromSequence(hb);

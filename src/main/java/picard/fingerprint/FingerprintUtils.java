@@ -147,8 +147,8 @@ public class FingerprintUtils {
     static Stream<VariantContext> getVariantContext(final ReferenceSequenceFile reference,
                                                     final String sample,
                                                     final HaplotypeProbabilities haplotypeProbabilities,
-                                                    final boolean representative_only) {
-        if (representative_only) {
+                                                    final boolean representativeOnly) {
+        if (representativeOnly) {
             return Stream.of(getVariantContextFromSnp(reference, sample, haplotypeProbabilities, haplotypeProbabilities.getRepresentativeSnp()));
         } else {
             return haplotypeProbabilities.getHaplotype().getSnps().stream().map(snp -> getVariantContextFromSnp(reference, sample, haplotypeProbabilities, snp));
