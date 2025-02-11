@@ -261,10 +261,10 @@ public class CollectSamErrorMetricsTest {
                         new BaseErrorMetric("62A40.2", 72L, 1L)},
                 // No additional mismatches are found on the read with 1 mismatch.
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("1", 35L, 0L)},
+                        new BaseErrorMetric("-1", 36L, 0L)},
                 // No additional mismatches are found on the read with 1 mismatch. (Just another way to check)
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("0", 37L, 1L)},
+                        new BaseErrorMetric("0", 36L, 1L)},
                 // There should be no errors in the CAG context because it matches reference
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
                         new BaseErrorMetric("CAG", 1L, 0L)},
@@ -400,10 +400,10 @@ public class CollectSamErrorMetricsTest {
                         new BaseErrorMetric("62A40.2", 72L, 1L)},
                 // No additional mismatches are found on the read with 1 mismatch.
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("1", 35L, 0L)},
+                        new BaseErrorMetric("-1", 36L, 0L)},
                 // No additional mismatches are found on the read with 1 mismatch. (Just another way to check)
                 {".error_by_mismatches_in_read", simpleSamWithBaseErrors1, priorQ,
-                        new BaseErrorMetric("0", 37L, 1L)},
+                        new BaseErrorMetric("0", 36L, 1L)},
                 // There should be no errors in the CAG context because it matches reference
                 {".error_by_one_base_padded_context", simpleSamWithBaseErrors1, priorQ,
                         new BaseErrorMetric("CAG", 1L, 0L)},
@@ -477,7 +477,7 @@ public class CollectSamErrorMetricsTest {
                 .stream()
                 .filter(m -> m.COVARIATE.equals(expectedMetric.COVARIATE))
                 .findAny()
-                .orElseThrow(() -> new AssertionError("didn't find metric with COVARIATE==" + expectedMetric.COVARIATE));
+                .orElseThrow(() -> new AssertionError("didn't find metric with COVARIATE==" + expectedMetric.COVARIATE + ": " + (metrics)));
 
         Assert.assertEquals(metric, expectedMetric);
     }

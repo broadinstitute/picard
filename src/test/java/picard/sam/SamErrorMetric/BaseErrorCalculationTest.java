@@ -1,7 +1,5 @@
 package picard.sam.SamErrorMetric;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Iterables;
 import htsjdk.samtools.*;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.reference.SamLocusAndReferenceIterator;
@@ -14,8 +12,6 @@ import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -33,7 +29,7 @@ public class BaseErrorCalculationTest {
         final SAMRecord samRecord = new SAMRecord(samFileHeader);
 
         samRecord.setReadBases("CgTGtGGAcAAAgAAA".getBytes());
-        final byte[] refBases = "CATGGGGAAAAAAAAA".getBytes();
+        final byte[] refBases = "CATGGGGAAAAAAaaa".getBytes();
         final int n = refBases.length;
 
         samRecord.setReadUnmappedFlag(false);
