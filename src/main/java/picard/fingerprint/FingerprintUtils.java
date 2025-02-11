@@ -45,16 +45,10 @@ import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A set of utilities used in the fingerprinting environment
@@ -71,18 +65,20 @@ public class FingerprintUtils {
      * @param referenceSequenceFileName the reference sequence (file)
      * @param sample                    the sample name to use in the vcf
      * @param source                    a "source" comment to use in the VCF
-     * @throws IOException
+     * @param representativeOnly        whether to extract only the representative snps
+     * @throws IOException if two snps in the haplotype map have the same "name"
      */
     public static void writeFingerPrint(final Fingerprint fingerprint,
                                         final File outputFile,
                                         final File referenceSequenceFileName,
                                         final String sample,
-                                        final String source) throws IOException {
+                                        final String source,
+                                        final boolean representativeOnly) throws IOException {
 
         try (final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceSequenceFileName);
              final VariantContextWriter variantContextWriter = getVariantContextWriter(outputFile, referenceSequenceFileName, sample, source, ref)) {
 
-            createVCSetFromFingerprint(fingerprint, ref, sample).forEach(variantContextWriter::add);
+            createVCSetFromFingerprint(fingerprint, ref, sample, representativeOnly).forEach(variantContextWriter::add);
         }
     }
 
@@ -113,18 +109,21 @@ public class FingerprintUtils {
     /**
      * A utility function that takes a fingerprint and returns a VariantContextSet with variants representing the haplotypes in the fingerprint
      *
-     * @param fingerPrint A fingerprint
-     * @param reference   A reference sequence that will be used to create the VariantContexts
-     * @param sample      A sample name that will be used for the genotype field
+     * @param fingerPrint         A fingerprint
+     * @param reference           A reference sequence that will be used to create the VariantContexts
+     * @param sample              A sample name that will be used for the genotype field
+     * @param representativeOnly A boolean specifying whether to create a VC only for the representative Snp (or for all of them if false)
      * @return VariantContextSet with variants representing the haplotypes in the fingerprint
      */
-    public static VariantContextSet createVCSetFromFingerprint(final Fingerprint fingerPrint, final ReferenceSequenceFile reference, final String sample) {
+    public static VariantContextSet createVCSetFromFingerprint(final Fingerprint fingerPrint, final ReferenceSequenceFile reference, final String sample, boolean representativeOnly) {
 
         final VariantContextSet variantContexts = new VariantContextSet(reference.getSequenceDictionary());
 
         // check that the same snp name isn't twice in the fingerprint.
         fingerPrint.values().stream()
-                .map(hp -> hp.getRepresentativeSnp().getName())
+                .flatMap(hp -> representativeOnly ?
+                        Stream.of(hp.getRepresentativeSnp().getName()) :
+                        hp.getHaplotype().getSnps().stream().map(Snp::getName))
                 .filter(Objects::nonNull)
                 .filter(n -> !n.equals(""))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
@@ -138,18 +137,31 @@ public class FingerprintUtils {
 
         // convert all the haplotypes to variant contexts and add them to the set.
         fingerPrint.values().stream()
-                .map(hp -> getVariantContext(reference, sample, hp))
+                .flatMap(hp -> getVariantContext(reference, sample, hp, representativeOnly))
                 .forEach(variantContexts::add);
 
         return variantContexts;
     }
 
     @VisibleForTesting
-    static VariantContext getVariantContext(final ReferenceSequenceFile reference,
+    static Stream<VariantContext> getVariantContext(final ReferenceSequenceFile reference,
                                                     final String sample,
-                                                    final HaplotypeProbabilities haplotypeProbabilities) {
-        final Snp snp = haplotypeProbabilities.getRepresentativeSnp();
-        final byte refAllele = StringUtil.toUpperCase(reference.getSubsequenceAt(
+                                                    final HaplotypeProbabilities haplotypeProbabilities,
+                                                    final boolean representativeOnly) {
+        if (representativeOnly) {
+            return Stream.of(getVariantContextFromSnp(reference, sample, haplotypeProbabilities, haplotypeProbabilities.getRepresentativeSnp()));
+        } else {
+            return haplotypeProbabilities.getHaplotype().getSnps().stream().map(snp -> getVariantContextFromSnp(reference, sample, haplotypeProbabilities, snp));
+        }
+    }
+
+    @VisibleForTesting
+    static VariantContext getVariantContextFromSnp(final ReferenceSequenceFile reference,
+        final String sample,
+        final HaplotypeProbabilities haplotypeProbabilities,
+        final Snp snp) {
+
+            final byte refAllele = StringUtil.toUpperCase(reference.getSubsequenceAt(
                 snp.getChrom(),
                 snp.getPos(),
                 snp.getPos()).getBases()[0]);
