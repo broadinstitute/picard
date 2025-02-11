@@ -247,9 +247,14 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         IOUtil.deleteDirectoryTree(dir);
         // actual coverage should not be impacted by coverage_cap
-        Assert.assertEquals(highCoverageMetrics.MEAN_TARGET_COVERAGE, 100000);
-        Assert.assertEquals(highCoverageMetrics.MEDIAN_TARGET_COVERAGE, 100000);
-        Assert.assertEquals(highCoverageMetrics.FOLD_80_BASE_PENALTY, 1);
+
+        // epsilons added due to an issue when running tests on debian,
+        // https://github.com/broadinstitute/picard/issues/1987
+        // not sure if they're necessary, but they're harmless
+        Assert.assertEquals(highCoverageMetrics.MEAN_TARGET_COVERAGE, 100000.0, 1.E-4);  // epsilons added due to an isue when running tests on debian, not sure if they're absolutely necessary but they should
+        // be harmless
+        Assert.assertEquals(highCoverageMetrics.MEDIAN_TARGET_COVERAGE, 100000.0, 1.E-4);
+        Assert.assertEquals(highCoverageMetrics.FOLD_80_BASE_PENALTY, 1.0, 1.E-4);
     }
 
 
