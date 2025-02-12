@@ -137,7 +137,10 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
         metrics.write(OUTPUT);
         if (hist.isEmpty()) {
             log.warn("No valid bases found in input file. No plot will be produced.");
-        } else {
+            return;
+        }
+
+        if (CHART_OUTPUT != null) {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/baseDistributionByCycle.R",
                     OUTPUT.getAbsolutePath(),
                     CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
