@@ -160,7 +160,8 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
                         continue;
                     }
                     if (read.hasAttribute(BARCODE_BQ)) {
-                        final byte[] bytes = SAMUtils.fastqToPhred(read.getStringAttribute(BARCODE_BQ));
+                        final String barcodeBQ = read.getStringAttribute(BARCODE_BQ).replace(" ", "");;
+                        final byte[] bytes = SAMUtils.fastqToPhred(barcodeBQ);
                         final boolean badQuality = IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
                         if (badQuality) {
                             log.warn("bad quality barcode");
