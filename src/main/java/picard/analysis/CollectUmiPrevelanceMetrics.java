@@ -150,7 +150,6 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
 
                 final DuplicateSet set = duplicateSets.next();
                 final SAMRecord setRep = set.getRepresentative();
-                log.info(String.format("duplicate set! %s", setRep.getReadName()));
 
                 progress.record(setRep);
                 Set<String> barcodes = new HashSet<>();
