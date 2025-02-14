@@ -38,8 +38,8 @@ import picard.util.help.HelpConstants;
  *     <li>Metrics that are intended for evaluating the performance of the wet-lab assay that generated the data.
  *     This group includes metrics like the number of bases mapping on/off/near baits, %selected, fold 80 base
  *     penalty, hs library size and the hs penalty metrics. These metrics are calculated prior to some of the
- *     filters are applied (e.g. low mapping quality reads, low base quality bases and bases overlapping in the middle
- *     of paired-end reads are all counted).
+ *     filters are applied (e.g. duplicate reads, low mapping quality reads, low base quality bases and bases
+ *     overlapping in the middle of paired-end reads are all counted).
  *     </li>
  *     <li>Metrics for assessing target coverage as a proxy for how well the data is likely to perform in downstream
  *     applications like variant calling. This group includes metrics like mean target coverage, the percentage of bases
@@ -82,10 +82,11 @@ public class HsMetrics extends PanelMetricsBase {
     /** The mean coverage of all baits in the experiment. */
     public double MEAN_BAIT_COVERAGE;
 
-    /** The number of aligned, de-duped, on-bait bases out of the PF bases available. */
+    /** The fraction of aligned, on-bait bases out of the PF bases available.
+     * (NOTE: This uses duplicate reads for both numerator and denominator) */
     public double PCT_USABLE_BASES_ON_BAIT;
 
-    /** The number of aligned, de-duped, on-target bases out of all of the PF bases available. */
+    /** The fraction of aligned, de-duped, on-target bases out of all the PF bases available. */
     public double PCT_USABLE_BASES_ON_TARGET;
 
     /** The fold by which the baited region has been amplified above genomic background. */
