@@ -28,51 +28,43 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.filter.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.*;
-import htsjdk.utils.ValidationUtils;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.*;
-import htsjdk.variant.vcf.VCFContigHeaderLine;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.ExperimentalFeature;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
-import picard.analysis.replicates.IndependentReplicateMetric;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.filter.CountingFilterWrapper;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
-import picard.util.SequenceDictionaryUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static picard.cmdline.StandardOptionDefinitions.MINIMUM_MAPPING_QUALITY_SHORT_NAME;
 
 /**
- * A CLP that, tallys the number of UMIs in a duplicate set across the entire bam and produces a histogram.
+ * A CLP that, tallies the number of UMIs in a duplicate set across the entire bam and produces a histogram.
  *
  * @author Yossi Farjoun
  */
 @DocumentedFeature
 @ExperimentalFeature
 @CommandLineProgramProperties(
-        summary = CollectUmiPrevelanceMetrics.USAGE_SUMMARY + CollectUmiPrevelanceMetrics.USAGE_DETAILS,
-        oneLineSummary = CollectUmiPrevelanceMetrics.USAGE_SUMMARY,
+        summary = CollectUmiPrevalenceMetrics.USAGE_SUMMARY + CollectUmiPrevalenceMetrics.USAGE_DETAILS,
+        oneLineSummary = CollectUmiPrevalenceMetrics.USAGE_SUMMARY,
         programGroup = DiagnosticsAndQCProgramGroup.class
 )
-public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
+public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
 
     static final String USAGE_SUMMARY = "Tally the counts of UMIs in duplicate sets within a bam. \n";
     static final String USAGE_DETAILS = "<p>" +
-            "This tool estimates <FIX ME>";
+            "This tool collects the Histogram of the number of duplicate sets that contain a given number of UMIs. " +
+            "Understanding this distribution can help understand the role that the UMIs have in the determination of " +
+            "consensus sets, the risk of UMI collisions, and of spurious reads that result from uncorrected UMIs.";
 
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM/CRAM file.")
@@ -82,10 +74,7 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
     public File OUTPUT;
 
     @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true)
-    public Integer MINIMUM_MQ = 40;
-
-    @Argument(doc = "Number of sets to examine before stopping.", optional = true)
-    public Integer STOP_AFTER = 0;
+    public Integer MINIMUM_MQ = 30;
 
     @Argument(doc = "Barcode SAM tag.", optional = true)
     public String BARCODE_TAG = "RX";
@@ -104,10 +93,10 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
             doc = "The interval between which progress will be displayed.",
             optional = true
     )
-    public int PROGRESS_STEP_INTERVAL = 100000;
+    public int PROGRESS_STEP_INTERVAL = 1_000_000;
 
 
-    private static final Log log = Log.getInstance(CollectUmiPrevelanceMetrics.class);
+    private static final Log log = Log.getInstance(CollectUmiPrevalenceMetrics.class);
 
     @Override
     protected int doWork() {
@@ -117,21 +106,23 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
         // get an iterator to reads that overlap the heterozygous sites
         final Histogram<Integer> umiCount = new Histogram<>("numUmis", "duplicateSets");
         final CountingPairedFilter countingPairedFilter = new CountingPairedFilter();
+        final CountingFilterWrapper countingAlignedFilter = new CountingFilterWrapper(new AlignedFilter(true));
         final CountingMapQFilter countingMapQFilter = new CountingMapQFilter(MINIMUM_MQ);
+        final CountingFilterWrapper countingSecondaryOrSupplementaryFilter =
+                new CountingFilterWrapper(new SecondaryOrSupplementaryFilter());
         final ProgressLogger progress = new ProgressLogger(log, PROGRESS_STEP_INTERVAL, "examined", "duplicate sets");
 
         try (SamReader in = SamReaderFactory.makeDefault()
                 .referenceSequence(REFERENCE_SEQUENCE)
                 .open(INPUT)) {
 
-
             IOUtil.assertFileIsWritable(OUTPUT);
 
             final SAMRecordIterator samRecordIterator = in.iterator();
             final List<SamRecordFilter> samFilters = CollectionUtil.makeList(
-                    new AlignedFilter(true),
-                    new SecondaryOrSupplementaryFilter(),
-                    countingMapQFilter
+                    countingAlignedFilter,
+                    countingMapQFilter,
+                    countingSecondaryOrSupplementaryFilter
             );
             if (FILTER_UNPAIRED_READS) {
                 samFilters.add(countingPairedFilter);
@@ -143,7 +134,7 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
             // get duplicate iterator from iterator above
             final DuplicateSetIterator duplicateSets = new DuplicateSetIterator(filteredSamRecordIterator, in.getFileHeader(), false, null, log);
 
-            log.info("Starting iteration on reads");
+            log.info("Starting iteration on duplicate sets");
 
             set:
             while (duplicateSets.hasNext()) {
@@ -159,7 +150,8 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
                         continue;
                     }
                     if (read.hasAttribute(BARCODE_BQ)) {
-                        final String barcodeBQ = read.getStringAttribute(BARCODE_BQ).replace(" ", "");;
+                        final String barcodeBQ = read.getStringAttribute(BARCODE_BQ).replace(" ", "");
+                        ;
                         final byte[] bytes = SAMUtils.fastqToPhred(barcodeBQ);
                         final boolean badQuality = IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
                         if (badQuality) {
@@ -177,7 +169,9 @@ public class CollectUmiPrevelanceMetrics extends CommandLineProgram {
         log.info("Iteration done. Emitting metrics.");
         log.info(String.format("Processed %d sets", progress.getCount()));
         log.info(String.format("Filtered %d unpaired reads", countingPairedFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d unaligned reads", countingAlignedFilter.getFilteredRecords()));
         log.info(String.format("Filtered %d low mapQ reads", countingMapQFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d Secondary or Supplementary reads", countingSecondaryOrSupplementaryFilter.getFilteredRecords()));
         // Emit metrics
         final MetricsFile<?, Integer> metricsFile = getMetricsFile();
         metricsFile.addHistogram(umiCount);
