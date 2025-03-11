@@ -95,6 +95,7 @@ public class CreateVerifyIDIntensityContaminationMetricsFile extends CommandLine
                 final VerifyIDIntensityContaminationMetrics metrics = new VerifyIDIntensityContaminationMetrics();
                 metrics.ID = Integer.parseInt(m.group(1));
                 metrics.PCT_MIX = Double.parseDouble(m.group(2));
+                Double.valueOf(m.group(2));
                 metrics.LLK = Double.parseDouble(m.group(3));
                 metrics.LLK0 = Double.parseDouble(m.group(4));
 

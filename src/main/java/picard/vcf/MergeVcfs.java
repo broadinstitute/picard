@@ -54,6 +54,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -169,7 +170,7 @@ public class MergeVcfs extends CommandLineProgram {
         final List<Path> inputPaths = INPUT.stream().map(PicardHtsPath::toPath).collect(Collectors.toList());
         final List<Path> unrolledPaths = IOUtil.unrollPaths(inputPaths, FileExtensions.VCF_LIST.toArray(new String[]{}));
         final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<>(unrolledPaths.size());
-        final Collection<VCFHeader> headers = new ArrayList<>(unrolledPaths.size());
+        final Collection<VCFHeader> headers = new LinkedHashSet<>(unrolledPaths.size());
         VariantContextComparator variantContextComparator = null;
         SAMSequenceDictionary sequenceDictionary = null;
 
