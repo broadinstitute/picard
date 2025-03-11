@@ -375,10 +375,11 @@ public class FingerprintCheckerTest {
         final File fasta = new File(TEST_DATA_DIR, "reference.fasta");
 
         try (final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(fasta)) {
-            final VariantContext vc = FingerprintUtils.getVariantContext(ref, "test", hp);
+            final VariantContext vc = FingerprintUtils.getVariantContext(ref, "test", hp, true).iterator().next();
             Assert.assertTrue(MathUtil.max(MathUtil.promote(vc.getGenotype(0).getPL())) > 0);
         }
     }
+
 
     @DataProvider()
     Object[][] mergeIsSafeProvider() {
@@ -551,7 +552,7 @@ public class FingerprintCheckerTest {
         final Fingerprint fp = fpchecker.fingerprintVcf(vcfInput.toPath()).values().iterator().next();
 
         final File vcfOutput = File.createTempFile("fingerprint", ".vcf");
-        FingerprintUtils.writeFingerPrint(fp, vcfOutput, fasta, "Dummy", "Testing");
+        FingerprintUtils.writeFingerPrint(fp, vcfOutput, fasta, "Dummy", "Testing", true);
 
         VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
     }
