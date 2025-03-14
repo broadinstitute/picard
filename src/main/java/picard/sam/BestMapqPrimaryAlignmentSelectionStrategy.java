@@ -33,8 +33,7 @@ import java.util.Random;
 /**
  * This strategy was designed for TopHat output, but could be of general utility.  It picks the alignment with best MAPQ.
  * If paired-end, it is the alignment in which the sum of the MAPQs of both ends is the best.  In case of ties, one
- * is selected arbitrarily.  This strategy expects pair-aware alignments, with the corresponding alignment for each
- * mate of the pair correlated by HI (hit index) tag.  If the aligner has set a pair of alignments as primary, this
+ * is selected arbitrarily. If the aligner has set a pair of alignments as primary, this
  * is used (assuming one of those alignments is not filtered out).  Otherwise the alignment pair with best MapQ is
  * selected.
  */
@@ -49,7 +48,7 @@ public class BestMapqPrimaryAlignmentSelectionStrategy implements PrimaryAlignme
     public void pickPrimaryAlignment(final HitsForInsert hits) {
 
         if (hits.numHits() == 0) throw new IllegalArgumentException("No alignments to pick from");
-        hits.coordinateByHitIndex();
+        hits.coordinateByMate();
         // See if primary alignment is not already unambiguously determined.
         final NumPrimaryAlignmentState firstEndAlignmentState = hits.tallyPrimaryAlignments(true);
         final NumPrimaryAlignmentState secondEndAlignmentState = hits.tallyPrimaryAlignments(false);
