@@ -26,6 +26,7 @@ package picard.fingerprint;
 
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import org.broadinstitute.barclay.argparser.Advanced;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Hidden;
@@ -82,6 +83,11 @@ public class ExtractFingerprint extends CommandLineProgram {
     @Argument(doc = "When true code will check for readability on input files (this can be slow on cloud access)")
     public boolean TEST_INPUT_READABILITY = true;
 
+
+    @Advanced
+    @Argument(doc = "When true, code will extract variants for every snp in the haplotype database, not only the representative one.")
+    public boolean EXTRACT_NON_REPRESENTATIVES_TOO = false;
+
     @Override
     protected boolean requiresReference() {
         return true;
@@ -133,7 +139,8 @@ public class ExtractFingerprint extends CommandLineProgram {
         final String sampleToUse = getSampleToUse(soleEntry.getKey());
 
         try {
-            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(), sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION);
+            FingerprintUtils.writeFingerPrint(soleEntry.getValue(), OUTPUT, referenceSequence.getReferenceFile(),
+                    sampleToUse, "PLs derived from " + INPUT + " using an assumed contamination of " + this.CONTAMINATION, !EXTRACT_NON_REPRESENTATIVES_TOO);
         } catch (Exception e) {
             log.error(e);
         }
