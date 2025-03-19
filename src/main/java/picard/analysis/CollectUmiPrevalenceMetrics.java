@@ -38,6 +38,7 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.filter.CountingFilterWrapper;
 import picard.filter.CountingMapQFilter;
 import picard.filter.CountingPairedFilter;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,21 +69,21 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
 
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM/CRAM file.")
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Write metrics to this file")
     public File OUTPUT;
 
-    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true)
+    @Argument(shortName = MINIMUM_MAPPING_QUALITY_SHORT_NAME, doc = "minimal value for the mapping quality of the reads to be used in the estimation.", optional = true,minValue = 0, maxValue = 255)
     public Integer MINIMUM_MQ = 30;
 
     @Argument(doc = "Barcode SAM tag.", optional = true)
-    public String BARCODE_TAG = "RX";
+    public String BARCODE_TAG = SAMTag.RX.name();
 
     @Argument(doc = "Barcode Quality SAM tag.", optional = true)
-    public String BARCODE_BQ = "QX";
+    public String BARCODE_BQ = SAMTag.BQ.name();
 
-    @Argument(shortName = "BQ", doc = "minimal value for the base quality of all the bases in a molecular barcode, for it to be used.", optional = true)
+    @Argument(shortName = "BQ", doc = "minimal value for the base quality of all the bases in a molecular barcode, for it to be used.", optional = true,minValue = 0, maxValue = 255)
     public Integer MINIMUM_BARCODE_BQ = 30;
 
     @Argument(shortName = "FUR", doc = "Whether to filter unpaired reads from the input.", optional = true)
@@ -98,15 +99,42 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(CollectUmiPrevalenceMetrics.class);
 
+    private class BarcodeQualityFilter implements SamRecordFilter{
+        Integer minValue;
+
+        BarcodeQualityFilter(Integer minValue){
+            this.minValue=minValue;
+        }
+
+        @Override
+        public boolean filterOut(SAMRecord samRecord) {
+            final String barcodeBQ = samRecord.getStringAttribute(BARCODE_BQ).replace(" ", "");
+
+            final byte[] bytes = SAMUtils.fastqToPhred(barcodeBQ);
+            final boolean badQuality = IntStream.range(0, bytes.length)
+                    .map(i -> bytes[i])
+                    .anyMatch(q -> q < this.minValue);
+            return !badQuality;
+        }
+
+        @Override
+        public boolean filterOut(SAMRecord samRecord, SAMRecord samRecord1) {
+            return filterOut(samRecord) && filterOut(samRecord1);
+        }
+    }
+
     @Override
     protected int doWork() {
 
-        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(INPUT.toPath());
 
         // get an iterator to reads that overlap the heterozygous sites
         final Histogram<Integer> umiCount = new Histogram<>("numUmis", "duplicateSets");
         final CountingPairedFilter countingPairedFilter = new CountingPairedFilter();
         final CountingFilterWrapper countingAlignedFilter = new CountingFilterWrapper(new AlignedFilter(true));
+        final CountingFilterWrapper countingBarcodeFilter = new CountingFilterWrapper(new TagFilter(BARCODE_TAG,true));
+        final CountingFilterWrapper countingBarcodeQTagFilter = new CountingFilterWrapper(new TagFilter(BARCODE_BQ,true));
+        final CountingFilterWrapper countingBarcodeQUalityFilter = new CountingFilterWrapper(new BarcodeQualityFilter(MINIMUM_BARCODE_BQ));
         final CountingMapQFilter countingMapQFilter = new CountingMapQFilter(MINIMUM_MQ);
         final CountingFilterWrapper countingSecondaryOrSupplementaryFilter =
                 new CountingFilterWrapper(new SecondaryOrSupplementaryFilter());
@@ -114,15 +142,18 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
 
         try (SamReader in = SamReaderFactory.makeDefault()
                 .referenceSequence(REFERENCE_SEQUENCE)
-                .open(INPUT)) {
+                .open(INPUT.toPath())) {
 
-            IOUtil.assertFileIsWritable(OUTPUT);
+            IOUtil.assertFileIsWritable(OUTPUT.toPath());
 
             final SAMRecordIterator samRecordIterator = in.iterator();
             final List<SamRecordFilter> samFilters = CollectionUtil.makeList(
                     countingAlignedFilter,
                     countingMapQFilter,
-                    countingSecondaryOrSupplementaryFilter
+                    countingSecondaryOrSupplementaryFilter,
+                    countingBarcodeFilter,
+                    countingBarcodeQTagFilter,
+                    countingBarcodeQUalityFilter
             );
             if (FILTER_UNPAIRED_READS) {
                 samFilters.add(countingPairedFilter);
@@ -136,42 +167,30 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
 
             log.info("Starting iteration on duplicate sets");
 
-            set:
             while (duplicateSets.hasNext()) {
-
                 final DuplicateSet set = duplicateSets.next();
                 final SAMRecord setRep = set.getRepresentative();
 
                 progress.record(setRep);
-                Set<String> barcodes = new HashSet<>();
-                for (final SAMRecord read : set.getRecords()) {
-                    if (!read.hasAttribute(BARCODE_TAG)) {
-                        log.warn("no barcode tag!");
-                        continue;
-                    }
-                    if (read.hasAttribute(BARCODE_BQ)) {
-                        final String barcodeBQ = read.getStringAttribute(BARCODE_BQ).replace(" ", "");
-                        ;
-                        final byte[] bytes = SAMUtils.fastqToPhred(barcodeBQ);
-                        final boolean badQuality = IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
-                        if (badQuality) {
-                            log.warn("bad quality barcode");
-                            continue;
-                        }
-                    }
-                    barcodes.add(read.getStringAttribute(BARCODE_TAG));
-                }
+                final Set<String> barcodes = new HashSet<>();
+                set.getRecords().forEach(r -> barcodes.add(r.getStringAttribute(BARCODE_TAG)));
                 umiCount.increment(barcodes.size(), 1);
+
             }
         } catch (IOException e) {
             throw new RuntimeException("Problem while reading file: " + INPUT, e);
         }
+
         log.info("Iteration done. Emitting metrics.");
         log.info(String.format("Processed %d sets", progress.getCount()));
         log.info(String.format("Filtered %d unpaired reads", countingPairedFilter.getFilteredRecords()));
         log.info(String.format("Filtered %d unaligned reads", countingAlignedFilter.getFilteredRecords()));
         log.info(String.format("Filtered %d low mapQ reads", countingMapQFilter.getFilteredRecords()));
         log.info(String.format("Filtered %d Secondary or Supplementary reads", countingSecondaryOrSupplementaryFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d reads that had no UMI", countingBarcodeFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d reads that had no UMI quality", countingBarcodeQTagFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d reads that had poor quality UMI", countingBarcodeQUalityFilter.getFilteredRecords()));
+
         // Emit metrics
         final MetricsFile<?, Integer> metricsFile = getMetricsFile();
         metricsFile.addHistogram(umiCount);
