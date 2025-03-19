@@ -108,6 +108,9 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
 
         @Override
         public boolean filterOut(SAMRecord samRecord) {
+            if (!samRecord.hasAttribute(BARCODE_BQ)){
+                return false;
+            }
             final String barcodeBQ = samRecord.getStringAttribute(BARCODE_BQ).replace(" ", "");
 
             final byte[] bytes = SAMUtils.fastqToPhred(barcodeBQ);
@@ -115,6 +118,18 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
                     .map(i -> bytes[i])
                     .anyMatch(q -> q < this.minValue);
             return !badQuality;
+        }
+
+        @Override
+        public boolean filterOut(SAMRecord samRecord, SAMRecord samRecord1) {
+            return filterOut(samRecord) && filterOut(samRecord1);
+        }
+    }
+    private class UMITagPresentFilter implements SamRecordFilter{
+
+        @Override
+        public boolean filterOut(SAMRecord samRecord) {
+            return !samRecord.hasAttribute(BARCODE_TAG);
         }
 
         @Override
@@ -132,9 +147,8 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
         final Histogram<Integer> umiCount = new Histogram<>("numUmis", "duplicateSets");
         final CountingPairedFilter countingPairedFilter = new CountingPairedFilter();
         final CountingFilterWrapper countingAlignedFilter = new CountingFilterWrapper(new AlignedFilter(true));
-        final CountingFilterWrapper countingBarcodeFilter = new CountingFilterWrapper(new TagFilter(BARCODE_TAG,true));
-        final CountingFilterWrapper countingBarcodeQTagFilter = new CountingFilterWrapper(new TagFilter(BARCODE_BQ,true));
-        final CountingFilterWrapper countingBarcodeQUalityFilter = new CountingFilterWrapper(new BarcodeQualityFilter(MINIMUM_BARCODE_BQ));
+        final CountingFilterWrapper countingBarcodeFilter = new CountingFilterWrapper(new UMITagPresentFilter());
+        final CountingFilterWrapper countingBarcodeQualityFilter = new CountingFilterWrapper(new BarcodeQualityFilter(MINIMUM_BARCODE_BQ));
         final CountingMapQFilter countingMapQFilter = new CountingMapQFilter(MINIMUM_MQ);
         final CountingFilterWrapper countingSecondaryOrSupplementaryFilter =
                 new CountingFilterWrapper(new SecondaryOrSupplementaryFilter());
@@ -152,8 +166,7 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
                     countingMapQFilter,
                     countingSecondaryOrSupplementaryFilter,
                     countingBarcodeFilter,
-                    countingBarcodeQTagFilter,
-                    countingBarcodeQUalityFilter
+                    countingBarcodeQualityFilter
             );
             if (FILTER_UNPAIRED_READS) {
                 samFilters.add(countingPairedFilter);
@@ -187,9 +200,8 @@ public class CollectUmiPrevalenceMetrics extends CommandLineProgram {
         log.info(String.format("Filtered %d unaligned reads", countingAlignedFilter.getFilteredRecords()));
         log.info(String.format("Filtered %d low mapQ reads", countingMapQFilter.getFilteredRecords()));
         log.info(String.format("Filtered %d Secondary or Supplementary reads", countingSecondaryOrSupplementaryFilter.getFilteredRecords()));
-        log.info(String.format("Filtered %d reads that had no UMI", countingBarcodeFilter.getFilteredRecords()));
-        log.info(String.format("Filtered %d reads that had no UMI quality", countingBarcodeQTagFilter.getFilteredRecords()));
-        log.info(String.format("Filtered %d reads that had poor quality UMI", countingBarcodeQUalityFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d reads that had no UMI tag", countingBarcodeFilter.getFilteredRecords()));
+        log.info(String.format("Filtered %d reads that had poor quality UMI", countingBarcodeQualityFilter.getFilteredRecords()));
 
         // Emit metrics
         final MetricsFile<?, Integer> metricsFile = getMetricsFile();
