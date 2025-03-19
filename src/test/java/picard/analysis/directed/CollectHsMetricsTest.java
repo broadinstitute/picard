@@ -247,9 +247,10 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         IOUtil.deleteDirectoryTree(dir);
         // actual coverage should not be impacted by coverage_cap
-        Assert.assertEquals(highCoverageMetrics.MEAN_TARGET_COVERAGE, 100000);
-        Assert.assertEquals(highCoverageMetrics.MEDIAN_TARGET_COVERAGE, 100000);
-        Assert.assertEquals(highCoverageMetrics.FOLD_80_BASE_PENALTY, 1);
+
+        Assert.assertEquals(highCoverageMetrics.MEAN_TARGET_COVERAGE, 100000.0);
+        Assert.assertEquals(highCoverageMetrics.MEDIAN_TARGET_COVERAGE, 100000.0);
+        Assert.assertEquals(highCoverageMetrics.FOLD_80_BASE_PENALTY, 1.0);
     }
 
 
