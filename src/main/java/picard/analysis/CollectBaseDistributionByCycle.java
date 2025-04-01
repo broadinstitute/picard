@@ -39,7 +39,6 @@ import java.util.List;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import org.checkerframework.checker.units.qual.C;
 
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
