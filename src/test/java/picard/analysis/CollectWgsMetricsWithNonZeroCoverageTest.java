@@ -7,9 +7,12 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 
 public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgramTest {
     private static final File TEST_DIR = new File("testdata/picard/sam/");
@@ -242,5 +245,95 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
         // Other metrics change when we ignore the zero depth bin
         Assert.assertEquals(nonZeroMetrics.GENOME_TERRITORY, 0);
         Assert.assertEquals(nonZeroMetrics.MEAN_COVERAGE, Double.NaN);
+    }
+
+    @Test
+    public void testChartFailureGATKLite() throws IOException {
+        final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+
+        try {
+            final ByteArrayOutputStream stdoutCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stdoutCapture));
+
+            System.setProperty("IN_GATKLITE_DOCKER", "true");
+            final File input = new File(TEST_DIR, "forMetrics.sam");
+            final File outfile = File.createTempFile("test", ".wgs_metrics");
+            final File pdffile = File.createTempFile("test", ".wgs_metrics.pdf");
+            final File ref = new File(TEST_DIR, "merger.fasta");
+            final int sampleSize = 1000;
+            outfile.deleteOnExit();
+            pdffile.deleteOnExit();
+            final String[] args = new String[] {
+                    "INPUT="  + input.getAbsolutePath(),
+                    "OUTPUT=" + outfile.getAbsolutePath(),
+                    "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                    "SAMPLE_SIZE=" + sampleSize,
+                    "CHART=" + pdffile.getAbsolutePath()
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+
+            Assert.assertTrue(stdoutCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));      
+        }
+        finally {
+            System.setErr(stderr);
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty("IN_GATKLITE_DOCKER");
+            } 
+        }
+    }
+
+    @Test
+    public void testNoChart() throws IOException {
+        final File input = new File(TEST_DIR, "forMetrics.sam");
+        final File outfile = File.createTempFile("test", ".wgs_metrics");
+        final File pdffile = File.createTempFile("test", ".wgs_metrics.pdf");
+        final File ref = new File(TEST_DIR, "merger.fasta");
+        final int sampleSize = 1000;
+        outfile.deleteOnExit();
+        pdffile.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize,
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<WgsMetricsWithNonZeroCoverage , Integer> output = new MetricsFile<>();
+        output.read(new FileReader(outfile));
+
+        for (final WgsMetricsWithNonZeroCoverage metrics : output.getMetrics()) {
+            if (metrics.CATEGORY == WgsMetricsWithNonZeroCoverage.Category.WHOLE_GENOME) {
+                Assert.assertEquals(metrics.GENOME_TERRITORY, 1210);
+                Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
+                Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
+                Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
+                Assert.assertEquals(metrics.PCT_1X, 0.107438);
+            } else {
+                Assert.assertEquals(metrics.GENOME_TERRITORY, 130);
+                Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
+                Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
+                Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
+                Assert.assertEquals(metrics.PCT_1X, 1.0);
+            }
+        }
+
+        for (final Histogram<Integer> histogram : output.getAllHistograms()) {
+            if (histogram.getValueLabel().equals("count_WHOLE_GENOME")) {
+                Assert.assertEquals(histogram.get(0).getValue(), 1080d);
+            } else {
+                Assert.assertEquals(histogram.get(0).getValue(), 0d);
+            }
+            Assert.assertEquals(histogram.get(1).getValue(), 9d);
+            Assert.assertEquals(histogram.get(2).getValue(), 35d);
+            Assert.assertEquals(histogram.get(3).getValue(), 86d);
+            Assert.assertEquals(histogram.get(4).getValue(), 0d);
+        }
+
+        Assert.assertEquals(pdffile.length(), 0);
     }
 }

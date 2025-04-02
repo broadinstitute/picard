@@ -69,7 +69,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "DOI: 10.1371/journal.pone.0062856/.<br /><br />" +
             "" +
             "<p>The GC bias statistics are always output in a detailed long-form version, but a summary can also be produced. Both the " +
-            "detailed metrics and the summary metrics are output as tables '.txt' files) and an accompanying chart that plots the " +
+            "detailed metrics and the summary metrics are output as tables '.txt' files) and an optional accompanying chart that plots the " +
             "data ('.pdf' file). </p> " +
             "" +
             "<h4>Detailed metrics</h4>" +
@@ -118,7 +118,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
     // Usage and parameters
 
-    @Argument(shortName = "CHART", doc = "The PDF file to render the chart to.")
+    @Argument(shortName = "CHART", doc = "The PDF file to render the chart to.", optional = true)
     public File CHART_OUTPUT;
 
     @Argument(shortName = "S", doc = "The text file to write summary metrics to.")
@@ -149,6 +149,9 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+            return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
+        }
         if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
@@ -162,7 +165,8 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     /////////////////////////////////////////////////////////////////////////////
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if(CHART_OUTPUT != null)
+            IOUtil.assertFileIsWritable(CHART_OUTPUT);
         IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
@@ -206,13 +210,15 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         detailMetricsFile.write(OUTPUT);
         summaryMetricsFile.write(SUMMARY_OUTPUT);
 
-        final NumberFormat fmt = NumberFormat.getIntegerInstance();
-        fmt.setGroupingUsed(true);
-        RExecutor.executeFromClasspath(R_SCRIPT,
-                OUTPUT.getAbsolutePath(),
-                SUMMARY_OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
-                String.valueOf(SCAN_WINDOW_SIZE));
+        if(CHART_OUTPUT != null) {
+            final NumberFormat fmt = NumberFormat.getIntegerInstance();
+            fmt.setGroupingUsed(true);
+            RExecutor.executeFromClasspath(R_SCRIPT,
+                    OUTPUT.getAbsolutePath(),
+                    SUMMARY_OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
+                    String.valueOf(SCAN_WINDOW_SIZE));
+        }
     }
 }
 

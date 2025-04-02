@@ -75,7 +75,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             "WgsMetricsWithNonZeroCoverage</a> documentation for detailed explanations of the output metrics." +
             "<hr />";
 
-    @Argument(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.", optional = true)
     public File CHART_OUTPUT;
 
     private final Log log = Log.getInstance(CollectWgsMetricsWithNonZeroCoverage.class);
@@ -123,6 +123,9 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+            return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
+        }
         if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
@@ -139,7 +142,9 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if(CHART_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        }
         IOUtil.assertFileIsReadable(INPUT);
 
         // Initialize the SamReader, so the header is available prior to super.doWork, for getIntervalsToExamine call. */
@@ -148,19 +153,21 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         this.collector = new WgsMetricsWithNonZeroCoverageCollector(this, COVERAGE_CAP, getIntervalsToExamine());
         super.doWork();
 
-        final List<SAMReadGroupRecord> readGroups = getSamFileHeader().getReadGroups();
-        final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
+        if(CHART_OUTPUT != null) {
+            final List<SAMReadGroupRecord> readGroups = getSamFileHeader().getReadGroups();
+            final String plotSubtitle = (readGroups.size() == 1) ? StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary()) : "";
 
-        if (collector.areHistogramsEmpty()) {
-            log.warn("No valid bases found in input file. No plot will be produced.");
-        } else {
-            final int rResult = RExecutor.executeFromClasspath("picard/analysis/wgsHistogram.R",
-                    OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
-                    INPUT.getName(),
-                    plotSubtitle);
-            if (rResult != 0) {
-                throw new PicardException("R script wgsHistogram.R failed with return code " + rResult);
+            if (collector.areHistogramsEmpty()) {
+                log.warn("No valid bases found in input file. No plot will be produced.");
+            } else {
+                final int rResult = RExecutor.executeFromClasspath("picard/analysis/wgsHistogram.R",
+                        OUTPUT.getAbsolutePath(),
+                        CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
+                        INPUT.getName(),
+                        plotSubtitle);
+                if (rResult != 0) {
+                    throw new PicardException("R script wgsHistogram.R failed with return code " + rResult);
+                }
             }
         }
 

@@ -778,6 +778,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testHistogramFailureGATKLite() throws IOException {
         final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
 
         try {
             final ByteArrayOutputStream stdoutCapture = new ByteArrayOutputStream();
@@ -801,7 +802,12 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         }
         finally {
             System.setErr(stderr);
-            System.clearProperty("IN_GATKLITE_DOCKER");
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty("IN_GATKLITE_DOCKER");
+            } 
         }
     }
 
