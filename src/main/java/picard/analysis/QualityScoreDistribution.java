@@ -57,7 +57,7 @@ import java.util.List;
 public class QualityScoreDistribution extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Chart the distribution of quality scores.  ";
     static final String USAGE_DETAILS = "<p>This tool is used for determining the overall 'quality' for a library in a given run. To " +
-            "that effect, it outputs a chart and tables indicating the range of quality scores and the total numbers of bases " +
+            "that effect, it outputs tables and (optionally) a chart indicating the range of quality scores and the total numbers of bases " +
             "corresponding to those scores. Options include plotting the distribution of all of the reads, only the aligned reads, " +
             "or reads that have passed the Illumina Chastity filter thresholds as described " +
             "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>here</a>.</p>" +
@@ -76,7 +76,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             "      CHART=qual_score_dist.pdf" +
             "</pre>" +
             "<hr />";
-    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.", optional=true)
     public File CHART_OUTPUT;
 
     @Argument(doc="If set to true calculate mean quality over aligned reads only.")
@@ -100,6 +100,9 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+            return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
+        }
         if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
@@ -109,7 +112,8 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if(CHART_OUTPUT != null)
+            IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
         // If we're working with a single library, assign that library's name
         // as a suffix to the plot title
@@ -156,21 +160,24 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
         metrics.addHistogram(qHisto);
         if (!oqHisto.isEmpty()) metrics.addHistogram(oqHisto);
         metrics.write(OUTPUT);
-        if (qHisto.isEmpty() && oqHisto.isEmpty()) {
-            log.warn("No valid bases found in input file. No plot will be produced.");
-        }
-        else {
-            // Now run R to generate a chart
-            final int rResult = RExecutor.executeFromClasspath(
-                    "picard/analysis/qualityScoreDistribution.R",
-                    OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
-                    INPUT.getName(),
-                    this.plotSubtitle);
-
-            if (rResult != 0) {
-                throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);
+        if(CHART_OUTPUT != null){
+            if (qHisto.isEmpty() && oqHisto.isEmpty()) {
+                log.warn("No valid bases found in input file. No plot will be produced.");
+            }
+            else {
+                // Now run R to generate a chart
+                final int rResult = RExecutor.executeFromClasspath(
+                        "picard/analysis/qualityScoreDistribution.R",
+                        OUTPUT.getAbsolutePath(),
+                        CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
+                        INPUT.getName(),
+                        this.plotSubtitle);
+    
+                if (rResult != 0) {
+                    throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);
+                }
             }
         }
+        
     }
 }

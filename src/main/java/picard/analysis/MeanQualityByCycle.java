@@ -59,7 +59,7 @@ import java.util.List;
 @DocumentedFeature
 public class MeanQualityByCycle extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Collect mean quality by cycle.";
-    static final String USAGE_DETAILS = "This tool generates a data table and chart of mean quality by cycle from a BAM file. It is " +
+    static final String USAGE_DETAILS = "This tool generates a data table and (optionally) a chart of mean quality by cycle from a BAM file. It is " +
             "intended to be used on a single lane or a read group's worth of data, but can be applied to merged BAMs if needed. " +
             "<br /><br />" +
             "This metric gives an overall snapshot of sequencing machine performance. For most types of sequencing data, the output " +
@@ -75,7 +75,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             "      CHART=mean_qual_by_cycle.pdf" +
             "</pre>" +
             "<hr />";
-    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.", optional=true)
     public File CHART_OUTPUT;
 
     @Argument(doc="If set to true, calculate mean quality over aligned reads only.")
@@ -97,6 +97,9 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+            return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
+        }
         if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
@@ -105,7 +108,9 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if(CHART_OUTPUT != null) {
+            IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        }
         // If we're working with a single library, assign that library's name
         // as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
@@ -121,8 +126,10 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) return;
         if (rec.isSecondaryOrSupplementary()) return;
 
-        q.addRecord(rec);
-        oq.addRecord(rec);
+        if(CHART_OUTPUT != null) {
+            q.addRecord(rec);
+            oq.addRecord(rec);
+        }
     }
 
     @Override
@@ -133,20 +140,22 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         if (!oq.isEmpty()) metrics.addHistogram(oq.getMeanQualityHistogram());
         metrics.write(OUTPUT);
 
-        if (q.isEmpty() && oq.isEmpty()) {
-            log.warn("No valid bases found in input file. No plot will be produced.");
-        }
-        else {
-            // Now run R to generate a chart
-            final int rResult = RExecutor.executeFromClasspath(
-                    "picard/analysis/meanQualityByCycle.R",
-                    OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
-                    INPUT.getName(),
-                    plotSubtitle);
-
-            if (rResult != 0) {
-                throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
+        if(CHART_OUTPUT != null) {
+            if (q.isEmpty() && oq.isEmpty()) {
+                log.warn("No valid bases found in input file. No plot will be produced.");
+            }
+            else {
+                // Now run R to generate a chart
+                final int rResult = RExecutor.executeFromClasspath(
+                        "picard/analysis/meanQualityByCycle.R",
+                        OUTPUT.getAbsolutePath(),
+                        CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
+                        INPUT.getName(),
+                        plotSubtitle);
+    
+                if (rResult != 0) {
+                    throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
+                }
             }
         }
     }

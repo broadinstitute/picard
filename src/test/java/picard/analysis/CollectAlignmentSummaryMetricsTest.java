@@ -781,8 +781,8 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
 
         try {
-            final ByteArrayOutputStream stdoutCapture = new ByteArrayOutputStream();
-            System.setErr(new PrintStream(stdoutCapture));
+            final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stderrCapture));
 
             System.setProperty("IN_GATKLITE_DOCKER", "true");
 
@@ -798,7 +798,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
 
             Assert.assertEquals(runPicardCommandLine(argsList.toArray(new String[0])),1);
 
-            Assert.assertTrue(stdoutCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));      
+            Assert.assertTrue(stderrCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));      
         }
         finally {
             System.setErr(stderr);

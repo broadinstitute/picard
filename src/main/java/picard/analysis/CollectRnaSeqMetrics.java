@@ -149,6 +149,10 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
 
+        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+            return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
+        }
+
         if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
@@ -201,10 +205,10 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
         // Generate the coverage by position plot
         if (CHART_OUTPUT != null && atLeastOneHistogram) {
             final int rResult = RExecutor.executeFromClasspath("picard/analysis/rnaSeqCoverage.R",
-                                                               OUTPUT.getAbsolutePath(),
-                                                               CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
-                                                               INPUT.getName(),
-                                                               this.plotSubtitle);
+                                                            OUTPUT.getAbsolutePath(),
+                                                            CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
+                                                            INPUT.getName(),
+                                                            this.plotSubtitle);
 
             if (rResult != 0) {
                 throw new PicardException("Problem invoking R to generate plot.");

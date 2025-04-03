@@ -35,6 +35,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.annotation.RefFlatReader.RefFlatColumns;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -113,6 +114,82 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.NUM_UNEXPLAINED_READS, 2);
         Assert.assertEquals(metrics.PCT_R1_TRANSCRIPT_STRAND_READS, 0.333333);
         Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.666667);
+    }
+
+    @Test
+    public void testChartFailureGATKLite() throws Exception {
+
+        final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+
+        try {
+            final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stderrCapture));
+
+            System.setProperty("IN_GATKLITE_DOCKER", "true");
+
+            final String sequence = "chr1";
+            final String ignoredSequence = "chrM";
+
+            // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+            final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+            // Set seed so that strandedness is consistent among runs.
+            builder.setRandomSeed(0);
+            final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+            builder.addPair("pair1", sequenceIndex, 45, 475);
+            builder.addPair("pair2", sequenceIndex, 90, 225);
+            builder.addPair("pair3", sequenceIndex, 120, 600);
+            builder.addFrag("frag1", sequenceIndex, 150, true);
+            builder.addFrag("frag2", sequenceIndex, 450, true);
+            builder.addFrag("frag3", sequenceIndex, 225, false);
+            builder.addPair("rrnaPair", sequenceIndex, 400, 500);
+
+            builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
+
+            final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+            samFile.deleteOnExit();
+
+            final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+            for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
+            samWriter.close();
+
+            // Create an interval list with one ribosomal interval.
+            final Interval rRnaInterval = new Interval(sequence, 300, 520, true, "rRNA");
+            final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
+            rRnaIntervalList.add(rRnaInterval);
+            final File rRnaIntervalsFile = File.createTempFile("tmp.rRna.", ".interval_list");
+            rRnaIntervalsFile.deleteOnExit();
+            rRnaIntervalList.write(rRnaIntervalsFile);
+
+            // Generate the metrics.
+            final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+            metricsFile.deleteOnExit();
+
+            final File chartFile = File.createTempFile("testChartFailureGATKLite", ".pdf");
+            chartFile.deleteOnExit();
+
+            final String[] args = new String[] {
+                    "INPUT=" +               samFile.getAbsolutePath(),
+                    "OUTPUT=" +              metricsFile.getAbsolutePath(),
+                    "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
+                    "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
+                    "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
+                    "CHART_OUTPUT=" + chartFile.getAbsolutePath(),
+                    "IGNORE_SEQUENCE=" + ignoredSequence
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+
+            Assert.assertTrue(stderrCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image.")); 
+        }
+        finally {
+            System.setErr(stderr);
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty("IN_GATKLITE_DOCKER");
+            } 
+        }
     }
 
     @DataProvider(name = "rRnaIntervalsFiles")
