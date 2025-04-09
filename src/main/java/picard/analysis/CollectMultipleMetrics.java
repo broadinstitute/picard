@@ -110,7 +110,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
         /**
          * By default, this method calls the
-         * {@link #makeInstance(String, String, File, File, Set, File, File, File, Set)} method
+         * {@link #makeInstance(String, String, File, File, Set, File, File, File, boolean, Set)} method
          * without 'includeUnpaired' parameter.
          */
         default SinglePassSamProgram makeInstance(final String outbase,
@@ -120,6 +120,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                   final Set<MetricAccumulationLevel> metricAccumulationLevel,
                                                   final File dbSnp, final File intervals,
                                                   final File refflat, Set<String> ignoreSequence,
+                                                  final boolean doNotCreatePlots,
                                                   final boolean includeUnpaired) {
 
             return makeInstance(outbase, outext, input,
@@ -128,7 +129,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                     dbSnp,
                     intervals,
                     refflat,
-                    ignoreSequence);
+                    ignoreSequence,
+                    doNotCreatePlots);
         }
 
         SinglePassSamProgram makeInstance(final String outbase,
@@ -139,7 +141,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                           final File dbSnp,
                                           final File intervals,
                                           final File refflat,
-                                          final Set<String> ignoreSequence);
+                                          final Set<String> ignoreSequence,
+                                          final boolean doNotCreatePlots);
 
         default boolean needsReferenceSequence() {
             return false;
@@ -185,7 +188,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
 
@@ -194,7 +198,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 // overrides
                 program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.INPUT = input;
-                program.HISTOGRAM_FILE = new File(outbase + PDF_EXTENSION);
+                if(!doNotCreatePlots)
+                    program.HISTOGRAM_FILE = new File(outbase + PDF_EXTENSION);
                 program.setReferenceSequence(reference);
 
                 return program;
@@ -229,10 +234,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
                 program.output = new RequiredOutputArgumentCollection( new File(outbase + METRICS_EXTENSION + outext));
-                program.Histogram_FILE = new File(outbase + PDF_EXTENSION);
+                if(!doNotCreatePlots)
+                    program.Histogram_FILE = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -266,10 +273,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
-                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
+                if(!doNotCreatePlots)
+                    program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -304,10 +313,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
-                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
+                if(!doNotCreatePlots)
+                    program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -342,10 +353,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
-                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
+                if(!doNotCreatePlots)
+                    program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -390,11 +403,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final CollectGcBiasMetrics program = new CollectGcBiasMetrics();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + ".gc_bias.detail_metrics" + outext));
                 program.SUMMARY_OUTPUT = new File(outbase + ".gc_bias.summary_metrics" + outext);
-                program.CHART_OUTPUT = new File(outbase + ".gc_bias.pdf");
+                if(!doNotCreatePlots)
+                    program.CHART_OUTPUT = new File(outbase + ".gc_bias.pdf");
                 program.INPUT = input;
                 // previously MetricAccumulationLevel.ALL_READS, MetricAccumulationLevel.LIBRARY
                 program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
@@ -443,10 +458,12 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final CollectRnaSeqMetrics program = new CollectRnaSeqMetrics();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + METRICS_EXTENSION + outext));
-                program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
+                if(!doNotCreatePlots)
+                    program.CHART_OUTPUT = new File(outbase + PDF_EXTENSION);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -491,7 +508,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
 
                 return makeInstance(outbase, outext, input,
                         reference,
@@ -500,6 +518,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                         intervals,
                         refflat,
                         ignoreSequence,
+                        doNotCreatePlots,
                         false);
             }
 
@@ -513,6 +532,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File intervals,
                                                      final File refflat,
                                                      final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots,
                                                      final boolean includeUnpaired) {
                 final CollectSequencingArtifactMetrics program = new CollectSequencingArtifactMetrics();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase));
@@ -553,7 +573,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                                                      final File dbSnp,
                                                      final File intervals,
                                                      final File refflat,
-                                                     final Set<String> ignoreSequence) {
+                                                     final Set<String> ignoreSequence,
+                                                     final boolean doNotCreatePlots) {
                 final CollectQualityYieldMetrics program = new CollectQualityYieldMetrics();
                 program.output = new RequiredOutputArgumentCollection(new File(outbase + METRIC_EXTENSION + outext));
                 // Generally programs should not be accessing these directly but it might make things smoother
@@ -653,6 +674,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             "Providing them in an EXTRA_ARGUMENT will _not_ result in an error, but they will be silently ignored. " , optional = true)
     public List<String> EXTRA_ARGUMENT = null;
 
+    @Argument(doc = "If set, the tools run will not generate plots.", optional = true)
+    public boolean DO_NOT_CREATE_PLOTS = false;
+
     /**
      * Contents of PROGRAM set is transferred to this set during command-line validation, so that an outside
      * developer can invoke this class programmatically and provide alternative Programs to run by calling
@@ -670,7 +694,10 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         }
         programsToRun = new LinkedHashSet<>(PROGRAM);
 
-        if (!checkRInstallation(true)) {
+        if (!DO_NOT_CREATE_PLOTS && runningInGatkLiteDocker()) {
+            errorMsgs.add("Histogram files cannot be written because that requires R, which is not available in the GATK Lite Docker image.");
+        }
+        if (!checkRInstallation(!DO_NOT_CREATE_PLOTS)) {
             errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
         }
 
@@ -714,6 +741,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                     INTERVALS,
                     REF_FLAT,
                     IGNORE_SEQUENCE,
+                    DO_NOT_CREATE_PLOTS,
                     INCLUDE_UNPAIRED);
 
             if (additionalArguments.containsKey(program)) {

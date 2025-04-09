@@ -33,9 +33,11 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.RExecutor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 
 /**
@@ -219,6 +221,221 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
             else {
                 Assert.fail("Unexpected metric: " + metrics);
             }
+        }
+    }
+
+    @Test
+    public void testNoPlots() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
+        final File outfile   = File.createTempFile("test", ".insert_size_metrics");
+        final File pdf   = File.createTempFile("test", ".pdf");
+        outfile.deleteOnExit();
+        pdf.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "LEVEL=SAMPLE",
+                "LEVEL=LIBRARY",
+                "LEVEL=READ_GROUP",
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        Assert.assertEquals(pdf.length(), 0);
+
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+
+        for (final InsertSizeMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.PAIR_ORIENTATION.name(), "FR");
+            if (metrics.LIBRARY == null) {  // SAMPLE or ALL_READS level
+                Assert.assertEquals((int) metrics.MEDIAN_INSERT_SIZE, 41);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 45);
+                Assert.assertEquals(metrics.READ_PAIRS, 13);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 11);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 11);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 11);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 11);
+
+            }
+            else if (metrics.LIBRARY.equals("Solexa-41753")) { // one LIBRARY and one READ_GROUP
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 44);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 44);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 44);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 44);
+                Assert.assertEquals(metrics.READ_PAIRS, 2);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 1);
+
+            }
+            else if (metrics.LIBRARY.equals("Solexa-41748") && metrics.READ_GROUP == null) {
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 40);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 45);
+                Assert.assertEquals(metrics.READ_PAIRS, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 11);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 11);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 11);
+            }
+            else if (metrics.LIBRARY.equals("Solexa-41734") && metrics.READ_GROUP == null) {
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 38);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.READ_PAIRS, 2);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 7);
+            }
+            else if (metrics.READ_GROUP.equals("62A79AAXX100907.7")) {
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 37);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.READ_PAIRS, 4);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 9);
+            }
+            else if (metrics.READ_GROUP.equals("62A79AAXX100907.6")) {
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 41);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 38);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 45);
+                Assert.assertEquals(metrics.READ_PAIRS, 5);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 3);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 7);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 9);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 9);
+            }
+            else if (metrics.READ_GROUP.equals("62A79AAXX100907.5")) {
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 41);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 41);
+                Assert.assertEquals(metrics.READ_PAIRS, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 1);
+            }
+            else if (metrics.READ_GROUP.equals("62A79AAXX100907.3")) {
+                Assert.assertEquals((int)metrics.MEDIAN_INSERT_SIZE, 36);
+                Assert.assertEquals((int)metrics.MODE_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MIN_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.MAX_INSERT_SIZE, 36);
+                Assert.assertEquals(metrics.READ_PAIRS, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_10_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_20_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_30_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_40_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_50_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_60_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_70_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_80_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_90_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_95_PERCENT, 1);
+                Assert.assertEquals(metrics.WIDTH_OF_99_PERCENT, 1);
+            }
+            else {
+                Assert.fail("Unexpected metric: " + metrics);
+            }
+        }
+    }
+
+    @Test
+    public void testFailureGatkLiteDocker() throws IOException {
+        final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+
+        try {
+            final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stderrCapture));
+
+            System.setProperty("IN_GATKLITE_DOCKER", "true");
+
+            final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
+            final File outfile   = File.createTempFile("test", ".insert_size_metrics");
+            final File pdf   = File.createTempFile("test", ".pdf");
+            outfile.deleteOnExit();
+            pdf.deleteOnExit();
+            final String[] args = new String[] {
+                    "INPUT="  + input.getAbsolutePath(),
+                    "OUTPUT=" + outfile.getAbsolutePath(),
+                    "LEVEL=SAMPLE",
+                    "LEVEL=LIBRARY",
+                    "LEVEL=READ_GROUP",
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+
+            Assert.assertEquals(pdf.length(), 0);
+
+            Assert.assertTrue(stderrCapture.toString().contains("Histogram files cannot be written because that requires R, which is not available in the GATK Lite Docker image."));      
+        }
+        finally {
+            System.setErr(stderr);
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty("IN_GATKLITE_DOCKER");
+            } 
         }
     }
 
