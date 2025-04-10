@@ -49,6 +49,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
     }
 
     public short score = 0;
+    public boolean read2CoordinateRequiresSerialize = false;
     public long read1IndexInFile = -1;
     public long read2IndexInFile = -1;
     public int duplicateSetSize = -1;
@@ -62,7 +63,7 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
         this.read1Coordinate = read.read1Coordinate;
         this.read2ReferenceIndex = read.read2ReferenceIndex;
         this.read2Coordinate = read.read2Coordinate;
-
+        this.read2CoordinateRequiresSerialize = read.read2CoordinateRequiresSerialize;
         this.readGroup = read.getReadGroup();
         this.tile = read.getTile();
         this.x = read.x;
