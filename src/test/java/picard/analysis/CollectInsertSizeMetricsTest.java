@@ -418,6 +418,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
             final String[] args = new String[] {
                     "INPUT="  + input.getAbsolutePath(),
                     "OUTPUT=" + outfile.getAbsolutePath(),
+                    "Histogram_FILE=" + pdf.getAbsolutePath(),
                     "LEVEL=SAMPLE",
                     "LEVEL=LIBRARY",
                     "LEVEL=READ_GROUP",
@@ -426,7 +427,7 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
 
             Assert.assertEquals(pdf.length(), 0);
 
-            Assert.assertTrue(stderrCapture.toString().contains("Histogram files cannot be written because that requires R, which is not available in the GATK Lite Docker image."));      
+            Assert.assertTrue(stderrCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));      
         }
         finally {
             System.setErr(stderr);
