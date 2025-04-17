@@ -126,10 +126,8 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) return;
         if (rec.isSecondaryOrSupplementary()) return;
 
-        if(CHART_OUTPUT != null) {
-            q.addRecord(rec);
-            oq.addRecord(rec);
-        }
+        q.addRecord(rec);
+        oq.addRecord(rec);
     }
 
     @Override
