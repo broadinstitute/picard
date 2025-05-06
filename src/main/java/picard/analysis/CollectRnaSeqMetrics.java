@@ -149,7 +149,7 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
             throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
         }
 
-        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+        if (CHART_OUTPUT != null && RExecutor.runningInGatkLiteDocker()) {
             return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
         }
 

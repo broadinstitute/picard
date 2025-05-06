@@ -44,6 +44,7 @@ import java.util.Arrays;
 public class RExecutor {
     private static final Log LOG = Log.getInstance(RExecutor.class);
     private static final String R_EXE = "Rscript";
+    private static String GATK_LITE_DOCKER_ENV_VAR = "IN_GATKLITE_DOCKER";
     
     /**
      * Executes the given R script that is stored in a file on the classpath. The script file
@@ -109,5 +110,17 @@ public class RExecutor {
                 }
             }
         }
+    }
+
+    /**
+     * Checks for the environment variable / property that indicates this is running in the
+     * GATK-Lite Docker image.
+     * @return true if the environment variable or property is set and is true, false otherwise
+     */
+    public static boolean runningInGatkLiteDocker() {
+        if (System.getenv(GATK_LITE_DOCKER_ENV_VAR) != null) {
+            return Boolean.parseBoolean(System.getenv(GATK_LITE_DOCKER_ENV_VAR));
+        }
+        return Boolean.parseBoolean(System.getProperty(GATK_LITE_DOCKER_ENV_VAR, "false"));
     }
 }

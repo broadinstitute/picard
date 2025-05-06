@@ -97,7 +97,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        if (CHART_OUTPUT != null && runningInGatkLiteDocker()) {
+        if (CHART_OUTPUT != null && RExecutor.runningInGatkLiteDocker()) {
             return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
         }
         if (!checkRInstallation(CHART_OUTPUT != null)) {

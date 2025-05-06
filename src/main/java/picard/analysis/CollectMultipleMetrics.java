@@ -40,6 +40,7 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.RequiredOutputArgumentCollection;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -694,7 +695,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         }
         programsToRun = new LinkedHashSet<>(PROGRAM);
 
-        if (!DO_NOT_CREATE_PLOTS && runningInGatkLiteDocker()) {
+        if (!DO_NOT_CREATE_PLOTS && RExecutor.runningInGatkLiteDocker()) {
             errorMsgs.add("Histogram files cannot be written because that requires R, which is not available in the GATK Lite Docker image.");
         }
         if (!checkRInstallation(!DO_NOT_CREATE_PLOTS)) {

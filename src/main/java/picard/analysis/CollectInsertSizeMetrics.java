@@ -133,7 +133,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             errorMsgs.add("MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded.");
         }
 
-        if (Histogram_FILE != null && runningInGatkLiteDocker()) {
+        if (Histogram_FILE != null && RExecutor.runningInGatkLiteDocker()) {
             errorMsgs.add("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image.");
         }
 

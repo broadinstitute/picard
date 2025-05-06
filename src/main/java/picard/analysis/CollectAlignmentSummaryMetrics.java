@@ -136,7 +136,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     private AlignmentSummaryMetricsCollector collector;
 
     protected String[] customCommandLineValidation() {
-        if (HISTOGRAM_FILE != null && runningInGatkLiteDocker()) {
+        if (HISTOGRAM_FILE != null && RExecutor.runningInGatkLiteDocker()) {
             return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
         }
         if (!checkRInstallation(HISTOGRAM_FILE != null)) {

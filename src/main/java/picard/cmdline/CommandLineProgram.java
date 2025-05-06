@@ -87,7 +87,6 @@ import java.util.stream.Collectors;
 public abstract class CommandLineProgram {
     private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
     private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
-    private static String GATK_LITE_DOCKER_ENV_VAR = "IN_GATKLITE_DOCKER";
     private static Boolean useLegacyParser;
     public static String SYNTAX_TRANSITION_URL =
             "https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)";
@@ -519,13 +518,6 @@ public abstract class CommandLineProgram {
         return true;
     }
 
-    /**
-     * Checks for the environment variable that indicates this is running in the GATK-Lite Docker
-     * image.
-     * @return true if the environment variable is set and is true, false otherwise
-     */
-    public static boolean runningInGatkLiteDocker() {
-        return Boolean.valueOf(System.getProperty(GATK_LITE_DOCKER_ENV_VAR, "false")).booleanValue();
-    }
+    
         
 }

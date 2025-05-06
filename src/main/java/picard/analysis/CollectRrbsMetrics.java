@@ -227,7 +227,7 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
             errorMsgs.add("MINIMUM_READ_LENGTH must be > 0");
         }
 
-        if (!DO_NOT_CREATE_PLOTS && runningInGatkLiteDocker()) {
+        if (!DO_NOT_CREATE_PLOTS && RExecutor.runningInGatkLiteDocker()) {
             errorMsgs.add("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image.");
         }
         
