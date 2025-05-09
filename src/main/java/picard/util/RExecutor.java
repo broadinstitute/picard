@@ -24,6 +24,8 @@
 
 package picard.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -123,7 +125,7 @@ public class RExecutor {
      * @return true if the environment variable or property is set and is true, false otherwise
      */
     public static boolean runningInGatkLiteDocker() {
-        if (System.getenv(GATK_LITE_DOCKER_ENV_VAR) != null) {
+        if (StringUtils.isNotBlank(System.getenv(GATK_LITE_DOCKER_ENV_VAR))) {
             return Boolean.parseBoolean(System.getenv(GATK_LITE_DOCKER_ENV_VAR));
         }
         return Boolean.parseBoolean(System.getProperty(GATK_LITE_DOCKER_ENV_VAR, "false"));
