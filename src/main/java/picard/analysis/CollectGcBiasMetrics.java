@@ -165,8 +165,9 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     /////////////////////////////////////////////////////////////////////////////
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        if(CHART_OUTPUT != null)
+        if(CHART_OUTPUT != null) {
             IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        }
         IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 

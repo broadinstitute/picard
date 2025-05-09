@@ -38,6 +38,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import picard.util.RExecutor;
 import picard.vcf.VcfTestUtils;
 
 import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
@@ -466,13 +467,13 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
     @Test
     public void testChartFailureGATKLite () throws IOException {
         final PrintStream stderr = System.err;
-        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
 
         try {
             final ByteArrayOutputStream stdoutCapture = new ByteArrayOutputStream();
             System.setErr(new PrintStream(stdoutCapture));
 
-            System.setProperty("IN_GATKLITE_DOCKER", "true");
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
 
             final File input = new File("testdata/picard/metrics/chrM_NO_SEQ.sam");
             final File summaryOutfile = File.createTempFile("test", ".gc_bias.summary_metrics");
@@ -510,10 +511,10 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
         finally {
             System.setErr(stderr);
             if(gatkLiteDockerProperty != null) {
-                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
             }
             else{
-                System.clearProperty("IN_GATKLITE_DOCKER");
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
             } 
         }
     }

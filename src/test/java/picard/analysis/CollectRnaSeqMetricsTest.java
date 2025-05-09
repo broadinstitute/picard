@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.annotation.RefFlatReader.RefFlatColumns;
+import picard.util.RExecutor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -120,13 +121,13 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     public void testChartFailureGATKLite() throws Exception {
 
         final PrintStream stderr = System.err;
-        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
 
         try {
             final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
             System.setErr(new PrintStream(stderrCapture));
 
-            System.setProperty("IN_GATKLITE_DOCKER", "true");
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
 
             final String sequence = "chr1";
             final String ignoredSequence = "chrM";
@@ -184,10 +185,10 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         finally {
             System.setErr(stderr);
             if(gatkLiteDockerProperty != null) {
-                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
             }
             else{
-                System.clearProperty("IN_GATKLITE_DOCKER");
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
             } 
         }
     }

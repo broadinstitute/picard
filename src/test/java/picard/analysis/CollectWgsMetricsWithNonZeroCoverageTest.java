@@ -7,6 +7,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.RExecutor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -250,13 +251,13 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
     @Test
     public void testChartFailureGATKLite() throws IOException {
         final PrintStream stderr = System.err;
-        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
 
         try {
             final ByteArrayOutputStream stdoutCapture = new ByteArrayOutputStream();
             System.setErr(new PrintStream(stdoutCapture));
 
-            System.setProperty("IN_GATKLITE_DOCKER", "true");
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
             final File input = new File(TEST_DIR, "forMetrics.sam");
             final File outfile = File.createTempFile("test", ".wgs_metrics");
             final File pdffile = File.createTempFile("test", ".wgs_metrics.pdf");
@@ -278,10 +279,10 @@ public class CollectWgsMetricsWithNonZeroCoverageTest extends CommandLineProgram
         finally {
             System.setErr(stderr);
             if(gatkLiteDockerProperty != null) {
-                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
             }
             else{
-                System.clearProperty("IN_GATKLITE_DOCKER");
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
             } 
         }
     }

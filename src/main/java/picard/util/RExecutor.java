@@ -44,7 +44,12 @@ import java.util.Arrays;
 public class RExecutor {
     private static final Log LOG = Log.getInstance(RExecutor.class);
     private static final String R_EXE = "Rscript";
-    private static String GATK_LITE_DOCKER_ENV_VAR = "IN_GATKLITE_DOCKER";
+
+    /**
+     * Name for the environment variable / system property that indicates this is running in the
+     * GATK-Lite Docker image. This is referenced to determine whether R is available.
+     */
+    public static String GATK_LITE_DOCKER_ENV_VAR = "IN_GATKLITE_DOCKER";
     
     /**
      * Executes the given R script that is stored in a file on the classpath. The script file

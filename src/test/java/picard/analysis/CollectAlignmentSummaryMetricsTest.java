@@ -31,6 +31,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.RExecutor;
 import picard.util.TestNGUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -778,13 +779,13 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
     @Test
     public void testHistogramFailureGATKLite() throws IOException {
         final PrintStream stderr = System.err;
-        final String gatkLiteDockerProperty = System.getProperty("IN_GATKLITE_DOCKER");
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
 
         try {
             final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
             System.setErr(new PrintStream(stderrCapture));
 
-            System.setProperty("IN_GATKLITE_DOCKER", "true");
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
 
             final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
             final File outFile = getTempOutputFile("testReadLengthHistogram", ".txt");
@@ -803,10 +804,10 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         finally {
             System.setErr(stderr);
             if(gatkLiteDockerProperty != null) {
-                System.setProperty("IN_GATKLITE_DOCKER", gatkLiteDockerProperty);
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
             }
             else{
-                System.clearProperty("IN_GATKLITE_DOCKER");
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
             } 
         }
     }
