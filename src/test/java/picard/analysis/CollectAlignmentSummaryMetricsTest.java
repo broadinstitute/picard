@@ -31,11 +31,14 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.RExecutor;
 import picard.util.TestNGUtil;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -770,6 +773,42 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    public void testHistogramFailureGATKLite() throws IOException {
+        final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
+
+        try {
+            final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stderrCapture));
+
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
+
+            final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+            final File outFile = getTempOutputFile("testReadLengthHistogram", ".txt");
+
+            final List<String> argsList = new ArrayList<>();
+            final File outHist = getTempOutputFile("testReadLengthHistogram", ".pdf");
+
+            argsList.add("INPUT=" + input.getAbsolutePath());
+            argsList.add("OUTPUT=" + outFile.getAbsolutePath());
+            argsList.add("HISTOGRAM_FILE=" + outHist);
+
+            Assert.assertEquals(runPicardCommandLine(argsList.toArray(new String[0])),1);
+
+            Assert.assertTrue(stderrCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));      
+        }
+        finally {
+            System.setErr(stderr);
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
+            } 
         }
     }
 

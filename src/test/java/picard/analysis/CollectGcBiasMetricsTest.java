@@ -38,13 +38,16 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
+import picard.util.RExecutor;
 import picard.vcf.VcfTestUtils;
 
 import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -457,6 +460,109 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 setBuilder.addPair(newReadName, contig2, start + ID, start + ID + LENGTH);
             } else {
                 setBuilder.addPair(newReadName, contig3, start + ID, start + ID + LENGTH);
+            }
+        }
+    }
+
+    @Test
+    public void testChartFailureGATKLite () throws IOException {
+        final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
+
+        try {
+            final ByteArrayOutputStream stdoutCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stdoutCapture));
+
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
+
+            final File input = new File("testdata/picard/metrics/chrM_NO_SEQ.sam");
+            final File summaryOutfile = File.createTempFile("test", ".gc_bias.summary_metrics");
+            final File detailsOutfile = File.createTempFile("test", ".gc_bias.detail_metrics");
+            summaryOutfile.deleteOnExit();
+            detailsOutfile.deleteOnExit();
+
+            final File pdf = File.createTempFile("test", ".pdf");
+            pdf.deleteOnExit();
+
+            final int windowSize = 100;
+            final double minGenFraction = 1.0E-5;
+            final boolean biSulfiteSeq = false;
+            final boolean assumeSorted = false;
+
+            final String[] args = new String[]{
+                    "INPUT=" + input.getAbsolutePath(),
+                    "OUTPUT=" + detailsOutfile.getAbsolutePath(),
+                    "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
+                    "SUMMARY_OUTPUT=" + summaryOutfile.getAbsolutePath(),
+                    "CHART_OUTPUT=" + pdf.getAbsolutePath(),
+                    "SCAN_WINDOW_SIZE=" + windowSize,
+                    "MINIMUM_GENOME_FRACTION=" + minGenFraction,
+                    "IS_BISULFITE_SEQUENCED=" + biSulfiteSeq,
+                    "LEVEL=ALL_READS",
+                    "LEVEL=SAMPLE",
+                    "LEVEL=READ_GROUP",
+                    "ASSUME_SORTED=" + assumeSorted,
+                    "ALSO_IGNORE_DUPLICATES=" + false
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+
+            Assert.assertTrue(stdoutCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));  
+        }
+        finally {
+            System.setErr(stderr);
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
+            } 
+        }
+    }
+
+    @Test
+    public void testWithoutChartOutput() throws IOException {
+        final File input = new File("testdata/picard/metrics/chrM_NO_SEQ.sam");
+        final File summaryOutfile = File.createTempFile("test", ".gc_bias.summary_metrics");
+        final File detailsOutfile = File.createTempFile("test", ".gc_bias.detail_metrics");
+        summaryOutfile.deleteOnExit();
+        detailsOutfile.deleteOnExit();
+
+        final int windowSize = 100;
+        final double minGenFraction = 1.0E-5;
+        final boolean biSulfiteSeq = false;
+        final boolean assumeSorted = false;
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + detailsOutfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
+                "SUMMARY_OUTPUT=" + summaryOutfile.getAbsolutePath(),
+                "SCAN_WINDOW_SIZE=" + windowSize,
+                "MINIMUM_GENOME_FRACTION=" + minGenFraction,
+                "IS_BISULFITE_SEQUENCED=" + biSulfiteSeq,
+                "LEVEL=ALL_READS",
+                "LEVEL=SAMPLE",
+                "LEVEL=READ_GROUP",
+                "ASSUME_SORTED=" + assumeSorted,
+                "ALSO_IGNORE_DUPLICATES=" + false
+        };
+
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(summaryOutfile));
+
+        for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) {
+                Assert.assertEquals(metrics.TOTAL_CLUSTERS, 0);
+                Assert.assertEquals(metrics.ALIGNED_READS, 1);
+                Assert.assertEquals(metrics.AT_DROPOUT, 78.682453);
+                Assert.assertEquals(metrics.GC_DROPOUT, 14.693382);
+                Assert.assertEquals(metrics.GC_NC_0_19, 0.0);
+                Assert.assertEquals(metrics.GC_NC_20_39, 0.0);
+                Assert.assertEquals(metrics.GC_NC_40_59, 1.246783);
+                Assert.assertEquals(metrics.GC_NC_60_79, 0.0);
+                Assert.assertEquals(metrics.GC_NC_80_100, 0.0);
             }
         }
     }

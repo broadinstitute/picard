@@ -118,6 +118,8 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
     public boolean ASSUME_SORTED = false;
     @Argument(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+    @Argument(doc = "If set, this tool will not generate a PDF file with plots of the metrics.", optional = true)
+    public boolean DO_NOT_CREATE_PLOTS = false;
 
     public static final String DETAIL_FILE_EXTENSION = "rrbs_detail_metrics";
     public static final String SUMMARY_FILE_EXTENSION = "rrbs_summary_metrics";
@@ -186,7 +188,8 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         }
         summaryFile.write(SUMMARY_OUT);
         detailsFile.write(DETAILS_OUT);
-        RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath().replaceAll("%", "%%"));
+        if(!DO_NOT_CREATE_PLOTS)
+            RExecutor.executeFromClasspath(R_SCRIPT, DETAILS_OUT.getAbsolutePath(), SUMMARY_OUT.getAbsolutePath(), PLOTS_OUT.getAbsolutePath().replaceAll("%", "%%"));
         CloserUtil.close(samReader);
         return 0;
     }
@@ -200,7 +203,9 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IOUtil.assertFileIsWritable(summaryFile);
         IOUtil.assertFileIsWritable(detailsFile);
-        IOUtil.assertFileIsWritable(plotsFile);
+        if(!DO_NOT_CREATE_PLOTS) {
+            IOUtil.assertFileIsWritable(plotsFile);
+        }
     }
 
     @Override
@@ -222,7 +227,11 @@ private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
             errorMsgs.add("MINIMUM_READ_LENGTH must be > 0");
         }
 
-        if (!checkRInstallation(R_SCRIPT != null)) {
+        if (!DO_NOT_CREATE_PLOTS && RExecutor.runningInGatkLiteDocker()) {
+            errorMsgs.add("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image.");
+        }
+        
+        if (!checkRInstallation(!DO_NOT_CREATE_PLOTS)) {
             errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
         }
 

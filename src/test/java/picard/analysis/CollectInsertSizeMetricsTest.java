@@ -33,9 +33,11 @@ import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.util.RExecutor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 
 /**
@@ -65,6 +67,31 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
+        verifyMetrics(outfile);
+    }
+
+    @Test
+    public void testNoPlots() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
+        final File outfile   = File.createTempFile("test", ".insert_size_metrics");
+        final File pdf   = File.createTempFile("test", ".pdf");
+        outfile.deleteOnExit();
+        pdf.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "LEVEL=SAMPLE",
+                "LEVEL=LIBRARY",
+                "LEVEL=READ_GROUP",
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        Assert.assertEquals(pdf.length(), 0);
+
+        verifyMetrics(outfile);
+    }
+
+    private void verifyMetrics(File outfile) throws IOException {
         final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
 
@@ -219,6 +246,47 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
             else {
                 Assert.fail("Unexpected metric: " + metrics);
             }
+        }
+    }
+
+    @Test
+    public void testFailureGatkLiteDocker() throws IOException {
+        final PrintStream stderr = System.err;
+        final String gatkLiteDockerProperty = System.getProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
+
+        try {
+            final ByteArrayOutputStream stderrCapture = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(stderrCapture));
+
+            System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, "true");
+
+            final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
+            final File outfile   = File.createTempFile("test", ".insert_size_metrics");
+            final File pdf   = File.createTempFile("test", ".pdf");
+            outfile.deleteOnExit();
+            pdf.deleteOnExit();
+            final String[] args = new String[] {
+                    "INPUT="  + input.getAbsolutePath(),
+                    "OUTPUT=" + outfile.getAbsolutePath(),
+                    "Histogram_FILE=" + pdf.getAbsolutePath(),
+                    "LEVEL=SAMPLE",
+                    "LEVEL=LIBRARY",
+                    "LEVEL=READ_GROUP",
+            };
+            Assert.assertEquals(runPicardCommandLine(args), 1);
+
+            Assert.assertEquals(pdf.length(), 0);
+
+            Assert.assertTrue(stderrCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));      
+        }
+        finally {
+            System.setErr(stderr);
+            if(gatkLiteDockerProperty != null) {
+                System.setProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR, gatkLiteDockerProperty);
+            }
+            else{
+                System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
+            } 
         }
     }
 

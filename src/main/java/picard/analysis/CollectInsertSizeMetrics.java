@@ -89,7 +89,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     protected static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
 
-    @Argument(shortName="H", doc="File to write insert size Histogram chart to.")
+    @Argument(shortName="H", doc="File to write insert size Histogram chart to.", optional=true)
     public File Histogram_FILE;
 
     @Argument(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
@@ -133,6 +133,10 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             errorMsgs.add("MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded.");
         }
 
+        if (Histogram_FILE != null && RExecutor.runningInGatkLiteDocker()) {
+            errorMsgs.add("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image.");
+        }
+
         if (!checkRInstallation(Histogram_FILE != null)) {
             errorMsgs.add("R is not installed on this machine. It is required for creating the chart.");
         }
@@ -144,7 +148,9 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Override protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(Histogram_FILE);
+        if(Histogram_FILE != null) {
+            IOUtil.assertFileIsWritable(Histogram_FILE);
+        }
 
         //Delegate actual collection to InsertSizeMetricCollector
         multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT,
@@ -170,21 +176,22 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         }
         else  {
             file.write(OUTPUT);
+            if(Histogram_FILE != null){
+                final List<String> plotArgs = new ArrayList<>();
+                Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
 
-            final List<String> plotArgs = new ArrayList<>();
-            Collections.addAll(plotArgs, OUTPUT.getAbsolutePath(), Histogram_FILE.getAbsolutePath().replaceAll("%", "%%"), INPUT.getName());
+                if (HISTOGRAM_WIDTH != null) {
+                    plotArgs.add(String.valueOf(HISTOGRAM_WIDTH));
+                }
+                else if (MIN_HISTOGRAM_WIDTH != null) {
+                    final int max = (int) file.getAllHistograms().stream().mapToDouble(Histogram::getMax).max().getAsDouble();
+                    plotArgs.add(String.valueOf(Math.max(max, MIN_HISTOGRAM_WIDTH)));
+                }
 
-            if (HISTOGRAM_WIDTH != null) {
-                plotArgs.add(String.valueOf(HISTOGRAM_WIDTH));
-            }
-            else if (MIN_HISTOGRAM_WIDTH != null) {
-                final int max = (int) file.getAllHistograms().stream().mapToDouble(Histogram::getMax).max().getAsDouble();
-                plotArgs.add(String.valueOf(Math.max(max, MIN_HISTOGRAM_WIDTH)));
-            }
-
-            final int rResult = RExecutor.executeFromClasspath(Histogram_R_SCRIPT, plotArgs.toArray(new String[0]));
-            if (rResult != 0) {
-                throw new PicardException("R script " + Histogram_R_SCRIPT + " failed with return code " + rResult);
+                final int rResult = RExecutor.executeFromClasspath(Histogram_R_SCRIPT, plotArgs.toArray(new String[0]));
+                if (rResult != 0) {
+                    throw new PicardException("R script " + Histogram_R_SCRIPT + " failed with return code " + rResult);
+                }
             }
         }
     }

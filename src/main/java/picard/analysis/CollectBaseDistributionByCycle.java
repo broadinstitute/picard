@@ -39,6 +39,7 @@ import java.util.List;
 import htsjdk.samtools.util.StringUtil;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+
 import picard.PicardException;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
@@ -54,7 +55,7 @@ import picard.util.RExecutor;
 @DocumentedFeature
 public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
         static final String USAGE_SUMMARY = "Chart the nucleotide distribution per cycle in a SAM or BAM file";
-        static final String USAGE_DETAILS = "This tool produces a chart of the nucleotide distribution per cycle in a SAM or BAM file " +
+        static final String USAGE_DETAILS = "This tool produces a text file and, optionally, a chart of the nucleotide distribution per cycle in a SAM or BAM file " +
                 "in order to enable assessment of systematic errors at specific positions in the reads.<br /><br />" +
                 "" +
                 "<h4>Interpretation notes</h4>" +
@@ -85,7 +86,7 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
                 "</pre>" +
                 "<hr />"
                 ;
-    @Argument(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
+    @Argument(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.", optional=true)
     public File CHART_OUTPUT;
 
     @Argument(doc = "If set to true, calculate the base distribution over aligned reads only.")
@@ -100,6 +101,9 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (CHART_OUTPUT != null && RExecutor.runningInGatkLiteDocker()) {
+            return new String[]{"The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."};
+        }
         if (!checkRInstallation(CHART_OUTPUT != null)) {
             return new String[]{"R is not installed on this machine. It is required for creating the chart."};
         }
@@ -108,7 +112,9 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if(CHART_OUTPUT != null){
+            IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        }
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
         if (readGroups.size() == 1) {
             plotSubtitle = StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary());
@@ -138,13 +144,15 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
         if (hist.isEmpty()) {
             log.warn("No valid bases found in input file. No plot will be produced.");
         } else {
-            final int rResult = RExecutor.executeFromClasspath("picard/analysis/baseDistributionByCycle.R",
-                    OUTPUT.getAbsolutePath(),
-                    CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
-                    INPUT.getName(),
-                    plotSubtitle);
-            if (rResult != 0) {
-                throw new PicardException("R script nucleotideDistributionByCycle.R failed with return code " + rResult);
+            if(CHART_OUTPUT != null) {
+                final int rResult = RExecutor.executeFromClasspath("picard/analysis/baseDistributionByCycle.R",
+                        OUTPUT.getAbsolutePath(),
+                        CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
+                        INPUT.getName(),
+                        plotSubtitle);
+                if (rResult != 0) {
+                    throw new PicardException("R script nucleotideDistributionByCycle.R failed with return code " + rResult);
+                }
             }
         }
     }
