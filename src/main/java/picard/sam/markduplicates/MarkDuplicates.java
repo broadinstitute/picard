@@ -480,7 +480,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             sizeInBytes = ReadEndsForMarkDuplicates.getSizeOf();
         }
         MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2;
-        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
+        //final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
+        final int maxInMemory = 1000;
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
         final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
@@ -493,13 +494,17 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             pairCodec = new ReadEndsForMarkDuplicatesCodec();
             diskCodec = new ReadEndsForMarkDuplicatesCodec();
         }
+        if (flowBasedArguments.FLOW_USE_END_IN_UNPAIRED_READS){
+            fragCodec.setForceSerialization();
+            pairCodec.setForceSerialization();
+            diskCodec.setForceSerialization();
+        }
 
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
                 pairCodec,
                 new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
                 TMP_DIR);
-
         this.fragSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
                 fragCodec,
                 new ReadEndsMDComparator(useBarcodes),

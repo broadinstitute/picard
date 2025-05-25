@@ -32,9 +32,15 @@ import java.io.*;
 public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<ReadEndsForMarkDuplicates> {
     protected DataInputStream in;
     protected DataOutputStream out;
+    protected boolean forceSerialization = false;
 
     public SortingCollection.Codec<ReadEndsForMarkDuplicates> clone() {
-        return new ReadEndsForMarkDuplicatesCodec();
+
+        ReadEndsForMarkDuplicatesCodec result = new ReadEndsForMarkDuplicatesCodec();
+        if(this.forceSerialization){
+            result.setForceSerialization();
+        }
+        return result;
     }
 
     public void setOutputStream(final OutputStream os) { this.out = new DataOutputStream(os); }
@@ -48,19 +54,23 @@ public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<R
     public DataOutputStream getOutputStream() {
         return out;
     }
-
+    public void setForceSerialization(){
+        forceSerialization = true;
+    }
+    public void unsetForceSerialization(){
+        forceSerialization = false;
+    }
     public void encode(final ReadEndsForMarkDuplicates read) {
         try {
             this.out.writeShort(read.score);
             this.out.writeShort(read.libraryId);
             this.out.writeByte(read.orientation);
-            this.out.writeByte(read.read2CoordinateRequiresSerialize ? 1 : 0);
             this.out.writeInt(read.read1ReferenceIndex);
             this.out.writeInt(read.read1Coordinate);
             this.out.writeLong(read.read1IndexInFile);
             this.out.writeInt(read.read2ReferenceIndex);
 
-            if ((read.orientation > ReadEnds.R) || (read.read2CoordinateRequiresSerialize)) {
+            if ((read.orientation > ReadEnds.R) || (forceSerialization)) {
                 this.out.writeInt(read.read2Coordinate);
                 this.out.writeLong(read.read2IndexInFile);
             }
@@ -88,13 +98,12 @@ public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<R
 
             read.libraryId = this.in.readShort();
             read.orientation = this.in.readByte();
-            read.read2CoordinateRequiresSerialize = this.in.readByte() == 1;
             read.read1ReferenceIndex = this.in.readInt();
             read.read1Coordinate = this.in.readInt();
             read.read1IndexInFile = this.in.readLong();
             read.read2ReferenceIndex = this.in.readInt();
 
-            if ((read.orientation > ReadEnds.R)|| (read.read2CoordinateRequiresSerialize)) {
+            if ((read.orientation > ReadEnds.R)|| (forceSerialization)) {
                 read.read2Coordinate = this.in.readInt();
                 read.read2IndexInFile = this.in.readLong();
             }

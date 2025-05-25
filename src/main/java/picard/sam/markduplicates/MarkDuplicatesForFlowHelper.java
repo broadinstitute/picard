@@ -66,7 +66,6 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
 
     public MarkDuplicatesForFlowHelper(final MarkDuplicates md) {
         this.md = md;
-
         validateFlowParameteres();
     }
 
@@ -177,7 +176,6 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
         ends.read1Coordinate = getReadEndCoordinate(rec, !rec.getReadNegativeStrandFlag(), true, md.flowBasedArguments);
         if (md.flowBasedArguments.FLOW_USE_END_IN_UNPAIRED_READS) {
             ends.read2Coordinate = getReadEndCoordinate(rec, rec.getReadNegativeStrandFlag(), false, md.flowBasedArguments);
-            ends.read2CoordinateRequiresSerialize = true;
         }
 
         // adjust score
