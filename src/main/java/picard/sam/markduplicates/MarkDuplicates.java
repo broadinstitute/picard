@@ -480,8 +480,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             sizeInBytes = ReadEndsForMarkDuplicates.getSizeOf();
         }
         MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2;
-        //final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
-        final int maxInMemory = 1000;
+        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
         final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
