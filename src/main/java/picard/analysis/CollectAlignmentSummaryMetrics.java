@@ -70,7 +70,7 @@ import java.util.Set;
  * </ul>
  * Metrics are written for the first read of a pair, the second read, and combined for the pair.
  *
- * Chimeras are identified if any of the of following criteria are met:
+ * Chimeric reads are identified when the mapping quality (MAPQ) is ≥ 20 and any of the following criteria are met:
  * <ul>
  * <li>the insert size is larger than MAX_INSERT_SIZE</li>
  * <li>the ends of a pair map to different contigs</li>
