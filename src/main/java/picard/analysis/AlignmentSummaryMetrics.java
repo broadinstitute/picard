@@ -201,10 +201,10 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double STRAND_BALANCE;
 
     /**
-     * The fraction of reads with a mapping quality (MAPQ) ≥ 20 that are identified as chimeric by and any of the 
+     * The fraction of read pairs with a mapping quality (MAPQ) ≥ 20 that are identified as chimeric by and any of the 
      * following criteria: (1) the insert size exceeds the maximum insert size (by default 100 kb), (2) the two 
      * ends of a read pair map to different contigs, (3) the paired-end orientation deviates from the expected 
-     * orientation, or (4) the read contains an SA (supplementary alignment) tag indicating a chimeric alignment.
+     * orientation, or (4) either read in the pair contains an SA (supplementary alignment) tag indicating a chimeric alignment.
      */
     public double PCT_CHIMERAS;
 

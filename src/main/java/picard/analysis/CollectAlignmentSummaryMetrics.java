@@ -70,12 +70,12 @@ import java.util.Set;
  * </ul>
  * Metrics are written for the first read of a pair, the second read, and combined for the pair.
  *
- * Chimeric reads are identified when the mapping quality (MAPQ) is ≥ 20 and any of the following criteria are met:
+ * Read pairs with a mapping quality (MAPQ) is ≥ 20 are classified as chimeric if any of the following criteria are met:
  * <ul>
  * <li>the insert size is larger than MAX_INSERT_SIZE</li>
  * <li>the ends of a pair map to different contigs</li>
  * <li>the paired end orientation is different that the expected orientation</li>
- * <li>the read contains an SA tag (chimeric alignment)</li>
+ * <li>either read in the pair contains an SA tag (chimeric alignment)</li>
  * </ul>
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
