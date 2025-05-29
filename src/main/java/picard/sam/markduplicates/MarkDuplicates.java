@@ -494,12 +494,19 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             diskCodec = new ReadEndsForMarkDuplicatesCodec();
         }
 
+        //In Illumina the two ends of the fragment are saved only if the read is paired
+        // in flow based sequencing we are interested in both ends of the read
+        if (flowBasedArguments.FLOW_USE_END_IN_UNPAIRED_READS){
+            fragCodec.setForceSerialization();
+            pairCodec.setForceSerialization();
+            diskCodec.setForceSerialization();
+        }
+
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
                 pairCodec,
                 new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
                 TMP_DIR);
-
         this.fragSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
                 fragCodec,
                 new ReadEndsMDComparator(useBarcodes),

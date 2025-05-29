@@ -62,7 +62,6 @@ public class ReadEndsForMarkDuplicates extends ReadEnds implements Cloneable {
         this.read1Coordinate = read.read1Coordinate;
         this.read2ReferenceIndex = read.read2ReferenceIndex;
         this.read2Coordinate = read.read2Coordinate;
-
         this.readGroup = read.getReadGroup();
         this.tile = read.getTile();
         this.x = read.x;

@@ -66,7 +66,6 @@ public class MarkDuplicatesForFlowHelper implements MarkDuplicatesHelper {
 
     public MarkDuplicatesForFlowHelper(final MarkDuplicates md) {
         this.md = md;
-
         validateFlowParameteres();
     }
 
