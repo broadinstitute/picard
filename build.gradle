@@ -26,7 +26,7 @@ application {
 repositories {
     mavenCentral()
     maven {
-        url "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/" //for htsjdk snapshots
+        url "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/" //for htsjdk snapshots
     }
     mavenLocal()
 }
@@ -344,7 +344,7 @@ publishing {
                 password = isRelease ? project.findProperty("sonatypePassword") : System.env.ARTIFACTORY_PASSWORD
             }
             def release = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshot = "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/"
+            def snapshot = "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/"
             url = isRelease ? release : snapshot
         }
     }
