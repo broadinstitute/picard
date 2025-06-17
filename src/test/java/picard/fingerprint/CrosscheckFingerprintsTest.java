@@ -1096,8 +1096,6 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
 
     }
 
-    @Test
-
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
         doTest(args, metrics, expectedRetVal, expectedNMetrics, expectedType, false);
     }

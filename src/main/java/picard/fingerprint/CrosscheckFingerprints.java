@@ -900,7 +900,6 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                         LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
                 final FingerprintResult result = getMatchResults(expectedToMatch, results);
 
-
                 if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
                     metrics.add(getMatchDetails(result, results, lhsId, rhsId, type));
                 }

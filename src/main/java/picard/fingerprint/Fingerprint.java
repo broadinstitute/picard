@@ -136,7 +136,7 @@ public class Fingerprint extends TreeMap<HaplotypeBlock, HaplotypeProbabilities>
                             final FingerprintIdDetails finalId;
                             if (entryList.size() == 1) {
                                 finalId = entryList.get(0).getKey();
-                            } else {;;;;
+                            } else {
                                 finalId = new FingerprintIdDetails();
                                 entryList.forEach(id -> finalId.merge(id.getKey()));
                             }
