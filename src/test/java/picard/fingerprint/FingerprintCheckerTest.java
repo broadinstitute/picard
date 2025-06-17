@@ -556,4 +556,19 @@ public class FingerprintCheckerTest {
 
         VcfTestUtils.assertVcfFilesAreEqual(vcfOutput, vcfExpected);
     }
+
+    @Test void testFingerprintWithDupe() {
+        final File haplotype_db = new File(TEST_DATA_DIR, "Homo_sapiens_assembly19.haplotype_database.subset.txt");
+        final HaplotypeMap map = new HaplotypeMap(haplotype_db);
+        final File vcf = new File(TEST_DATA_DIR, "NA12891.multiple_per_site.vcf");
+        final File vcf_index = new File(TEST_DATA_DIR, "NA12891.multiple_per_site.vcf.idx");
+        final VCFFileReader vcf_reader = new VCFFileReader(vcf.toPath(), vcf_index.toPath());
+
+        final FingerprintChecker checker = new FingerprintChecker(map);
+
+        final Map<String, Fingerprint> fingerprintMap = checker.loadFingerprintsFromQueriableReader(vcf_reader, null, null);
+
+        Assert.assertEquals(fingerprintMap.get("NA12891").size(), 5);
+
+    }
 }

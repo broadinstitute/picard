@@ -79,6 +79,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Major class that coordinates the activities involved in comparing genetic fingerprint
@@ -340,7 +341,13 @@ public class FingerprintChecker {
         return loadFingerprintsFromVariantContexts(() ->
                         snps.stream().map(snp -> {
                             try {
-                                return reader.query(snp.getChrom(), snp.getPos(), snp.getPos()).next();
+                                final List<VariantContext> ctxs = reader.query(snp.getChrom(), snp.getPos(), snp.getPos()).toList();
+                                for (final VariantContext ctx : ctxs) {
+                                    if (AlleleSubsettingUtils.subsetVCToMatchSnp(ctx, snp) != null) {
+                                        return ctx;
+                                    }
+                                }
+                                return null;
                             } catch (NoSuchElementException e) {
                                 return null;
                             }

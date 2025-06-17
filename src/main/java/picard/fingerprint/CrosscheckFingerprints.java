@@ -422,6 +422,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private final List<String> rhsMatrixKeys = new ArrayList<>();
     private Map<String, String> sampleIndividualMap;
 
+    private Boolean nonZeroLodFound = false;
+
     @Override
     protected String[] customCommandLineValidation() {
         if (SECOND_INPUT == null && INPUT_SAMPLE_MAP != null) {
@@ -576,7 +578,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
         //check if all LODs are 0
-        if (metrics.stream().noneMatch(m -> m.LOD_SCORE != 0)) {
+        if (!nonZeroLodFound) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: there are no reads or variants at fingerprinting sites ");
             return EXIT_CODE_WHEN_NO_VALID_CHECKS;
@@ -898,11 +900,15 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                         LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
                 final FingerprintResult result = getMatchResults(expectedToMatch, results);
 
+
                 if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
                     metrics.add(getMatchDetails(result, results, lhsId, rhsId, type));
                 }
                 if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
                     unexpectedResults++;
+                }
+                if (results.getLOD() != 0) {
+                    nonZeroLodFound = true;
                 }
                 if (crosscheckMatrix != null) {
                     crosscheckMatrix[row][col] = results.getLOD();
@@ -956,7 +962,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
             final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
 
-            if (!OUTPUT_ERRORS_ONLY || !result.isExpected()) {
+            if (!OUTPUT_ERRORS_ONLY || (result != FingerprintResult.INCONCLUSIVE &&  !result.isExpected())) {
                 metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
             }
             if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
@@ -965,6 +971,8 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             if (results.getLOD() == 0) {
                 log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
                 unexpectedResults++;
+            } else {
+                nonZeroLodFound = true;
             }
         }
         return unexpectedResults;
