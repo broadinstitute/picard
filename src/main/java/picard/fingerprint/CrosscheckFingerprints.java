@@ -422,7 +422,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private final List<String> rhsMatrixKeys = new ArrayList<>();
     private Map<String, String> sampleIndividualMap;
 
-    private Boolean nonZeroLodFound = false;
+    private Boolean foundNonZeroLod = false;
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -578,7 +578,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
         //check if all LODs are 0
-        if (!nonZeroLodFound) {
+        if (!foundNonZeroLod) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: there are no reads or variants at fingerprinting sites ");
             return EXIT_CODE_WHEN_NO_VALID_CHECKS;
@@ -907,7 +907,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                     unexpectedResults++;
                 }
                 if (results.getLOD() != 0) {
-                    nonZeroLodFound = true;
+                    foundNonZeroLod = true;
                 }
                 if (crosscheckMatrix != null) {
                     crosscheckMatrix[row][col] = results.getLOD();
@@ -971,7 +971,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
                 log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
                 unexpectedResults++;
             } else {
-                nonZeroLodFound = true;
+                foundNonZeroLod = true;
             }
         }
         return unexpectedResults;

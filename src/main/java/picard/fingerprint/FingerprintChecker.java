@@ -65,7 +65,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
@@ -337,21 +336,18 @@ public class FingerprintChecker {
 
         final SortedSet<Snp> snps = new TreeSet<>(haplotypes.getAllSnps());
 
-        return loadFingerprintsFromVariantContexts(() ->
-                        snps.stream().map(snp -> {
-                            try {
-                                final List<VariantContext> ctxs = reader.query(snp.getChrom(), snp.getPos(), snp.getPos()).toList();
-                                for (final VariantContext ctx : ctxs) {
-                                    if (AlleleSubsettingUtils.subsetVCToMatchSnp(ctx, snp) != null) {
-                                        return ctx;
-                                    }
-                                }
-                                return null;
-                            } catch (NoSuchElementException e) {
-                                return null;
+        final Iterable<VariantContext> snpIterable = () -> snps.stream()
+                .map(snp -> {
+                        final List<VariantContext> ctxs = reader.query(snp).toList();
+                        for (final VariantContext ctx : ctxs) {
+                            if (AlleleSubsettingUtils.subsetVCToMatchSnp(ctx, snp) != null) {
+                                return ctx;
                             }
-                        }).iterator(),
-                specificSample, source);
+                        }
+                        return null;
+                }).iterator();
+
+        return loadFingerprintsFromVariantContexts(snpIterable, specificSample, source);
     }
 
     /**
