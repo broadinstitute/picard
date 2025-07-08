@@ -1088,6 +1088,12 @@ public class CrosscheckFingerprintsTest extends CommandLineProgramTest {
             second_input.forEach(f -> args.add("INPUT=" + f));
             doTest(args.toArray(new String[0]), metrics, exptectRetVal, expectedNMetrics, dataType, expectAllMatch);
         }
+
+        //add OUTPUT_ERRORS_ONLY
+        args.add("OUTPUT_ERRORS_ONLY=true");
+        final CrosscheckFingerprints crossChecker = new CrosscheckFingerprints();
+        Assert.assertEquals(crossChecker.instanceMain(args.toArray(new String[0])), exptectRetVal);
+
     }
 
     private void doTest(final String[] args, final File metrics, final int expectedRetVal, final int expectedNMetrics, final CrosscheckMetric.DataType expectedType) throws IOException {
