@@ -27,6 +27,7 @@ package picard.cmdline.argumentcollections;
 import java.io.File;
 import java.nio.file.Path;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.util.Log;
 import picard.nio.PicardBucketUtils;
 import picard.nio.PicardHtsPath;
@@ -61,7 +62,7 @@ public interface ReferenceArgumentCollection {
      *
      * @return The reference provided by the user, if any, or the default, if any, as a PicardHtsPath. May be null.
      */
-    default PicardHtsPath getHtsPath(){
+    default IOPath getHtsPath(){
         return getReferenceFile() == null ? null : new PicardHtsPath(getReferenceFile());
     }
 
@@ -74,7 +75,7 @@ public interface ReferenceArgumentCollection {
      * the value returned by calls to getReferenceFile to not get an NPE, and to fail gracefully downstream
      * with an error message that includes the reference file specifier.
      */
-    static File getFileSafe(final PicardHtsPath picardPath, final Log log) {
+    static File getFileSafe(final IOPath picardPath, final Log log) {
         if (picardPath == null) {
             return null;
         } else if (picardPath.getScheme().equals(PicardBucketUtils.FILE_SCHEME)) {
