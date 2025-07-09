@@ -27,6 +27,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
@@ -40,6 +41,8 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardBucketUtils;
+import picard.nio.PicardHtsPath;
 
 import java.io.File;
 
@@ -101,10 +104,10 @@ public class SortSam extends CommandLineProgram {
 
             "<hr />";
     @Argument(doc = "The SAM, BAM or CRAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
-    public File INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(doc = "The sorted SAM, BAM or CRAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     // note that SortOrder here is a local enum, not the SamFileHeader version.
     @Argument(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file. ")
@@ -149,12 +152,15 @@ public class SortSam extends CommandLineProgram {
 
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        ;
+        IOUtil.assertFileIsReadable(INPUT.toPath());
+        if (INPUT.getScheme().equals(PicardBucketUtils.FILE_SCHEME)){
+            IOUtil.assertFileIsWritable(OUTPUT.toPath());
+        }
+
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath()).open(SamInputResource.of(INPUT.toPath())); // tsato: needs to be wrapped in SamInputResource.of() ??
+
         reader.getFileHeader().setSortOrder(SORT_ORDER.getSortOrder());
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), false, OUTPUT, REFERENCE_SEQUENCE);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), false, OUTPUT.toPath(), referenceSequence.getReferencePath());
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
 
