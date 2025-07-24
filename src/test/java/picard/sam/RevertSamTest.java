@@ -332,8 +332,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         return new Object[][]{{true},{false}};
     }
 
-
-        @Test(dataProvider = "overrideTestData", expectedExceptions = {PicardException.class})
+    @Test(dataProvider = "overrideTestData", expectedExceptions = {PicardException.class})
     public void testSampleLibraryOverride(final String sample, final String library) throws Exception {
 
         final File output = File.createTempFile("bad", ".sam");
