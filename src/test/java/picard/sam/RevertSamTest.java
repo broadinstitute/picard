@@ -157,10 +157,9 @@ public class RevertSamTest extends CommandLineProgramTest {
     
     @Test(dataProvider = "truefalse")
     public void testRevertCorruptXQTagSam(boolean restore_hardclips) throws IOException {
-//        final RevertSam reverter = new RevertSam();
         final File output = File.createTempFile("reverted", ".sam");
 
-        final String args[] = new String[12];
+        final String[] args = new String[12];
         int index = 0;
         args[index++] = "INPUT=" + corruptXQTagSamToRevert;
         args[index++] = "OUTPUT=" + output.getAbsolutePath();
