@@ -25,6 +25,7 @@
 package picard.sam;
 
 import htsjdk.io.IOPath;
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
