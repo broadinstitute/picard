@@ -199,10 +199,10 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.AS.name());
     }};
 
-    @Argument(shortName = "RV", doc = "Attributes on negative strand reads that need to be reversed.", optional = true)
+    @Argument(shortName="RV", doc="Attributes on negative strand reads that need to be reversed.", optional = true)
     public Set<String> ATTRIBUTE_TO_REVERSE = new LinkedHashSet<>(SAMRecord.TAGS_TO_REVERSE);
 
-    @Argument(shortName = "RC", doc = "Attributes on negative strand reads that need to be reverse complemented.", optional = true)
+    @Argument(shortName="RC", doc="Attributes on negative strand reads that need to be reverse complemented.", optional = true)
     public Set<String> ATTRIBUTE_TO_REVERSE_COMPLEMENT = new LinkedHashSet<>(SAMRecord.TAGS_TO_REVERSE_COMPLEMENT);
 
     @Argument(doc = "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
@@ -291,7 +291,7 @@ public class RevertSam extends CommandLineProgram {
                 defaultExtension = "." + OUTPUT_BY_READGROUP_FILE_FORMAT.toString();
             }
 
-            if (OUTPUT_MAP != null) {
+            if (OUTPUT_MAP != null){
                 outputMap = readOutputMap(OUTPUT_MAP.toPath());
             } else {
                 outputMap = createOutputMapFromReadGroups(inHeader.getReadGroups(), OUTPUT.toPath(), defaultExtension);
@@ -512,18 +512,20 @@ public class RevertSam extends CommandLineProgram {
                         if (KEEP_FIRST_DUPLICATE && firsts >= 1 && seconds >= 1) { // if we have at least one R1 and one R2, we can discard all but the first encountered
                             discarded += recs.size() - 2;
                             recs = Arrays.asList(firstRecord, secondRecord);
-                        } else {
+                        }  else {
                             log.debug("Discarding ", recs.size(), " reads with name ", recs.get(0).getReadName(), " because  we found ", firsts, " R1s ", seconds, " R2s and ", unpaired, " unpaired reads.");
                             discarded += recs.size();
                             continue readNameLoop;
                         }
 
                     }
-                } else if (unpaired > 1) { // only unpaired reads, and we have too many
+                }
+                else if (unpaired > 1) { // only unpaired reads, and we have too many
                     if (KEEP_FIRST_DUPLICATE) {
                         discarded += recs.size() - 1;
                         recs = Collections.singletonList(unpairedRecord);
-                    } else {
+                    }
+                    else {
                         log.debug("Discarding ", recs.size(), " reads with name ", recs.get(0).getReadName(), " because we found ", unpaired, " unpaired reads.");
                         discarded += recs.size();
                         continue readNameLoop;
@@ -581,8 +583,8 @@ public class RevertSam extends CommandLineProgram {
         final Map<String, Path> outputMap = new HashMap<>();
 
         try (final TabbedInputParser intermediateParser = new TabbedInputParser(false, Files.newInputStream(outputMapFile));
-             final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediateParser)) {
-            for (final TabbedTextFileWithHeaderParser.Row row : parser) {
+             final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediateParser)){
+            for(final TabbedTextFileWithHeaderParser.Row row : parser) {
                 final String id = row.getField(READ_GROUP_ID_COLUMN_NAME);
                 final String output = row.getField(OUTPUT_COLUMN_NAME);
                 final Path outputPath = new PicardHtsPath(output).toPath();
@@ -590,7 +592,7 @@ public class RevertSam extends CommandLineProgram {
             }
             CloserUtil.close(parser);
             return outputMap;
-        } catch (IOException e) {
+        } catch (IOException e){
             throw new PicardException("Encountered an error while creating an output map", e);
         }
     }
@@ -799,9 +801,10 @@ public class RevertSam extends CommandLineProgram {
         }
 
         /**
+         *
          * @param outputByReadGroup
-         * @param output            Points to the BAM output. May be null.
-         * @param outputMap         Points to the tsv-file containing the (read group, output path) pair in each row. May be null.
+         * @param output Points to the BAM output. May be null.
+         * @param outputMap Points to the tsv-file containing the (read group, output path) pair in each row. May be null.
          * @param errors
          */
         static void validateOutputParams(final boolean outputByReadGroup, final IOPath output, final IOPath outputMap, final List<String> errors) {
@@ -833,11 +836,11 @@ public class RevertSam extends CommandLineProgram {
             }
 
             try (final TabbedInputParser intermediaryParser = new TabbedInputParser(false, Files.newInputStream(outputMap.toPath()));
-                 final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediaryParser)) {
+                 final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(intermediaryParser)){
                 if (!ValidationUtil.isOutputMapHeaderValid(parser.columnLabelsList())) {
                     errors.add("Invalid header: " + outputMap + ". Must be a tab-separated file with READ_GROUP_ID as first column and OUTPUT as second column.");
                 }
-            } catch (IOException e) {
+            } catch (IOException e){
                 throw new PicardException("Encountered an exception while parsing the output map", e);
             }
         }
