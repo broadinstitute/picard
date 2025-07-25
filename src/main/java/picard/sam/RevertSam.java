@@ -25,6 +25,7 @@
 package picard.sam;
 
 import htsjdk.io.IOPath;
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
@@ -243,6 +244,7 @@ public class RevertSam extends CommandLineProgram {
     public String LIBRARY_NAME;
 
     private final static Log log = Log.getInstance(RevertSam.class);
+    private int hardClippingWarnCounter = 0;
 
     /**
      * Enforce that output ordering is queryname when sanitization is turned on since it requires a queryname sort.
@@ -437,17 +439,30 @@ public class RevertSam extends CommandLineProgram {
             rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
             rec.setMateUnmappedFlag(rec.getReadPairedFlag());
 
-            if (RESTORE_HARDCLIPS) {
-                String hardClippedBases = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG);
-                String hardClippedQualities = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG);
-                if (hardClippedBases != null && hardClippedQualities != null) {
-                    // Record has already been reverse complemented if this was on the negative strand
-                    rec.setReadString(rec.getReadString() + hardClippedBases);
-                    rec.setBaseQualities(SAMUtils.fastqToPhred(SAMUtils.phredToFastq(rec.getBaseQualities()) + hardClippedQualities));
+            if (RESTORE_HARDCLIPS &&
+                    rec.hasAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG) &&
+                    rec.hasAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG)) {
+                try {
+                    String hardClippedBases = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG);
+                    String hardClippedQualities = rec.getStringAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG);
 
-                    // Remove hard clipping storage tags
-                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG, null);
-                    rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG, null);
+                    if (hardClippedBases != null && hardClippedQualities != null) {
+                        // Record has already been reverse complemented if this was on the negative strand
+                        rec.setReadString(rec.getReadString() + hardClippedBases);
+                        rec.setBaseQualities(SAMUtils.fastqToPhred(SAMUtils.phredToFastq(rec.getBaseQualities()) + hardClippedQualities));
+
+                        // Remove hard clipping storage tags
+                        rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG, null);
+                        rec.setAttribute(AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG, null);
+                    }
+                } catch (SAMException e) {
+                    if (this.hardClippingWarnCounter < 100) {
+                        log.warn("Problem with tag %s or %s, in read %s".formatted(AbstractAlignmentMerger.HARD_CLIPPED_BASES_TAG,
+                                AbstractAlignmentMerger.HARD_CLIPPED_BASE_QUALITIES_TAG, rec.getReadName()));
+                        if (++this.hardClippingWarnCounter == 100) {
+                            log.warn("No more such warnings will be issued, even if problem persists.");
+                        }
+                    }
                 }
             }
 

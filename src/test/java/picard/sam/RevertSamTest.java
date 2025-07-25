@@ -69,6 +69,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     private final static PicardHtsPath DEFAULT_CLOUD_TEST_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD, DEFAULT_CLOUD_TEST_OUTPUT_RELATIVE_PATH);
     public static final String REVERT_SAM_LOCAL_TEST_DATA_DIR = "testdata/picard/sam/RevertSam/";
     private static final String basicSamToRevert = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_basic.sam";
+    private static final String corruptXQTagSamToRevert = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_corrupt_XQ_tag.sam";
     private static final String sampleLibraryOverrideSam = REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_sample_library_override.sam";
     private static final File validOutputMap = new File(REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_valid_output_map.txt");
     private static final File nonExistentOutputMap = new File(REVERT_SAM_LOCAL_TEST_DATA_DIR + "revert_sam_does_not_exist.txt");
@@ -151,6 +152,30 @@ public class RevertSamTest extends CommandLineProgramTest {
         } else {
             verifyPositiveResults(output, reverter, removeDuplicates, removeAlignmentInfo, restoreOriginalQualities, outputByReadGroup, null, 8, sample, library);
         }
+    }
+    
+    
+    @Test(dataProvider = "truefalse")
+    public void testRevertCorruptXQTagSam(boolean restore_hardclips) throws IOException {
+        final File output = File.createTempFile("reverted", ".sam");
+
+        final String[] args = new String[12];
+        int index = 0;
+        args[index++] = "INPUT=" + corruptXQTagSamToRevert;
+        args[index++] = "OUTPUT=" + output.getAbsolutePath();
+        args[index++] = "OUTPUT_BY_READGROUP=false";
+        args[index++] = "REFERENCE_SEQUENCE=" + referenceFasta;
+        args[index++] = "SORT_ORDER=" + SAMFileHeader.SortOrder.queryname.name();
+        args[index++] = "REMOVE_DUPLICATE_INFORMATION=" + true;
+        args[index++] = "REMOVE_ALIGNMENT_INFORMATION=" + true;
+        args[index++] = "RESTORE_ORIGINAL_QUALITIES=" + true;
+        args[index++] = "RESTORE_HARDCLIPS=" + restore_hardclips;
+        args[index++] = "SAMPLE_ALIAS=" + "test_sample_1";
+        args[index++] = "LIBRARY_NAME=" + "test_library_1";
+        args[index++] = "ATTRIBUTE_TO_CLEAR=" + SAMTag.NM.name();
+
+        runPicardCommandLine(args);
+
     }
 
     @Test
@@ -299,6 +324,11 @@ public class RevertSamTest extends CommandLineProgramTest {
                 {null, false, true, true, false, false, "Hey,Dad!", "NewLibraryName", Arrays.asList("XT")},
                 {null, false, false, false, false, false, null, null, Collections.EMPTY_LIST}
         };
+    }
+
+    @DataProvider(name = "truefalse")
+    public Object[][] trueFalse(){
+        return new Object[][]{{true},{false}};
     }
 
     @Test(dataProvider = "overrideTestData", expectedExceptions = {PicardException.class})
