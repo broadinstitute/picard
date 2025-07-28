@@ -299,7 +299,16 @@ public class MarkDuplicatesForFlowHelperTest {
     }
 
     @Test(dataProvider = "forFlowDataProvider")
-    public void testForFlowMDCall(final DuplicateScoringStrategy.ScoringStrategy scoringStrategy, final TestRecordInfo[] recInfos, final String[] params, TesterModifier modifier) {
+    public void testForFlowMDCall_WithFlowMode(final DuplicateScoringStrategy.ScoringStrategy scoringStrategy, final TestRecordInfo[] recInfos, final String[] params, TesterModifier modifier) {
+        testForFlowMDCall(scoringStrategy, recInfos, params, modifier, true);
+    }
+
+    @Test(dataProvider = "forFlowDataProvider")
+    public void testForFlowMDCall_WithoutFlowMode(final DuplicateScoringStrategy.ScoringStrategy scoringStrategy, final TestRecordInfo[] recInfos, final String[] params, TesterModifier modifier) {
+        testForFlowMDCall(scoringStrategy, recInfos, params, modifier, false);
+    }
+
+    private void testForFlowMDCall(final DuplicateScoringStrategy.ScoringStrategy scoringStrategy, final TestRecordInfo[] recInfos, final String[] params, TesterModifier modifier, final boolean withFlowMode) {
 
         // get tester, build records
         final AbstractMarkDuplicatesCommandLineProgramTester tester =
@@ -328,7 +337,9 @@ public class MarkDuplicatesForFlowHelperTest {
         }
 
         // add parames, set flow order
-        tester.addArg("FLOW_MODE=true");
+        if ( withFlowMode ) {
+            tester.addArg("FLOW_MODE=true");
+        }
         for ( final String param : params ) {
             tester.addArg(param);
         }
@@ -339,8 +350,12 @@ public class MarkDuplicatesForFlowHelperTest {
             modifier.modify(tester);
         }
 
-        // run test
-        tester.runTest();
+        // run test. tests without flow mode should fail
+        if ( withFlowMode ) {
+            tester.runTest();
+        } else {
+            Assert.assertThrows(() -> tester.runTest());
+        }
     }
 
     @DataProvider(name ="getFlowSumOfBaseQualitiesDataProvider")
