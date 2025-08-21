@@ -78,11 +78,11 @@ dependencies {
     implementation 'com.google.guava:guava:32.1.1-jre'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.apache.commons:commons-collections4:4.4'
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+    implementation 'commons-io:commons-io:2.14.0'
 
     //nio plugin providers for google cloud and http(s)
-    implementation 'com.google.cloud:google-cloud-nio:0.127.0'
+    implementation 'com.google.cloud:google-cloud-nio:0.127.8'
     implementation 'org.broadinstitute:http-nio:1.1.1'
 
     testImplementation 'org.testng:testng:7.7.0'
@@ -91,6 +91,9 @@ dependencies {
         //log4j api and core, specify these so we don't transitively get old vulnerable versions
         implementation 'org.apache.logging.log4j:log4j-api:' +log4jVersion
         implementation 'org.apache.logging.log4j:log4j-core:' + log4jVersion
+
+        // See: https://nvd.nist.gov/vuln/detail/CVE-2024-7254
+        implementation 'com.google.protobuf:protobuf-java:3.25.5'
     }
 }
 
