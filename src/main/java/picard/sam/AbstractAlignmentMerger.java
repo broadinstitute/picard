@@ -40,6 +40,7 @@ import htsjdk.samtools.util.CigarUtil;
 import picard.PicardException;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -106,7 +107,8 @@ public abstract class AbstractAlignmentMerger {
     private UnmappingReadStrategy unmappingReadsStrategy = UnmappingReadStrategy.DO_NOT_CHANGE;
     private boolean addPGTagToReads = true;
 
-
+    protected final boolean inputIsRegularFile;
+    
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(final SAMRecord record) {
             return ignoreAlignment(record);
@@ -284,6 +286,8 @@ public abstract class AbstractAlignmentMerger {
         IOUtil.assertFileIsReadable(referenceFasta);
 
         this.unmappedBamFile = unmappedBamFile;
+        this.inputIsRegularFile = unmappedBamFile.isFile();
+        
         this.targetBamFile = targetBamFile;
         this.referenceFasta = referenceFasta;
 

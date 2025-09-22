@@ -180,6 +180,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         try {
             super.mergeAlignment(referenceFasta);
         } catch (final IllegalStateException ise) {
+            if (!this.inputIsRegularFile) {
+                log.error("Input is not regular file, cannot sort and restart. Please queryname sort the input prior to piping it in.");
+                throw ise;
+            }
             log.warn("Exception merging bam alignment - attempting to sort aligned reads and try again: ", ise.getMessage());
             forceSort = true;
             resetRefSeqFileWalker();
