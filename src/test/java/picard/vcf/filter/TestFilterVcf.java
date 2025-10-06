@@ -36,6 +36,7 @@ import picard.vcf.VcfTestUtils;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -234,6 +235,36 @@ public class TestFilterVcf {
 
         filterer.doWork();
     }
+
+    @DataProvider(name = "trueFalse")
+    private Object[][] trueFalse() {
+        return new Object[][]{{true}, {false}};
+    }
+
+    /**
+     * Tests that attempting to create no index works
+     */
+    @Test(dataProvider = "trueFalse")
+    public void testFilteringWithoutIndexing(boolean createIndex) throws Exception {
+        final File out = File.createTempFile("filterVcfTest.", ".vcf");
+        out.deleteOnExit();
+        final File out_idx = new File(out.getPath() + ".idx");
+        out_idx.deleteOnExit();
+
+        final FilterVcf filterer = new FilterVcf();
+        filterer.CREATE_INDEX = createIndex;
+        filterer.INPUT = INPUT;
+        filterer.OUTPUT = out;
+        filterer.MIN_AB = 0;
+        filterer.MIN_DP = 18;
+        filterer.MIN_GQ = 0;
+        filterer.MAX_FS = Double.MAX_VALUE;
+
+        filterer.doWork();
+
+         Assert.assertEquals(out_idx.exists(), createIndex);
+    }
+
 
     /**
      * Consumes a VCF and returns a ListMap where each they keys are the IDs of filtered out sites and the values are the set of filters.

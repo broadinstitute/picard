@@ -28,6 +28,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.*;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.JavascriptVariantFilter;
+import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.*;
@@ -121,6 +122,13 @@ public class FilterVcf extends CommandLineProgram {
             // If the user is writing to a .bcf or .vcf, VariantContextBuilderWriter requires a Sequence Dictionary.  Make sure that the
             // Input VCF has one.
             final VariantContextWriterBuilder variantContextWriterBuilder = new VariantContextWriterBuilder();
+            
+            if (CREATE_INDEX) {
+                variantContextWriterBuilder.setOption(Options.INDEX_ON_THE_FLY);
+            } else {
+                variantContextWriterBuilder.unsetOption(Options.INDEX_ON_THE_FLY);
+            }
+
             if (isVcfOrBcf(OUTPUT)) {
                 final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
                 if (sequenceDictionary == null) {
