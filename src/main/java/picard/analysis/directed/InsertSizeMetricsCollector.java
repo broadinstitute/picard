@@ -56,7 +56,9 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
     @Override
     protected InsertSizeCollectorArgs makeArg(SAMRecord samRecord, ReferenceSequence refSeq) {
         final int insertSize = Math.abs(samRecord.getInferredInsertSize());
-        final SamPairUtil.PairOrientation orientation = SamPairUtil.getPairOrientation(samRecord);
+        final SamPairUtil.PairOrientation orientation = 
+                samRecord.getReferenceName().equals(samRecord.getMateReferenceName()) ?
+                        SamPairUtil.getPairOrientation(samRecord) : null;
 
         return new InsertSizeCollectorArgs(insertSize, orientation);
     }

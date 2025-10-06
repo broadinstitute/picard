@@ -278,7 +278,8 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                             final Cigar mateCigar         = SAMUtils.getMateCigar(rec);
                             final int mateReferenceLength = (mateCigar == null) ? rec.getReadLength() : mateCigar.getReferenceLength();
                             final int mateAlignmentEnd    =  CoordMath.getEnd(rec.getMateAlignmentStart(), mateReferenceLength);
-                            properOrientation    = SamPairUtil.getPairOrientation(rec) == SamPairUtil.PairOrientation.FR;
+                            properOrientation    = rec.getReferenceName().equals(rec.getMateReferenceName()) && 
+                                    SamPairUtil.getPairOrientation(rec) == SamPairUtil.PairOrientation.FR;
                             leftMostAlignedBase  = Math.min(rec.getAlignmentStart(), rec.getMateAlignmentStart());
                             rightMostAlignedBase = Math.max(rec.getAlignmentEnd(), mateAlignmentEnd);
                         }
