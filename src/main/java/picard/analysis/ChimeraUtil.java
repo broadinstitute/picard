@@ -75,7 +75,6 @@ public class ChimeraUtil {
     }
 
     private static boolean matchesExpectedOrientations(final SAMRecord rec, final Set<PairOrientation> expectedOrientations) {
-        return rec.getReferenceName().equals(rec.getMateReferenceName()) && 
-                expectedOrientations.contains(SamPairUtil.getPairOrientation(rec)) && rec.getAttribute(SAMTag.SA.toString()) == null;
+        return expectedOrientations.contains(SamPairUtil.getPairOrientation(rec)) && rec.getAttribute(SAMTag.SA.toString()) == null;
     }
 }
