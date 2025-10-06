@@ -123,13 +123,12 @@ public class FilterVcf extends CommandLineProgram {
             // Input VCF has one.
             final VariantContextWriterBuilder variantContextWriterBuilder = new VariantContextWriterBuilder();
             
-            // The default settings of the VariantContextWriterBuilder are INDEX_ON_THE_FLY, so we only need to remove
-            // if an index is unwanted (e.g. when streaming).
-            if (!CREATE_INDEX) {
-                variantContextWriterBuilder.clearIndexCreator();
+            if (CREATE_INDEX) {
+                variantContextWriterBuilder.setOption(Options.INDEX_ON_THE_FLY);
+            } else {
                 variantContextWriterBuilder.unsetOption(Options.INDEX_ON_THE_FLY);
-            } 
-            
+            }
+
             if (isVcfOrBcf(OUTPUT)) {
                 final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
                 if (sequenceDictionary == null) {
