@@ -349,6 +349,25 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
         Assert.assertTrue(pdf.exists());
+    }   
+    
+    @Test
+    public void testWithChimera() throws IOException {
+        final File input = new File(TEST_DATA_DIR + "/InsertSizeMetrics","test_chimeras.sam");
+        final File outfile   = File.createTempFile("test_with_chimeras", ".insert_size_metrics");
+        final File pdf = File.createTempFile("test_with_chimeras", ".pdf");
+        pdf.deleteOnExit();
+
+        final String[] args = new String[] {
+            "INPUT="  + input.getAbsolutePath(),
+            "OUTPUT=" + outfile.getAbsolutePath(),
+            "Histogram_FILE=" + pdf.getAbsolutePath(),
+            "LEVEL=SAMPLE",
+            "LEVEL=LIBRARY",
+            "LEVEL=READ_GROUP"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertTrue(pdf.exists());
     }
 
     @Test

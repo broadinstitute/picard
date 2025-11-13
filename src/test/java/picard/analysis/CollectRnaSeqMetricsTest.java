@@ -47,6 +47,8 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         return CollectRnaSeqMetrics.class.getSimpleName();
     }
 
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/RnaSeqMetrics");
+
     @Test
     public void testBasic() throws Exception {
         final String sequence = "chr1";
@@ -546,6 +548,27 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.MEDIAN_3PRIME_BIAS, expected_3prime);
         Assert.assertEquals(metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS, expected_ratio);
     }
+
+
+    @Test
+    public void testWithChimera() throws Exception {
+        final File input = new File(TEST_DATA_DIR,"test_chimeras.sam");
+        final File outfile   = File.createTempFile("test_with_chimeras", ".rna_seq_metrics");
+        outfile.deleteOnExit();
+        final String sequence = "chr1";
+        final String ignoredSequence = "chrM";
+        
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "IGNORE_SEQUENCE=" + ignoredSequence,
+                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        Assert.assertTrue(outfile.exists());
+    }
+    
 
     @Test
     public void testPctRibosomalBases() throws Exception {

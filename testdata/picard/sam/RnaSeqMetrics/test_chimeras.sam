@@ -1,0 +1,10 @@
+@HD	VN:1.0	SO:coordinate
+@SQ	SN:chr1	LN:101
+@SQ	SN:chrM	LN:101
+@RG	ID:0	SM:Hi,Momma!	LB:whatever	PU:me	PL:ILLUMINA
+SL-XAV:1:1:0:764#0/1	113	chr1	1	255	6M	chr1	10	10	TTCATG	&/,&-.
+SL-XAV:1:1:0:764#0/1	177	chr1	10	255	6M	chr1	1	10	TTCATG	&/,&-.
+SL-XAV:1:1:0:800#0/1	81	chr1	1	255	6M	chrM	10	10	TTCATG	&/,&-.
+SL-XAV:1:1:0:800#0/1	161	chrM	10	255	6M	chr1	1	10	TTCATG	&/,&-.
+SL-XAV:1:1:0:1800#0/1	81	chr1	50	255	6M	chrM	10	10	TTCATG	&/,&-.
+SL-XAV:1:1:0:1800#0/1	161	chrM	10	255	6M	chr1	50	10	TTCATG	&/,&-.
