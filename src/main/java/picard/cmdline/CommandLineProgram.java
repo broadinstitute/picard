@@ -25,6 +25,7 @@ package picard.cmdline;
 
 import com.intel.gkl.compression.IntelDeflaterFactory;
 import com.intel.gkl.compression.IntelInflaterFactory;
+import htsjdk.io.IOPath;
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -341,7 +342,7 @@ public abstract class CommandLineProgram {
         // object created by this code path won't be valid - but we still have to set it here in case
         // the tool tries to access REFERENCE_SEQUENCE directly (such tools will subsequently fail given
         // a non-local file anyway, but this prevents them from immediately throwing an NPE).
-        final PicardHtsPath refHtsPath = referenceSequence.getHtsPath();
+        final IOPath refHtsPath = referenceSequence.getHtsPath();
         REFERENCE_SEQUENCE = ReferenceArgumentCollection.getFileSafe(refHtsPath, Log.getInstance(this.getClass()));
 
         // The TMP_DIR setting section below was moved from instanceMain() to here due to timing issues
