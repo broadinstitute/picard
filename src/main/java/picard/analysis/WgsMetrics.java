@@ -31,6 +31,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.util.MathUtil;
 import picard.util.help.HelpConstants;
+import java.util.stream.LongStream;
 
 /** Metrics for evaluating the performance of whole genome sequencing experiments. */
 @DocumentedFeature(groupName = HelpConstants.DOC_CAT_METRICS, summary = HelpConstants.DOC_CAT_METRICS_SUMMARY)
@@ -46,6 +47,9 @@ public class WgsMetrics extends MergeableMetricBase {
     @MergingIsManual
     protected final Histogram<Integer> highQualityDepthHistogram;
 
+    /** Count of sites with a given depth of coverage. Excludes bases with quality below MINIMUM_BASE_QUALITY and 0 coverage.*/
+    @MergingIsManual
+    protected final Histogram<Integer> highQualityDepthHistogramNonZero;
     /** Count of sites with a given depth of coverage. Includes all but quality 2 bases */
     @MergingIsManual
     protected final Histogram<Integer> unfilteredDepthHistogram;
@@ -68,6 +72,7 @@ public class WgsMetrics extends MergeableMetricBase {
     public WgsMetrics() {
         intervals                           = null;
         highQualityDepthHistogram           = null;
+        highQualityDepthHistogramNonZero    = null;
         unfilteredDepthHistogram            = null;
         unfilteredBaseQHistogram            = null;
         theoreticalHetSensitivitySampleSize = -1;
@@ -77,6 +82,7 @@ public class WgsMetrics extends MergeableMetricBase {
     /**
      * Create an instance of this metric that is mergeable.
      *
+     * @param highQualityDepthHistogramNonZero the count of genomic positions observed for each observed depth. Excludes bases with quality below MINIMUM_BASE_QUALITY or with 0 coverage.
      * @param highQualityDepthHistogram the count of genomic positions observed for each observed depth. Excludes bases with quality below MINIMUM_BASE_QUALITY.
      * @param unfilteredDepthHistogram the depth histogram that includes all but quality 2 bases.
      * @param pctExcludedByAdapter the fraction of aligned bases that were filtered out because they were in reads with 0 mapping quality that looked like adapter sequence.
@@ -92,6 +98,7 @@ public class WgsMetrics extends MergeableMetricBase {
      * @param theoreticalHetSensitivitySampleSize the sample size used for theoretical het sensitivity sampling.
      */
     public WgsMetrics(final IntervalList intervals,
+                      final Histogram<Integer> highQualityDepthHistogramNonZero,
                       final Histogram<Integer> highQualityDepthHistogram,
                       final Histogram<Integer> unfilteredDepthHistogram,
                       final double pctExcludedByAdapter,
@@ -107,6 +114,7 @@ public class WgsMetrics extends MergeableMetricBase {
                       final int theoreticalHetSensitivitySampleSize) {
         this.intervals      = intervals.uniqued();
         this.highQualityDepthHistogram = highQualityDepthHistogram;
+        this.highQualityDepthHistogramNonZero = new Histogram<>("coverage_or_base_quality", "high_quality_non_zero_coverage_count");
         this.unfilteredDepthHistogram = unfilteredDepthHistogram;
         this.unfilteredBaseQHistogram = unfilteredBaseQHistogram;
         this.coverageCap    = coverageCap;
@@ -320,12 +328,21 @@ public class WgsMetrics extends MergeableMetricBase {
         PCT_90X  = MathUtil.sum(depthHistogramArray, 90, depthHistogramArray.length)  / (double) GENOME_TERRITORY;
         PCT_100X = MathUtil.sum(depthHistogramArray, 100, depthHistogramArray.length) / (double) GENOME_TERRITORY;
 
-
+        
+        long maxDepth = 0;
+        for (final Histogram.Bin<Integer> bin : highQualityDepthHistogram.values()) {
+            maxDepth = Math.max((int) bin.getIdValue(), maxDepth);
+            final int depth = (int) bin.getIdValue();
+            if (depth > 0) {
+                highQualityDepthHistogramNonZero.increment(depth,bin.getValue());
+            }
+        }
+        LongStream.range(1, maxDepth).forEach(i -> highQualityDepthHistogramNonZero.increment((int) i, 0));
         // This roughly measures by how much we must over-sequence so that xx% of bases have coverage at least as deep as the current mean coverage:
-        if (highQualityDepthHistogram.getCount() > 0) {
-            FOLD_80_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.2);
-            FOLD_90_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.1);
-            FOLD_95_BASE_PENALTY = MEAN_COVERAGE / highQualityDepthHistogram.getPercentile(0.05);
+        if (highQualityDepthHistogramNonZero.getCount() > 0) {
+            FOLD_80_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.2);
+            FOLD_90_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.1);
+            FOLD_95_BASE_PENALTY = highQualityDepthHistogramNonZero.getMean() / highQualityDepthHistogramNonZero.getPercentile(0.05);
         } else {
             FOLD_80_BASE_PENALTY = 0;
             FOLD_90_BASE_PENALTY = 0;

@@ -104,6 +104,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
         public WgsMetricsWithNonZeroCoverage(final IntervalList intervals,
                                              final Histogram<Integer> highQualityDepthHistogram,
+                                             final Histogram<Integer> highQualitDepthHistogramNonZero,
                                              final Histogram<Integer> unfilteredDepthHistogram,
                                              final double pctExcludedByAdapter,
                                              final double pctExcludedByMapq,
@@ -116,7 +117,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                              final int coverageCap,
                                              final Histogram<Integer> unfilteredBaseQHistogram,
                                              final int sampleSize) {
-            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByAdapter, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+            super(intervals, highQualityDepthHistogram, highQualitDepthHistogramNonZero, unfilteredDepthHistogram, pctExcludedByAdapter, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
                     pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
         }
     }
@@ -177,6 +178,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
     @Override
     protected WgsMetrics generateWgsMetrics(final IntervalList intervals,
                                             final Histogram<Integer> highQualityDepthHistogram,
+                                            final Histogram<Integer> highQualityDepthHistogramNonZero,
                                             final Histogram<Integer> unfilteredDepthHistogram,
                                             final double pctExcludedByAdapter,
                                             final double pctExcludedByMapq,
@@ -192,6 +194,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         return new WgsMetricsWithNonZeroCoverage(
                 intervals,
                 highQualityDepthHistogram,
+                highQualityDepthHistogramNonZeroFinal,
                 unfilteredDepthHistogram,
                 pctExcludedByAdapter,
                 pctExcludedByMapq,
@@ -214,7 +217,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
 
     protected class WgsMetricsWithNonZeroCoverageCollector extends WgsMetricsCollector {
         Histogram<Integer> highQualityDepthHistogram;
-        Histogram<Integer> highQualityDepthHistogramNonZero;
+        Histogram<Integer> highQualityDepthHistogramNonZeroFinal;
 
         public WgsMetricsWithNonZeroCoverageCollector(final CollectWgsMetricsWithNonZeroCoverage metrics,
                                                       final int coverageCap, final IntervalList intervals) {
@@ -229,7 +232,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
                                      final CountingFilter mapqFilter,
                                      final CountingPairedFilter pairFilter) {
             highQualityDepthHistogram = getDepthHistogram();
-            highQualityDepthHistogramNonZero = getDepthHistogramNonZero();
+            highQualityDepthHistogramNonZeroFinal = getDepthHistogramNonZero();
 
             // calculate metrics the same way as in CollectWgsMetrics
             final WgsMetricsWithNonZeroCoverage metrics = (WgsMetricsWithNonZeroCoverage) getMetrics(dupeFilter, adapterFilter, mapqFilter, pairFilter);
@@ -246,7 +249,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
             file.addMetric(metrics);
             file.addMetric(metricsNonZero);
             file.addHistogram(highQualityDepthHistogram);
-            file.addHistogram(highQualityDepthHistogramNonZero);
+            file.addHistogram(highQualityDepthHistogramNonZeroFinal);
 
             if (includeBQHistogram) {
                 addBaseQHistogram(file);
@@ -267,7 +270,7 @@ public class CollectWgsMetricsWithNonZeroCoverage extends CollectWgsMetrics {
         }
 
         public boolean areHistogramsEmpty() {
-            return (highQualityDepthHistogram.isEmpty() || highQualityDepthHistogramNonZero.isEmpty());
+            return (highQualityDepthHistogram.isEmpty() || highQualityDepthHistogramNonZeroFinal.isEmpty());
         }
     }
 }
