@@ -24,6 +24,17 @@
 
 package picard.sam;
 
+import htsjdk.beta.codecs.reads.cram.CRAMDecoderOptions;
+import htsjdk.beta.codecs.reads.cram.CRAMEncoderOptions;
+import htsjdk.beta.exception.HtsjdkException;
+import htsjdk.beta.plugin.reads.ReadsDecoder;
+import htsjdk.beta.plugin.reads.ReadsDecoderOptions;
+import htsjdk.beta.plugin.reads.ReadsEncoder;
+import htsjdk.beta.plugin.reads.ReadsEncoderOptions;
+import htsjdk.beta.plugin.registry.HtsCodecRegistry;
+import htsjdk.beta.plugin.registry.HtsCodecResolver;
+import htsjdk.beta.plugin.registry.HtsDefaultRegistry;
+import htsjdk.io.IOPath;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import htsjdk.tribble.annotation.Strand;
@@ -34,8 +45,8 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
+import picard.nio.PicardHtsPath;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -62,31 +73,39 @@ public class AddOATag extends CommandLineProgram {
             "</pre>";
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "SAM or BAM input file")
-    public String INPUT;
+    public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "SAM or BAM file to write merged result to")
-    public String OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     @Argument(shortName = "L", doc = "If provided, only records that overlap given interval list will have the OA tag added.", optional = true)
-    public File INTERVAL_LIST;
+    public PicardHtsPath INTERVAL_LIST;
 
     private static final Log log = Log.getInstance(AddOATag.class);
 
     @Override
     protected int doWork() {
-        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(IOUtil.getPath(INPUT));
-             final SAMFileWriter writer = new SAMFileWriterFactory().makeWriter(reader.getFileHeader(), true, IOUtil.getPath(OUTPUT), REFERENCE_SEQUENCE)) {
-                writer.setProgressLogger(
-                        new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
+        ReadsDecoderOptions readsDecoderOptions = new ReadsDecoderOptions()
+                .setCRAMDecoderOptions(new CRAMDecoderOptions()
+                        .setReferencePath(referenceSequence.getHtsPath()));
+        ReadsEncoderOptions readsEncoderOptions = new ReadsEncoderOptions()
+                .setPreSorted(true)
+                .setCRAMEncoderOptions(new CRAMEncoderOptions()
+                        .setReferencePath(referenceSequence.getHtsPath()));
 
-                final OverlapDetector overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST, 0, 0);
+        try (ReadsDecoder reader = HtsDefaultRegistry.getReadsResolver().getReadsDecoder(INPUT, readsDecoderOptions);
+             ReadsEncoder writer = HtsDefaultRegistry.getReadsResolver().getReadsEncoder(OUTPUT, readsEncoderOptions)) {
+              // unsupported  writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
+                writer.setHeader(reader.getHeader());
+
+                final OverlapDetector<?> overlapDetector = getOverlapDetectorFromIntervalListFile(INTERVAL_LIST);
                 for (final SAMRecord rec : reader) {
                     if (overlapDetector == null || overlapDetector.overlapsAny(rec)) {
                         setOATag(rec);
                     }
-                    writer.addAlignment(rec);
+                    writer.write(rec);
                 }
-        } catch (IOException e) {
+        } catch (HtsjdkException e) {
             log.error(e);
             return 1;
         }
@@ -95,14 +114,12 @@ public class AddOATag extends CommandLineProgram {
     }
 
     // Take an interval list file and convert it to an overlap detector, can add left and right padding
-    static OverlapDetector<Interval> getOverlapDetectorFromIntervalListFile(final File intervalList, final int lhsBuffer, final int rhsBuffer) {
+    static OverlapDetector<Interval> getOverlapDetectorFromIntervalListFile(final IOPath intervalList) {
         if (intervalList == null) {
             return null;
         }
-        List<Interval> intervals = IntervalList.fromFile(intervalList).uniqued().getIntervals();
-        OverlapDetector<Interval> detector = new OverlapDetector<>(lhsBuffer, rhsBuffer);
-        detector.addAll(intervals, intervals);
-        return detector;
+        List<Interval> intervals = IntervalList.fromPath(intervalList.toPath()).uniqued().getIntervals();
+        return OverlapDetector.create(intervals);
     }
 
     // format OA tag string according to the spec
