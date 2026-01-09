@@ -26,10 +26,18 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -140,6 +148,13 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "allows to gain two plots per level at the same time: one is the usual one and the other excludes duplicates.")
     public boolean ALSO_IGNORE_DUPLICATES = false;
 
+    @Argument(shortName = "MQ", doc = "Minimum mapping quality for a read to be included in analysis.", optional = true)
+    public Integer MINIMUM_MAPPING_QUALITY = null;
+
+    @Argument(shortName = "XL", doc = "An optional list of intervals to exclude from analysis. " +
+            "Reads that overlap these intervals will be ignored. Can be a BED file or Picard interval_list.", optional = true)
+    public File EXCLUDE_INTERVALS = null;
+
     // Calculates GcBiasMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private GcBiasMetricsCollector multiCollector;
 
@@ -171,11 +186,25 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
+        // Load intervals to exclude if provided
+        IntervalList intervalsToExclude = null;
+        if (EXCLUDE_INTERVALS != null) {
+            IOUtil.assertFileIsReadable(EXCLUDE_INTERVALS);
+            // IntervalList.fromFile works for interval_list format
+            // For BED files, we need to manually load using BEDCodec with the sequence dictionary
+            if (EXCLUDE_INTERVALS.getName().endsWith(".bed")) {
+                intervalsToExclude = loadBedFile(EXCLUDE_INTERVALS, header.getSequenceDictionary());
+            } else {
+                intervalsToExclude = IntervalList.fromFile(EXCLUDE_INTERVALS);
+            }
+        }
+
         //Calculate windowsByGc for the reference sequence
         final int[] windowsByGc = GcBiasUtils.calculateRefWindowsByGc(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE);
 
         //Delegate actual collection to GcBiasMetricCollector
-        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(), SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED, ALSO_IGNORE_DUPLICATES);
+        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(),
+                SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED, ALSO_IGNORE_DUPLICATES, MINIMUM_MAPPING_QUALITY, intervalsToExclude);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -220,6 +249,39 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
                     CHART_OUTPUT.getAbsolutePath().replaceAll("%", "%%"),
                     String.valueOf(SCAN_WINDOW_SIZE));
         }
+    }
+
+    /**
+     * Helper method to load a BED file into an IntervalList using the provided sequence dictionary.
+     */
+    private static IntervalList loadBedFile(final File bedFile, final SAMSequenceDictionary dictionary) {
+        final SAMFileHeader header = new SAMFileHeader();
+        header.setSequenceDictionary(dictionary);
+        final IntervalList intervalList = new IntervalList(header);
+
+        try (final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(
+                bedFile.getAbsolutePath(), new BEDCodec(), false);
+             final CloseableTribbleIterator<BEDFeature> iterator = bedReader.iterator()) {
+
+            while (iterator.hasNext()) {
+                final BEDFeature bedFeature = iterator.next();
+                final String contig = bedFeature.getContig();
+                final int start = bedFeature.getStart();
+                final int end = bedFeature.getEnd();
+
+                // Verify contig exists in dictionary
+                if (dictionary.getSequence(contig) == null) {
+                    throw new PicardException("Contig " + contig + " from BED file not found in sequence dictionary");
+                }
+
+                final Interval interval = new Interval(contig, start, end);
+                intervalList.add(interval);
+            }
+        } catch (final Exception e) {
+            throw new PicardException("Error reading BED file: " + bedFile, e);
+        }
+
+        return intervalList.uniqued();
     }
 }
 
