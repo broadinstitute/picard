@@ -168,12 +168,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 }
 
                 // Filter reads that overlap excluded intervals
-                if (intervalsToExclude != null) {
-                    final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
-                    if (intervalsToExclude.overlapsAny(readInterval)) {
-                        readsFilteredByIntervals++;
-                        return;
-                    }
+                if (intervalsToExclude != null && intervalsToExclude.overlapsAny(rec)) {
+                    readsFilteredByIntervals++;
+                    return;
                 }
 
                 if (referenceIndex != rec.getReferenceIndex() || gc == null) {
