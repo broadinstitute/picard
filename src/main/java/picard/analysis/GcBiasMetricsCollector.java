@@ -128,6 +128,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         final static String READS_USED_ALL = "ALL";
         final static String READS_USED_UNIQUE = "UNIQUE";
         private int logCounter;
+        // Counters for filtered reads
+        private long readsFilteredByMapQ = 0;
+        private long readsFilteredByIntervals = 0;
 
         /////////////////////////////////////////////////////////////////////////////
         //Records the accumulation level for each level of collection and initializes
@@ -160,6 +163,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
             if (!rec.getReadUnmappedFlag()) {
                 // Filter by mapping quality if threshold is set
                 if (minimumMappingQuality != null && rec.getMappingQuality() < minimumMappingQuality) {
+                    readsFilteredByMapQ++;
                     return;
                 }
 
@@ -167,6 +171,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 if (intervalsToExclude != null) {
                     final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
                     if (intervalsToExclude.overlapsAny(readInterval)) {
+                        readsFilteredByIntervals++;
                         return;
                     }
                 }
@@ -194,7 +199,35 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         }
 
         @Override
-        public void finish() {}
+        public void finish() {
+            // Log filtering statistics if any filters were applied
+            if (minimumMappingQuality != null || intervalsToExclude != null) {
+                final String level = getAccumulationLevel();
+                log.info(String.format("Filtering statistics for %s:", level));
+
+                if (minimumMappingQuality != null) {
+                    log.info(String.format("  Reads filtered by MAPQ < %d: %,d",
+                        minimumMappingQuality, readsFilteredByMapQ));
+                }
+
+                if (intervalsToExclude != null) {
+                    log.info(String.format("  Reads filtered by excluded intervals: %,d",
+                        readsFilteredByIntervals));
+                }
+            }
+        }
+
+        private String getAccumulationLevel() {
+            if (readGroup != null) {
+                return String.format("%s (Read Group: %s)", ACCUMULATION_LEVEL_READ_GROUP, readGroup);
+            } else if (library != null) {
+                return String.format("%s (Library: %s)", ACCUMULATION_LEVEL_LIBRARY, library);
+            } else if (sample != null) {
+                return String.format("%s (Sample: %s)", ACCUMULATION_LEVEL_SAMPLE, sample);
+            } else {
+                return ACCUMULATION_LEVEL_ALL_READS;
+            }
+        }
 
         /////////////////////////////////////////////////////////////////////////////
         //Called to add metrics to the output file for each level of collection

@@ -33,6 +33,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
@@ -124,6 +125,8 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
+    private static final Log log = Log.getInstance(CollectGcBiasMetrics.class);
+
     // Usage and parameters
 
     @Argument(shortName = "CHART", doc = "The PDF file to render the chart to.", optional = true)
@@ -197,6 +200,14 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             } else {
                 intervalsToExclude = IntervalList.fromFile(EXCLUDE_INTERVALS);
             }
+
+            // Log information about excluded regions
+            final int numExcludedRegions = intervalsToExclude.getIntervals().size();
+            final long totalBasesExcluded = intervalsToExclude.getBaseCount();
+            final NumberFormat fmt = NumberFormat.getIntegerInstance();
+            fmt.setGroupingUsed(true);
+            log.info(String.format("Loaded %s excluded regions covering %s bases",
+                fmt.format(numExcludedRegions), fmt.format(totalBasesExcluded)));
         }
 
         //Calculate windowsByGc for the reference sequence
@@ -284,5 +295,3 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         return intervalList.uniqued();
     }
 }
-
-
