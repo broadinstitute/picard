@@ -46,7 +46,6 @@ public class TheoreticalSensitivity {
     private static final Log log = Log.getInstance(TheoreticalSensitivity.class);
     private static final int SAMPLING_MAX = 600; //prevent 'infinite' loops
     private static final int MAX_CONSIDERED_DEPTH_HET_SENS = 1000; // No point in looking any deeper than this, otherwise GC overhead is too high.  Only used for HET sensitivity.
-    private static final int LARGE_NUMBER_OF_DRAWS = 10; // The number of draws at which we believe a Gaussian approximation to sum random variables.
     private static final double DEPTH_BIN_WIDTH = 0.01; // Minimal fraction of depth histogram to use when integrating theoretical sensitivity.  This ensures we don't calculate theoretical sensitivity at every depth, which would be computationally expensive.
     private static final int RANDOM_SEED = 51;
 
@@ -202,13 +201,20 @@ public class TheoreticalSensitivity {
         if (histogram == null) throw new PicardException("Histogram is null and cannot be normalized");
 
         final double histogramSumOfValues = histogram.getSumOfValues();
-        final double[] normalizedHistogram = new double[histogram.size()];
+        final double[] normalizedHistogram = new double[(int) histogram.getMax() + 1];
 
-        for (int i = 0; i < histogram.size(); i++) {
-            if (histogram.get(i) != null) {
-                normalizedHistogram[i] = histogram.get(i).getValue() / histogramSumOfValues;
-            }
+        final Iterator<Integer> keySet = histogram.keySet().iterator();
+
+        for (Iterator<Integer> it = keySet; it.hasNext(); ) {
+            Integer key = it.next();
+            normalizedHistogram[key] = histogram.get(key).getValue() / histogramSumOfValues;
         }
+
+        double s = 0;
+        for(int i = 0;i < (int) histogram.getMax() + 1;i++) {
+            s += normalizedHistogram[i];
+        }
+
         return normalizedHistogram;
     }
 
@@ -241,9 +247,14 @@ public class TheoreticalSensitivity {
      * @param sampleSize sampleSize is the total number of simulations to run
      * @param alleleFraction the allele fraction to evaluate sensitivity at
      * @param randomSeed random number seed to use for random number generator
+     * @param overlapProbability Probability a position on a read overlaps with its mate
+     * @param maxOverlapBaseQuality Maximum base quality that can result from summing overlapping base qualities, often capped by PCR error rate
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
-    public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction, final long randomSeed) {
+    public static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram,
+                                                    final double logOddsThreshold, final int sampleSize,
+                                                    final double alleleFraction, final long randomSeed,
+                                                    final double overlapProbability, final int maxOverlapBaseQuality) {
         // If the depth is 0 at a particular locus, the sensitivity is trivially 0.0.
         if (depth == 0) {
             return 0.0;
@@ -264,35 +275,27 @@ public class TheoreticalSensitivity {
         for (int sample = 0; sample < sampleSize; sample++) {
             final int altDepth = bd.sample();
 
-            final int sumOfQualities;
-            if (altDepth < LARGE_NUMBER_OF_DRAWS) {
-                // If the number of alt reads is "small" we draw from the actual base quality distribution.
-                sumOfQualities = IntStream.range(0, altDepth).map(n -> qualityRW.draw()).sum();
-            } else {
-                // If the number of alt reads is "large" we draw from a Gaussian approximation of the base
-                // quality distribution to speed up the code.
-                sumOfQualities = drawSumOfQScores(altDepth, averageQuality, standardDeviationQuality, randomNumberGenerator.nextGaussian());
+            int sumOfQualities;
+            // If the number of alt reads is "small" we draw from the actual base quality distribution.
+            sumOfQualities = 0;
+            for(int i = 0;i < altDepth;i++) {
+                if(rg.nextDouble() > overlapProbability) {
+                    sumOfQualities += Math.min(qualityRW.draw(), maxOverlapBaseQuality);
+                } else {
+                    // Simulate overlapping reads by sampling from the quality distribution twice.
+                    // Since PCR errors affect overlapping reads, the total contribution to the sum
+                    // of qualities cannot exceed the PCR error rate.
+                    sumOfQualities += Math.min(qualityRW.draw() + qualityRW.draw(), maxOverlapBaseQuality);
+                }
             }
+
 
             if (isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold)) {
                 calledVariants++;
             }
+            //System.out.println("AF = " + alleleFraction + " altDepth = " + altDepth + " " + sumOfQualities + " " + isCalled(depth, altDepth, (double) sumOfQualities, alleleFraction, logOddsThreshold));
         }
         return (double) calledVariants / sampleSize;
-    }
-
-    /**
-     * Simulates the sum of base qualities taken from reads that support the alternate allele by
-     * taking advantage of the fact that the sum of draws from a distribution tends towards a
-     * Gaussian per the Central Limit Theorem.
-     * @param altDepth Number of draws to take from base quality distribution
-     * @param averageQuality Average quality of alt bases
-     * @param standardDeviationQuality Sample standard deviation of base quality scores
-     * @param z number of standard deviation from the mean to take sum over
-     * @return Simulated sum of base qualities the support the alternate allele
-     */
-    static int drawSumOfQScores(final int altDepth, final double averageQuality, final double standardDeviationQuality, final double z) {
-        return (int) (altDepth * averageQuality + z * Math.sqrt(altDepth) * standardDeviationQuality);
     }
 
     /**
@@ -305,8 +308,12 @@ public class TheoreticalSensitivity {
      * @param alleleFraction the allele fraction to evaluate sensitivity at
      * @return Theoretical sensitivity for the given arguments at a constant depth.
      */
-    private static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram, final double logOddsThreshold, final int sampleSize, final double alleleFraction) {
-        return sensitivityAtConstantDepth(depth, qualityHistogram, logOddsThreshold, sampleSize, alleleFraction, RANDOM_SEED);
+    private static double sensitivityAtConstantDepth(final int depth, final Histogram<Integer> qualityHistogram,
+                                                     final double logOddsThreshold, final int sampleSize,
+                                                     final double alleleFraction, final double overlapProbability,
+                                                     final int pcrErrorRate) {
+        return sensitivityAtConstantDepth(depth, qualityHistogram, logOddsThreshold, sampleSize, alleleFraction,
+                RANDOM_SEED, overlapProbability, pcrErrorRate);
     }
 
     /**
@@ -317,10 +324,23 @@ public class TheoreticalSensitivity {
      * @param sampleSize the total number of simulations to run
      * @param logOddsThreshold Log odds threshold necessary for variant to be called
      * @param alleleFraction the allele fraction to evaluate sensitivity at
+     * @param overlapProbability the probability two bases from the same fragment are overlapping
+     * @param pcrErrorRate Upper bound for the effective base quality two bases in an overlapping read
      * @return Theoretical sensitivity for the given arguments over a particular depth distribution.
      */
-    public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram, final Histogram<Integer> qualityHistogram,
-                                                final int sampleSize, final double logOddsThreshold, final double alleleFraction) {
+    public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram,
+                                                final Histogram<Integer> qualityHistogram, final int sampleSize,
+                                                final double logOddsThreshold, final double alleleFraction,
+                                                final double overlapProbability, final int pcrErrorRate) {
+        return theoreticalSensitivity(depthHistogram, qualityHistogram, sampleSize, logOddsThreshold,
+           alleleFraction, overlapProbability, pcrErrorRate, false);
+    }
+
+    public static double theoreticalSensitivity(final Histogram<Integer> depthHistogram,
+                                                final Histogram<Integer> qualityHistogram, final int sampleSize,
+                                                final double logOddsThreshold, final double alleleFraction,
+                                                final double overlapProbability, final int pcrErrorRate,
+                                                final boolean useTrapezoidRule) {
         if (alleleFraction > 1.0 || alleleFraction < 0.0) {
             throw new IllegalArgumentException("Allele fractions must be between 0 and 1.");
         }
@@ -330,24 +350,42 @@ public class TheoreticalSensitivity {
         // Integrate sensitivity over depth distribution
         double sensitivity = 0.0;
         int currentDepth = 0;
-        double right = 0;
-        while (currentDepth < depthDistribution.length) {
-            double deltaDepthProbability = 0.0;
-            // Accumulate a portion of the depth distribution to compute theoretical sensitivity over.
-            // This helps prevent us from spending lots of compute over coverages
-            // that occur with low probability and don't contribute much to sensitivity anyway, but
-            // it complicates things a bit by having a variable deltaDepthProbability which
-            // amount of the depth distribution to use with the trapezoid rule integration step.
-            while (deltaDepthProbability == 0 && currentDepth < depthDistribution.length ||
-                    deltaDepthProbability < DEPTH_BIN_WIDTH && currentDepth < depthDistribution.length &&
-                    depthDistribution[currentDepth] < DEPTH_BIN_WIDTH / 2.0) {
-                deltaDepthProbability += depthDistribution[currentDepth];
-                currentDepth++;
+
+        if(useTrapezoidRule) {
+            double right = 0;
+            while (currentDepth < depthDistribution.length) {
+                double deltaDepthProbability = 0.0;
+                // Accumulate a portion of the depth distribution to compute theoretical sensitivity over.
+                // This helps prevent us from spending lots of compute over coverages
+                // that occur with low probability and don't contribute much to sensitivity anyway, but
+                // it complicates things a bit by having a variable deltaDepthProbability which
+                // amount of the depth distribution to use with the trapezoid rule integration step.
+                while (deltaDepthProbability == 0 && currentDepth < depthDistribution.length ||
+                        deltaDepthProbability < DEPTH_BIN_WIDTH && currentDepth < depthDistribution.length &&
+                                depthDistribution[currentDepth] < DEPTH_BIN_WIDTH / 2.0) {
+                    deltaDepthProbability += depthDistribution[currentDepth];
+                    currentDepth++;
+                }
+                // I think we overshoot by 1
+
+
+                // Calculate sensitivity for a particular depth, and use trapezoid rule to integrate sensitivity.
+                final double left = right;
+
+                System.out.println("Current Depth = " + currentDepth);
+                right = sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize,
+                        alleleFraction, overlapProbability, pcrErrorRate);
+                sensitivity += deltaDepthProbability * (left + right) / 2.0;
             }
-            // Calculate sensitivity for a particular depth, and use trapezoid rule to integrate sensitivity.
-            final double left = right;
-            right = sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize, alleleFraction);
-            sensitivity += deltaDepthProbability * (left + right) / 2.0;
+        }
+        else {
+            for(currentDepth = 0;currentDepth < depthDistribution.length;currentDepth++) {
+                if(depthDistribution[currentDepth] != 0) {
+                    System.out.println("Depth = " + currentDepth);
+                    sensitivity += sensitivityAtConstantDepth(currentDepth, qualityHistogram, logOddsThreshold, sampleSize,
+                            alleleFraction, overlapProbability, pcrErrorRate) * depthDistribution[currentDepth];
+                }
+            }
         }
         return sensitivity;
     }
@@ -386,7 +424,11 @@ public class TheoreticalSensitivity {
      * @param alleleFractions List of allele fractions to measure theoretical sensitivity over.
      */
     public static List<TheoreticalSensitivityMetrics> calculateSensitivities(final int simulationSize,
-                                              final Histogram<Integer> depthHistogram, final Histogram<Integer> baseQHistogram, final List<Double> alleleFractions) {
+                                                                             final Histogram<Integer> depthHistogram,
+                                                                             final Histogram<Integer> baseQHistogram,
+                                                                             final List<Double> alleleFractions,
+                                                                             final double overlapProbability,
+                                                                             final int pcrErrorRate) {
 
         final List<TheoreticalSensitivityMetrics> metricsOverVariousAlleleFractions = new ArrayList<>();
         final double logOddsThreshold = 6.2; // This threshold is used because it is the value used for MuTect2.
@@ -396,7 +438,8 @@ public class TheoreticalSensitivity {
         for (final double alleleFraction : alleleFractions) {
             final TheoreticalSensitivityMetrics theoreticalSensitivityMetrics = new TheoreticalSensitivityMetrics();
             theoreticalSensitivityMetrics.ALLELE_FRACTION = alleleFraction;
-            theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY = TheoreticalSensitivity.theoreticalSensitivity(depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction);
+            theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY = TheoreticalSensitivity.theoreticalSensitivity(
+                    depthHistogram, baseQHistogram, simulationSize, logOddsThreshold, alleleFraction, overlapProbability, pcrErrorRate);
             theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - theoreticalSensitivityMetrics.THEORETICAL_SENSITIVITY));
             theoreticalSensitivityMetrics.SAMPLE_SIZE = simulationSize;
             theoreticalSensitivityMetrics.LOG_ODDS_THRESHOLD = logOddsThreshold;
