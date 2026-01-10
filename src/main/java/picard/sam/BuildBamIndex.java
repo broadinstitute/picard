@@ -25,24 +25,32 @@
 package picard.sam;
 
 import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.CRAMCRAIIndexer;
+import htsjdk.samtools.CRAMIndexer;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.seekablestream.SeekablePathStream;
+import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.utils.ValidationUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
 import picard.nio.PicardHtsPath;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -69,13 +77,13 @@ public class BuildBamIndex extends CommandLineProgram {
     private static final Log log = Log.getInstance(BuildBamIndex.class);
 
     @Argument(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.")
+            doc = "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.") // tsato: Is the GA4GH bit accurate?
     public PicardHtsPath INPUT;
 
     @Argument(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
                     "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
-    public File OUTPUT;
+    public PicardHtsPath OUTPUT;
 
     /**
      * Main method for the program.  Checks that all input files are present and
@@ -83,44 +91,36 @@ public class BuildBamIndex extends CommandLineProgram {
      * all the records generating a BAM Index, then writes the bai file.
      */
     protected int doWork() {
-        final Path inputPath = INPUT.toPath();
+        ValidationUtils.validateArg(INPUT.hasExtension(FileExtensions.BAM) || INPUT.hasExtension(FileExtensions.CRAM),
+                "only BAM and CRAM files are supported. INPUT = " + INPUT);
 
-        // set default output file - input-file.bai
-        if (OUTPUT == null) {
-
-            final String baseFileName = inputPath.getFileName().toString();
-
-            // only BAI indices can be created for now, although CSI indices can be read as well
-            if (baseFileName.endsWith(FileExtensions.BAM)) {
-
-                final int index = baseFileName.lastIndexOf('.');
-                OUTPUT = new File(baseFileName.substring(0, index) + FileExtensions.BAI_INDEX);
-
-            } else {
-                OUTPUT = new File(baseFileName + FileExtensions.BAI_INDEX);
-            }
-        }
-
-        IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader bam;
-
-
-        bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
+        bam = SamReaderFactory.makeDefault().referenceSequence(referenceSequence.getReferencePath())
                 .disable(SamReaderFactory.Option.EAGERLY_DECODE)
                 .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
-                .open(SamInputResource.of(inputPath));
+                .open(SamInputResource.of(INPUT.toPath()));
+        ValidationUtils.validateArg(bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate),
+            "Input bam file must be sorted by coordinates");
 
-        if (bam.type() != SamReader.Type.BAM_TYPE && bam.type() != SamReader.Type.BAM_CSI_TYPE) {
-            throw new SAMException("Input file must be bam file, not sam file.");
+        // set default output file - <input-file>.bai or <input-file>.crai
+        if (OUTPUT == null) {
+            final String extension = INPUT.hasExtension(FileExtensions.BAM) ? FileExtensions.BAI_INDEX : FileExtensions.CRAM_INDEX;
+            OUTPUT = PicardHtsPath.replaceExtension(INPUT, extension);
         }
 
-        if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-            throw new SAMException("Input bam file must be sorted by coordinate");
+        if (bam.type() == SamReader.Type.BAM_TYPE || bam.type() == SamReader.Type.BAM_CSI_TYPE){
+            BAMIndexer.createIndex(bam, OUTPUT.toPath());
+        } else if (bam.type() == SamReader.Type.CRAM_TYPE){
+            try (SeekableStream seekableStream = new SeekablePathStream(INPUT.toPath())){
+                CRAMCRAIIndexer.writeIndex(seekableStream, Files.newOutputStream(OUTPUT.toPath()));
+            } catch (IOException e){
+                throw new SAMException("Unable to write the CRAM Index " + OUTPUT);
+            }
+        } else {
+            throw new PicardException("Unsupported file type: " + INPUT);
         }
 
-        BAMIndexer.createIndex(bam, OUTPUT);
-
-        log.info("Successfully wrote bam index file " + OUTPUT);
+        log.info("Successfully wrote bam index file " + OUTPUT); // tsato: bam -> SAM
         CloserUtil.close(bam);
         return 0;
     }
