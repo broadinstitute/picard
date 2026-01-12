@@ -77,8 +77,8 @@ public class ReadBaseStratification {
     /**
      * defaults to 2500
      **/
-    public static void setLocationBinSize(int locationBinSize) { 
-       LOCATION_BIN_SIZE = locationBinSize; 
+    public static void setLocationBinSize(int locationBinSize) {
+        LOCATION_BIN_SIZE = locationBinSize;
     }
 
     /* ******* general-use classes, for defining and creating new stratifiers ***********/
@@ -116,6 +116,7 @@ public class ReadBaseStratification {
         public Integer stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
             return stratify(recordAndOffset.getRecord());
         }
+
         //Static ReadNameParser so that cache of read names/ PhysicalLocations is shared between all PositionBasedStratifiers
         static final ReadNameParser readNameParser = new ReadNameParser();
 
@@ -576,9 +577,10 @@ public class ReadBaseStratification {
 
         /**
          * Returns the number of bases associated with I and D CIGAR elements.
+         *
          * @param samRecord The read to investigate
          * @return The number of bases associated with I and D CIGAR elements, or null if the evaluation of either
-         *         operation caused an error
+         * operation caused an error
          */
         @Override
         public Integer stratify(final SAMRecord samRecord) {
@@ -751,6 +753,11 @@ public class ReadBaseStratification {
     public static final RecordAndOffsetStratifier<Integer> baseCycleStratifier = wrapStaticFunction(ReadBaseStratification::stratifyCycle, "cycle");
 
     /**
+     * Get the one-based molecular position of the base, taking the distance to the ends into account
+     */
+    public static final RecordAndOffsetStratifier<Integer> baseMolecularPosStratifier = wrapStaticFunction(ReadBaseStratification::stratifyMolecularPosition, "molecular_pos");
+
+    /**
      * Stratifies into the read-pairs estimated insert-length, as long as it isn't larger than 10x the length of the read
      */
     public static final RecordAndOffsetStratifier<Integer> insertLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "insert_length");
@@ -839,6 +846,7 @@ public class ReadBaseStratification {
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
+        MOLECULAR_POS(() -> baseMolecularPosStratifier, "The molecular position of the base was read (distance from the end of the molecule)."),
         SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
@@ -884,6 +892,10 @@ public class ReadBaseStratification {
                 return null;
             }
             return sam.getFirstOfPairFlag() ? ReadOrdinality.FIRST : ReadOrdinality.SECOND;
+        }
+
+        public boolean isFirst() {
+            return this.equals(FIRST);
         }
     }
 
@@ -1067,8 +1079,9 @@ public class ReadBaseStratification {
 
     /**
      * Returns the number of bases associated with a specific cigar operator within a read
+     *
      * @param samRecord The read to investigate
-     * @param operator The operator that the counted bases should be associated with
+     * @param operator  The operator that the counted bases should be associated with
      */
     private static Integer stratifyCigarOperatorsInRead(final SAMRecord samRecord, final CigarOperator operator) {
         try {
@@ -1122,6 +1135,29 @@ public class ReadBaseStratification {
 
         return retval;
     }
+
+
+    /**
+     * Get the one-based position of the base relative to the ends of the molecule.
+     * <p>
+     * Take the minimum of cycle and insertlength - cycle + 1, if the smaller is the latter,
+     * negate its value. If you are on read 2, also negate the value. The idea is that overlapping
+     * bases should get the same molecular position, and that for read 1 it should be "natural".
+     *
+     * @param recordAndOffset the read and offset in question
+     * @return the molecular position
+     */
+    private static Integer stratifyMolecularPosition(final RecordAndOffset recordAndOffset) {
+        final int cycle = stratifyCycle(recordAndOffset);
+        final int insertSize = stratifyInsertLength(recordAndOffset.getRecord());
+        final int cycleFromEnd = insertSize - cycle + 1;
+        final ReadOrdinality ordinality = ReadOrdinality.of(recordAndOffset.getRecord());
+        
+        if (ordinality == null) return null;
+
+        return (cycle < cycleFromEnd ? cycle : -cycleFromEnd) * (ordinality.isFirst() ? 1 : -1);
+    }
+
 
     private static Integer stratifyHomopolymerLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
 
@@ -1277,8 +1313,7 @@ public class ReadBaseStratification {
                 if (cigarElement.getOperator().consumesReadBases() && readPosition == offset) {
                     return cigarElement;
                 }
-            }
-            else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion) {
+            } else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion) {
                 if (readPosition == offset + 1) {
                     return cigarElement;
                 }
