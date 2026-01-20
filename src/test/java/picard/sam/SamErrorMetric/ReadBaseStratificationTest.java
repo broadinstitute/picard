@@ -537,9 +537,43 @@ public class ReadBaseStratificationTest {
 
         if (expected == null) {
             Assert.assertNull(ReadBaseStratification.getIndelElement(rao));
-        }
-        else {
+        } else {
             Assert.assertEquals(ReadBaseStratification.getIndelElement(rao).getOperator(), expected);
         }
+    }
+
+    @DataProvider
+    public Object[][] molecularPositions() {
+        return new Object[][] {
+                {0, true, 1},
+                {1, true, 2},
+                {1, true, 2},
+                {36, true, -1},
+                {35, true, -2},
+        };
+    }
+
+    @Test(dataProvider = "molecularPositions")
+    public void testTestMolecularPositionStratifier(int position, boolean read1, int expected_mol_pos) {
+        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(samSequenceRecord);
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
+
+        SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.setHeader(samFileHeader);
+        final List<SAMRecord> pair = builder.addPair("test_MolecularPositionStratifier",
+                0, 100, 100, false, false, "36M", "36M", false, true, 30);
+
+        ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseMolecularPosStratifier;
+
+        SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(pair.get(read1 ? 0 : 1), position);
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, position + 1);
+        SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
+
+
+        Assert.assertEquals(stratifier.stratify(recordAndOffset, locusAndReference), expected_mol_pos);
     }
 }
