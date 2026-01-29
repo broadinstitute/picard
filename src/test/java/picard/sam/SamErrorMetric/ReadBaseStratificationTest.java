@@ -554,7 +554,7 @@ public class ReadBaseStratificationTest {
     }
 
     @Test(dataProvider = "molecularPositions")
-    public void testTestMolecularPositionStratifier(int position, boolean read1, int expected_mol_pos) {
+    public void testTestMolecularPositionStratifier(int offset, boolean read1, int expected_mol_pos) {
         final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000);
         final SAMFileHeader samFileHeader = new SAMFileHeader();
         samFileHeader.addSequence(samSequenceRecord);
@@ -569,8 +569,8 @@ public class ReadBaseStratificationTest {
 
         ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseMolecularPosStratifier;
 
-        SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(pair.get(read1 ? 0 : 1), position);
-        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, position + 1);
+        SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(pair.get(read1 ? 0 : 1), offset);
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
         SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
 
 
