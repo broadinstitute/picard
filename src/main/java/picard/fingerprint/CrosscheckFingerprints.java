@@ -59,10 +59,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static picard.fingerprint.Fingerprint.CrosscheckMode.CHECK_SAME_SAMPLE;
 
@@ -422,7 +426,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
     private final List<String> rhsMatrixKeys = new ArrayList<>();
     private Map<String, String> sampleIndividualMap;
 
-    private Boolean foundNonZeroLod = false;
+    private final AtomicBoolean foundNonZeroLod = new AtomicBoolean(false);
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -578,7 +582,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             }
         }
         //check if all LODs are 0
-        if (!foundNonZeroLod) {
+        if (!foundNonZeroLod.get()) {
             log.error("No non-zero results found. This is likely an error. " +
                     "Probable cause: there are no reads or variants at fingerprinting sites ");
             return EXIT_CODE_WHEN_NO_VALID_CHECKS;
@@ -868,10 +872,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      * coming from the same individual.
      */
     private int crossCheckFingerprints(final Map<FingerprintIdDetails, Fingerprint> lhsFingerprints, final Map<FingerprintIdDetails, Fingerprint> rhsFingerprints, final CrosscheckMetric.DataType type, final List<CrosscheckMetric> metrics) {
-        int unexpectedResults = 0;
-        long checksMade = 0;
-
-        final int logEvery = 100_000;
+        final AtomicInteger unexpectedResults = new AtomicInteger(0);
 
         final List<FingerprintIdDetails> lhsFingerprintIdDetails = new ArrayList<>(lhsFingerprints.keySet());
         final List<FingerprintIdDetails> rhsFingerprintIdDetails = new ArrayList<>(rhsFingerprints.keySet());
@@ -887,38 +888,47 @@ public class CrosscheckFingerprints extends CommandLineProgram {
             sampleIndividualMap = buildSampleIndividualsMap(SAMPLE_INDIVIDUAL_MAP, inputSamples);
         }
 
-        for (int row = 0; row < lhsFingerprintIdDetails.size(); row++) {
-            final FingerprintIdDetails lhsId = lhsFingerprintIdDetails.get(row);
+        final List<CrosscheckMetric> synchronizedMetrics = java.util.Collections.synchronizedList(metrics);
 
-            for (int col = 0; col < rhsFingerprintIdDetails.size(); col++) {
-                final FingerprintIdDetails rhsId = rhsFingerprintIdDetails.get(col);
-                final String lhsMatchId = resolveIndividualIfPossible(lhsId.sample);
-                final String rhsMatchId = resolveIndividualIfPossible(rhsId.sample);
-                final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsMatchId.equals(rhsMatchId);
+        log.info("Comparing " + totalChecks + " fingerprint pairs using " + NUM_THREADS + " threads.");
 
-                final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFingerprints.get(lhsId), rhsFingerprints.get(rhsId),
-                        LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
-                final FingerprintResult result = getMatchResults(expectedToMatch, results);
+        final ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
+        try {
+            forkJoinPool.submit(() ->
+                IntStream.range(0, lhsFingerprintIdDetails.size()).parallel().forEach(row -> {
+                    final FingerprintIdDetails lhsId = lhsFingerprintIdDetails.get(row);
 
-                if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
-                    metrics.add(getMatchDetails(result, results, lhsId, rhsId, type));
-                }
-                if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
-                    unexpectedResults++;
-                }
-                if (results.getLOD() != 0) {
-                    foundNonZeroLod = true;
-                }
-                if (crosscheckMatrix != null) {
-                    crosscheckMatrix[row][col] = results.getLOD();
-                }
+                    for (int col = 0; col < rhsFingerprintIdDetails.size(); col++) {
+                        final FingerprintIdDetails rhsId = rhsFingerprintIdDetails.get(col);
+                        final String lhsMatchId = resolveIndividualIfPossible(lhsId.sample);
+                        final String rhsMatchId = resolveIndividualIfPossible(rhsId.sample);
+                        final boolean expectedToMatch = EXPECT_ALL_GROUPS_TO_MATCH || lhsMatchId.equals(rhsMatchId);
 
-                if (++checksMade % logEvery == 0) {
-                    log.info("Compared " + checksMade + " of " + totalChecks);
-                }
-            }
+                        final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFingerprints.get(lhsId), rhsFingerprints.get(rhsId),
+                                LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
+                        final FingerprintResult result = getMatchResults(expectedToMatch, results);
+
+                        if (!OUTPUT_ERRORS_ONLY || result == FingerprintResult.INCONCLUSIVE || !result.isExpected()) {
+                            synchronizedMetrics.add(getMatchDetails(result, results, lhsId, rhsId, type));
+                        }
+                        if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
+                            unexpectedResults.incrementAndGet();
+                        }
+                        if (results.getLOD() != 0) {
+                            foundNonZeroLod.set(true);
+                        }
+                        if (crosscheckMatrix != null) {
+                            crosscheckMatrix[row][col] = results.getLOD();
+                        }
+                    }
+                })
+            ).get();
+        } catch (final Exception e) {
+            throw new PicardException("Error during parallel fingerprint comparison", e);
+        } finally {
+            forkJoinPool.shutdown();
         }
-        return unexpectedResults;
+        return unexpectedResults.get();
     }
 
     /**
@@ -927,7 +937,7 @@ public class CrosscheckFingerprints extends CommandLineProgram {
      */
     private int checkFingerprintsBySample(final Map<FingerprintIdDetails, Fingerprint> fingerprints1, final Map<FingerprintIdDetails, Fingerprint> fingerprints2,
                                           final List<CrosscheckMetric> metrics) {
-        int unexpectedResults = 0;
+        final AtomicInteger unexpectedResults = new AtomicInteger(0);
 
         final Map<FingerprintIdDetails, Fingerprint> fingerprints1BySample = Fingerprint.mergeFingerprintsBy(fingerprints1, Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
         final Map<FingerprintIdDetails, Fingerprint> fingerprints2BySample = Fingerprint.mergeFingerprintsBy(fingerprints2, Fingerprint.getFingerprintIdDetailsStringFunction(CrosscheckMetric.DataType.SAMPLE));
@@ -939,42 +949,55 @@ public class CrosscheckFingerprints extends CommandLineProgram {
         samples.addAll(sampleToDetail1.keySet());
         samples.addAll(sampleToDetail2.keySet());
 
-        for (final String sample : samples) {
-            final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
-            final FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
+        final List<CrosscheckMetric> synchronizedMetrics = java.util.Collections.synchronizedList(metrics);
 
-            if (lhsID == null || rhsID == null) {
-                log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
-                unexpectedResults++;
-                continue;
-            }
+        log.info("Checking " + samples.size() + " samples using " + NUM_THREADS + " threads.");
 
-            final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
-            final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
+        final ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
+        try {
+            forkJoinPool.submit(() ->
+                samples.parallelStream().forEach(sample -> {
+                    final FingerprintIdDetails lhsID = sampleToDetail1.get(sample);
+                    final FingerprintIdDetails rhsID = sampleToDetail2.get(sample);
 
-            if (lhsFP.size() == 0 || rhsFP.size() == 0) {
-                log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/variants at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
-                unexpectedResults++;
-            }
+                    if (lhsID == null || rhsID == null) {
+                        log.error(String.format("sample %s is missing from %s group", sample, lhsID == null ? "LEFT" : "RIGHT"));
+                        unexpectedResults.incrementAndGet();
+                        return;
+                    }
 
-            final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
-                    LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
-            final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
+                    final Fingerprint lhsFP = fingerprints1BySample.get(lhsID);
+                    final Fingerprint rhsFP = fingerprints2BySample.get(rhsID);
 
-            if (!OUTPUT_ERRORS_ONLY || (result != FingerprintResult.INCONCLUSIVE &&  !result.isExpected())) {
-                metrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
-            }
-            if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
-                unexpectedResults++;
-            }
-            if (results.getLOD() == 0) {
-                log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
-                unexpectedResults++;
-            } else {
-                foundNonZeroLod = true;
-            }
+                    if (lhsFP.size() == 0 || rhsFP.size() == 0) {
+                        log.error(String.format("sample %s from %s group was not fingerprinted.  Probably there are no reads/variants at fingerprinting sites.", sample, lhsFP.size() == 0 ? "LEFT" : "RIGHT"));
+                        unexpectedResults.incrementAndGet();
+                    }
+
+                    final MatchResults results = FingerprintChecker.calculateMatchResults(lhsFP, rhsFP,
+                            LOSS_OF_HET_RATE, false, CALCULATE_TUMOR_AWARE_RESULTS);
+                    final CrosscheckMetric.FingerprintResult result = getMatchResults(true, results);
+
+                    if (!OUTPUT_ERRORS_ONLY || (result != FingerprintResult.INCONCLUSIVE &&  !result.isExpected())) {
+                        synchronizedMetrics.add(getMatchDetails(result, results, lhsID, rhsID, CrosscheckMetric.DataType.SAMPLE));
+                    }
+                    if (result != FingerprintResult.INCONCLUSIVE && !result.isExpected()) {
+                        unexpectedResults.incrementAndGet();
+                    }
+                    if (results.getLOD() == 0) {
+                        log.error("LOD score of zero found when checking sample fingerprints.  Probably there are no reads/variants at fingerprinting sites for one of the samples");
+                        unexpectedResults.incrementAndGet();
+                    } else {
+                        foundNonZeroLod.set(true);
+                    }
+                })
+            ).get();
+        } catch (final Exception e) {
+            throw new PicardException("Error during parallel fingerprint comparison", e);
+        } finally {
+            forkJoinPool.shutdown();
         }
-        return unexpectedResults;
+        return unexpectedResults.get();
     }
 
     /**
