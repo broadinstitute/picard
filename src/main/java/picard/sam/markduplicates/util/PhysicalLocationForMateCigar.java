@@ -29,10 +29,10 @@ package picard.sam.markduplicates.util;
  */
 
 import picard.sam.util.PhysicalLocation;
-import picard.sam.util.PhysicalLocationShort;
+import picard.sam.util.PhysicalLocationInt;
 
 /** Stores the minimal information needed for optical duplicate detection. */
-public class PhysicalLocationForMateCigar extends PhysicalLocationShort {
+public class PhysicalLocationForMateCigar extends PhysicalLocationInt {
 
     // Information used to detect optical dupes
     short readGroup = -1;

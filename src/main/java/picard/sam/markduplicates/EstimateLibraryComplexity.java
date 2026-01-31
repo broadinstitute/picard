@@ -47,7 +47,7 @@ import picard.cmdline.programgroups.DiagnosticsAndQCProgramGroup;
 import picard.sam.DuplicationMetrics;
 import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
-import picard.sam.util.PhysicalLocationShort;
+import picard.sam.util.PhysicalLocationInt;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -178,7 +178,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
     /**
      * Little class to hold the sequence of a pair of reads and tile location information.
      */
-    static class PairedReadSequence extends PhysicalLocationShort {
+    static class PairedReadSequence extends PhysicalLocationInt {
 
         //just for rough estimate size of reads, does not affect the fundamental operation of the algorithm
         static final int NUMBER_BASES_IN_READ = 150;
@@ -286,8 +286,8 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             try {
                 this.out.writeShort(val.readGroup);
                 this.out.writeShort(val.tile);
-                this.out.writeShort(val.x);
-                this.out.writeShort(val.y);
+                this.out.writeInt(val.x);
+                this.out.writeInt(val.y);
                 this.out.writeInt(val.read1.length);
                 this.out.write(val.read1);
                 this.out.writeInt(val.read2.length);
@@ -307,8 +307,8 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 }
 
                 val.tile = this.in.readShort();
-                val.x = this.in.readShort();
-                val.y = this.in.readShort();
+                val.x = this.in.readInt();
+                val.y = this.in.readInt();
 
                 int length = this.in.readInt();
                 val.read1 = new byte[length];

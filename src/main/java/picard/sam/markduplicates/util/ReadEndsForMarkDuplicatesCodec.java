@@ -77,8 +77,8 @@ public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<R
 
             this.out.writeShort(read.readGroup);
             this.out.writeShort(read.tile);
-            this.out.writeShort((short)read.x);
-            this.out.writeShort((short)read.y);
+            this.out.writeInt(read.x);
+            this.out.writeInt(read.y);
             this.out.writeByte(read.orientationForOpticalDuplicates);
             this.out.writeInt(read.duplicateSetSize);
         } catch (final IOException ioe) {
@@ -110,8 +110,8 @@ public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<R
 
             read.readGroup = this.in.readShort();
             read.tile = this.in.readShort();
-            read.x = this.in.readShort();
-            read.y = this.in.readShort();
+            read.x = this.in.readInt();
+            read.y = this.in.readInt();
 
             read.orientationForOpticalDuplicates = this.in.readByte();
             read.duplicateSetSize = this.in.readInt();

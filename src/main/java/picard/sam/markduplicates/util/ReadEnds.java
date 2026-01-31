@@ -23,10 +23,10 @@
  */
 package picard.sam.markduplicates.util;
 
-import picard.sam.util.PhysicalLocationShort;
+import picard.sam.util.PhysicalLocationInt;
 
 /** Little struct-like class to hold read pair (and fragment) end data for duplicate marking. */
-abstract public class ReadEnds extends PhysicalLocationShort {
+abstract public class ReadEnds extends PhysicalLocationInt {
 
     public static final byte F = 0, R = 1, FF = 2, FR = 3, RR = 4, RF = 5;
 
