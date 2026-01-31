@@ -207,6 +207,43 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         };
     }
 
+    /**
+     * Tests that optical duplicate detection works correctly when read coordinates exceed
+     * the range of a short (32767). The test BAM contains 3 duplicate read pairs on tile 2214
+     * with coordinates x=(32579, 32588, 32768) y=(36746, 36761, 36824). All three pairs are
+     * within 2500 pixels of each other. When x/y are truncated to short, 32768 overflows to
+     * -32768, causing the third read pair to appear ~65000 pixels away and be missed as an
+     * optical duplicate. With int coordinates, all three are correctly identified, yielding
+     * 2 optical duplicates instead of 1.
+     */
+    @Test
+    public void testOpticalDuplicateDetectionWithCoordinateOverflow() {
+        final File outputDir = IOUtil.createTempDir(TEST_BASE_NAME + ".tmp").toFile();
+        outputDir.deleteOnExit();
+        final File outputSam = new File(outputDir, TEST_BASE_NAME + ".sam");
+        outputSam.deleteOnExit();
+        final File metricsFile = new File(outputDir, TEST_BASE_NAME + ".duplicate_metrics");
+        metricsFile.deleteOnExit();
+
+        final MarkDuplicates markDuplicates = new MarkDuplicates();
+        markDuplicates.INPUT = CollectionUtil.makeList(
+                new File(TEST_DATA_DIR, "optical_overflow_test.bam").getAbsolutePath());
+        markDuplicates.OUTPUT = outputSam;
+        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
+        markDuplicates.PROGRAM_RECORD_ID = null;
+        markDuplicates.VALIDATION_STRINGENCY = htsjdk.samtools.ValidationStringency.LENIENT;
+        // Use 2500 pixel distance so all three read pairs (max separation ~189 in x, ~78 in y)
+        // are within range. With short overflow, the third pair appears ~65000 pixels away.
+        markDuplicates.OPTICAL_DUPLICATE_PIXEL_DISTANCE = 2500;
+        markDuplicates.setupOpticalDuplicateFinder();
+        Assert.assertEquals(markDuplicates.doWork(), 0);
+        Assert.assertEquals(markDuplicates.numOpticalDuplicates(), 2L,
+                "Expected 2 optical duplicates when coordinates exceed short range; " +
+                "if only 1 is found, x/y coordinates may be truncated to short");
+        IOUtil.recursiveDelete(outputDir.toPath());
+    }
+
     @Test
     public void testWithBarcodeFragmentDuplicate() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
