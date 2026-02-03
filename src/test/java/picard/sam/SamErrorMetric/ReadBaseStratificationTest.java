@@ -544,12 +544,18 @@ public class ReadBaseStratificationTest {
 
     @DataProvider
     public Object[][] molecularPositions() {
+        // Test setup: read length = 36, insert size = 36 (fully overlapping reads)
+        // Read 1: forward strand, Read 2: reverse strand
         return new Object[][] {
-                {0, true, 1},
-                {1, true, 2},
-                {1, true, 2},
-                {36, true, -1},
-                {35, true, -2},
+                // Read 1 (forward strand)
+                {0, true, 1},     // cycle=1, cycleFromEnd=36, mol_pos=1
+                {1, true, 2},     // cycle=2, cycleFromEnd=35, mol_pos=2
+                {17, true, 18},   // cycle=18, cycleFromEnd=19, mol_pos=18 (last positive)
+                {18, true, -18},  // cycle=19, cycleFromEnd=18, mol_pos=-18 (first negative)
+                {35, true, -1},   // cycle=36, cycleFromEnd=1, mol_pos=-1
+                // Read 2 (reverse strand) - overlapping positions should match Read 1
+                {0, false, 1},    // cycle=36, cycleFromEnd=1, base=-1, *-1=1 (matches R1 offset 0)
+                {35, false, -1},  // cycle=1, cycleFromEnd=36, base=1, *-1=-1 (matches R1 offset 35)
         };
     }
 
@@ -575,5 +581,166 @@ public class ReadBaseStratificationTest {
 
 
         Assert.assertEquals(stratifier.stratify(recordAndOffset, locusAndReference), expected_mol_pos);
+    }
+
+    @DataProvider
+    public Object[][] molecularPositionsRead1Reverse() {
+        // Test setup: read length = 36, insert size = 36 (fully overlapping reads)
+        // Read 1: reverse strand (rightmost), Read 2: forward strand (leftmost)
+        // This is still FR orientation: → ←
+        return new Object[][] {
+                // Read 1 (reverse strand) - cycle counts from 3' end of read
+                {0, true, -1},    // cycle=36, cycleFromEnd=1, base=-1, *1=-1 (genomic pos 100)
+                {35, true, 1},    // cycle=1, cycleFromEnd=36, base=1, *1=1 (genomic pos 135)
+                // Read 2 (forward strand) - overlapping positions should match Read 1
+                {0, false, -1},   // cycle=1, cycleFromEnd=36, base=1, *-1=-1 (genomic pos 100, matches R1)
+                {35, false, 1},   // cycle=36, cycleFromEnd=1, base=-1, *-1=1 (genomic pos 135, matches R1)
+        };
+    }
+
+    @Test(dataProvider = "molecularPositionsRead1Reverse")
+    public void testMolecularPositionStratifierRead1Reverse(int offset, boolean read1, int expected_mol_pos) {
+        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(samSequenceRecord);
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
+        SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.setHeader(samFileHeader);
+        // Read 2 at position 100 (forward), Read 1 at position 100 (reverse)
+        // FR orientation with read 1 on reverse strand
+        final List<SAMRecord> pair = builder.addPair("test_MolecularPositionStratifier_R1rev",
+                0, 100, 100, false, false, "36M", "36M", true, false, 30);
+
+        ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseMolecularPosStratifier;
+
+        SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(pair.get(read1 ? 0 : 1), offset);
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
+        SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
+
+        Assert.assertEquals(stratifier.stratify(recordAndOffset, locusAndReference), expected_mol_pos);
+    }
+
+    @DataProvider
+    public Object[][] molecularPositionsPartialOverlap() {
+        // Test setup: read length = 36, insert size = 51 (partial overlap)
+        // Read 1: forward strand, positions 100-135
+        // Read 2: reverse strand, positions 115-150
+        // Overlap at genomic positions 115-135 (21 bases)
+        //
+        // Molecule positions:  1 ................. 16 ................. 36 ................. 51
+        //                      ───────────────────────────────────────────────────────────────
+        // Read 1 (fwd):       [R1 ................. R1 ................. R1]
+        //                      ─────────────────────────────────────────→
+        //   offsets:           0                   15                   35
+        //   mol_pos:           1                   16                  -16
+        //                      ───────────────────────────────────────────────────────────────
+        // Read 2 (rev):                           [R2 ................. R2 ................. R2]
+        //                                         ←─────────────────────────────────────────
+        //   offsets:                               0                   20                   35
+        //   mol_pos:                              16                  -16                   -1
+        //                      ───────────────────────────────────────────────────────────────
+        // Overlapping bases at molecule positions 16-36 have matching mol_pos values.
+        return new Object[][] {
+                // Read 1 (forward strand)
+                {0, true, 1},      // cycle=1, cycleFromEnd=51, mol_pos=1
+                {15, true, 16},    // cycle=16, cycleFromEnd=36, mol_pos=16 (start of overlap)
+                {25, true, 26},   // cycle=26, cycleFromEnd=26, mol_pos=-26 (midpoint)
+                {35, true, -16},   // cycle=36, cycleFromEnd=16, mol_pos=-16 (end of R1)
+                // Read 2 (reverse strand)
+                {0, false, 16},    // cycle=36, cycleFromEnd=16, base=-16, *-1=16 (matches R1 offset 15)
+                {20, false, -16},  // cycle=16, cycleFromEnd=36, base=16, *-1=-16 (matches R1 offset 35)
+                {35, false, -1},   // cycle=1, cycleFromEnd=51, base=1, *-1=-1
+        };
+    }
+
+    @Test(dataProvider = "molecularPositionsPartialOverlap")
+    public void testMolecularPositionStratifierPartialOverlap(int offset, boolean read1, int expected_mol_pos) {
+        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord("chr1", 2_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(samSequenceRecord);
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
+        SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.setHeader(samFileHeader);
+        // Read 1 starts at 100, Read 2 starts at 115, both 36 bases → insert size = 51
+        final List<SAMRecord> pair = builder.addPair("test_MolecularPositionStratifier_partial",
+                0, 100, 115, false, false, "36M", "36M", false, true, 30);
+
+        ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseMolecularPosStratifier;
+
+        SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(pair.get(read1 ? 0 : 1), offset);
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
+        SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
+
+        Assert.assertEquals(stratifier.stratify(recordAndOffset, locusAndReference), expected_mol_pos);
+    }
+
+    @DataProvider
+    public Object[][] molecularPositionEdgeCases() {
+        // Returns: description, contig1, start1, contig2, start2, unmapped1, unmapped2, cigar1, cigar2, strand1, strand2
+        return new Object[][] {
+                // description,      c1, s1,  c2,  s2, unmap1, unmap2, cig1,  cig2,  neg1,  neg2
+                {"mateUnmapped",      0, 100,   0,   0,  false,   true, "36M",  null, false, false},
+                {"chimeric",          0, 100,   1, 100,  false,  false, "36M", "36M", false,  true},
+                {"outie",             0,  50,   0, 100,  false,  false, "36M", "36M",  true, false},
+                {"tandemFF",          0, 100,   0, 150,  false,  false, "36M", "36M", false, false},
+                {"tandemRR",          0, 100,   0, 150,  false,  false, "36M", "36M",  true,  true},
+        };
+    }
+
+    @Test(dataProvider = "molecularPositionEdgeCases")
+    public void testMolecularPositionStratifierEdgeCases(String description, int contig1, int start1,
+            int contig2, int start2, boolean unmapped1, boolean unmapped2,
+            String cigar1, String cigar2, boolean negStrand1, boolean negStrand2) {
+        final SAMSequenceRecord chr1 = new SAMSequenceRecord("chr1", 10_000);
+        final SAMSequenceRecord chr2 = new SAMSequenceRecord("chr2", 10_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(chr1);
+        samFileHeader.addSequence(chr2);
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
+        SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.setHeader(samFileHeader);
+
+        ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseMolecularPosStratifier;
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(chr1, 1);
+        SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
+
+        final List<SAMRecord> pair = builder.addPair(description,
+                contig1, start1, start2, unmapped1, unmapped2, cigar1, cigar2, negStrand1, negStrand2, 30);
+
+        // For chimeric, fix the reference indices
+        if (contig2 != contig1) {
+            pair.get(1).setReferenceIndex(contig2);
+            pair.get(0).setMateReferenceIndex(contig2);
+        }
+
+        SamLocusIterator.RecordAndOffset rao = new SamLocusIterator.RecordAndOffset(pair.get(0), 0);
+        Assert.assertNull(stratifier.stratify(rao, locusAndReference), description + " should return null");
+    }
+
+    @Test
+    public void testMolecularPositionStratifierUnpaired() {
+        final SAMSequenceRecord chr1 = new SAMSequenceRecord("chr1", 10_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(chr1);
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
+        SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.setHeader(samFileHeader);
+
+        ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseMolecularPosStratifier;
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(chr1, 1);
+        SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
+
+        // Unpaired read
+        final SAMRecord unpaired = builder.addFrag("unpaired", 0, 100, false, false, "36M", null, 30);
+        SamLocusIterator.RecordAndOffset unpairedRao = new SamLocusIterator.RecordAndOffset(unpaired, 0);
+        Assert.assertNull(stratifier.stratify(unpairedRao, locusAndReference), "Unpaired read should return null");
     }
 }

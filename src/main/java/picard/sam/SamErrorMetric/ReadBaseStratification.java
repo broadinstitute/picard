@@ -846,7 +846,7 @@ public class ReadBaseStratification {
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
-        MOLECULAR_POS(() -> baseMolecularPosStratifier, "The molecular position of the base was read (distance from the end of the molecule)."),
+        MOLECULAR_POS(() -> baseMolecularPosStratifier, "The molecular position of the read-base (distance from the end of the molecule, negative if closer to read 2's 3' end)."),
         SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
@@ -1140,22 +1140,49 @@ public class ReadBaseStratification {
     /**
      * Get the one-based position of the base relative to the ends of the molecule.
      * <p>
-     * Take the minimum of cycle and insertlength - cycle + 1, if the smaller is the latter,
-     * negate its value. If you are on read 2, also negate the value. The idea is that overlapping
-     * bases should get the same molecular position, and that for read 1 it should be "natural".
+     * Positive values indicate bases closer to the 5' end of the molecule (WRT 
+     * strand read by read1),
+     * negative values indicate bases closer to the 3' end (WRT same). The absolute value
+     * is the distance from the nearer end. Overlapping bases from read pairs
+     * should therefore get the _same_ molecular position value. . 
+     * <p>
+     * Example with insert size = 10 and read length = 6:
+     * <pre>
+     * Molecule positions:    1    2    3    4    5    6    7    8    9   10
+     * Read 1 (fwd):         ────────────────────────────>>
+     *   cycle:               1    2    3    4    5    6
+     *   mol_pos:             1    2    3    4    5   -5
+     * R                    ────────────────────────────>>
+     *      *   
+     * Read 2 (rev):                           <<─────────────────────────────
+     *   cycle:                                   6    5    4    3    2    1
+     *   mol_pos:                                 5   -5   -4   -3   -2   -1
+     *                                         <<─────────────────────────────
+     * Overlapping bases at positions 5 and 6 have matching mol_pos (5 and -5).
+     * </pre>
      *
      * @param recordAndOffset the read and offset in question
      * @return the molecular position
      */
     private static Integer stratifyMolecularPosition(final RecordAndOffset recordAndOffset) {
-        final int cycle = stratifyCycle(recordAndOffset);
-        final int insertSize = stratifyInsertLength(recordAndOffset.getRecord());
-        final int cycleFromEnd = insertSize - cycle + 1;
-        final ReadOrdinality ordinality = ReadOrdinality.of(recordAndOffset.getRecord());
-        
+        final SAMRecord rec = recordAndOffset.getRecord();
+        final ReadOrdinality ordinality = ReadOrdinality.of(rec);
+
+        // Return null for unpaired reads
         if (ordinality == null) return null;
 
-        return (cycle < cycleFromEnd ? cycle : -cycleFromEnd) * (ordinality.isFirst() ? 1 : -1);
+        // Return null if mate is unmapped or on different chromosome (chimeric)
+        if (rec.getMateUnmappedFlag() || !rec.getReferenceIndex().equals(rec.getMateReferenceIndex())) return null;
+
+        // Return null for non-FR orientation (RF, tandem, etc.)
+        if (SamPairUtil.getPairOrientation(rec) != SamPairUtil.PairOrientation.FR) return null;
+
+        final int cycle = stratifyCycle(recordAndOffset);
+        final int insertSize = Math.abs(rec.getInferredInsertSize());
+        final int cycleFromEnd = insertSize - cycle + 1;
+
+        // At the midpoint (cycle == cycleFromEnd), we consider it part of the first half (positive)
+        return (cycle <= cycleFromEnd ? cycle : -cycleFromEnd) * (ordinality.isFirst() ? 1 : -1);
     }
 
 
