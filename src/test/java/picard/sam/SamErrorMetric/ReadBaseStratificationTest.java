@@ -566,8 +566,7 @@ public class ReadBaseStratificationTest {
         samFileHeader.addSequence(samSequenceRecord);
         final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
         samFileHeader.addReadGroup(readGroupRecord);
-
-
+        
         SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
         builder.setHeader(samFileHeader);
         final List<SAMRecord> pair = builder.addPair("test_InsertEndDistanceStratifier",
@@ -578,8 +577,7 @@ public class ReadBaseStratificationTest {
         SamLocusIterator.RecordAndOffset recordAndOffset = new SamLocusIterator.RecordAndOffset(pair.get(read1 ? 0 : 1), offset);
         SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(samSequenceRecord, 1);
         SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
-
-
+        
         Assert.assertEquals(stratifier.stratify(recordAndOffset, locusAndReference), expected_insert_end_dist);
     }
 
