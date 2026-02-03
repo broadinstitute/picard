@@ -846,7 +846,7 @@ public class ReadBaseStratification {
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
-        INSERT_END_DISTANCE(() -> baseInsertEndDistanceStratifier, "The distance from the nearest end of the insert (positive if closer to read 1's 5' end, negative if closer to read 2's 3' end). Overlapping bases from paired reads get the same absolute value."),
+        INSERT_END_DISTANCE(() -> baseInsertEndDistanceStratifier, "Distance from the nearest insert end for FR read pairs. Negative if closer to read 2's 3' end. Overlapping bases get matching values. Ignores non-FR orientations, unpaired, or chimeric reads."),
         SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
