@@ -753,9 +753,9 @@ public class ReadBaseStratification {
     public static final RecordAndOffsetStratifier<Integer> baseCycleStratifier = wrapStaticFunction(ReadBaseStratification::stratifyCycle, "cycle");
 
     /**
-     * Get the one-based molecular position of the base, taking the distance to the ends into account
+     * Get the one-based distance from the nearest end of the insert, taking both reads into account
      */
-    public static final RecordAndOffsetStratifier<Integer> baseMolecularPosStratifier = wrapStaticFunction(ReadBaseStratification::stratifyMolecularPosition, "molecular_pos");
+    public static final RecordAndOffsetStratifier<Integer> baseInsertEndDistanceStratifier = wrapStaticFunction(ReadBaseStratification::stratifyInsertEndDistance, "insert_end_distance");
 
     /**
      * Stratifies into the read-pairs estimated insert-length, as long as it isn't larger than 10x the length of the read
@@ -846,7 +846,7 @@ public class ReadBaseStratification {
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
-        MOLECULAR_POS(() -> baseMolecularPosStratifier, "The molecular position of the read-base (distance from the end of the molecule, negative if closer to read 2's 3' end)."),
+        INSERT_END_DISTANCE(() -> baseInsertEndDistanceStratifier, "The distance from the nearest end of the insert (positive if closer to read 1's 5' end, negative if closer to read 2's 3' end). Overlapping bases from paired reads get the same absolute value."),
         SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
@@ -1138,33 +1138,31 @@ public class ReadBaseStratification {
 
 
     /**
-     * Get the one-based position of the base relative to the ends of the molecule.
+     * Get the one-based distance from the nearest end of the insert.
      * <p>
-     * Positive values indicate bases closer to the 5' end of the molecule (WRT 
-     * strand read by read1),
-     * negative values indicate bases closer to the 3' end (WRT same). The absolute value
+     * Positive values indicate bases closer to the 5' end of the insert (as read by read 1),
+     * negative values indicate bases closer to the 3' end. The absolute value
      * is the distance from the nearer end. Overlapping bases from read pairs
-     * should therefore get the _same_ molecular position value. . 
+     * should therefore get the same absolute distance value.
      * <p>
      * Example with insert size = 10 and read length = 6:
      * <pre>
-     * Molecule positions:    1    2    3    4    5    6    7    8    9   10
+     * Insert positions:      1    2    3    4    5    6    7    8    9   10
      * Read 1 (fwd):         ────────────────────────────>>
      *   cycle:               1    2    3    4    5    6
-     *   mol_pos:             1    2    3    4    5   -5
-     * R                    ────────────────────────────>>
-     *      *   
+     *   insert_end_dist:     1    2    3    4    5   -5
+     *
      * Read 2 (rev):                           <<─────────────────────────────
      *   cycle:                                   6    5    4    3    2    1
-     *   mol_pos:                                 5   -5   -4   -3   -2   -1
-     *                                         <<─────────────────────────────
-     * Overlapping bases at positions 5 and 6 have matching mol_pos (5 and -5).
+     *   insert_end_dist:                         5   -5   -4   -3   -2   -1
+     *
+     * Overlapping bases at positions 5 and 6 have matching insert_end_dist (5 and -5).
      * </pre>
      *
      * @param recordAndOffset the read and offset in question
-     * @return the molecular position
+     * @return the distance from the nearest insert end
      */
-    private static Integer stratifyMolecularPosition(final RecordAndOffset recordAndOffset) {
+    private static Integer stratifyInsertEndDistance(final RecordAndOffset recordAndOffset) {
         final SAMRecord rec = recordAndOffset.getRecord();
         final ReadOrdinality ordinality = ReadOrdinality.of(rec);
 
