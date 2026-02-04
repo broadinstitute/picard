@@ -159,7 +159,8 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 "MINIMUM_MAPPING_QUALITY=" + minimumMappingQuality,
                 "MINIMUM_BASE_QUALITY=" + minimumBaseQuality,
                 "CLIP_OVERLAPPING_READS=" + clipOverlappingReads,
-                "SAMPLE_SIZE=" + sampleSize
+                "SAMPLE_SIZE=" + sampleSize,
+                "THEORETICAL_SENSITIVITY_OUTPUT=" + "ts.out"
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);

@@ -107,6 +107,9 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Argument(doc="Output for Theoretical Sensitivity metrics where the allele fractions are provided by the ALLELE_FRACTION argument.", optional = true)
     public File THEORETICAL_SENSITIVITY_OUTPUT;
 
+    @Argument(doc="Phred scaled PCR Error Rate for Theoretical Sensitivity model.", optional = true)
+    public int PCR_ERROR_RATE = 45;
+
     @Argument(doc="Allele fraction for which to calculate theoretical sensitivity.", optional = true)
     public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
     /**
@@ -175,7 +178,11 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
             // Write out theoretical sensitivity results.
             final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
             log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
-            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION);
+
+            final double overlapProbability = ((PanelMetricsBase) metrics.getMetrics().toArray()[0]).PCT_EXC_OVERLAP;
+
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE,
+                    collector.getDepthHistogram(), collector.getBaseQualityHistogram(), ALLELE_FRACTION, overlapProbability, PCR_ERROR_RATE);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }
