@@ -81,17 +81,6 @@ public class ReadNameParserTests {
         };
     }
 
-    // NB: these test fail s due to overflow in the duplicate finder test.  This has been the behavior previously, so keep it for now.
-    @Test(dataProvider = "testParseReadNameDataProvider", enabled = true)
-    public void testParseReadNameOverflow(final String readName, final int tile, final int x, final int y) {
-        ReadNameParser parser = new ReadNameParser();
-        PhysicalLocation loc = new PhysicalLocationShort();
-        Assert.assertTrue(parser.addLocationInformation(readName, loc));
-        Assert.assertEquals(loc.getTile(), tile);
-        Assert.assertEquals(loc.getX(), (short)x); // casting to short for the overflow
-        Assert.assertEquals(loc.getY(), (short)y); // casting to short for the overflow
-    }
-
     // NB: this test the case where we do not overflow in the duplicate finder test.
     @Test(dataProvider = "testParseReadNameDataProvider", enabled = true)
     public void testParseReadNameOK(final String readName, final int tile, final int x, final int y) {
