@@ -848,7 +848,7 @@ public class ReadBaseStratification {
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
         INSERT_END_DISTANCE(() -> baseInsertEndDistanceStratifier, "Distance from the nearest insert end for FR read pairs. " +
                 "Negative if closer to read 2's 3' end, e.g., 150x2 reads with 100bp overlap will have values (R1) 51, .., 100, -100, .., -51 for the overlapping region. " +
-                "Overlapping bases get matching values. As it is designed for use with OVERLAPPING_ERROR, value in non-overlapping region is unspecified, and non-FR orientations, unpaired, and chimeric reads are ignored."),
+                "Overlapping bases get matching values. As it is designed for use with OVERLAPPING_ERROR, value in non-overlapping region is unspecified, and non-FR orientations, unpaired, chimeric reads, and reads with TLEN=0 are ignored."),
         SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
@@ -1179,6 +1179,10 @@ public class ReadBaseStratification {
 
         final int cycle = stratifyCycle(recordAndOffset);
         final int insertSize = Math.abs(rec.getInferredInsertSize());
+
+        // Return null if insert size is zero (TLEN not set or invalid)
+        if (insertSize == 0) return null;
+
         final int cycleFromEnd = insertSize - cycle + 1;
 
         // At the midpoint (cycle == cycleFromEnd), we consider it part of the first half (positive)

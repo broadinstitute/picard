@@ -722,6 +722,31 @@ public class ReadBaseStratificationTest {
     }
 
     @Test
+    public void testInsertEndDistanceStratifierZeroInsertSize() {
+        final SAMSequenceRecord chr1 = new SAMSequenceRecord("chr1", 10_000);
+        final SAMFileHeader samFileHeader = new SAMFileHeader();
+        samFileHeader.addSequence(chr1);
+        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord("rgID");
+        samFileHeader.addReadGroup(readGroupRecord);
+
+        SAMRecordSetBuilder builder = new SAMRecordSetBuilder();
+        builder.setHeader(samFileHeader);
+
+        ReadBaseStratification.RecordAndOffsetStratifier<Integer> stratifier = ReadBaseStratification.baseInsertEndDistanceStratifier;
+        SamLocusIterator.LocusInfo locusInfo = new SamLocusIterator.LocusInfo(chr1, 1);
+        SAMLocusAndReference locusAndReference = new SAMLocusAndReference(locusInfo, (byte) 'A');
+
+        // Create a normal FR pair, then set TLEN to 0 to simulate missing insert size
+        final List<SAMRecord> pair = builder.addPair("zeroInsertSize",
+                0, 100, 115, false, false, "36M", "36M", false, true, 30);
+        pair.get(0).setInferredInsertSize(0);
+        pair.get(1).setInferredInsertSize(0);
+
+        SamLocusIterator.RecordAndOffset rao = new SamLocusIterator.RecordAndOffset(pair.get(0), 0);
+        Assert.assertNull(stratifier.stratify(rao, locusAndReference), "Zero insert size should return null");
+    }
+
+    @Test
     public void testInsertEndDistanceStratifierUnpaired() {
         final SAMSequenceRecord chr1 = new SAMSequenceRecord("chr1", 10_000);
         final SAMFileHeader samFileHeader = new SAMFileHeader();
