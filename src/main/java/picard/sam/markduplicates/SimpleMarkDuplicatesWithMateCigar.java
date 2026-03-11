@@ -46,6 +46,7 @@ import picard.sam.markduplicates.util.ReadEnds;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -122,18 +123,40 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
 
         int numDuplicates = 0;
+        int outputRecordIndex = 0;
         
         libraryIdGenerator = new LibraryIdGenerator(headerAndIterator.header);
         
         for (final DuplicateSet duplicateSet : new IterableAdapter<>(iterator)) {
             final SAMRecord representative = duplicateSet.getRepresentative();
+            final List<SAMRecord> records = duplicateSet.getRecords();
             final boolean doOpticalDuplicateTracking = (this.READ_NAME_REGEX != null) &&
                     isPairedAndBothMapped(representative) &&
                     representative.getFirstOfPairFlag();
             final Set<String> duplicateReadEndsSeen = new HashSet<>();
             
             final List<ReadEnds> duplicateReadEnds = new ArrayList<>();
-            for (final SAMRecord record : duplicateSet.getRecords()) {
+            int representativeRecordIndex = -1;
+            int duplicateSetSize = 0;
+            if (TAG_DUPLICATE_SET_MEMBERS) {
+                int indexWithinSet = outputRecordIndex;
+                final Map<String, Integer> firstRecordIndexByReadName = new HashMap<>();
+                final Set<String> readNamesInDuplicateSet = new HashSet<>();
+                for (final SAMRecord record : records) {
+                    if (this.REMOVE_DUPLICATES && record.getDuplicateReadFlag()) {
+                        continue;
+                    }
+                    if (!record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag()) {
+                        readNamesInDuplicateSet.add(record.getReadName());
+                        firstRecordIndexByReadName.putIfAbsent(record.getReadName(), indexWithinSet);
+                    }
+                    indexWithinSet++;
+                }
+                duplicateSetSize = readNamesInDuplicateSet.size();
+                representativeRecordIndex = firstRecordIndexByReadName.getOrDefault(representative.getReadName(), -1);
+            }
+
+            for (final SAMRecord record : records) {
 
                 // get the metrics for the library of this read (creating a new one if needed)
                 final String library = LibraryIdGenerator.getLibraryName(header, record);
@@ -192,11 +215,16 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
                 }
 
                 if (!this.REMOVE_DUPLICATES || !record.getDuplicateReadFlag()) {
+                    if (TAG_DUPLICATE_SET_MEMBERS && duplicateSetSize > 1 && !record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag()) {
+                        record.setAttribute(DUPLICATE_SET_INDEX_TAG, representativeRecordIndex);
+                        record.setAttribute(DUPLICATE_SET_SIZE_TAG, duplicateSetSize);
+                    }
                     if (PROGRAM_RECORD_ID != null) {
                         record.setAttribute(SAMTag.PG.name(), chainedPgIds.get(record.getStringAttribute(SAMTag.PG.name())));
                     }
                     out.addAlignment(record);
                     progress.record(record);
+                    outputRecordIndex++;
                 }
             }
 

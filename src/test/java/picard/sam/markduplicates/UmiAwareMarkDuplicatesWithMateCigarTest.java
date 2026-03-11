@@ -176,6 +176,42 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         tester.setExpectedAssignedUmis(assignedUmi).runTest();
     }
 
+    @Test
+    public void testTagDuplicateSetMembers() {
+        final UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
+        tester.addArg("TAG_DUPLICATE_SET_MEMBERS=true");
+        tester.addArg("MOLECULAR_IDENTIFIER_TAG=MI");
+        tester.setExpectedOpticalDuplicate(1);
+        final String representativeReadName = "RUNID:1:1:16020:13352";
+        final String duplicateReadName = "RUNID:1:1:15993:13361";
+
+        tester.addMatePairWithUmi("A", representativeReadName, 0, 0, 20, 20, false, false, false, false,
+                "45M", "45M", false, true, false, false, false, 10, "AAAA", "AAAA");
+        tester.expectedRepresentativeReadMap.put(representativeReadName, null);
+        tester.expectedSetSizeMap.put(representativeReadName, 2);
+
+        tester.addMatePairWithUmi("A", duplicateReadName, 0, 0, 20, 20, false, false, true, true,
+                "44M1S", "44M1S", false, true, false, false, false, 10, "AAAA", "AAAA");
+        tester.expectedRepresentativeReadMap.put(duplicateReadName, null);
+        tester.expectedSetSizeMap.put(duplicateReadName, 2);
+
+        tester.runTest();
+    }
+
+    @Test
+    public void testDoesNotTagSingletonDuplicateSets() {
+        final UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
+        tester.addArg("TAG_DUPLICATE_SET_MEMBERS=true");
+
+        final String readName = "RUNID:1:1:16020:13352";
+        tester.addMatePairWithUmi("A", readName, 0, 0, 20, 20, false, false, false, false,
+                "45M", "45M", false, true, false, false, false, 10, "AAAA", "AAAA");
+        tester.expectedRepresentativeReadMap.put(readName, null);
+        tester.expectedSetSizeMap.put(readName, null);
+
+        tester.runTest();
+    }
+
     @Test(dataProvider = "testBadUmiSetsDataProvider", expectedExceptions = {IllegalArgumentException.class, PicardException.class})
     public void testBadUmis(List<String> umis, List<String> assignedUmi, final List<Boolean> isDuplicate, final int editDistanceToJoin) {
         UmiAwareMarkDuplicatesWithMateCigarTester tester = getTester(false);
@@ -503,4 +539,3 @@ public class UmiAwareMarkDuplicatesWithMateCigarTest extends SimpleMarkDuplicate
         tester.runTest();
     }
 }
-
