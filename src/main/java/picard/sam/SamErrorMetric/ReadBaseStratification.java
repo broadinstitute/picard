@@ -1273,8 +1273,8 @@ public class ReadBaseStratification {
             }
 
             if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Insertion) {
-                // If it doesn't consume bases, skip to the next
-                if (cigarElement.getOperator().consumesReadBases() && readPosition == offset) {
+                // Return only if this is actually an insertion element at the right position
+                if (cigarElement.getOperator() == CigarOperator.I && readPosition == offset) {
                     return cigarElement;
                 }
             }

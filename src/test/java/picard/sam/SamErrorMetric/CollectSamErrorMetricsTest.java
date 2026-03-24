@@ -709,5 +709,39 @@ public class CollectSamErrorMetricsTest {
 
         Assert.assertEquals(metric, expectedMetric);
     }
+
+    /**
+     * Test that getIndelElement returns null (rather than a non-insertion CIGAR element)
+     * when called with an offset that doesn't correspond to an actual insertion in the CIGAR.
+     *
+     * This can happen when htsjdk's accumulateIndels has a readBase drift: if an
+     * earlier insertion fails the BQ check, readBase is not advanced, causing subsequent
+     * insertions to be reported at the wrong offset. When getIndelElement is called
+     * with that drifted offset, it should not return a Match element that happens to
+     * be at that position.
+     *
+     * CIGAR: 10M1I1M1I10M — the 1M between the two insertions occupies read position 11.
+     * If called with offset=11 (a drifted offset that lands on the M), getIndelElement
+     * should return null, not the 1M CigarElement.
+     */
+    @Test
+    public void testGetIndelElementRejectsNonInsertionElement() {
+        final SAMRecord record = createRecordFromCigar("10M1I1M1I10M");
+
+        // Create a RecordAndOffset for an insertion at the drifted offset (11),
+        // which actually corresponds to the 1M element, not the 1I.
+        final SamLocusIterator.RecordAndOffset rao =
+                new SamLocusIterator.RecordAndOffset(record, 11,
+                        SamLocusIterator.RecordAndOffset.AlignmentType.Insertion);
+
+        final CigarElement result = ReadBaseStratification.getIndelElement(rao);
+
+        // Before the fix, this returns the 1M element (operator=M, length=1).
+        // After the fix, it should return null since offset 11 is not an insertion.
+        Assert.assertNull(result,
+                "getIndelElement should return null when the offset lands on a " +
+                "non-insertion CIGAR element, but returned operator=" +
+                (result != null ? result.getOperator() : "N/A"));
+    }
 }
 
