@@ -21,7 +21,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /**
  * @author nhomer
@@ -123,13 +124,20 @@ public class BedToIntervalList extends CommandLineProgram {
             header.setSequenceDictionary(samSequenceDictionary);
             header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
-            // For /dev/stdin specifically, wrap System.in so that tests can inject data
-            // via System.setIn().  All other non-regular paths (named pipes, /dev/fd/N,
-            // process substitutions) are opened by path through FileReader as normal.
-            try (final BufferedReader reader = INPUT.getPath().equals("/dev/stdin")
-                    ? new BufferedReader(new InputStreamReader(System.in))
-                    : new BufferedReader(new FileReader(INPUT))) {
-                // Sniff the format before parsing; reject anything that isn't BED.
+            // AbstractFeatureReader requires a real file path, so buffer /dev/stdin to a temp file.
+            final File bedFile;
+            File tempFile = null;
+            if (INPUT.getPath().equals("/dev/stdin")) {
+                tempFile = File.createTempFile("bed_to_interval_list_stdin_", ".bed");
+                tempFile.deleteOnExit();
+                Files.copy(System.in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                bedFile = tempFile;
+            } else {
+                bedFile = INPUT;
+            }
+
+            // Sniff the format before parsing; reject anything that isn't BED.
+            try (final BufferedReader reader = new BufferedReader(new FileReader(bedFile))) {
                 reader.mark(8 * 1024);
                 final FormatDetectionResult detected = IntervalFileReader.detectIntervalFormat(reader);
                 if (detected.format() != IntervalFileFormat.BED) {
@@ -138,14 +146,14 @@ public class BedToIntervalList extends CommandLineProgram {
                             : (detected.firstLine() != null ? " First data line: " + detected.firstLine() : " File appears to be empty or contain only headers.");
                     throw new PicardException("BedToIntervalList requires BED format input." + hint);
                 }
-                reader.reset();
-                IntervalList out = IntervalFileReader.fromBed(reader, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS, LOG);
-                if (SORT) out = out.sorted();
-                if (UNIQUE) out = out.uniqued();
-                out.write(OUTPUT);
-                LOG.info(String.format("Wrote %d intervals spanning a total of %d bases",
-                        out.getIntervals().size(), out.getBaseCount()));
             }
+
+            IntervalList out = IntervalFileReader.fromBed(bedFile, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS, LOG);
+            if (SORT) out = out.sorted();
+            if (UNIQUE) out = out.uniqued();
+            out.write(OUTPUT);
+            LOG.info(String.format("Wrote %d intervals spanning a total of %d bases",
+                    out.getIntervals().size(), out.getBaseCount()));
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }

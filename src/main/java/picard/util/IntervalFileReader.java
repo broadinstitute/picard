@@ -3,9 +3,16 @@ package picard.util;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.annotation.Strand;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
 import picard.PicardException;
 
 import java.io.BufferedReader;
@@ -16,13 +23,12 @@ import java.io.IOException;
 /**
  * Utility class for reading interval files in BED or Picard interval_list format.
  *
- * <p>This class provides format-detection, generic loading (auto-detecting BED vs interval_list),
- * and a dedicated BED parser.  It is designed to be used by any Picard tool that needs to
- * accept interval files — callers get transparent support for both formats without duplicating
- * parsing logic.
+ * <p>This class provides format-detection and generic loading (auto-detecting BED vs interval_list).
+ * BED parsing delegates to htsjdk's {@link BEDCodec} / {@link AbstractFeatureReader} (Tribble),
+ * preserving the same robust behavior used by {@link BedToIntervalList}.
  *
- * <p>BED coordinate conventions: BED uses 0-based half-open coordinates.  This parser converts
- * them to the 1-based closed intervals used throughout Picard / htsjdk.
+ * <p>BED coordinate conventions: BED uses 0-based half-open coordinates.  {@link BEDCodec}
+ * converts them to the 1-based closed intervals used throughout Picard / htsjdk.
  */
 public final class IntervalFileReader {
 
@@ -64,32 +70,36 @@ public final class IntervalFileReader {
     }
 
     /**
-     * Loads an {@link IntervalList} from {@code reader}, auto-detecting whether the content is
-     * BED or interval_list format.  The reader must support {@link BufferedReader#mark} /
-     * {@link BufferedReader#reset} (a plain {@link BufferedReader} always does — this works for
-     * regular files, pipes, FIFOs, and process-substitution streams alike).
+     * Loads an {@link IntervalList} from {@code file}, auto-detecting whether the content is
+     * BED or interval_list format.
      *
      * <p>Returns a sorted, uniqued {@link IntervalList}.
      *
-     * @param reader     source; must support mark/reset
+     * @param file       BED or interval_list file to read
      * @param dictionary sequence dictionary used when parsing BED-format content
-     * @throws IOException     on read error
-     * @throws PicardException on unrecognized format
+     * @throws PicardException on read error or unrecognized format
      */
-    public static IntervalList loadIntervals(final BufferedReader reader,
-                                             final SAMSequenceDictionary dictionary) throws IOException {
-        // 8 KB is enough to cover any realistic BED/interval_list preamble.
-        // BufferedReader.mark() is backed by an in-memory char array, so this also works
-        // correctly for non-seekable sources such as pipes and FIFOs.
-        reader.mark(8 * 1024);
-        final FormatDetectionResult detected = detectIntervalFormat(reader);
-        reader.reset();
+    public static IntervalList loadIntervals(final File file, final SAMSequenceDictionary dictionary) {
+        final FormatDetectionResult detected;
+        try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            reader.mark(8 * 1024);
+            detected = detectIntervalFormat(reader);
+        } catch (final IOException e) {
+            throw new PicardException("Error detecting format of " + file, e);
+        }
+
         return switch (detected.format()) {
-            case INTERVAL_LIST -> IntervalList.fromReader(reader).uniqued();
+            case INTERVAL_LIST -> {
+                try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    yield IntervalList.fromReader(reader).uniqued();
+                } catch (final IOException e) {
+                    throw new PicardException("Error reading interval_list from " + file, e);
+                }
+            }
             case BED -> {
                 final SAMFileHeader header = new SAMFileHeader();
                 header.setSequenceDictionary(dictionary);
-                yield fromBed(reader, header, false, false, null).uniqued();
+                yield fromBed(file, header, false, false, null).uniqued();
             }
             case UNKNOWN -> throw new PicardException(
                     "Unrecognized interval file format. Expected interval_list (lines starting with @) " +
@@ -98,28 +108,13 @@ public final class IntervalFileReader {
     }
 
     /**
-     * Convenience overload of {@link #loadIntervals(BufferedReader, SAMSequenceDictionary)} that
-     * opens {@code file} itself.  {@link IOException} is wrapped in a {@link PicardException}.
+     * Parses BED records from {@code file} into an {@link IntervalList}.
      *
-     * @param file       BED or interval_list file to read
-     * @param dictionary sequence dictionary used when parsing BED-format content
-     */
-    public static IntervalList loadIntervals(final File file, final SAMSequenceDictionary dictionary) {
-        try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            return loadIntervals(reader, dictionary);
-        } catch (final IOException e) {
-            throw new PicardException("Error reading intervals from " + file, e);
-        }
-    }
-
-    /**
-     * Parses BED records from a {@link BufferedReader} into an {@link IntervalList}.
-     * Comment lines starting with {@code #} are skipped.
-     * Coordinates are converted from 0-based half-open BED to 1-based closed intervals.
-     * <p>
-     * This method works with any reader, including streams backed by pipes or FIFOs.
+     * <p>Uses htsjdk's {@link BEDCodec} / {@link AbstractFeatureReader} for parsing, which
+     * silently skips {@code track} and {@code browser} lines and handles real-world BED quirks.
+     * Coordinates are returned in 1-based closed format as required by Picard / htsjdk.
      *
-     * @param reader                  source of BED records
+     * @param file                    BED file to parse
      * @param header                  SAMFileHeader whose sequence dictionary is used for validation
      * @param dropMissingContigs      if true, records on contigs absent from the dictionary are silently
      *                                dropped; if false, such records throw a {@link PicardException}
@@ -128,68 +123,68 @@ public final class IntervalFileReader {
      * @param log                     used for informational and warning messages; may be {@code null}
      *                                to suppress all logging
      * @return an unsorted, non-uniqued {@link IntervalList}
-     * @throws IOException on read error
      */
-    public static IntervalList fromBed(final BufferedReader reader,
+    public static IntervalList fromBed(final File file,
                                        final SAMFileHeader header,
                                        final boolean dropMissingContigs,
                                        final boolean keepLengthZeroIntervals,
-                                       final Log log) throws IOException {
+                                       final Log log) {
         final IntervalList intervalList = new IntervalList(header);
         int missingIntervals = 0;
         int missingRegion = 0;
         int lengthZeroIntervals = 0;
 
-        String line;
-        while ((line = reader.readLine()) != null) {
-            final String trimmed = line.trim();
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-                continue;
-            }
+        final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(
+                file.getAbsolutePath(), new BEDCodec(), false);
+        try {
+            final CloseableTribbleIterator<BEDFeature> iterator = bedReader.iterator();
+            while (iterator.hasNext()) {
+                final BEDFeature bedFeature = iterator.next();
+                final String sequenceName = bedFeature.getContig();
+                // BEDCodec converts to 1-based start and 1-based inclusive end
+                final int start = bedFeature.getStart();
+                final int end   = bedFeature.getEnd();
+                // NB: do not use an empty name within an interval
+                final String name = bedFeature.getName().isEmpty() ? null : bedFeature.getName();
+                final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
 
-            final String[] fields = trimmed.split("\t");
-            if (fields.length < 3) {
-                throw new PicardException("Invalid BED line (fewer than 3 tab-separated fields): " + line);
-            }
+                final SAMSequenceRecord sequenceRecord = header.getSequenceDictionary().getSequence(sequenceName);
 
-            final String sequenceName = fields[0];
-            final int start = Integer.parseInt(fields[1]) + 1; // BED start is 0-based; convert to 1-based
-            final int end   = Integer.parseInt(fields[2]);     // BED end is 0-based exclusive == 1-based inclusive
-            final String name = (fields.length > 3 && !fields[3].isEmpty()) ? fields[3] : null;
-            final boolean isNegativeStrand = fields.length > 5 && "-".equals(fields[5]);
+                if (null == sequenceRecord) {
+                    if (dropMissingContigs) {
+                        if (log != null) log.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, start, end));
+                        missingIntervals++;
+                        missingRegion += end - start + 1;
+                        continue;
+                    }
+                    throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
+                } else if (start < 1) {
+                    throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
+                } else if (sequenceRecord.getSequenceLength() < start) {
+                    throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
+                } else if ((end == 0 && start != 1) || end < 0) {
+                    throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
+                } else if (sequenceRecord.getSequenceLength() < end) {
+                    throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
+                } else if (end < start - 1) {
+                    throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
+                }
 
-            final SAMSequenceRecord sequenceRecord = header.getSequenceDictionary().getSequence(sequenceName);
-
-            if (null == sequenceRecord) {
-                if (dropMissingContigs) {
-                    if (log != null) log.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, start, end));
-                    missingIntervals++;
-                    missingRegion += end - start + 1;
+                if ((start == end + 1) && !keepLengthZeroIntervals) {
+                    if (log != null) log.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
+                    lengthZeroIntervals++;
                     continue;
                 }
-                throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
-            } else if (start < 1) {
-                throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
-            } else if (sequenceRecord.getSequenceLength() < start) {
-                throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-            } else if ((end == 0 && start != 1) || end < 0) {
-                throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
-            } else if (sequenceRecord.getSequenceLength() < end) {
-                throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
-            } else if (end < start - 1) {
-                throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
-            }
+                if (start == end + 1) {
+                    lengthZeroIntervals++;
+                }
 
-            if ((start == end + 1) && !keepLengthZeroIntervals) {
-                if (log != null) log.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
-                lengthZeroIntervals++;
-                continue;
+                intervalList.add(new Interval(sequenceName, start, end, isNegativeStrand, name));
             }
-            if (start == end + 1) {
-                lengthZeroIntervals++;
-            }
-
-            intervalList.add(new Interval(sequenceName, start, end, isNegativeStrand, name));
+        } catch (final IOException e) {
+            throw new PicardException("Error reading BED file: " + file, e);
+        } finally {
+            CloserUtil.close(bedReader);
         }
 
         if (log != null) {
