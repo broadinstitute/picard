@@ -183,7 +183,13 @@ public class ViewSam extends CommandLineProgram {
 
                     if (this.PF_STATUS == PfStatus.PF && rec.getReadFailsVendorQualityCheckFlag()) continue;
                     if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
-                    writer.write(rec.getSAMString());
+                    // htsjdk 5.0 dropped the trailing newline from SAMRecord.getSAMString(); add one
+                    // ourselves when missing so this code works with both pre- and post-5.0 htsjdk.
+                    final String samString = rec.getSAMString();
+                    writer.write(samString);
+                    if (samString.isEmpty() || samString.charAt(samString.length() - 1) != '\n') {
+                        writer.write("\n");
+                    }
                 }
             }
             writer.flush();

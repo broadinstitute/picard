@@ -56,8 +56,11 @@ public class IntelInflaterDeflaterLoadTest {
             throw new SkipException(componentName + " is not available on this platform");
         }
 
-        if (SystemUtils.OS_ARCH != null && SystemUtils.OS_ARCH.equals("ppc64le")) {
-            throw new SkipException(componentName + " is not available for this architecture");
+        // Intel GKL only ships native libraries for x86_64. Skip on any other CPU architecture
+        // (e.g. ppc64le, aarch64/Apple Silicon).
+        final String arch = SystemUtils.OS_ARCH;
+        if (arch != null && !arch.equals("x86_64") && !arch.equals("amd64")) {
+            throw new SkipException(componentName + " is not available for architecture " + arch);
         }
     }
 
