@@ -26,12 +26,10 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 
@@ -188,9 +186,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         // Load intervals to exclude if provided
         IntervalList intervalsToExclude = null;
         if (EXCLUDE_INTERVALS != null) {
-            IOUtil.assertFileIsReadable(EXCLUDE_INTERVALS);
-            // Always buffer content and detect format by examining the first line.
-            // This works for both regular files and special files (pipes, FIFOs, process substitutions).
+            IOUtil.assertFileIsReadable(EXCLUDE_INTERVALS);            // This works for both regular files and special files (pipes, FIFOs, process substitutions).
             intervalsToExclude = IntervalFileReader.loadIntervals(EXCLUDE_INTERVALS, header.getSequenceDictionary());
 
             // Log information about excluded regions
