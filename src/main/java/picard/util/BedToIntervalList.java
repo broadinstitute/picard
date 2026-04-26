@@ -148,7 +148,7 @@ public class BedToIntervalList extends CommandLineProgram {
                 }
             }
 
-            IntervalList out = IntervalFileReader.fromBed(bedFile, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS, LOG);
+            IntervalList out = IntervalFileReader.fromBed(bedFile, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS);
             if (SORT) out = out.sorted();
             if (UNIQUE) out = out.uniqued();
             out.write(OUTPUT);

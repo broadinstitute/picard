@@ -103,7 +103,7 @@ public class IntervalFileReaderTest {
     @Test
     public void testFromBedFileSimple() {
         final File bedFile = new File(TEST_DATA_DIR, "simple.bed");
-        final IntervalList result = IntervalFileReader.fromBed(bedFile, buildHeader(), false, false, null);
+        final IntervalList result = IntervalFileReader.fromBed(bedFile, buildHeader());
         final List<Interval> intervals = result.getIntervals();
         Assert.assertEquals(intervals.size(), 2);
         // simple.bed: chr1 100 2000 and chr1 3000 4000
@@ -119,7 +119,7 @@ public class IntervalFileReaderTest {
     @Test
     public void testFromBedFileExtendedFields() {
         final File bedFile = new File(TEST_DATA_DIR, "extended.bed");
-        final IntervalList result = IntervalFileReader.fromBed(bedFile, buildHeader(), false, false, null);
+        final IntervalList result = IntervalFileReader.fromBed(bedFile, buildHeader());
         Assert.assertFalse(result.getIntervals().isEmpty());
     }
 

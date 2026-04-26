@@ -38,6 +38,8 @@ public final class IntervalFileReader {
     /** Result of format detection: the detected format and, when format is UNKNOWN, the first data line. */
     public record FormatDetectionResult(IntervalFileFormat format, String firstLine) {}
 
+    private static final Log log = Log.getInstance(IntervalFileReader.class);
+
     private IntervalFileReader() {} // utility class — no instances
 
     /**
@@ -99,12 +101,17 @@ public final class IntervalFileReader {
             case BED -> {
                 final SAMFileHeader header = new SAMFileHeader();
                 header.setSequenceDictionary(dictionary);
-                yield fromBed(file, header, false, false, null).uniqued();
+                yield fromBed(file, header).uniqued();
             }
             case UNKNOWN -> throw new PicardException(
                     "Unrecognized interval file format. Expected interval_list (lines starting with @) " +
                     "or BED (≥3 tab-separated fields). First data line: " + detected.firstLine());
         };
+    }
+
+    /** Calls {@link #fromBed(File, SAMFileHeader, boolean, boolean)} with both flags false. */
+    public static IntervalList fromBed(final File file, final SAMFileHeader header) {
+        return fromBed(file, header, false, false);
     }
 
     /**
@@ -116,22 +123,17 @@ public final class IntervalFileReader {
      *
      * @param file                    BED file to parse
      * @param header                  SAMFileHeader whose sequence dictionary is used for validation
-     * @param dropMissingContigs      if true, records on contigs absent from the dictionary are silently
-     *                                dropped; if false, such records throw a {@link PicardException}
-     * @param keepLengthZeroIntervals if true, length-zero BED intervals (chromStart == chromEnd) are
-     *                                included; if false, they are silently dropped
-     * @param log                     used for informational and warning messages; may be {@code null}
-     *                                to suppress all logging
+     * @param dropMissingContigs      if true, records whose contig is absent from the dictionary are silently dropped;
+     *                                if false, such records throw a {@link PicardException}
+     * @param keepLengthZeroIntervals if true, BED records where chromStart == chromEnd are included;
+     *                                if false, they are silently dropped
      * @return an unsorted, non-uniqued {@link IntervalList}
+     * @throws PicardException if a record references a contig absent from the dictionary and dropMissingContigs is false
      */
-    public static IntervalList fromBed(final File file,
-                                       final SAMFileHeader header,
+    public static IntervalList fromBed(final File file, final SAMFileHeader header,
                                        final boolean dropMissingContigs,
-                                       final boolean keepLengthZeroIntervals,
-                                       final Log log) {
+                                       final boolean keepLengthZeroIntervals) {
         final IntervalList intervalList = new IntervalList(header);
-        int missingIntervals = 0;
-        int missingRegion = 0;
         int lengthZeroIntervals = 0;
 
         final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(
@@ -144,7 +146,7 @@ public final class IntervalFileReader {
                 // BEDCodec converts to 1-based start and 1-based inclusive end
                 final int start = bedFeature.getStart();
                 final int end   = bedFeature.getEnd();
-                // NB: do not use an empty name within an interval
+                // if the interval has no name, use null to avoid confusion with empty-string names
                 final String name = bedFeature.getName().isEmpty() ? null : bedFeature.getName();
                 final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
 
@@ -152,9 +154,7 @@ public final class IntervalFileReader {
 
                 if (null == sequenceRecord) {
                     if (dropMissingContigs) {
-                        if (log != null) log.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, start, end));
-                        missingIntervals++;
-                        missingRegion += end - start + 1;
+                        log.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, start, end));
                         continue;
                     }
                     throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
@@ -170,13 +170,12 @@ public final class IntervalFileReader {
                     throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
                 }
 
-                if ((start == end + 1) && !keepLengthZeroIntervals) {
-                    if (log != null) log.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
-                    lengthZeroIntervals++;
-                    continue;
-                }
                 if (start == end + 1) {
                     lengthZeroIntervals++;
+                    if (!keepLengthZeroIntervals) {
+                        log.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
+                        continue;
+                    }
                 }
 
                 intervalList.add(new Interval(sequenceName, start, end, isNegativeStrand, name));
@@ -187,25 +186,12 @@ public final class IntervalFileReader {
             CloserUtil.close(bedReader);
         }
 
-        if (log != null) {
-            if (dropMissingContigs) {
-                if (missingRegion == 0) {
-                    log.info("There were no missing regions.");
-                } else {
-                    log.warn(String.format("There were %d missing regions with a total of %d bases", missingIntervals, missingRegion));
-                }
-            }
-            if (!keepLengthZeroIntervals) {
-                if (lengthZeroIntervals == 0) {
-                    log.info("No input regions had length zero, so none were skipped.");
-                } else {
-                    log.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", lengthZeroIntervals));
-                }
-            } else {
-                if (lengthZeroIntervals > 0) {
-                    log.warn(String.format("Input file had %d entries with length zero. Run with the KEEP_LENGTH_ZERO_INTERVALS flag set to false to remove these.", lengthZeroIntervals));
-                }
-            }
+        if (lengthZeroIntervals == 0) {
+            log.info("No input regions had length zero, so none were skipped.");
+        } else if (!keepLengthZeroIntervals) {
+            log.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", lengthZeroIntervals));
+        } else {
+            log.warn(String.format("Input file had %d entries with length zero.", lengthZeroIntervals));
         }
 
         return intervalList;
