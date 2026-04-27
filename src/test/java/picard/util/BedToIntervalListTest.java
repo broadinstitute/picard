@@ -69,13 +69,6 @@ public class BedToIntervalListTest {
         doTest(inputBed, "header.sam");
     }
 
-    @Test(expectedExceptions = PicardException.class)
-    public void testRejectIntervalListInput() throws IOException {
-        // Feeding an interval_list file (which starts with @ SAM headers) to BedToIntervalList
-        // should throw a clear PicardException rather than a confusing NumberFormatException.
-        doTest("seq_dict_test.dictionary.interval_list", "header.sam");
-    }
-
     @Test
     public void testStdinSupport() throws IOException {
         // Feed the contents of simple.bed through System.in and verify the output matches

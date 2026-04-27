@@ -10,19 +10,11 @@ import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
-import picard.util.IntervalFileReader.FormatDetectionResult;
-import picard.util.IntervalFileReader.IntervalFileFormat;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 /**
  * @author nhomer
@@ -110,7 +102,7 @@ public class BedToIntervalList extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        // Only assert readability for regular files; FIFOs, named pipes, /dev/stdin,
+        // Only assert readability for regular files; /dev/stdin, FIFOs, named pipes,
         // and process-substitution paths (/dev/fd/N) all return false from isFile().
         if (INPUT.isFile()) {
             IOUtil.assertFileIsReadable(INPUT);
@@ -118,45 +110,17 @@ public class BedToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        try {
-            final SAMFileHeader header = new SAMFileHeader();
-            final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
-            header.setSequenceDictionary(samSequenceDictionary);
-            header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        final SAMFileHeader header = new SAMFileHeader();
+        final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
+        header.setSequenceDictionary(samSequenceDictionary);
+        header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
-            // AbstractFeatureReader requires a real file path, so buffer /dev/stdin to a temp file.
-            final File bedFile;
-            File tempFile = null;
-            if (INPUT.getPath().equals("/dev/stdin")) {
-                tempFile = File.createTempFile("bed_to_interval_list_stdin_", ".bed");
-                tempFile.deleteOnExit();
-                Files.copy(System.in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                bedFile = tempFile;
-            } else {
-                bedFile = INPUT;
-            }
-
-            // Sniff the format before parsing; reject anything that isn't BED.
-            try (final BufferedReader reader = new BufferedReader(new FileReader(bedFile))) {
-                reader.mark(8 * 1024);
-                final FormatDetectionResult detected = IntervalFileReader.detectIntervalFormat(reader);
-                if (detected.format() != IntervalFileFormat.BED) {
-                    final String hint = detected.format() == IntervalFileFormat.INTERVAL_LIST
-                            ? " Input appears to be an interval_list file; supply a BED file instead."
-                            : (detected.firstLine() != null ? " First data line: " + detected.firstLine() : " File appears to be empty or contain only headers.");
-                    throw new PicardException("BedToIntervalList requires BED format input." + hint);
-                }
-            }
-
-            IntervalList out = IntervalFileReader.fromBed(bedFile, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS);
-            if (SORT) out = out.sorted();
-            if (UNIQUE) out = out.uniqued();
-            out.write(OUTPUT);
-            LOG.info(String.format("Wrote %d intervals spanning a total of %d bases",
-                    out.getIntervals().size(), out.getBaseCount()));
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+        IntervalList out = IntervalFileReader.fromBed(INPUT, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS);
+        if (SORT) out = out.sorted();
+        if (UNIQUE) out = out.uniqued();
+        out.write(OUTPUT);
+        LOG.info(String.format("Wrote %d intervals spanning a total of %d bases",
+                out.getIntervals().size(), out.getBaseCount()));
 
         return 0;
     }
