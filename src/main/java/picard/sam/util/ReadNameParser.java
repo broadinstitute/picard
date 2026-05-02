@@ -95,7 +95,7 @@ public class ReadNameParser implements Serializable {
                     }
                     return false;
                 }
-                loc.setTile((short) tmpLocationFields[0]);
+                loc.setTile(tmpLocationFields[0]);
                 loc.setX(tmpLocationFields[1]);
                 loc.setY(tmpLocationFields[2]);
                 return true;
@@ -107,7 +107,7 @@ public class ReadNameParser implements Serializable {
 
                 final Matcher m = this.readNamePattern.matcher(readName);
                 if (m.matches()) {
-                    loc.setTile((short) Integer.parseInt(m.group(1)));
+                    loc.setTile(Integer.parseInt(m.group(1)));
                     loc.setX(Integer.parseInt(m.group(2)));
                     loc.setY(Integer.parseInt(m.group(3)));
                     return true;
