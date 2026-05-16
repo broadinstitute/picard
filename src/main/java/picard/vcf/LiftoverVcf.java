@@ -61,9 +61,15 @@ import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 import picard.util.LiftoverUtils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -206,6 +212,15 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "Output VCF file will be written on the fly but it won't be sorted and indexed.", optional = true)
     public boolean DISABLE_SORT = false;
 
+    @Argument(doc = "Optional path to a JSON Lines (NDJSON) sidecar that receives one structured " +
+            "progress event per ProgressLogger milestone during the read and write phases. " +
+            "Provides a stable parsing target for downstream tooling, as an alternative to " +
+            "regex-parsing the human-readable log output. Each line is one JSON object: " +
+            "{\"timestamp\":..., \"stage\":..., \"records_processed\":..., \"records_rejected\":..., " +
+            "\"last_position\":..., \"elapsed_seconds\":...}.",
+            optional = true)
+    public File PROGRESS_JSON;
+
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
@@ -286,6 +301,56 @@ public class LiftoverVcf extends CommandLineProgram {
     private final Map<String, Long> liftedByDestContig = new TreeMap<>();
     private final Map<String, Long> liftedBySourceContig = new TreeMap<>();
 
+    /**
+     * Builds a single NDJSON event line for the PROGRESS_JSON sidecar. Field order is fixed so
+     * downstream consumers can rely on a stable schema; this method is the only writer of the
+     * format and is unit-tested by {@code LiftoverVcfProgressJsonTest}. JSON is built by hand to
+     * avoid adding a runtime dependency for a single use site.
+     */
+    static String formatProgressEvent(final Instant timestamp, final String stage,
+                                      final long recordsProcessed, final long recordsRejected,
+                                      final String lastPosition, final long elapsedSeconds) {
+        final StringBuilder sb = new StringBuilder(160);
+        sb.append('{');
+        sb.append("\"timestamp\":\"").append(timestamp.truncatedTo(ChronoUnit.SECONDS)).append("\",");
+        sb.append("\"stage\":\"").append(escapeJsonString(stage)).append("\",");
+        sb.append("\"records_processed\":").append(recordsProcessed).append(',');
+        sb.append("\"records_rejected\":").append(recordsRejected).append(',');
+        sb.append("\"last_position\":");
+        if (lastPosition == null) {
+            sb.append("null");
+        } else {
+            sb.append('"').append(escapeJsonString(lastPosition)).append('"');
+        }
+        sb.append(',');
+        sb.append("\"elapsed_seconds\":").append(elapsedSeconds);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    static String escapeJsonString(final String s) {
+        final StringBuilder sb = new StringBuilder(s.length() + 4);
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
+            switch (c) {
+                case '"':  sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        return sb.toString();
+    }
+
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReferenceArgumentCollection() {
@@ -308,8 +373,21 @@ public class LiftoverVcf extends CommandLineProgram {
         IOUtil.assertFileIsReadable(CHAIN);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(REJECT);
+        if (PROGRESS_JSON != null) {
+            IOUtil.assertFileIsWritable(PROGRESS_JSON);
+        }
 
-        
+        final PrintWriter progressJsonWriter;
+        if (PROGRESS_JSON != null) {
+            try {
+                progressJsonWriter = new PrintWriter(new BufferedWriter(new FileWriter(PROGRESS_JSON)), true);
+            } catch (final IOException e) {
+                throw new htsjdk.samtools.SAMException("Could not open PROGRESS_JSON file: " + PROGRESS_JSON, e);
+            }
+        } else {
+            progressJsonWriter = null;
+        }
+
         if (CREATE_INDEX && DISABLE_SORT) {
             log.error("CREATE_INDEX=true and DISABLE_SORT=true are mutually exclusive.");
             return 1;
@@ -407,9 +485,11 @@ public class LiftoverVcf extends CommandLineProgram {
             }
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
+        String lastReadPosition = null;
 
         for (final VariantContext ctx : in) {
             ++total;
+            lastReadPosition = ctx.getContig() + ":" + ctx.getStart();
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
             final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
 
@@ -453,7 +533,17 @@ public class LiftoverVcf extends CommandLineProgram {
                     tryToAddVariant(liftedVC, refSeq, ctx);
                 }
             }
-            progress.record(ctx.getContig(), ctx.getStart());
+            if (progress.record(ctx.getContig(), ctx.getStart()) && progressJsonWriter != null) {
+                progressJsonWriter.println(formatProgressEvent(
+                        Instant.now(), "read", total, failedLiftover + failedAlleleCheck,
+                        lastReadPosition, progress.getElapsedSeconds()));
+            }
+        }
+
+        if (progressJsonWriter != null) {
+            progressJsonWriter.println(formatProgressEvent(
+                    Instant.now(), "read_complete", total, failedLiftover + failedAlleleCheck,
+                    lastReadPosition, progress.getElapsedSeconds()));
         }
 
         final NumberFormat pfmt = new DecimalFormat("0.0000%");
@@ -493,24 +583,40 @@ public class LiftoverVcf extends CommandLineProgram {
         rejectedRecords.close();
         in.close();
 
-        if (!DISABLE_SORT) { 
+        if (!DISABLE_SORT) {
             ////////////////////////////////////////////////////////////////////////
             // Write the sorted outputs to the final output file
             ////////////////////////////////////////////////////////////////////////
             sorter.doneAdding();
             progress = new ProgressLogger(log, 1000000, "written");
             log.info("Writing out sorted records to final VCF.");
-    
+
+            String lastWritePosition = null;
             for (final VariantContext ctx : sorter) {
                 this.acceptedRecords.add(ctx);
-                progress.record(ctx.getContig(), ctx.getStart());
+                lastWritePosition = ctx.getContig() + ":" + ctx.getStart();
+                if (progress.record(ctx.getContig(), ctx.getStart()) && progressJsonWriter != null) {
+                    progressJsonWriter.println(formatProgressEvent(
+                            Instant.now(), "write", progress.getCount(), 0L,
+                            lastWritePosition, progress.getElapsedSeconds()));
+                }
             }
-    
+
+            if (progressJsonWriter != null) {
+                progressJsonWriter.println(formatProgressEvent(
+                        Instant.now(), "write_complete", progress.getCount(), 0L,
+                        lastWritePosition, progress.getElapsedSeconds()));
+            }
+
             sorter.cleanup();
         }
 
         this.acceptedRecords.close();
-        
+
+        if (progressJsonWriter != null) {
+            progressJsonWriter.close();
+        }
+
         return 0;
     }
 

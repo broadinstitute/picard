@@ -173,6 +173,75 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testProgressJsonSidecarIsWritten() throws IOException {
+        final String filename = "testLiftoverFailingVariants.vcf";
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-progress-json.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-progress-json.vcf");
+        final File progressJson = new File(OUTPUT_DATA_PATH, "progress.json");
+        final File input = new File(TEST_DATA_PATH, filename);
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+        progressJson.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "PROGRESS_JSON=" + progressJson.getAbsolutePath(),
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        Assert.assertTrue(progressJson.exists(), "PROGRESS_JSON file should have been created");
+        final List<String> lines = Files.readAllLines(progressJson.toPath());
+        Assert.assertFalse(lines.isEmpty(),
+                "PROGRESS_JSON should contain at least the final read_complete event");
+
+        boolean sawReadComplete = false;
+        for (final String line : lines) {
+            Assert.assertTrue(line.startsWith("{") && line.endsWith("}"),
+                    "Each line should be a self-contained JSON object: " + line);
+            Assert.assertTrue(line.contains("\"timestamp\":"), "Missing timestamp field: " + line);
+            Assert.assertTrue(line.contains("\"stage\":"), "Missing stage field: " + line);
+            Assert.assertTrue(line.contains("\"records_processed\":"), "Missing records_processed: " + line);
+            Assert.assertTrue(line.contains("\"records_rejected\":"), "Missing records_rejected: " + line);
+            Assert.assertTrue(line.contains("\"last_position\":"), "Missing last_position: " + line);
+            Assert.assertTrue(line.contains("\"elapsed_seconds\":"), "Missing elapsed_seconds: " + line);
+            if (line.contains("\"stage\":\"read_complete\"")) {
+                sawReadComplete = true;
+            }
+        }
+        Assert.assertTrue(sawReadComplete,
+                "Expected a read_complete event so small inputs still produce a JSON event");
+    }
+
+    @Test
+    public void testNoProgressJsonByDefault() {
+        // When PROGRESS_JSON is not specified, the run must not create any sidecar file
+        // and must still succeed end-to-end.
+        final String filename = "testLiftoverFailingVariants.vcf";
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-no-progress-json.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-no-progress-json.vcf");
+        final File input = new File(TEST_DATA_PATH, filename);
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
+    @Test
     public void testReverseComplementFailureDoesNotErrorOut() {
         final VariantContextBuilder builder = new VariantContextBuilder().source("test").loc("chr1", 1, 4);
         final Allele originalRef = Allele.create("TCAT", true);
