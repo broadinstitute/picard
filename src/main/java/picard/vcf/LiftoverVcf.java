@@ -217,7 +217,8 @@ public class LiftoverVcf extends CommandLineProgram {
             "Provides a stable parsing target for downstream tooling, as an alternative to " +
             "regex-parsing the human-readable log output. Each line is one JSON object: " +
             "{\"timestamp\":..., \"stage\":..., \"records_processed\":..., \"records_rejected\":..., " +
-            "\"last_position\":..., \"elapsed_seconds\":...}.",
+            "\"last_position\":..., \"elapsed_seconds\":...}. " +
+            "Existing files at this path are overwritten.",
             optional = true)
     public File PROGRESS_JSON;
 
@@ -377,17 +378,6 @@ public class LiftoverVcf extends CommandLineProgram {
             IOUtil.assertFileIsWritable(PROGRESS_JSON);
         }
 
-        final PrintWriter progressJsonWriter;
-        if (PROGRESS_JSON != null) {
-            try {
-                progressJsonWriter = new PrintWriter(new BufferedWriter(new FileWriter(PROGRESS_JSON)), true);
-            } catch (final IOException e) {
-                throw new htsjdk.samtools.SAMException("Could not open PROGRESS_JSON file: " + PROGRESS_JSON, e);
-            }
-        } else {
-            progressJsonWriter = null;
-        }
-
         if (CREATE_INDEX && DISABLE_SORT) {
             log.error("CREATE_INDEX=true and DISABLE_SORT=true are mutually exclusive.");
             return 1;
@@ -412,6 +402,20 @@ public class LiftoverVcf extends CommandLineProgram {
             refSeqs.put(rec.getSequenceName(), walker.get(rec.getSequenceIndex()));
         }
         CloserUtil.close(walker);
+
+        // Opened here (rather than alongside the early IOUtil.assertFileIsWritable checks above)
+        // so that we don't truncate the user's PROGRESS_JSON path on early-return validation
+        // failures (CREATE_INDEX/DISABLE_SORT mutex, missing sequence dictionary).
+        final PrintWriter progressJsonWriter;
+        if (PROGRESS_JSON != null) {
+            try {
+                progressJsonWriter = new PrintWriter(new BufferedWriter(new FileWriter(PROGRESS_JSON)), true);
+            } catch (final IOException e) {
+                throw new htsjdk.samtools.SAMException("Could not open PROGRESS_JSON file: " + PROGRESS_JSON, e);
+            }
+        } else {
+            progressJsonWriter = null;
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Setup the outputs

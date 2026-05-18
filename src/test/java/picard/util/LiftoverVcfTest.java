@@ -200,7 +200,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         Assert.assertFalse(lines.isEmpty(),
                 "PROGRESS_JSON should contain at least the final read_complete event");
 
-        boolean sawReadComplete = false;
+        String readCompleteLine = null;
         for (final String line : lines) {
             Assert.assertTrue(line.startsWith("{") && line.endsWith("}"),
                     "Each line should be a self-contained JSON object: " + line);
@@ -211,11 +211,23 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             Assert.assertTrue(line.contains("\"last_position\":"), "Missing last_position: " + line);
             Assert.assertTrue(line.contains("\"elapsed_seconds\":"), "Missing elapsed_seconds: " + line);
             if (line.contains("\"stage\":\"read_complete\"")) {
-                sawReadComplete = true;
+                readCompleteLine = line;
             }
         }
-        Assert.assertTrue(sawReadComplete,
+        Assert.assertNotNull(readCompleteLine,
                 "Expected a read_complete event so small inputs still produce a JSON event");
+
+        // Verify the formatter wiring: the read_complete event should report the exact input
+        // record count (3 for testLiftoverFailingVariants.vcf). A regression that passed
+        // progress.getCount() instead of `total` to formatProgressEvent would still pass the
+        // field-presence checks above but would fail here.
+        final java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\"records_processed\":(\\d+)").matcher(readCompleteLine);
+        Assert.assertTrue(m.find(),
+                "records_processed field not parseable in read_complete event: " + readCompleteLine);
+        Assert.assertEquals(Long.parseLong(m.group(1)), 3L,
+                "Expected records_processed=3 (testLiftoverFailingVariants.vcf has 3 records); got: "
+                        + readCompleteLine);
     }
 
     @Test
