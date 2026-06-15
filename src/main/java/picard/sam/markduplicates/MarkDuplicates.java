@@ -95,7 +95,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             "then unmapped mates and secondary/supplementary reads are not excluded from the duplication test and can be" +
             " marked as duplicate reads.</p>  " +
 
-            "<p>If desired, duplicates can be removed using the REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES options.</p>" +
+            "<p>If desired, duplicates can be removed using the REMOVE_DUPLICATES and REMOVE_SEQUENCING_DUPLICATES options.</p>" +
             "" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
