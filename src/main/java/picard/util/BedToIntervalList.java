@@ -2,31 +2,19 @@ package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.CloseableTribbleIterator;
-import htsjdk.tribble.FeatureReader;
-import htsjdk.tribble.annotation.Strand;
-import htsjdk.tribble.bed.BEDCodec;
-import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.argparser.Hidden;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.IntervalsManipulationProgramGroup;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * @author nhomer
@@ -111,123 +99,28 @@ public class BedToIntervalList extends CommandLineProgram {
     public boolean KEEP_LENGTH_ZERO_INTERVALS = false;
 
     private final Log LOG = Log.getInstance(getClass());
-    private int missingIntervals = 0;
-    private int missingRegion = 0;
-    private int lengthZeroIntervals = 0;
 
     @Override
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
-        if(INPUT.getPath().equals("/dev/stdin")) {
-            throw new IllegalArgumentException("BedToIntervalList does not support reading from standard input - a file must be provided.");
+        // Only assert readability for regular files; /dev/stdin, FIFOs, named pipes,
+        // and process-substitution paths (/dev/fd/N) all return false from isFile().
+        if (INPUT.isFile()) {
+            IOUtil.assertFileIsReadable(INPUT);
         }
-
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        try {
-            // create a new header that we will assign the dictionary provided by the SAMSequenceDictionaryExtractor to.
-            final SAMFileHeader header = new SAMFileHeader();
-            final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
-            header.setSequenceDictionary(samSequenceDictionary);
-            // set the sort order to be sorted by coordinate, which is actually done below
-            // by getting the .uniqued() intervals list before we write out the file
-            header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-            final IntervalList intervalList = new IntervalList(header);
+        final SAMFileHeader header = new SAMFileHeader();
+        final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY.toPath());
+        header.setSequenceDictionary(samSequenceDictionary);
+        header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
-            final FeatureReader<BEDFeature> bedReader = AbstractFeatureReader.getFeatureReader(INPUT.getAbsolutePath(), new BEDCodec(), false);
-            final CloseableTribbleIterator<BEDFeature> iterator = bedReader.iterator();
-            final ProgressLogger progressLogger = new ProgressLogger(LOG, (int) 1e6);
-
-            while (iterator.hasNext()) {
-                final BEDFeature bedFeature = iterator.next();
-                final String sequenceName = bedFeature.getContig();
-                final int start = bedFeature.getStart();
-                final int end = bedFeature.getEnd();
-                // NB: do not use an empty name within an interval
-                final String name;
-                if (bedFeature.getName().isEmpty()) {
-                    name = null;
-                } else {
-                    name = bedFeature.getName();
-                }
-
-                final SAMSequenceRecord sequenceRecord = header.getSequenceDictionary().getSequence(sequenceName);
-
-                // Do some validation
-                if (null == sequenceRecord) {
-                    if (DROP_MISSING_CONTIGS) {
-                        LOG.info(String.format("Dropping interval with missing contig: %s:%d-%d", sequenceName, bedFeature.getStart(), bedFeature.getEnd()));
-                        missingIntervals++;
-                        missingRegion += bedFeature.getEnd() - bedFeature.getStart();
-                        continue;
-                    }
-                    throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
-                } else if (start < 1) {
-                    throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
-                } else if (sequenceRecord.getSequenceLength() < start) {
-                    throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-                } else if ((end == 0 && start != 1 ) //special case for 0-length interval at the start of a contig
-                        || end < 0 ) {
-                    throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
-                } else if (sequenceRecord.getSequenceLength() < end) {
-                    throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
-                } else if (end < start - 1) {
-                    throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
-                }
-
-                final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
-
-                // Use end+1 since bed start gets shifted by 1 using 1-based coordinates
-                if ((start == end+1) && !KEEP_LENGTH_ZERO_INTERVALS) {
-                    LOG.info(String.format("Skipping writing length zero interval at %s:%d-%d.", sequenceName, start, end));
-                } else {
-                    final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
-                    intervalList.add(interval);
-                }
-
-                if (start == end+1) {
-                    lengthZeroIntervals++;
-                }
-
-                progressLogger.record(sequenceName, start);
-            }
-            CloserUtil.close(bedReader);
-
-            if (DROP_MISSING_CONTIGS) {
-                if (missingRegion == 0) {
-                    LOG.info("There were no missing regions.");
-                } else {
-                    LOG.warn(String.format("There were %d missing regions with a total of %d bases", missingIntervals, missingRegion));
-                }
-            }
-
-            if (!KEEP_LENGTH_ZERO_INTERVALS) {
-                if (lengthZeroIntervals == 0) {
-                    LOG.info("No input regions had length zero, so none were skipped.");
-                } else {
-                    LOG.info(String.format("Skipped writing a total of %d entries with length zero in the input file.", lengthZeroIntervals));
-                }
-            } else {
-                if (lengthZeroIntervals > 0) {
-                    LOG.warn(String.format("Input file had %d entries with length zero. Run with the KEEP_LENGTH_ZERO_INTERVALS flag set to false to remove these.", lengthZeroIntervals));
-                }
-            }
-
-            // Sort and write the output
-            IntervalList out = intervalList;
-            if (SORT) {
-                out = out.sorted();
-            }
-            if (UNIQUE) {
-                out = out.uniqued();
-            }
-            out.write(OUTPUT);
-            LOG.info(String.format("Wrote %d intervals spanning a total of %d bases", out.getIntervals().size(),out.getBaseCount()));
-
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+        IntervalList out = IntervalFileReader.fromBed(INPUT, header, DROP_MISSING_CONTIGS, KEEP_LENGTH_ZERO_INTERVALS);
+        if (SORT) out = out.sorted();
+        if (UNIQUE) out = out.uniqued();
+        out.write(OUTPUT);
+        LOG.info(String.format("Wrote %d intervals spanning a total of %d bases",
+                out.getIntervals().size(), out.getBaseCount()));
 
         return 0;
     }
