@@ -60,6 +60,7 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
 import picard.cmdline.programgroups.VariantManipulationProgramGroup;
 import picard.util.LiftoverUtils;
+import picard.util.ProgressJsonWriter;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -206,6 +207,16 @@ public class LiftoverVcf extends CommandLineProgram {
     @Argument(doc = "Output VCF file will be written on the fly but it won't be sorted and indexed.", optional = true)
     public boolean DISABLE_SORT = false;
 
+    @Argument(doc = "Optional path to a JSON Lines (NDJSON) sidecar giving downstream tooling a " +
+            "stable parsing target instead of the human-readable log output. Existing files are " +
+            "overwritten; output is UTF-8 with one JSON object per line: " +
+            "{\"timestamp\":..., \"stage\":..., \"records_processed\":..., \"records_rejected\":..., " +
+            "\"last_position\":..., \"elapsed_seconds\":...}. Stage is read/read_complete then " +
+            "write/write_complete (or a single write_skipped when DISABLE_SORT=true). " +
+            "records_processed counts input records in read stages and written records in write stages.",
+            optional = true)
+    public File PROGRESS_JSON;
+
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
@@ -286,6 +297,9 @@ public class LiftoverVcf extends CommandLineProgram {
     private final Map<String, Long> liftedByDestContig = new TreeMap<>();
     private final Map<String, Long> liftedBySourceContig = new TreeMap<>();
 
+    /** Cadence (in input records) at which read-phase PROGRESS_JSON events are emitted. */
+    private static final long PROGRESS_JSON_INTERVAL = 1_000_000;
+
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReferenceArgumentCollection() {
@@ -308,8 +322,10 @@ public class LiftoverVcf extends CommandLineProgram {
         IOUtil.assertFileIsReadable(CHAIN);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(REJECT);
+        if (PROGRESS_JSON != null) {
+            IOUtil.assertFileIsWritable(PROGRESS_JSON);
+        }
 
-        
         if (CREATE_INDEX && DISABLE_SORT) {
             log.error("CREATE_INDEX=true and DISABLE_SORT=true are mutually exclusive.");
             return 1;
@@ -335,183 +351,222 @@ public class LiftoverVcf extends CommandLineProgram {
         }
         CloserUtil.close(walker);
 
-        ////////////////////////////////////////////////////////////////////////
-        // Setup the outputs
-        ////////////////////////////////////////////////////////////////////////
-        final VCFHeader inHeader = in.getFileHeader();
-        // build VCF header, remove the old '##reference=file://...'
-        final VCFHeader outHeader = new VCFHeader(
-            inHeader.getMetaDataInInputOrder()
-                .stream()
-                .filter(M->!M.getKey().equals("reference"))
-                .collect(Collectors.toCollection(LinkedHashSet::new)),
-            inHeader.getSampleNamesInOrder()
-            );
-        outHeader.setSequenceDictionary(walker.getSequenceDictionary());
-        if (WRITE_ORIGINAL_POSITION) {
-            for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
-        }
+        // Opened after the early validation returns above so a failed run never truncates an
+        // existing PROGRESS_JSON file. try-with-resources closes it on every exit path.
+        final ProgressJsonWriter progressJson =
+                PROGRESS_JSON == null ? null : new ProgressJsonWriter(PROGRESS_JSON);
+        try (progressJson) {
+            ////////////////////////////////////////////////////////////////////////
+            // Setup the outputs
+            ////////////////////////////////////////////////////////////////////////
+            final VCFHeader inHeader = in.getFileHeader();
+            // build VCF header, remove the old '##reference=file://...'
+            final VCFHeader outHeader = new VCFHeader(
+                inHeader.getMetaDataInInputOrder()
+                    .stream()
+                    .filter(M->!M.getKey().equals("reference"))
+                    .collect(Collectors.toCollection(LinkedHashSet::new)),
+                inHeader.getSampleNamesInOrder()
+                );
+            outHeader.setSequenceDictionary(walker.getSequenceDictionary());
+            if (WRITE_ORIGINAL_POSITION) {
+                for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
+            }
 
-        outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.SWAPPED_ALLELES, 0, VCFHeaderLineType.Flag,
-                "The REF and the ALT alleles have been swapped in liftover due to changes in the reference. " +
-                "It is possible that not all INFO annotations reflect this swap, and in the genotypes, " +
-                "only the GT, PL, and AD fields have been modified. You should check the TAGS_TO_REVERSE parameter that was used " +
-                        "during the LiftOver to be sure."));
-        outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.REV_COMPED_ALLELES, 0, VCFHeaderLineType.Flag,
-                "The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the " +
-                        "previous reference to the current one was on the negative strand."));
-        outHeader.addMetaDataLine(new VCFHeaderLine("reference", REFERENCE_SEQUENCE.toURI().toString()));
-        
-        this.acceptedRecords = new VariantContextWriterBuilder()
-            .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
-            .modifyOption(Options.INDEX_ON_THE_FLY,!DISABLE_SORT)
-            .setOutputFile(OUTPUT)
-            .setReferenceDictionary(walker.getSequenceDictionary())
-            .build();
-        
-        this.acceptedRecords.writeHeader(outHeader);
+            outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.SWAPPED_ALLELES, 0, VCFHeaderLineType.Flag,
+                    "The REF and the ALT alleles have been swapped in liftover due to changes in the reference. " +
+                    "It is possible that not all INFO annotations reflect this swap, and in the genotypes, " +
+                    "only the GT, PL, and AD fields have been modified. You should check the TAGS_TO_REVERSE parameter that was used " +
+                            "during the LiftOver to be sure."));
+            outHeader.addMetaDataLine(new VCFInfoHeaderLine(LiftoverUtils.REV_COMPED_ALLELES, 0, VCFHeaderLineType.Flag,
+                    "The REF and the ALT alleles have been reverse complemented in liftover since the mapping from the " +
+                            "previous reference to the current one was on the negative strand."));
+            outHeader.addMetaDataLine(new VCFHeaderLine("reference", REFERENCE_SEQUENCE.toURI().toString()));
 
-        rejectedRecords = new VariantContextWriterBuilder().setOutputFile(REJECT)
-                .unsetOption(Options.INDEX_ON_THE_FLY)
+            this.acceptedRecords = new VariantContextWriterBuilder()
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
+                .modifyOption(Options.INDEX_ON_THE_FLY,!DISABLE_SORT)
+                .setOutputFile(OUTPUT)
+                .setReferenceDictionary(walker.getSequenceDictionary())
                 .build();
-        final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
-        for (final VCFFilterHeaderLine line : FILTERS) {
-            rejectHeader.addMetaDataLine(line);
-        }
 
-        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_LOCUS, 1, VCFHeaderLineType.String, "The locus of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
-        rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_ALLELES, 1, VCFHeaderLineType.String, "The alleles of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
+            this.acceptedRecords.writeHeader(outHeader);
 
-        rejectedRecords.writeHeader(rejectHeader);
-
-        ////////////////////////////////////////////////////////////////////////
-        // Read the input VCF, lift the records over and write to the sorting
-        // collection.
-        ////////////////////////////////////////////////////////////////////////
-        long total = 0;
-        
-        if (DISABLE_SORT) {
-            log.info("Lifting variants over and writing the output file. Variants will not be sorted.");
-            
-            sorter = null;
-            }
-        else {
-            log.info("Lifting variants over and sorting (not yet writing the output file.)");
-    
-            sorter = SortingCollection.newInstance(VariantContext.class,
-                    new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
-                    outHeader.getVCFRecordComparator(),
-                    MAX_RECORDS_IN_RAM,
-                    TMP_DIR);
+            rejectedRecords = new VariantContextWriterBuilder().setOutputFile(REJECT)
+                    .unsetOption(Options.INDEX_ON_THE_FLY)
+                    .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
+                    .build();
+            final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
+            for (final VCFFilterHeaderLine line : FILTERS) {
+                rejectHeader.addMetaDataLine(line);
             }
 
-        ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
+            rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_LOCUS, 1, VCFHeaderLineType.String, "The locus of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
+            rejectHeader.addMetaDataLine(new VCFInfoHeaderLine(ATTEMPTED_ALLELES, 1, VCFHeaderLineType.String, "The alleles of the variant in the TARGET prior to failing due to reference allele mismatching to the target reference."));
 
-        for (final VariantContext ctx : in) {
-            ++total;
-            final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
-            final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
+            rejectedRecords.writeHeader(rejectHeader);
 
-            // target is null when there is no good liftover for the context. This happens either when it fall in a gap
-            // where there isn't a chain, or if a large enough proportion of it is diminished by the "deletion" at the
-            // end of each interval in a chain.
-            if (target == null) {
-                rejectVariant(ctx, FILTER_NO_TARGET);
-                continue;
-            }
-
-            // the target is the lifted-over interval comprised of the start/stop of the variant context,
-            // if the sizes of target and ctx do not match, it means that the interval grew or shrank during
-            // liftover which must be due to straddling multiple intervals in the liftover chain.
-            // This would invalidate the indel as it isn't clear what the resulting alleles should be.
-            if (ctx.getReference().length() != target.length()) {
-                rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_INTERVALS);
-                continue;
-            }
-
-            final ReferenceSequence refSeq;
-
-            if (!refSeqs.containsKey(target.getContig())) {
-                rejectVariant(ctx, FILTER_NO_TARGET);
-
-                final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
-                if (WARN_ON_MISSING_CONTIG) {
-                    log.warn(missingContigMessage);
-                } else {
-                    log.error(missingContigMessage);
-                    return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
-                }
-            } else {
-                refSeq = refSeqs.get(target.getContig());
-
-                final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION, WRITE_ORIGINAL_ALLELES);
-                // the liftedVC can be null if the liftover fails because of a problem with reverse complementing
-                if (liftedVC == null) {
-                    rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_REV_COMP);
-                } else {
-                    tryToAddVariant(liftedVC, refSeq, ctx);
-                }
-            }
-            progress.record(ctx.getContig(), ctx.getStart());
-        }
-
-        final NumberFormat pfmt = new DecimalFormat("0.0000%");
-        final String pct = pfmt.format((failedLiftover + failedAlleleCheck) / (double) total);
-        log.info("Processed ", total, " variants.");
-        log.info(failedLiftover, " variants failed to liftover.");
-        log.info(failedAlleleCheck, " variants lifted over but had mismatching reference alleles after lift over.");
-        log.info(pct, " of variants were not successfully lifted over and written to the output.");
-
-        final Set<String> contigUnion = new TreeSet<>();
-        contigUnion.addAll(liftedBySourceContig.keySet());
-        contigUnion.addAll(rejectsByContig.keySet());
-
-        log.info("liftover success by source contig:");
-        for (String contig : contigUnion) {
-            final long success = liftedBySourceContig.getOrDefault(contig, 0L);
-            final long fail = rejectsByContig.getOrDefault(contig, 0L);
-            final String liftPct = pfmt.format((double)success / (double)(success + fail));
-
-            log.info(contig, ": ", success, " / ", (success + fail), " (", liftPct, ")");
-        }
-
-        log.info("lifted variants by target contig:");
-        for (String contig : liftedByDestContig.keySet()) {
-            log.info(contig, ": ", liftedByDestContig.get(contig));
-        }
-        if (liftedByDestContig.isEmpty()) {
-            log.info("no successfully lifted variants");
-        }
-
-        if (RECOVER_SWAPPED_REF_ALT) {
-            log.info(totalTrackedAsSwapRefAlt, " variants were lifted by swapping REF/ALT alleles.");
-        } else {
-            log.warn(totalTrackedAsSwapRefAlt, " variants with a swapped REF/ALT were identified, but were not recovered.  See RECOVER_SWAPPED_REF_ALT and associated caveats.");
-        }
-
-        rejectedRecords.close();
-        in.close();
-
-        if (!DISABLE_SORT) { 
             ////////////////////////////////////////////////////////////////////////
-            // Write the sorted outputs to the final output file
+            // Read the input VCF, lift the records over and write to the sorting
+            // collection.
             ////////////////////////////////////////////////////////////////////////
-            sorter.doneAdding();
-            progress = new ProgressLogger(log, 1000000, "written");
-            log.info("Writing out sorted records to final VCF.");
-    
-            for (final VariantContext ctx : sorter) {
-                this.acceptedRecords.add(ctx);
+            long total = 0;
+
+            if (DISABLE_SORT) {
+                log.info("Lifting variants over and writing the output file. Variants will not be sorted.");
+
+                sorter = null;
+                }
+            else {
+                log.info("Lifting variants over and sorting (not yet writing the output file.)");
+
+                sorter = SortingCollection.newInstance(VariantContext.class,
+                        new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
+                        outHeader.getVCFRecordComparator(),
+                        MAX_RECORDS_IN_RAM,
+                        TMP_DIR);
+                }
+
+            ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
+            String lastReadPosition = null;
+
+            for (final VariantContext ctx : in) {
+                ++total;
+                if (progressJson != null) {
+                    lastReadPosition = ctx.getContig() + ":" + ctx.getStart();
+                    // Emit on a fixed input-record cadence (not progress.record's, which skips
+                    // rejected variants) so a bad chain shows a rising reject rate while running.
+                    if (total % PROGRESS_JSON_INTERVAL == 0) {
+                        progressJson.emit("read", total, failedLiftover + failedAlleleCheck,
+                                lastReadPosition, progress.getElapsedSeconds());
+                    }
+                }
+                final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
+                final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
+
+                // target is null when there is no good liftover for the context. This happens either when it fall in a gap
+                // where there isn't a chain, or if a large enough proportion of it is diminished by the "deletion" at the
+                // end of each interval in a chain.
+                if (target == null) {
+                    rejectVariant(ctx, FILTER_NO_TARGET);
+                    continue;
+                }
+
+                // the target is the lifted-over interval comprised of the start/stop of the variant context,
+                // if the sizes of target and ctx do not match, it means that the interval grew or shrank during
+                // liftover which must be due to straddling multiple intervals in the liftover chain.
+                // This would invalidate the indel as it isn't clear what the resulting alleles should be.
+                if (ctx.getReference().length() != target.length()) {
+                    rejectVariant(ctx, FILTER_INDEL_STRADDLES_TWO_INTERVALS);
+                    continue;
+                }
+
+                final ReferenceSequence refSeq;
+
+                if (!refSeqs.containsKey(target.getContig())) {
+                    rejectVariant(ctx, FILTER_NO_TARGET);
+
+                    final String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
+                    if (WARN_ON_MISSING_CONTIG) {
+                        log.warn(missingContigMessage);
+                    } else {
+                        log.error(missingContigMessage);
+                        return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
+                    }
+                } else {
+                    refSeq = refSeqs.get(target.getContig());
+
+                    final VariantContext liftedVC = LiftoverUtils.liftVariant(ctx, target, refSeq, WRITE_ORIGINAL_POSITION, WRITE_ORIGINAL_ALLELES);
+                    // the liftedVC can be null if the liftover fails because of a problem with reverse complementing
+                    if (liftedVC == null) {
+                        rejectVariant(ctx, FILTER_CANNOT_LIFTOVER_REV_COMP);
+                    } else {
+                        tryToAddVariant(liftedVC, refSeq, ctx);
+                    }
+                }
                 progress.record(ctx.getContig(), ctx.getStart());
             }
-    
-            sorter.cleanup();
-        }
 
-        this.acceptedRecords.close();
-        
-        return 0;
+            if (progressJson != null) {
+                progressJson.emit("read_complete", total, failedLiftover + failedAlleleCheck,
+                        lastReadPosition, progress.getElapsedSeconds());
+            }
+
+            final NumberFormat pfmt = new DecimalFormat("0.0000%");
+            final String pct = pfmt.format((failedLiftover + failedAlleleCheck) / (double) total);
+            log.info("Processed ", total, " variants.");
+            log.info(failedLiftover, " variants failed to liftover.");
+            log.info(failedAlleleCheck, " variants lifted over but had mismatching reference alleles after lift over.");
+            log.info(pct, " of variants were not successfully lifted over and written to the output.");
+
+            final Set<String> contigUnion = new TreeSet<>();
+            contigUnion.addAll(liftedBySourceContig.keySet());
+            contigUnion.addAll(rejectsByContig.keySet());
+
+            log.info("liftover success by source contig:");
+            for (String contig : contigUnion) {
+                final long success = liftedBySourceContig.getOrDefault(contig, 0L);
+                final long fail = rejectsByContig.getOrDefault(contig, 0L);
+                final String liftPct = pfmt.format((double)success / (double)(success + fail));
+
+                log.info(contig, ": ", success, " / ", (success + fail), " (", liftPct, ")");
+            }
+
+            log.info("lifted variants by target contig:");
+            for (String contig : liftedByDestContig.keySet()) {
+                log.info(contig, ": ", liftedByDestContig.get(contig));
+            }
+            if (liftedByDestContig.isEmpty()) {
+                log.info("no successfully lifted variants");
+            }
+
+            if (RECOVER_SWAPPED_REF_ALT) {
+                log.info(totalTrackedAsSwapRefAlt, " variants were lifted by swapping REF/ALT alleles.");
+            } else {
+                log.warn(totalTrackedAsSwapRefAlt, " variants with a swapped REF/ALT were identified, but were not recovered.  See RECOVER_SWAPPED_REF_ALT and associated caveats.");
+            }
+
+            rejectedRecords.close();
+            in.close();
+
+            if (!DISABLE_SORT) {
+                ////////////////////////////////////////////////////////////////////////
+                // Write the sorted outputs to the final output file
+                ////////////////////////////////////////////////////////////////////////
+                sorter.doneAdding();
+                progress = new ProgressLogger(log, 1000000, "written");
+                log.info("Writing out sorted records to final VCF.");
+
+                String lastWritePosition = null;
+                for (final VariantContext ctx : sorter) {
+                    this.acceptedRecords.add(ctx);
+                    final boolean milestone = progress.record(ctx.getContig(), ctx.getStart());
+                    if (progressJson != null) {
+                        lastWritePosition = ctx.getContig() + ":" + ctx.getStart();
+                        if (milestone) {
+                            progressJson.emit("write", progress.getCount(), 0L,
+                                    lastWritePosition, progress.getElapsedSeconds());
+                        }
+                    }
+                }
+
+                if (progressJson != null) {
+                    progressJson.emit("write_complete", progress.getCount(), 0L,
+                            lastWritePosition, progress.getElapsedSeconds());
+                }
+
+                sorter.cleanup();
+            } else if (progressJson != null) {
+                // DISABLE_SORT writes accepted records on the fly (in tryToAddVariant) with no
+                // separate write phase; emit a terminal sentinel reporting the written count.
+                progressJson.emit("write_skipped", total - failedLiftover - failedAlleleCheck,
+                        failedLiftover + failedAlleleCheck, lastReadPosition, progress.getElapsedSeconds());
+            }
+
+            this.acceptedRecords.close();
+
+            return 0;
+        }
     }
 
     private void rejectVariant(final VariantContext ctx, final String reason) {

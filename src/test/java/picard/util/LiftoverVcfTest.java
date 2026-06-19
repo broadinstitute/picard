@@ -173,6 +173,123 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testProgressJsonSidecarIsWritten() throws IOException {
+        final String filename = "testLiftoverFailingVariants.vcf";
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-progress-json.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-progress-json.vcf");
+        final File progressJson = new File(OUTPUT_DATA_PATH, "progress.json");
+        final File input = new File(TEST_DATA_PATH, filename);
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+        progressJson.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "PROGRESS_JSON=" + progressJson.getAbsolutePath(),
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        Assert.assertTrue(progressJson.exists(), "PROGRESS_JSON file should have been created");
+        // NDJSON must be LF-terminated, not CRLF, regardless of platform.
+        final byte[] rawBytes = Files.readAllBytes(progressJson.toPath());
+        Assert.assertFalse(new String(rawBytes, java.nio.charset.StandardCharsets.UTF_8).contains("\r"),
+                "PROGRESS_JSON must use LF line endings, not CRLF");
+        final List<String> lines = Files.readAllLines(progressJson.toPath());
+        Assert.assertFalse(lines.isEmpty(),
+                "PROGRESS_JSON should contain at least the final read_complete event");
+
+        String readCompleteLine = null;
+        for (final String line : lines) {
+            Assert.assertTrue(line.startsWith("{") && line.endsWith("}"),
+                    "Each line should be a self-contained JSON object: " + line);
+            Assert.assertTrue(line.contains("\"timestamp\":"), "Missing timestamp field: " + line);
+            Assert.assertTrue(line.contains("\"stage\":"), "Missing stage field: " + line);
+            Assert.assertTrue(line.contains("\"records_processed\":"), "Missing records_processed: " + line);
+            Assert.assertTrue(line.contains("\"records_rejected\":"), "Missing records_rejected: " + line);
+            Assert.assertTrue(line.contains("\"last_position\":"), "Missing last_position: " + line);
+            Assert.assertTrue(line.contains("\"elapsed_seconds\":"), "Missing elapsed_seconds: " + line);
+            if (line.contains("\"stage\":\"read_complete\"")) {
+                readCompleteLine = line;
+            }
+        }
+        Assert.assertNotNull(readCompleteLine,
+                "Expected a read_complete event so small inputs still produce a JSON event");
+
+        // Verify the formatter wiring: the read_complete event should report the exact input
+        // record count (3 for testLiftoverFailingVariants.vcf). A regression that passed the wrong
+        // counter to ProgressJsonWriter.formatEvent would still pass the field-presence checks
+        // above but would fail here.
+        final java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\"records_processed\":(\\d+)").matcher(readCompleteLine);
+        Assert.assertTrue(m.find(),
+                "records_processed field not parseable in read_complete event: " + readCompleteLine);
+        Assert.assertEquals(Long.parseLong(m.group(1)), 3L,
+                "Expected records_processed=3 (testLiftoverFailingVariants.vcf has 3 records); got: "
+                        + readCompleteLine);
+    }
+
+    @Test
+    public void testNoProgressJsonByDefault() {
+        // When PROGRESS_JSON is not specified the run must still succeed end-to-end; the writer
+        // is simply never constructed.
+        final String filename = "testLiftoverFailingVariants.vcf";
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-no-progress-json.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-no-progress-json.vcf");
+        final File input = new File(TEST_DATA_PATH, filename);
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
+    @Test
+    public void testProgressJsonWriteSkippedWhenSortDisabled() throws IOException {
+        // With DISABLE_SORT there is no separate write phase, so the sidecar should carry a
+        // terminal write_skipped event rather than write/write_complete.
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-progress-nosort.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-progress-nosort.vcf");
+        final File progressJson = new File(OUTPUT_DATA_PATH, "progress-nosort.json");
+        final File input = new File(TEST_DATA_PATH, "testLiftoverFailingVariants.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+        progressJson.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "PROGRESS_JSON=" + progressJson.getAbsolutePath(),
+                "DISABLE_SORT=true",
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final List<String> lines = Files.readAllLines(progressJson.toPath());
+        Assert.assertTrue(lines.stream().anyMatch(l -> l.contains("\"stage\":\"write_skipped\"")),
+                "Expected a write_skipped event when DISABLE_SORT=true; got: " + lines);
+        Assert.assertTrue(lines.stream().noneMatch(l -> l.contains("\"stage\":\"write_complete\"")),
+                "Did not expect a write_complete event when DISABLE_SORT=true; got: " + lines);
+    }
+
+    @Test
     public void testReverseComplementFailureDoesNotErrorOut() {
         final VariantContextBuilder builder = new VariantContextBuilder().source("test").loc("chr1", 1, 4);
         final Allele originalRef = Allele.create("TCAT", true);
