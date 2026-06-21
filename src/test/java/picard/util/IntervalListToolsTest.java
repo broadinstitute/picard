@@ -23,6 +23,7 @@
  */
 package picard.util;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
@@ -59,8 +60,8 @@ import java.util.stream.Stream;
 
 public class IntervalListToolsTest extends CommandLineProgramTest {
     private static final String TEST_DATA_DIR = "testdata/picard/util/";
-    private static final String CLOUD_DATA_DIR = GCloudTestUtils.getTestInputPath() + "picard/intervals/";
-    private static final String CLOUD_OUTPUT_DIR = GCloudTestUtils.getTestStaging() + "picard/";
+    private static final IOPath CLOUD_DATA_DIR = PicardHtsPath.resolve(GCloudTestUtils.getTestInputPath(), "picard/intervals/");
+    private static final IOPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.getTestStaging(), "picard/");
     private final Path scatterable = Paths.get(TEST_DATA_DIR, "scatterable.interval_list");
     private final PicardHtsPath scatterableCloud = new PicardHtsPath(CLOUD_DATA_DIR + "scatterable.interval_list");
     private final Path scatterableStdin = Paths.get(TEST_DATA_DIR, "scatterable_stdin");
@@ -242,9 +243,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
 
     private IntervalList tester(final IntervalListTools.Action action, final boolean invert, final boolean unique,
                                 final boolean dontMergeAbutting, final Path input1, final Path input2, final boolean cloudOutput) {
-        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : null;
         final String prefix = "IntervalListTools";
-        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(outputDirFullName, prefix, INTERVAL_LIST_EXTENSION);
+        final IOPath output = PicardBucketUtils.getTempFilePath(cloudOutput ? CLOUD_OUTPUT_DIR : null, prefix, INTERVAL_LIST_EXTENSION);
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT=" + output);
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -263,9 +263,8 @@ public class IntervalListToolsTest extends CommandLineProgramTest {
     private long testerCountOutput(IntervalListTools.Action action, IntervalListTools.Output outputValue, boolean invert,
                                    boolean unique, boolean dontMergeAbutting, Path input1, Path input2,
                                    final boolean cloudOutput) throws IOException {
-        final String outputDirFullName = cloudOutput ? CLOUD_OUTPUT_DIR : null;
         final String prefix = "IntervalListTools";
-        final PicardHtsPath countOutput = PicardBucketUtils.getTempFilePath(outputDirFullName, prefix, ".txt");
+        final IOPath countOutput = PicardBucketUtils.getTempFilePath(cloudOutput ? CLOUD_OUTPUT_DIR : null, prefix, ".txt");
 
         final List<String> args = buildStandardTesterArguments(action, invert, unique, dontMergeAbutting, input1, input2);
         args.add("OUTPUT_VALUE=" + outputValue);

@@ -22,7 +22,7 @@ public class GCloudTestUtilsUnitTest {
 
     @Test(groups = "bucket")
     public void testUpload() throws IOException {
-        final Path uploadDir = Files.createTempDirectory(IOUtil.getPath(GCloudTestUtils.getTestStaging()), "picardTest");
+        final Path uploadDir = Files.createTempDirectory(GCloudTestUtils.getTestStaging().toPath(), "picardTest");
         final Path txtUpload = uploadDir.resolve("tmp.txt");
         try {
             Assert.assertFalse(Files.exists(txtUpload));
