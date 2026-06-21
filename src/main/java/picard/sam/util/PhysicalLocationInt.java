@@ -11,16 +11,16 @@ import picard.PicardException;
  */
 public class PhysicalLocationInt implements PhysicalLocation {
 
-    public short tile = -1;
+    public int tile = -1;
     public int x = -1, y = -1;
 
     public short getReadGroup() { throw new PicardException("Not Implemented"); }
 
     public void setReadGroup(final short readGroup) { throw new PicardException("Not Implemented"); }
 
-    public short getTile() { return tile; }
+    public int getTile() { return tile; }
 
-    public void setTile(final short tile) { this.tile = tile; }
+    public void setTile(final int tile) { this.tile = tile; }
 
     public int getX() { return x; }
 
