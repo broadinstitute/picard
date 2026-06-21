@@ -77,8 +77,8 @@ public class ReadBaseStratification {
     /**
      * defaults to 2500
      **/
-    public static void setLocationBinSize(int locationBinSize) { 
-       LOCATION_BIN_SIZE = locationBinSize; 
+    public static void setLocationBinSize(int locationBinSize) {
+        LOCATION_BIN_SIZE = locationBinSize;
     }
 
     /* ******* general-use classes, for defining and creating new stratifiers ***********/
@@ -116,6 +116,7 @@ public class ReadBaseStratification {
         public Integer stratify(RecordAndOffset recordAndOffset, SAMLocusAndReference locusInfo) {
             return stratify(recordAndOffset.getRecord());
         }
+
         //Static ReadNameParser so that cache of read names/ PhysicalLocations is shared between all PositionBasedStratifiers
         static final ReadNameParser readNameParser = new ReadNameParser();
 
@@ -576,9 +577,10 @@ public class ReadBaseStratification {
 
         /**
          * Returns the number of bases associated with I and D CIGAR elements.
+         *
          * @param samRecord The read to investigate
          * @return The number of bases associated with I and D CIGAR elements, or null if the evaluation of either
-         *         operation caused an error
+         * operation caused an error
          */
         @Override
         public Integer stratify(final SAMRecord samRecord) {
@@ -751,6 +753,11 @@ public class ReadBaseStratification {
     public static final RecordAndOffsetStratifier<Integer> baseCycleStratifier = wrapStaticFunction(ReadBaseStratification::stratifyCycle, "cycle");
 
     /**
+     * Get the one-based distance from the nearest end of the insert, taking both reads into account
+     */
+    public static final RecordAndOffsetStratifier<Integer> baseInsertEndDistanceStratifier = wrapStaticFunction(ReadBaseStratification::stratifyInsertEndDistance, "insert_end_distance");
+
+    /**
      * Stratifies into the read-pairs estimated insert-length, as long as it isn't larger than 10x the length of the read
      */
     public static final RecordAndOffsetStratifier<Integer> insertLengthStratifier = wrapStaticReadFunction(ReadBaseStratification::stratifyInsertLength, "insert_length");
@@ -839,6 +846,9 @@ public class ReadBaseStratification {
         READ_GROUP(() -> readgroupStratifier, "The read-group id of the read."),
         CYCLE(() -> baseCycleStratifier, "The machine cycle during which the base was read."),
         BINNED_CYCLE(() -> binnedReadCycleStratifier, "The binned machine cycle. Similar to CYCLE, but binned into 5 evenly spaced ranges across the size of the read.  This stratifier may produce confusing results when used on datasets with variable sized reads."),
+        INSERT_END_DISTANCE(() -> baseInsertEndDistanceStratifier, "Distance from the nearest insert end for FR read pairs. " +
+                "Negative if closer to read 2's 3' end, e.g., 150x2 reads with 100bp overlap will have values (R1) 51, .., 100, -100, .., -51 for the overlapping region. " +
+                "Overlapping bases get matching values. As it is designed for use with OVERLAPPING_ERROR, value in non-overlapping region is unspecified, and non-FR orientations, unpaired, chimeric reads, and reads with TLEN=0 are ignored."),
         SOFT_CLIPS(() -> softClipsLengthStratifier, "The number of softclipped bases the read has."),
         INSERT_LENGTH(() -> insertLengthStratifier, "The insert-size they came from (taken from the TLEN field.)"),
         BASE_QUALITY(() -> baseQualityStratifier, "The base quality."),
@@ -884,6 +894,10 @@ public class ReadBaseStratification {
                 return null;
             }
             return sam.getFirstOfPairFlag() ? ReadOrdinality.FIRST : ReadOrdinality.SECOND;
+        }
+
+        public boolean isFirst() {
+            return this.equals(FIRST);
         }
     }
 
@@ -1067,8 +1081,9 @@ public class ReadBaseStratification {
 
     /**
      * Returns the number of bases associated with a specific cigar operator within a read
+     *
      * @param samRecord The read to investigate
-     * @param operator The operator that the counted bases should be associated with
+     * @param operator  The operator that the counted bases should be associated with
      */
     private static Integer stratifyCigarOperatorsInRead(final SAMRecord samRecord, final CigarOperator operator) {
         try {
@@ -1122,6 +1137,58 @@ public class ReadBaseStratification {
 
         return retval;
     }
+
+
+    /**
+     * Get the one-based distance from the nearest end of the insert.
+     * <p>
+     * Positive values indicate bases closer to the 5' end of the insert (as read by read 1),
+     * negative values indicate bases closer to the 3' end. The absolute value
+     * is the distance from the nearer end. Overlapping bases from read pairs
+     * should therefore get the same absolute distance value.
+     * <p>
+     * Example with insert size = 10 and read length = 6:
+     * <pre>
+     * Insert positions:      1    2    3    4    5    6    7    8    9   10
+     * Read 1 (fwd):         ────────────────────────────>>
+     *   cycle:               1    2    3    4    5    6
+     *   insert_end_dist:     1    2    3    4    5   -5
+     *
+     * Read 2 (rev):                           <<─────────────────────────────
+     *   cycle:                                   6    5    4    3    2    1
+     *   insert_end_dist:                         5   -5   -4   -3   -2   -1
+     *
+     * Overlapping bases at positions 5 and 6 have matching insert_end_dist (5 and -5).
+     * </pre>
+     *
+     * @param recordAndOffset the read and offset in question
+     * @return the distance from the nearest insert end
+     */
+    private static Integer stratifyInsertEndDistance(final RecordAndOffset recordAndOffset) {
+        final SAMRecord rec = recordAndOffset.getRecord();
+        final ReadOrdinality ordinality = ReadOrdinality.of(rec);
+
+        // Return null for unpaired reads
+        if (ordinality == null) return null;
+
+        // Return null if mate is unmapped or on different chromosome (chimeric)
+        if (rec.getMateUnmappedFlag() || !rec.getReferenceIndex().equals(rec.getMateReferenceIndex())) return null;
+
+        // Return null for non-FR orientation (RF, tandem, etc.)
+        if (SamPairUtil.getPairOrientation(rec) != SamPairUtil.PairOrientation.FR) return null;
+
+        final int cycle = stratifyCycle(recordAndOffset);
+        final int insertSize = Math.abs(rec.getInferredInsertSize());
+
+        // Return null if insert size is zero (TLEN not set or invalid)
+        if (insertSize == 0) return null;
+
+        final int cycleFromEnd = insertSize - cycle + 1;
+
+        // At the midpoint (cycle == cycleFromEnd), we consider it part of the first half (positive)
+        return (cycle <= cycleFromEnd ? cycle : -cycleFromEnd) * (ordinality.isFirst() ? 1 : -1);
+    }
+
 
     private static Integer stratifyHomopolymerLength(final RecordAndOffset recordAndOffset, final SAMLocusAndReference locusInfo) {
 
@@ -1277,8 +1344,7 @@ public class ReadBaseStratification {
                 if (cigarElement.getOperator().consumesReadBases() && readPosition == offset) {
                     return cigarElement;
                 }
-            }
-            else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion) {
+            } else if (recordAndOffset.getAlignmentType() == AbstractRecordAndOffset.AlignmentType.Deletion) {
                 if (readPosition == offset + 1) {
                     return cigarElement;
                 }
