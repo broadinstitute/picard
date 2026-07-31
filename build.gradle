@@ -59,7 +59,7 @@ def ensureBuildPrerequisites(buildPrerequisitesMessage) {
 
 ensureBuildPrerequisites(buildPrerequisitesMessage)
 
-final htsjdkVersion = System.getProperty('htsjdk.version', '4.3.0')
+final htsjdkVersion = System.getProperty('htsjdk.version', '5.0.0')
 final log4jVersion = System.getProperty('log4j.version', '2.20.0')
 
 dependencies {
@@ -134,9 +134,14 @@ tasks.withType(Jar).configureEach {
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // compile UTF-8 source regardless of platform locale
+}
+
 tasks.withType(Javadoc).configureEach {
     // do this for all javadoc tasks, including gatkDoc
     options.addStringOption('Xdoclint:none')
+    options.encoding = 'UTF-8' // read UTF-8 source regardless of platform locale
 }
 
 javadoc {
@@ -214,6 +219,10 @@ tasks.withType(Test).configureEach {
     outputs.upToDateWhen { false } // tests will always rerun
     description = "Runs the unit tests"
 
+    // Pin the test JVM charset so tests are locale-independent. DocumentationGenerationIntegrationTest
+    // spawns javadoc in-process, which reads UTF-8 source (e.g. "MAPQ ≥ 20") and errors under an ASCII default charset.
+    defaultCharacterEncoding = 'UTF-8'
+
     jvmArgs += [
             // required for MergeBamAlignmentTest
             '--add-opens', 'java.base/java.io=ALL-UNNAMED'
@@ -239,8 +248,9 @@ tasks.withType(Test).configureEach {
     }
 
     // set heap size for the test JVM(s)
+    // htsjdk 5.0.0 RANSNx16Encode (CRAM 3.1) requires more heap than previous versions
     minHeapSize = "1G"
-    maxHeapSize = "2G"
+    maxHeapSize = "4G"
     if (System.env.CI == "true") {  //if running under a CI output less into the logs
         int count = 0
 
