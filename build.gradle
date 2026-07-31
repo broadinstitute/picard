@@ -248,8 +248,9 @@ tasks.withType(Test).configureEach {
     }
 
     // set heap size for the test JVM(s)
+    // htsjdk 5.0.0 RANSNx16Encode (CRAM 3.1) requires more heap than previous versions
     minHeapSize = "1G"
-    maxHeapSize = "2G"
+    maxHeapSize = "4G"
     if (System.env.CI == "true") {  //if running under a CI output less into the logs
         int count = 0
 
