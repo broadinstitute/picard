@@ -286,6 +286,19 @@ public class LiftoverVcf extends CommandLineProgram {
     private final Map<String, Long> liftedByDestContig = new TreeMap<>();
     private final Map<String, Long> liftedBySourceContig = new TreeMap<>();
 
+    /**
+     * Formats a one-line rejection-rate summary for the read-phase progress log. Emitted
+     * alongside each {@link ProgressLogger} milestone so operators can monitor the reject rate
+     * live rather than waiting until the run completes to compare INPUT and REJECT record counts.
+     */
+    static String formatRejectionSummary(final long rejected, final long processed) {
+        final NumberFormat numFmt = new DecimalFormat("#,###");
+        final NumberFormat pctFmt = new DecimalFormat("0.00%");
+        final String rate = processed > 0 ? pctFmt.format((double) rejected / processed) : "0.00%";
+        return "Rejected so far: " + numFmt.format(rejected) + " of " + numFmt.format(processed)
+                + " (" + rate + " reject rate)";
+    }
+
     @Override
     protected ReferenceArgumentCollection makeReferenceArgumentCollection() {
         return new ReferenceArgumentCollection() {
@@ -453,7 +466,9 @@ public class LiftoverVcf extends CommandLineProgram {
                     tryToAddVariant(liftedVC, refSeq, ctx);
                 }
             }
-            progress.record(ctx.getContig(), ctx.getStart());
+            if (progress.record(ctx.getContig(), ctx.getStart())) {
+                log.info(formatRejectionSummary(failedLiftover + failedAlleleCheck, total));
+            }
         }
 
         final NumberFormat pfmt = new DecimalFormat("0.0000%");
