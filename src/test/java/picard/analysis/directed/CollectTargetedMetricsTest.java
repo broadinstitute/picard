@@ -166,14 +166,26 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 // the tests from taking too long to run.
                 {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 2000,
                         Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
-                        Arrays.asList(0.01, 0.54, 0.93,  0.99,  0.99)  // Expected sensitivity
+                        Arrays.asList(0.01, 0.54, 0.93,  0.99,  0.99), // Expected sensitivity
+                        45 // PCR Error Rate
+                },
+
+                // This is the same as the previous test but uses a lower value for the pcrErrorRate.
+                // The important thing captured here is that the expected sensitivities should be
+                // less than or equal to the values from the previous test.
+                {tempSamFile, outfile, tsOutfile, perTargetOutfile, referenceFile, singleIntervals, 2000,
+                        Arrays.asList(0.01, 0.05, 0.10,  0.30,  0.50), // Allele fraction
+                        Arrays.asList(0.00, 0.31, 0.87,  0.99,  0.99), // Expected sensitivity
+                        10 // PCR Error Rate
                 }
         };
     }
 
     @Test(dataProvider = "theoreticalSensitivityDataProvider")
     public void runCollectTargetedMetricsTheoreticalSensitivityTest(final File input, final File outfile, final File tsOutfile, final File perTargetOutfile, final String referenceFile,
-                                              final String targetIntervals, final int sampleSize, final List<Double> alleleFractions, final List<Double> expectedSensitivities) throws IOException {
+                                              final String targetIntervals, final int sampleSize,
+                                              final List<Double> alleleFractions, final List<Double> expectedSensitivities,
+                                              final int pcrErrorRate) throws IOException {
 
         final String[] args = new String[] {
                 "TARGET_INTERVALS=" + targetIntervals,
@@ -184,6 +196,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 "LEVEL=ALL_READS",
                 "AMPLICON_INTERVALS=" + targetIntervals,
                 "THEORETICAL_SENSITIVITY_OUTPUT=" + tsOutfile.getAbsolutePath(),
+                "PCR_ERROR_RATE=" + pcrErrorRate,
                 "SAMPLE_SIZE=" + sampleSize
         };
 

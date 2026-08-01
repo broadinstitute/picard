@@ -141,6 +141,9 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
     @Argument(doc="Allele fraction for which to calculate theoretical sensitivity.", optional = true)
     public List<Double> ALLELE_FRACTION = new ArrayList<>(Arrays.asList(0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5));
 
+    @Argument(doc="Maximum value allowed for base quality resulting from overlapping reads.  Often this is governed by PCR error rate. (Phred scale)", optional = true)
+    public int MAX_OVERLAP_BASE_QUAL = 45;
+
     @Argument(doc = "If true, fast algorithm is used.")
     public boolean USE_FAST_ALGORITHM = false;
 
@@ -248,8 +251,11 @@ static final String USAGE_DETAILS = "<p>This tool collects metrics about the fra
         if (THEORETICAL_SENSITIVITY_OUTPUT != null) {
             // Write out theoretical sensitivity results.
             final MetricsFile<TheoreticalSensitivityMetrics, ?> theoreticalSensitivityMetrics = getMetricsFile();
-            log.info("Calculating theoretical sentitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
-            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE, collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION);
+            log.info("Calculating theoretical sensitivity at " + ALLELE_FRACTION.size() + " allele fractions.");
+
+            List<TheoreticalSensitivityMetrics> tsm = TheoreticalSensitivity.calculateSensitivities(SAMPLE_SIZE,
+                    collector.getUnfilteredDepthHistogram(), collector.getUnfilteredBaseQHistogram(), ALLELE_FRACTION,
+                    collector.getMetrics(dupeFilter, adapterFilter, mapqFilter, pairFilter).PCT_EXC_OVERLAP, MAX_OVERLAP_BASE_QUAL);
             theoreticalSensitivityMetrics.addAllMetrics(tsm);
             theoreticalSensitivityMetrics.write(THEORETICAL_SENSITIVITY_OUTPUT);
         }

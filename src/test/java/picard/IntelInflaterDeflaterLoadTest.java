@@ -52,7 +52,7 @@ public class IntelInflaterDeflaterLoadTest {
     }
 
     private void checkIntelSupported(final String componentName) {
-        if (!SystemUtils.IS_OS_LINUX && !SystemUtils.IS_OS_MAC) {
+        if ((!SystemUtils.IS_OS_LINUX && !SystemUtils.IS_OS_MAC)) {
             throw new SkipException(componentName + " is not available on this platform");
         }
 
