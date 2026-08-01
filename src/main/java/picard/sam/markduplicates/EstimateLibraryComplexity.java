@@ -285,7 +285,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         public void encode(final PairedReadSequence val) {
             try {
                 this.out.writeShort(val.readGroup);
-                this.out.writeShort(val.tile);
+                this.out.writeInt(val.tile);
                 this.out.writeInt(val.x);
                 this.out.writeInt(val.y);
                 this.out.writeInt(val.read1.length);
@@ -306,7 +306,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                     return null;
                 }
 
-                val.tile = this.in.readShort();
+                val.tile = this.in.readInt();
                 val.x = this.in.readInt();
                 val.y = this.in.readInt();
 

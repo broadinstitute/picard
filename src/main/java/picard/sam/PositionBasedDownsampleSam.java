@@ -202,13 +202,13 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
        look per-readgroup, but at this point I'm making the assumptions that I need to downsample a
        sample where all the readgroups came from the same type of flowcell. */
 
-    CollectionUtil.DefaultingMap.Factory<Coord, Short> defaultingMapFactory = aShort -> new Coord();
+    CollectionUtil.DefaultingMap.Factory<Coord, Integer> defaultingMapFactory = anInt -> new Coord();
 
-    final private Map<Short, Coord> tileCoord = new CollectionUtil.DefaultingMap<>(defaultingMapFactory, true);
+    final private Map<Integer, Coord> tileCoord = new CollectionUtil.DefaultingMap<>(defaultingMapFactory, true);
 
 
-    final Map<Short, Histogram<Short>> xPositions = new HashMap<>();
-    final Map<Short, Histogram<Short>> yPositions = new HashMap<>();
+    final Map<Integer, Histogram<Integer>> xPositions = new HashMap<>();
+    final Map<Integer, Histogram<Integer>> yPositions = new HashMap<>();
 
     @Override
     protected String[] customCommandLineValidation() {

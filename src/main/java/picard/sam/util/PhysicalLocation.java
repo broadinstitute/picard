@@ -14,9 +14,9 @@ public interface PhysicalLocation extends Serializable {
 
     public void setReadGroup(short rg);
 
-    public short getTile();
+    public int getTile();
 
-    public void setTile(short tile);
+    public void setTile(int tile);
 
     public int getX();
 

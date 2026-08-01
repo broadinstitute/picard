@@ -211,7 +211,7 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
             log.debug("Building adjacency graph for duplicate group");
         }
 
-        final Map<Integer, List<Integer>> tileRGmap = new HashMap<>();
+        final Map<List<Integer>, List<Integer>> tileRGmap = new HashMap<>();
 
         int keeperIndex = -1;
         for (int i = 0; i < list.size(); i++) {
@@ -220,7 +220,7 @@ public class OpticalDuplicateFinder extends ReadNameParser implements Serializab
                 keeperIndex = i;
             }
             if (currentLoc.hasLocation()) {
-                final int key = ((int) currentLoc.getReadGroup() << 16) + currentLoc.getTile();
+                final List<Integer> key = Arrays.asList((int) currentLoc.getReadGroup(), currentLoc.getTile());
 
                 if (tileRGmap.containsKey(key)) {
                     tileRGmap.get(key).add(i);
