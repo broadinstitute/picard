@@ -32,9 +32,12 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.SAMException;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
@@ -46,6 +49,7 @@ import static picard.analysis.GcBiasMetricsCollector.PerUnitGcBiasMetricsCollect
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -506,7 +510,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
             };
             Assert.assertEquals(runPicardCommandLine(args), 1);
 
-            Assert.assertTrue(stdoutCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));  
+            Assert.assertTrue(stdoutCapture.toString().contains("The histogram file cannot be written because it requires R, which is not available in the GATK Lite Docker image."));
         }
         finally {
             System.setErr(stderr);
@@ -515,7 +519,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
             }
             else{
                 System.clearProperty(RExecutor.GATK_LITE_DOCKER_ENV_VAR);
-            } 
+            }
         }
     }
 
@@ -565,5 +569,116 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.GC_NC_80_100, 0.0);
             }
         }
+    }
+
+    /**
+     * AlignedAdapterReads.sam has 2 reads: one with MAPQ=0 and one with MAPQ=3.
+     * Returns {minMapq, expectedAlignedReads} pairs.
+     */
+    @DataProvider(name = "minimumMappingQualityData")
+    public Object[][] minimumMappingQualityData() {
+        return new Object[][]{
+                {0, 2},  // both reads pass (MAPQ=0 and MAPQ=3 both >= 0)
+                {1, 1},  // MAPQ=0 filtered, MAPQ=3 passes
+                {3, 1},  // MAPQ=0 filtered, MAPQ=3 passes (boundary: 3 >= 3)
+                {4, 0},  // both filtered (MAPQ=3 < 4)
+        };
+    }
+
+    /**
+     * Test the MINIMUM_MAPPING_QUALITY (MIN_MAPQ) parameter.
+     * Verifies that reads below the mapping quality threshold are excluded from analysis.
+     */
+    @Test(dataProvider = "minimumMappingQualityData")
+    public void testMinimumMappingQuality(final int minMapq, final long expectedAlignedReads) throws IOException {
+        final File input = new File("testdata/picard/metrics/AlignedAdapterReads.sam");
+        final File summaryOutfile = File.createTempFile("test_mapq" + minMapq, ".gc_bias.summary_metrics");
+        final File detailsOutfile = File.createTempFile("test_mapq" + minMapq, ".gc_bias.detail_metrics");
+        final File pdf = File.createTempFile("test_mapq" + minMapq, ".pdf");
+        summaryOutfile.deleteOnExit();
+        detailsOutfile.deleteOnExit();
+        pdf.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + detailsOutfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
+                "SUMMARY_OUTPUT=" + summaryOutfile.getAbsolutePath(),
+                "CHART_OUTPUT=" + pdf.getAbsolutePath(),
+                "SCAN_WINDOW_SIZE=100",
+                "MINIMUM_GENOME_FRACTION=1.0E-5",
+                "IS_BISULFITE_SEQUENCED=false",
+                "LEVEL=ALL_READS",
+                "ASSUME_SORTED=true",
+                "MINIMUM_MAPPING_QUALITY=" + minMapq
+        };
+        runPicardCommandLine(args);
+
+        Assert.assertEquals(countAlignedReads(summaryOutfile), expectedAlignedReads,
+                "Expected " + expectedAlignedReads + " aligned reads with MINIMUM_MAPPING_QUALITY=" + minMapq);
+    }
+
+    @DataProvider(name = "excludeIntervalsFormats")
+    public Object[][] excludeIntervalsFormats() throws IOException {
+        // interval_list: chrM:330-340 (1-based inclusive)
+        final File intervalListFile = File.createTempFile("test_intervals", ".interval_list");
+        intervalListFile.deleteOnExit();
+        final IntervalList intervalList = new IntervalList(SAMSequenceDictionaryExtractor.extractDictionary(dict.toPath()));
+        intervalList.add(new Interval("chrM", 330, 340));
+        intervalList.write(intervalListFile);
+
+        // BED: chrM 329 340 (0-based half-open, equivalent to chrM:330-340 1-based)
+        final File bedFile = File.createTempFile("test_intervals", ".bed");
+        bedFile.deleteOnExit();
+        try (final FileWriter writer = new FileWriter(bedFile)) {
+            writer.write("chrM\t329\t340\n");
+        }
+
+        return new Object[][]{
+                {intervalListFile},
+                {bedFile},
+        };
+    }
+
+    /**
+     * Test EXCLUDE_INTERVALS with both BED and interval_list formats.
+     * AlignedAdapterReads.sam has 2 reads: one at position 227 (ending ~329) and one at position 253 (ending ~334).
+     * Excluding chrM:330-340 removes only the second read.
+     */
+    @Test(dataProvider = "excludeIntervalsFormats")
+    public void testExcludeIntervals(final File intervalsFile) throws IOException {
+        final File summaryOutfile = File.createTempFile("test_exclude_intervals", ".gc_bias.summary_metrics");
+        final File detailsOutfile = File.createTempFile("test_exclude_intervals", ".gc_bias.detail_metrics");
+        final File pdf = File.createTempFile("test_exclude_intervals", ".pdf");
+        summaryOutfile.deleteOnExit();
+        detailsOutfile.deleteOnExit();
+        pdf.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + new File("testdata/picard/metrics/AlignedAdapterReads.sam").getAbsolutePath(),
+                "OUTPUT=" + detailsOutfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + CHR_M_REFERENCE.getAbsolutePath(),
+                "SUMMARY_OUTPUT=" + summaryOutfile.getAbsolutePath(),
+                "CHART_OUTPUT=" + pdf.getAbsolutePath(),
+                "SCAN_WINDOW_SIZE=100",
+                "MINIMUM_GENOME_FRACTION=1.0E-5",
+                "IS_BISULFITE_SEQUENCED=false",
+                "LEVEL=ALL_READS",
+                "ASSUME_SORTED=true",
+                "EXCLUDE_INTERVALS=" + intervalsFile.getAbsolutePath()
+        };
+        runPicardCommandLine(args);
+
+        Assert.assertEquals(countAlignedReads(summaryOutfile), 1);
+    }
+
+    private long countAlignedReads(final File summaryFile) throws IOException {
+        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(summaryFile));
+        return output.getMetrics().stream()
+                .filter(m -> m.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS))
+                .mapToLong(m -> m.ALIGNED_READS)
+                .findFirst()
+                .orElse(0);
     }
 }

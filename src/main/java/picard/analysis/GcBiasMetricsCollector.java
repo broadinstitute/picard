@@ -28,7 +28,10 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.OverlapDetector;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
@@ -54,6 +57,10 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     private static final int BINS = 101;
     //Use to calculate additional results without duplicates
     private boolean ignoreDuplicates;
+    //Minimum mapping quality for reads to be included
+    private final Integer minimumMappingQuality;
+    //Intervals to exclude from analysis
+    private final OverlapDetector<Interval> intervalsToExclude;
 
     //will hold the relevant gc information per contig
     private byte [] gc = null;
@@ -64,16 +71,25 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
                                   final boolean bisulfite) {
-        this(accumulationLevels, windowsByGc, samRgRecords, scanWindowSize, bisulfite, false);
+        this(accumulationLevels, windowsByGc, samRgRecords, scanWindowSize, bisulfite, false, null, null);
     }
 
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
                                   final boolean bisulfite, final boolean ignoreDuplicates) {
+        this(accumulationLevels, windowsByGc, samRgRecords, scanWindowSize, bisulfite, ignoreDuplicates, null, null);
+    }
+
+    public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
+                                  final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
+                                  final boolean bisulfite, final boolean ignoreDuplicates,
+                                  final Integer minimumMappingQuality, final IntervalList intervalsToExclude) {
         this.scanWindowSize = scanWindowSize;
         this.bisulfite = bisulfite;
         this.windowsByGc = windowsByGc;
         this.ignoreDuplicates = ignoreDuplicates;
+        this.minimumMappingQuality = minimumMappingQuality;
+        this.intervalsToExclude = intervalsToExclude != null ? OverlapDetector.create(intervalsToExclude.getIntervals()) : null;
         setup(accumulationLevels, samRgRecords);
     }
 
@@ -112,6 +128,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         final static String READS_USED_ALL = "ALL";
         final static String READS_USED_UNIQUE = "UNIQUE";
         private int logCounter;
+        // Counters for filtered reads
+        private long readsFilteredByMapQ = 0;
+        private long readsFilteredByIntervals = 0;
 
         /////////////////////////////////////////////////////////////////////////////
         //Records the accumulation level for each level of collection and initializes
@@ -142,6 +161,18 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 return;
             }
             if (!rec.getReadUnmappedFlag()) {
+                // Filter by mapping quality if threshold is set
+                if (minimumMappingQuality != null && rec.getMappingQuality() < minimumMappingQuality) {
+                    readsFilteredByMapQ++;
+                    return;
+                }
+
+                // Filter reads that overlap excluded intervals
+                if (intervalsToExclude != null && intervalsToExclude.overlapsAny(rec)) {
+                    readsFilteredByIntervals++;
+                    return;
+                }
+
                 if (referenceIndex != rec.getReferenceIndex() || gc == null) {
                     final ReferenceSequence ref = args.getRef();
                     refBases = ref.getBases();
@@ -165,7 +196,35 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
         }
 
         @Override
-        public void finish() {}
+        public void finish() {
+            // Log filtering statistics if any filters were applied
+            if (minimumMappingQuality != null || intervalsToExclude != null) {
+                final String level = getAccumulationLevel();
+                log.info(String.format("Filtering statistics for %s:", level));
+
+                if (minimumMappingQuality != null) {
+                    log.info(String.format("  Reads filtered by MAPQ < %d: %,d",
+                        minimumMappingQuality, readsFilteredByMapQ));
+                }
+
+                if (intervalsToExclude != null) {
+                    log.info(String.format("  Reads filtered by excluded intervals: %,d",
+                        readsFilteredByIntervals));
+                }
+            }
+        }
+
+        private String getAccumulationLevel() {
+            if (readGroup != null) {
+                return String.format("%s (Read Group: %s)", ACCUMULATION_LEVEL_READ_GROUP, readGroup);
+            } else if (library != null) {
+                return String.format("%s (Library: %s)", ACCUMULATION_LEVEL_LIBRARY, library);
+            } else if (sample != null) {
+                return String.format("%s (Sample: %s)", ACCUMULATION_LEVEL_SAMPLE, sample);
+            } else {
+                return ACCUMULATION_LEVEL_ALL_READS;
+            }
+        }
 
         /////////////////////////////////////////////////////////////////////////////
         //Called to add metrics to the output file for each level of collection
