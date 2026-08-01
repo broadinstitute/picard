@@ -27,9 +27,7 @@ package picard.sam.markduplicates;
 import htsjdk.samtools.*;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.util.*;
-import org.broadinstitute.barclay.argparser.Argument;
-import org.broadinstitute.barclay.argparser.ArgumentCollection;
-import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.*;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.PicardException;
 import picard.cmdline.programgroups.ReadDataManipulationProgramGroup;
@@ -263,6 +261,8 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         // use flow based calculation helper?
         if ( flowBasedArguments.FLOW_MODE ) {
             calcHelper = new MarkDuplicatesForFlowHelper(this);
+        } else {
+            ensureNoFlowParametersSpecified();
         }
 
         reportMemoryStats("Start of doWork");
@@ -448,6 +448,29 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         finalizeAndWriteMetrics(libraryIdGenerator, getMetricsFile(), METRICS_FILE);
 
         return 0;
+    }
+
+    // make sure no FLOW__ parameter was set (except for FLOW_MODE)
+    private void ensureNoFlowParametersSpecified() {
+        if ( getCommandLineParser() instanceof CommandLineArgumentParser ) {
+            final CommandLineArgumentParser parser = (CommandLineArgumentParser)getCommandLineParser();
+            for (NamedArgumentDefinition def : parser.getNamedArgumentDefinitions()) {
+                final String name = def.getLongName();
+                if (name != "FLOW_MODE" && name.startsWith("FLOW_") && def.getHasBeenSet()) {
+                    throw new PicardException(name + " specified, but no FLOW_MODE");
+                }
+            }
+        } else if ( getCommandLineParser() instanceof LegacyCommandLineArgumentParser ) {
+            final LegacyCommandLineArgumentParser parser = (LegacyCommandLineArgumentParser)getCommandLineParser();
+            if ( parser.getArgv() != null ) {
+                for ( final String name : parser.getArgv() ) {
+                    if (!name.startsWith("FLOW_MODE") && name.startsWith("FLOW_")) {
+                        throw new PicardException(name + " specified, but no FLOW_MODE");
+                    }
+                }
+            }
+
+        }
     }
 
     /**
