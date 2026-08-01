@@ -184,15 +184,15 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                     }
 
                     // Trim the Histogram down to get rid of outliers that would make the chart useless.
-                    final Histogram<Integer> trimmedHistogram = histogram; // alias it
-                    trimmedHistogram.trimByWidth(getWidthToTrimTo(metrics));
+                    histogram.trimByWidth(getWidthToTrimTo(metrics));
 
-                    if (!trimmedHistogram.isEmpty()) {
-                        metrics.MEAN_INSERT_SIZE = trimmedHistogram.getMean();
-                        metrics.STANDARD_DEVIATION = trimmedHistogram.getStandardDeviation();
+                    // Compute metrics that are sensitive to outliers after trimming.
+                    if (!histogram.isEmpty()) {
+                        metrics.MEAN_INSERT_SIZE = histogram.getMean();
+                        metrics.STANDARD_DEVIATION = histogram.getStandardDeviation();
                     }
 
-                    file.addHistogram(trimmedHistogram);
+                    file.addHistogram(histogram);
                     file.addMetric(metrics);
                 }
             }
