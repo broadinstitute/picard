@@ -62,6 +62,10 @@ public class PicardHtsPath extends HtsPath {
         super(rawInputString);
     }
 
+    public PicardHtsPath(final String directory, final String file) {
+        super(directory + file);
+    }
+
     /**
      * Create a PicardHtsPath from an existing {@link HtsPath} or subclass.
      *
@@ -179,10 +183,26 @@ public class PicardHtsPath extends HtsPath {
         return PicardHtsPath.fromPath(path.toPath().resolveSibling(newFileName));
     }
 
+    public static PicardHtsPath replaceExtension(final IOPath path, final String newExtension){
+        return replaceExtension(path, newExtension, false);
+    }
+
+
     /**
      * Wrapper for Path.resolve()
      */
     public static PicardHtsPath resolve(final PicardHtsPath absPath, final String relativePath){
         return PicardHtsPath.fromPath(absPath.toPath().resolve(relativePath));
+    }
+
+    /**
+     * Wrapper for Path.resolveSibling()
+     */
+    public static PicardHtsPath resolveSibling(final PicardHtsPath absPath, final String other){
+        return PicardHtsPath.fromPath(absPath.toPath().resolveSibling(other));
+    }
+
+    public boolean isLocalPath(){
+        return getScheme().equals(PicardBucketUtils.FILE_SCHEME);
     }
 }
