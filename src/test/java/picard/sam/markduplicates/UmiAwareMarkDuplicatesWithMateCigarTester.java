@@ -36,7 +36,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is an extension of AbstractMarkDuplicatesCommandLineProgramTester used to test
@@ -50,6 +52,9 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
     private List<String> expectedAssignedUmis;
     private UmiMetrics expectedMetrics;
     private File umiMetricsFile = new File(getOutputDir(), "umi_metrics.txt");
+    final Map<String, String> expectedRepresentativeReadMap = new HashMap<>();
+    final Map<String, Integer> readIndexMap = new HashMap<>();
+    final Map<String, Integer> expectedSetSizeMap = new HashMap<>();
 
     // This tag is only used for testing, it indicates what we expect to see in the inferred UMI tag.
     private final String expectedUmiTag = "RE";
@@ -196,6 +201,31 @@ public class UmiAwareMarkDuplicatesWithMateCigarTester extends AbstractMarkDupli
     void testRecordHook(final SAMRecord record) {
         if (expectedAssignedUmis != null) {
             Assert.assertEquals(getAssignedUmi(record.getStringAttribute("MI")), record.getAttribute(expectedUmiTag));
+        }
+        if (expectedRepresentativeReadMap.containsKey(record.getReadName())) {
+            if (expectedRepresentativeReadMap.get(record.getReadName()) == null) {
+                if (expectedSetSizeMap.get(record.getReadName()) == null) {
+                    Assert.assertNull(record.getAttribute("DI"));
+                } else {
+                    Assert.assertNotNull(record.getAttribute("DI"));
+                }
+            } else {
+                Assert.assertEquals(record.getAttribute("DI"), readIndexMap.get(expectedRepresentativeReadMap.get(record.getReadName())));
+            }
+            Assert.assertEquals(record.getAttribute("DS"), expectedSetSizeMap.get(record.getReadName()));
+        }
+    }
+
+    @Override
+    void updateExpectationsHook() {
+        try (final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(fastaFiles.get(samRecordSetBuilder.getHeader())).open(getOutput())) {
+            int indexInFile = 0;
+            for (final SAMRecord record : reader) {
+                readIndexMap.putIfAbsent(record.getReadName(), indexInFile);
+                indexInFile++;
+            }
+        } catch (final IOException ex) {
+            Assert.fail("Problem updating read file indices", ex);
         }
     }
 
