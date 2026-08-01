@@ -53,8 +53,10 @@ import org.broadinstitute.barclay.argparser.LegacyCommandLineArgumentParser;
 import org.broadinstitute.barclay.argparser.SpecialArgumentsCollection;
 import picard.cmdline.argumentcollections.OptionalReferenceArgumentCollection;
 import picard.cmdline.argumentcollections.ReferenceArgumentCollection;
+import picard.cmdline.argumentcollections.RequesterPaysArgumentCollection;
 import picard.cmdline.argumentcollections.RequiredReferenceArgumentCollection;
-import picard.nio.PathProvider;
+import picard.nio.GoogleStorageUtils;
+import picard.nio.HttpNioUtils;
 import picard.nio.PicardHtsPath;
 import picard.util.RExecutor;
 
@@ -62,11 +64,9 @@ import java.io.File;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -85,8 +85,8 @@ import java.util.stream.Collectors;
  *
  */
 public abstract class CommandLineProgram {
-    private static String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
-    private static String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
+    private static final String PROPERTY_USE_LEGACY_PARSER = "picard.useLegacyParser";
+    private static final String PROPERTY_CONVERT_LEGACY_COMMAND_LINE = "picard.convertCommandLine";
     private static Boolean useLegacyParser;
     public static String SYNTAX_TRANSITION_URL =
             "https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)";
@@ -131,6 +131,9 @@ public abstract class CommandLineProgram {
     // This is retained for compatibility with existing code that depends on accessing it, and is populated
     // after argument parsing using the value established by the user in the referenceSequence argument collection.
     protected File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
+
+    @ArgumentCollection
+    public RequesterPaysArgumentCollection requesterPays = new RequesterPaysArgumentCollection();
 
     @ArgumentCollection(doc="Special Arguments that have meaning to the argument parsing system.  " +
                 "It is unlikely these will ever need to be accessed by the command line program")
@@ -182,7 +185,7 @@ public abstract class CommandLineProgram {
     }
 
     public int instanceMain(final String[] argv) {
-        String actualArgs[] = argv;
+        String[] actualArgs = argv;
 
         if (System.getProperty(PROPERTY_CONVERT_LEGACY_COMMAND_LINE, "false").equals("true")) {
             actualArgs = CommandLineSyntaxTranslater.convertPicardStyleToPosixStyle(argv);
@@ -249,16 +252,15 @@ public abstract class CommandLineProgram {
         // default reader factory.  At least until https://github.com/samtools/htsjdk/issues/1666 is resolved
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
 
+        // Configure the various filesystem providers
+        GoogleStorageUtils.initialize(requesterPays.getProjectForRequesterPays());
+        HttpNioUtils.initialize();
+
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
 
-            // Output a one liner about who/where and what software/os we're running on
+            // Output a one-liner about who/where and what software/os we're running on
             try {
-                final String pathProvidersMessage =
-                        Arrays.stream(PathProvider.values())
-                                .map(provider -> String.format("Provider %s is%s available;", provider.name(), provider.isAvailable ? "" : " not"))
-                                .collect(Collectors.joining(" "));
-
                 final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
                         ((IntelDeflaterFactory)BlockCompressedOutputStream.getDefaultDeflaterFactory()).usingIntelDeflater());
                 final boolean usingIntelInflater = (BlockGunzipper.getDefaultInflaterFactory() instanceof IntelInflaterFactory &&
@@ -269,7 +271,7 @@ public abstract class CommandLineProgram {
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
                     usingIntelDeflater ? "Intel" : "Jdk", usingIntelInflater ? "Intel" : "Jdk",
-                        pathProvidersMessage,
+                    requesterPays.getDescription(),
                     getCommandLineParser().getVersion());
                 System.err.println(msg);
             }
@@ -409,7 +411,7 @@ public abstract class CommandLineProgram {
             commandLineParser = useLegacyParser() ?
                     new LegacyCommandLineArgumentParser(this) :
                     new CommandLineArgumentParser(this,
-                        Collections.EMPTY_LIST,
+                        Collections.emptyList(),
                         Collections.singleton(CommandLineParserOptions.APPEND_TO_COLLECTIONS));
         }
         return commandLineParser;
@@ -427,9 +429,7 @@ public abstract class CommandLineProgram {
     public static boolean useLegacyParser() {
         if (useLegacyParser == null) {
             final String legacyPropertyValue = System.getProperty(PROPERTY_USE_LEGACY_PARSER);
-            useLegacyParser = legacyPropertyValue == null ?
-                    false :
-                    Boolean.parseBoolean(legacyPropertyValue);
+            useLegacyParser = Boolean.parseBoolean(legacyPropertyValue);
         }
         return useLegacyParser;
     }
@@ -475,7 +475,7 @@ public abstract class CommandLineProgram {
     public static String getStandardUsagePreamble(final Class<?> mainClass) {
         return "USAGE: " + mainClass.getSimpleName() +" [options]\n\n" +
                 (hasWebDocumentation(mainClass) ?
-                        "Documentation: http://broadinstitute.github.io/picard/command-line-overview.html" +
+                        "Documentation: https://broadinstitute.github.io/picard/command-line-overview.html" +
                                 mainClass.getSimpleName() + "\n\n" :
                         "");
     }
@@ -499,7 +499,7 @@ public abstract class CommandLineProgram {
      * @return the link to a FAQ
      */
     public static String getFaqLink() {
-        return "To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp";
+        return "To get help, see https://broadinstitute.github.io/picard/index.html#GettingHelp";
     }
 
     /**

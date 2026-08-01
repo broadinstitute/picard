@@ -36,22 +36,26 @@ import org.threeten.bp.Duration;
 /**
  * This class serves as a connection to google's implementation of nio support for GCS housed files.
  *
- * While the actual code required to connect isn't packaged with Picard (only compiled), the Readme.md file in the
- * github repository describes how it can be used. Additionally, Picard is bundled in GATK4, and its tools exposed via
- * the GATK engine, since the nio library _is_ included the GATK4 jar. NIO enabled tools in picard can connect to
- * GCS when called through GATK4.
- *
  * This class contains hard-coded setting that have been found to work for the access patterns that characterize genomics
  * work. In the future it would make sense to expose these parameters so that they can be controlled via the commandline.
  * However, as the list of Path-enabled tools in picard is small, there seems to be little impetus to do so right now.
  *
  *
  */
-class GoogleStorageUtils {
+public final class GoogleStorageUtils {
 
-    public static void initialize() {
+    public static final int MAX_REOPENS = 20;
+
+    private GoogleStorageUtils(){}
+
+    /**
+     * Set appropriate configuration options for the GCS file system provider.
+     *
+     * @param requesterProject the project to pay with when accessing requester pays buckets
+     */
+    public static void initialize(final String requesterProject) {
         // requester pays support is currently not configured
-        CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(20, null));
+        CloudStorageFileSystemProvider.setDefaultCloudStorageConfiguration(GoogleStorageUtils.getCloudStorageConfiguration(MAX_REOPENS, requesterProject));
         CloudStorageFileSystemProvider.setStorageOptions(GoogleStorageUtils.setGenerousTimeouts(StorageOptions.newBuilder()).build());
     }
 
@@ -62,7 +66,8 @@ class GoogleStorageUtils {
                 .maxChannelReopens(maxReopens);
         if (!Strings.isNullOrEmpty(requesterProject)) {
             // enable requester pays and indicate who pays
-            builder = builder.autoDetectRequesterPays(true).userProject(requesterProject);
+            builder.autoDetectRequesterPays(true)
+                    .userProject(requesterProject);
         }
 
         // this causes the gcs filesystem to treat files that end in a / as a directory
