@@ -139,6 +139,32 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
     public static final String DUPLICATE_SET_SIZE_TAG = "DS";
 
     /**
+     * The optional attribute used to store the canonical single-end (fragment) duplicate key that
+     * MarkDuplicates uses to identify duplicates. The value is a printable rendering of the fields
+     * the fragment-level key is built from: {@code lib=<libraryId>;<referenceIndex>:<unclipped5Prime>:<strand>}.
+     * When barcodes/UMIs are in use (any of BARCODE_TAG, READ_ONE_BARCODE_TAG, READ_TWO_BARCODE_TAG), the
+     * barcode sequences that also distinguish duplicates are appended as a single hyphen-joined field, giving
+     * {@code lib=<libraryId>;<referenceIndex>:<unclipped5Prime>:<strand>:<barcodes>}, where {@code barcodes}
+     * joins the present sequences in key order (the top-strand-normalized BARCODE_TAG UMI, then the
+     * READ_ONE_BARCODE_TAG and READ_TWO_BARCODE_TAG values) with hyphens, e.g. {@code ACGT} or {@code ACGT-TTGA}.
+     * It is written, when {@link #TAG_DUPLICATE_KEY} is set, on every primary, mapped record so that an
+     * external tool can recover the exact duplicate sets Picard computed without re-deriving the key.
+     * <p>
+     * Note that this key carries the verbatim barcode sequences, whereas MarkDuplicates compares barcodes
+     * internally as 32-bit hashes ({@link java.util.Objects#hash} of the UMI, {@link String#hashCode} of the
+     * read-one/read-two barcodes). The two agree on every realistic input; only in the astronomically unlikely
+     * event of a hash collision would they differ, and then this key is the more precise one (it distinguishes
+     * sequences Picard's hashes happened to collapse). In other words the key is never coarser than Picard's
+     * duplicate sets, and finer only in that pathological case.
+     * <p>
+     * The tag name is deliberately lowercase: the SAM specification reserves uppercase two-letter tags for
+     * standard, predefined use and sets aside lowercase tags for locally-defined purposes, which is where
+     * this diagnostic key belongs. This is why it does not follow the uppercase convention of the
+     * {@code DT}/{@code DI}/{@code DS} tags above.
+     */
+    public static final String DUPLICATE_KEY_TAG = "kf";
+
+    /**
      * Enum for the possible values that a duplicate read can be tagged with in the DT attribute.
      */
     public enum DuplicateType {
@@ -192,6 +218,22 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
             "record belongs. This identifier is the index-in-file of the representative read that was selected out " +
             "of the duplicate set.", optional = true)
     public boolean TAG_DUPLICATE_SET_MEMBERS = false;
+
+    @Argument(doc = "If true, write the canonical single-end (fragment) duplicate key to the " +
+            "DUPLICATE_KEY_TAG (kf) attribute on every primary, mapped record. The value is a printable " +
+            "rendering of the fields MarkDuplicates keys on at the fragment level: " +
+            "'lib=<libraryId>;<referenceIndex>:<unclipped5Prime>:<strand>'. When barcodes or UMIs are in use " +
+            "(BARCODE_TAG, READ_ONE_BARCODE_TAG, or READ_TWO_BARCODE_TAG), the barcode sequences that also " +
+            "distinguish duplicates are appended as a single hyphen-joined field ':<barcodes>', joining the " +
+            "present sequences (UMI, then read-one and read-two barcodes), e.g. 'ACGT' or 'ACGT-TTGA'. " +
+            "Two reads of a pair each carry " +
+            "their own fragment key, so the canonical pair key can be reconstructed by combining the two " +
+            "ends; an orphan is a duplicate of a pair iff its key matches a pair end's key. This is purely " +
+            "diagnostic output to let external tools recover Picard's exact duplicate sets; it does not " +
+            "affect marking, metrics, or any other tag. This option is not supported with FLOW_MODE, which " +
+            "matches fragments on a flow-adjusted coordinate within an uncertainty window rather than by the " +
+            "exact key rendered here. Default false.", optional = true)
+    public boolean TAG_DUPLICATE_KEY = false;
 
     @Argument(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
             "sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. " +
@@ -253,6 +295,19 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
      * Then makes a pass through those determining duplicates before re-reading the
      * input file and writing it out with duplication flags set correctly.
      */
+    @Override
+    protected String[] customCommandLineValidation() {
+        // TAG_DUPLICATE_KEY renders the standard unclipped 5' coordinate, but in flow mode MarkDuplicates keys
+        // on a flow-adjusted coordinate and matches fragments within an uncertainty window rather than by exact
+        // equality. The emitted key would therefore not reproduce the duplicate sets flow mode actually marks,
+        // so the two options are mutually exclusive until flow-aware key rendering is implemented.
+        if (TAG_DUPLICATE_KEY && flowBasedArguments.FLOW_MODE) {
+            return new String[]{"TAG_DUPLICATE_KEY is not supported with FLOW_MODE: the canonical fragment key " +
+                    "cannot be rendered for the flow-based, position-uncertain duplicate matching used in flow mode."};
+        }
+        return super.customCommandLineValidation();
+    }
+
     protected int doWork() {
         IOUtil.assertInputsAreValid(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
@@ -399,6 +454,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
                             representativeQueryName = rec.getReadName();
                         }
                     }
+                }
+
+                // Optionally write the canonical fragment duplicate key on every primary, mapped record so
+                // that external tools can recover Picard's exact duplicate sets. Guarded by the same
+                // primary-and-mapped condition MarkDuplicates uses when building its own ReadEnds keys.
+                if (TAG_DUPLICATE_KEY && !rec.getReadUnmappedFlag() && !rec.isSecondaryOrSupplementary()) {
+                    rec.setAttribute(DUPLICATE_KEY_TAG, buildDuplicateKeyTag(rec, useBarcodes));
                 }
 
                 // Set MOLECULAR_IDENTIFIER_TAG for SAMRecord rec
@@ -710,6 +772,74 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram imp
         }
 
         return ends;
+    }
+
+    /**
+     * Renders the canonical fragment-level duplicate key for a single record. The fields are exactly those
+     * {@link #buildReadEnds} uses to populate a {@link ReadEndsForMarkDuplicates}: library id, reference
+     * index, unclipped 5' coordinate (read end for reverse-strand reads, read start otherwise), and strand.
+     * When {@code useBarcodes} is true the barcode sequences that additionally distinguish duplicates are
+     * appended as a single hyphen-joined positional field ({@code :<barcodes>}, e.g. {@code :ACGT} or
+     * {@code :ACGT-TTGA}, the same string values {@link #buildReadEnds} keys on), so the rendered key reproduces
+     * the duplicate sets Picard marks even under UMI-aware duplicate marking (see {@link #DUPLICATE_KEY_TAG} for
+     * the one pathological exception, a barcode hash collision, where this key is the more precise of the two).
+     * The result is written to {@link #DUPLICATE_KEY_TAG} when {@link #TAG_DUPLICATE_KEY} is enabled.
+     * <p>
+     * Two reads of a pair each carry their own fragment key, so the canonical pair key can be reconstructed
+     * downstream by ordering the two ends; an orphan is a duplicate of a pair iff its key matches a pair
+     * end's key. The caller must ensure the record is primary and mapped.
+     *
+     * @param rec a primary, mapped record
+     * @param useBarcodes whether barcode/UMI tags are in use, in which case the barcode sequences are appended
+     * @return the printable key {@code lib=<libraryId>;<referenceIndex>:<unclipped5Prime>:<F|R>}, with an
+     *         optional {@code :<barcodes>} suffix (the present barcode sequences joined with hyphens) when
+     *         {@code useBarcodes}
+     */
+    private String buildDuplicateKeyTag(final SAMRecord rec, final boolean useBarcodes) {
+        final short libraryId = this.libraryIdGenerator.getLibraryId(rec);
+        final boolean negativeStrand = rec.getReadNegativeStrandFlag();
+        final int unclipped5Prime = negativeStrand ? rec.getUnclippedEnd() : rec.getUnclippedStart();
+        final char strand = negativeStrand ? 'R' : 'F';
+        final StringBuilder key = new StringBuilder("lib=").append(libraryId).append(';')
+                .append(rec.getReferenceIndex()).append(':').append(unclipped5Prime).append(':').append(strand);
+
+        // Mirror buildReadEnds: when barcodes/UMIs are in use they are part of the duplicate key, so the key
+        // must include them or it would conflate reads Picard keeps in separate duplicate sets. We emit the
+        // underlying barcode sequences rather than Picard's internal int hashes so the values are human-readable
+        // and an external tool can reproduce them. The present sequences are joined, in the order MarkDuplicates
+        // keys on them, with hyphens (the usual UMI rendering) and appended as a single positional field: the
+        // top-strand-normalized UMI (the raw BARCODE_TAG value except for strand-canonicalized duplex UMIs),
+        // then the read-one and read-two barcodes. At most the UMI plus one read-specific barcode are present.
+        if (useBarcodes) {
+            final String umi = UmiUtil.getTopStrandNormalizedUmi(rec, BARCODE_TAG, DUPLEX_UMI);
+            final boolean isReadOne = !rec.getReadPairedFlag() || rec.getFirstOfPairFlag();
+            final String readOneBarcode = isReadOne ? barcodeStringOrEmpty(rec, READ_ONE_BARCODE_TAG) : "";
+            final String readTwoBarcode = isReadOne ? "" : barcodeStringOrEmpty(rec, READ_TWO_BARCODE_TAG);
+
+            final StringBuilder barcodes = new StringBuilder();
+            for (final String sequence : new String[]{umi, readOneBarcode, readTwoBarcode}) {
+                if (sequence != null && !sequence.isEmpty()) {
+                    if (barcodes.length() > 0) {
+                        barcodes.append('-');
+                    }
+                    barcodes.append(sequence);
+                }
+            }
+            if (barcodes.length() > 0) {
+                key.append(':').append(barcodes);
+            }
+        }
+
+        return key.toString();
+    }
+
+    /** Returns the string value of {@code tag} on the record, or the empty string if the tag is unset or absent. */
+    private String barcodeStringOrEmpty(final SAMRecord rec, final String tag) {
+        if (tag == null) {
+            return "";
+        }
+        final String value = rec.getStringAttribute(tag);
+        return value == null ? "" : value;
     }
 
     /**
