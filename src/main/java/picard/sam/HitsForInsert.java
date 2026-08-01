@@ -27,9 +27,9 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Holds all the hits (alignments) for a read or read pair.  For single-end reads, all the alignments are
@@ -48,28 +48,26 @@ import java.util.List;
  */
 class HitsForInsert {
 
-    private static final HitIndexComparator comparator = new HitIndexComparator();
-
     public enum NumPrimaryAlignmentState {
         NONE, ONE, MORE_THAN_ONE
     }
 
     // These are package-visible to make life easier for the PrimaryAlignmentSelectionStrategies.
-    final List<SAMRecord> firstOfPairOrFragment = new ArrayList<SAMRecord>();
-    final List<SAMRecord> secondOfPair = new ArrayList<SAMRecord>();
+    final List<SAMRecord> firstOfPairOrFragment = new ArrayList<>();
+    final List<SAMRecord> secondOfPair = new ArrayList<>();
 
-    private final List<SAMRecord> supplementalFirstOfPairOrFragment = new ArrayList<SAMRecord>();
-    private final List<SAMRecord> supplementalSecondOfPair = new ArrayList<SAMRecord>();
+    private final List<SAMRecord> supplementalFirstOfPairOrFragment = new ArrayList<>();
+    private final List<SAMRecord> supplementalSecondOfPair = new ArrayList<>();
 
     /**
-     * @throws if numHits() == 0
+     * @throws IllegalStateException if numHits() == 0
      */
     public String getReadName() {
         return getRepresentativeRead().getReadName();
     }
 
     /**
-     * @throws if numHits() == 0
+     * @throws IllegalStateException if numHits() == 0
      */
     public boolean isPaired() {
         return getRepresentativeRead().getReadPairedFlag();
@@ -154,7 +152,7 @@ class HitsForInsert {
      * @return the index, or -1 if no primary was found.
      */
     public int getIndexOfEarliestPrimary() {
-        for (int i = 0; i < numHits(); i++) {
+        for (int i = 0; i < numHits(); ++i) {
             final SAMRecord firstAligned = getFirstOfPair(i);
             final SAMRecord secondAligned = getSecondOfPair(i);
             final boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.isSecondaryOrSupplementary()) ||
@@ -197,8 +195,12 @@ class HitsForInsert {
      */
     public void coordinateByHitIndex() {
         // Sort by HI value, with reads with no HI going at the end.
-        Collections.sort(firstOfPairOrFragment, comparator);
-        Collections.sort(secondOfPair, comparator);
+        final Comparator<SAMRecord> comparator = Comparator.comparing(
+                record -> record.getIntegerAttribute(SAMTag.HI.name()),
+                Comparator.nullsLast(Comparator.naturalOrder())
+        );
+        firstOfPairOrFragment.sort(comparator);
+        secondOfPair.sort(comparator);
 
         // Insert nulls as necessary in the two lists so that correlated alignments have the same index
         // and uncorrelated alignments have null in the other list at the corresponding index.
@@ -219,16 +221,18 @@ class HitsForInsert {
                 secondOfPair.add(i, null);
             }
         }
+    }
 
-        // Now renumber any correlated alignments, and remove hit index if no correlated read.
-        int hi = 0;
+    /**
+     * Renumber any correlated alignments, and remove hit index if no correlated read.
+     */
+    private void renumberHitIndex() {
         for (int i = 0; i < numHits(); ++i) {
             final SAMRecord first = getFirstOfPair(i);
             final SAMRecord second = getSecondOfPair(i);
             if (first != null && second != null) {
                 first.setAttribute(SAMTag.HI.name(), i);
                 second.setAttribute(SAMTag.HI.name(), i);
-                ++hi;
             } else if (first != null) {
                 first.setAttribute(SAMTag.HI.name(), null);
             } else {
@@ -238,41 +242,80 @@ class HitsForInsert {
     }
 
     /**
+     * This method lines up alignments in firstOfPairOrFragment and secondOfPair lists so that the first and the second
+     * records of each pair have the same index.
+     */
+    void coordinateByMate() {
+        final List<SAMRecord> newFirstOfPairOrFragment = new ArrayList<>();
+        final List<SAMRecord> newSecondOfPair = new ArrayList<>();
+
+        for (int i = 0; i < firstOfPairOrFragment.size(); ++i) {
+            final SAMRecord first = firstOfPairOrFragment.get(i);
+            newFirstOfPairOrFragment.add(i, first);
+            newSecondOfPair.add(null);
+
+            for (int k = 0; k < secondOfPair.size(); ++k) {
+                final SAMRecord second = secondOfPair.get(k);
+                if (arePair(first, second)) {
+                    newSecondOfPair.set(i, second);
+                    secondOfPair.set(k, null);
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < secondOfPair.size(); ++i) {
+            if (secondOfPair.get(i) != null) {
+                newFirstOfPairOrFragment.add(i, null);
+                newSecondOfPair.add(i, secondOfPair.get(i));
+            }
+        }
+
+        firstOfPairOrFragment.clear();
+        firstOfPairOrFragment.addAll(newFirstOfPairOrFragment);
+        secondOfPair.clear();
+        secondOfPair.addAll(newSecondOfPair);
+
+        renumberHitIndex();
+    }
+
+    /**
+     * Identifies whether records present pairwise alignment or not.
+     *
+     * It is unnecessary to check QNAME here cause an object of {@code HitsForInsert}
+     * presents only records with the same QNAME.
+     *
+     * @return {@code true} if records belong to the same pairwise alignment
+     */
+    private static boolean arePair(final SAMRecord first, final SAMRecord second) {
+        return first != null && second != null
+                && first.getMateAlignmentStart() == second.getAlignmentStart()
+                && first.getAlignmentStart() == second.getMateAlignmentStart()
+                && !SAMRecord.NO_ALIGNMENT_REFERENCE_NAME.equals(first.getMateReferenceName())
+                && !SAMRecord.NO_ALIGNMENT_REFERENCE_NAME.equals(second.getMateReferenceName())
+                && Objects.equals(first.getReferenceName(), second.getMateReferenceName())
+                && Objects.equals(first.getMateReferenceName(), second.getReferenceName());
+    }
+
+    /**
      * Determine if there is a single primary alignment in a list of alignments.
      * @param records
      * @return NONE, ONE or MORE_THAN_ONE.
      */
     private NumPrimaryAlignmentState tallyPrimaryAlignments(final List<SAMRecord> records) {
         boolean seenPrimary = false;
-        for (int i = 0; i < records.size(); ++i) {
-            if (records.get(i) != null && !records.get(i).isSecondaryOrSupplementary()) {
+        for (SAMRecord record : records) {
+            if (record != null && !record.isSecondaryOrSupplementary()) {
                 if (seenPrimary) return NumPrimaryAlignmentState.MORE_THAN_ONE;
                 else seenPrimary = true;
             }
         }
-        if (seenPrimary) return NumPrimaryAlignmentState.ONE;
-        else return NumPrimaryAlignmentState.NONE;
+        return seenPrimary ? NumPrimaryAlignmentState.ONE : NumPrimaryAlignmentState.NONE;
     }
 
     public NumPrimaryAlignmentState tallyPrimaryAlignments(final boolean firstEnd) {
-        if (firstEnd) return tallyPrimaryAlignments(firstOfPairOrFragment);
-        else return tallyPrimaryAlignments(secondOfPair);
-    }
-
-    // null HI tag sorts after any non-null.
-    private static class HitIndexComparator implements Comparator<SAMRecord> {
-        public int compare(final SAMRecord rec1, final SAMRecord rec2) {
-            final Integer hi1 = rec1.getIntegerAttribute(SAMTag.HI.name());
-            final Integer hi2 = rec2.getIntegerAttribute(SAMTag.HI.name());
-            if (hi1 == null) {
-                if (hi2 == null) return 0;
-                else return 1;
-            } else if (hi2 == null) {
-                return -1;
-            } else {
-                return hi1.compareTo(hi2);
-            }
-        }
+        final List<SAMRecord> records = firstEnd ? firstOfPairOrFragment : secondOfPair;
+        return tallyPrimaryAlignments(records);
     }
 
     List<SAMRecord> getSupplementalFirstOfPairOrFragment() {
