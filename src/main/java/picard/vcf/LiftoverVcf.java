@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
@@ -323,7 +324,10 @@ public class LiftoverVcf extends CommandLineProgram {
         final VCFFileReader in = new VCFFileReader(INPUT, false);
 
         log.info("Loading up the target reference genome.");
-        final ReferenceSequenceFileWalker walker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+        // Prefer indexed FASTA access (.fai) for faster reference loading (see htsjdk#269).
+        final ReferenceSequenceFileWalker walker = new ReferenceSequenceFileWalker(
+            ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE, true, true)
+        );
         final Map<String, ReferenceSequence> refSeqs = new HashMap<>();
         // check if sequence dictionary exists
         if (walker.getSequenceDictionary() == null) {
