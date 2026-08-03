@@ -123,6 +123,7 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
 
         public RawWgsMetrics(final IntervalList intervals,
                              final Histogram<Integer> highQualityDepthHistogram,
+                             final Histogram<Integer> highQualityDepthHistogramNonZero
                              final Histogram<Integer> unfilteredDepthHistogram,
                              final double pctExcludedByAdapter,
                              final double pctExcludedByMapq,
@@ -135,7 +136,7 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
                              final int coverageCap,
                              final Histogram<Integer> unfilteredBaseQHistogram,
                              final int sampleSize) {
-            super(intervals, highQualityDepthHistogram, unfilteredDepthHistogram, pctExcludedByAdapter, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
+            super(intervals, highQualityDepthHistogram, highQualityDepthHistogramNonZero,unfilteredDepthHistogram, pctExcludedByAdapter, pctExcludedByMapq, pctExcludedByDupes, pctExcludedByPairing, pctExcludedByBaseq,
                     pctExcludedByOverlap, pctExcludedByCapping, pctTotal, coverageCap, unfilteredBaseQHistogram, sampleSize);
         }
     }
