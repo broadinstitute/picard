@@ -182,7 +182,7 @@ public class PicardHtsPath extends HtsPath {
     /**
      * Wrapper for Path.resolve()
      */
-    public static PicardHtsPath resolve(final PicardHtsPath absPath, final String relativePath){
+    public static PicardHtsPath resolve(final IOPath absPath, final String relativePath){
         return PicardHtsPath.fromPath(absPath.toPath().resolve(relativePath));
     }
 }

@@ -23,6 +23,7 @@
  */
 package picard.sam;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
@@ -289,7 +290,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     final PicardHtsPath HG19_MINI = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT_GCLOUD, "picard/references/hg19mini.fasta");
     final PicardHtsPath HG19_MINI_LOCAL = new PicardHtsPath("testdata/picard/reference/hg19mini.fasta");
 
-    final PicardHtsPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_STAGING_DEFAULT_GCLOUD, "picard/");
+    final PicardHtsPath CLOUD_OUTPUT_DIR = PicardHtsPath.resolve(GCloudTestUtils.TEST_STAGING_DEFAULT_GCLOUD, "picard/CreateSequenceDictionary/");
 
     @DataProvider
     public Object[][] cloudTestData() {
@@ -302,7 +303,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
 
     @Test(groups = "cloud", dataProvider = "cloudTestData")
     public void testCloud(final PicardHtsPath inputReference) {
-        final PicardHtsPath output = PicardBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR.getURIString() + "test", ".dict");
+        final IOPath output = PicardBucketUtils.getTempFilePath(CLOUD_OUTPUT_DIR, "", ".dict");
 
         final String[] argv = {
                 "REFERENCE=" + inputReference.getURI(),
@@ -310,7 +311,7 @@ public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
         };
 
         // This is the "original" dictionary that lives in gs://hellbender/test/resources/
-        final PicardHtsPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT_GCLOUD, "hg19mini.dict");
+        final IOPath expectedOutputPath = PicardHtsPath.resolve(GCloudTestUtils.TEST_INPUTS_DEFAULT_GCLOUD, "hg19mini.dict");
         Assert.assertEquals(runPicardCommandLine(argv), 0);
         final SAMSequenceDictionary expectedDictionary = SAMSequenceDictionaryExtractor.extractDictionary(expectedOutputPath.toPath());
         final SAMSequenceDictionary actualDictionary = SAMSequenceDictionaryExtractor.extractDictionary(output.toPath());

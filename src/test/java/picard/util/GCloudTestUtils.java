@@ -1,5 +1,6 @@
 package picard.util;
 
+import htsjdk.io.IOPath;
 import picard.nio.PicardHtsPath;
 
 public final class GCloudTestUtils {
@@ -48,8 +49,8 @@ public final class GCloudTestUtils {
      *
      * @return PICARD_TEST_STAGING env. var if defined, or {@value #TEST_STAGING_DEFAULT.getURIString()}
      */
-    public static String getTestStaging() {
-        return getSystemProperty("PICARD_TEST_STAGING", TEST_STAGING_DEFAULT_GCLOUD.getURIString());
+    public static IOPath getTestStaging() {
+        return new PicardHtsPath(getSystemProperty("PICARD_TEST_STAGING", TEST_STAGING_DEFAULT_GCLOUD.getURIString()));
     }
 
     /**
@@ -58,8 +59,8 @@ public final class GCloudTestUtils {
      *
      * @return PICARD_TEST_INPUTS env. var if defined or {@value #TEST_INPUTS_DEFAULT.getURIString()}.
      */
-    public static String getTestInputPath() {
-        return getSystemProperty("PICARD_TEST_INPUTS", TEST_INPUTS_DEFAULT_GCLOUD.getURIString());
+    public static IOPath getTestInputPath() {
+        return new PicardHtsPath(getSystemProperty("PICARD_TEST_INPUTS", TEST_INPUTS_DEFAULT_GCLOUD.getURIString()));
     }
 
 }

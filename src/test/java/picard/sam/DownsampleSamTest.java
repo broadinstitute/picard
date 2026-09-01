@@ -1,5 +1,6 @@
 package picard.sam;
 
+import htsjdk.io.IOPath;
 import htsjdk.samtools.*;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.BufferedLineReader;
@@ -137,14 +138,14 @@ public class DownsampleSamTest extends CommandLineProgramTest {
             testDownsampleWorker(new PicardHtsPath(tempSamFile), fraction, strategy.name(), seed);
     }
 
-    private PicardHtsPath testDownsampleWorker(final PicardHtsPath samFile,  final double fraction, final String strategy, final Integer seed) throws IOException {
+    private IOPath testDownsampleWorker(final IOPath samFile,  final double fraction, final String strategy, final Integer seed) throws IOException {
         return testDownsampleWorker(samFile, fraction, strategy, seed, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    private PicardHtsPath testDownsampleWorker(final PicardHtsPath samFile,  final double fraction, final String strategy, final Integer seed,
-                                               final Optional<PicardHtsPath> outputFile, final Optional<PicardHtsPath> metricsFile,
-                                               final Optional<PicardHtsPath> referenceFile) throws IOException {
-        final PicardHtsPath downsampled = outputFile.isEmpty() ? new PicardHtsPath(File.createTempFile("DownsampleSam", ".bam", tempDir)) : outputFile.get();
+    private IOPath testDownsampleWorker(final IOPath samFile,  final double fraction, final String strategy, final Integer seed,
+                                        final Optional<IOPath> outputFile, final Optional<IOPath> metricsFile,
+                                        final Optional<IOPath> referenceFile) throws IOException {
+        final IOPath downsampled = outputFile.isEmpty() ? new PicardHtsPath(File.createTempFile("DownsampleSam", ".bam", tempDir)) : outputFile.get();
 
         final List<String> args = new ArrayList<>(Arrays.asList(
                 "INPUT=" + samFile.getURIString(),
@@ -169,7 +170,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
         // temporarily skip this check for cram files until ValidateSam is updated the support cloud reference input
         if (! downsampled.isCram()){
             final ValidateSamFile validateSamFile = new ValidateSamFile();
-            validateSamFile.INPUT = downsampled;
+            validateSamFile.INPUT = PicardHtsPath.fromPath(downsampled.toPath());
             Assert.assertEquals(validateSamFile.doWork(), 0);
         }
 
@@ -235,7 +236,7 @@ public class DownsampleSamTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "RepeatedDownsamplingProvider")
     public void testRepeatedDownsampling(List<Strategy> strategies, List<Integer> seeds) throws IOException {
-        PicardHtsPath input = new PicardHtsPath(tempSamFile);
+        IOPath input = new PicardHtsPath(tempSamFile);
         final long nReadsOriginal = SamTestUtil.countSamTotalRecord(input.toPath());
         double totalFraction = 1;
         for (int i = 0 ; i < strategies.size(); i++) {
@@ -267,21 +268,25 @@ public class DownsampleSamTest extends CommandLineProgramTest {
     }
 
     @Test(groups = "cloud", dataProvider = "testCloudBamDataProvider")
-    public void testCloudBam(final PicardHtsPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
-        final Optional<PicardHtsPath> output = outputInCloud ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD + "downsample", ".bam")) :
+    public void testCloudBam(final IOPath inputSAM, final boolean outputInCloud, final boolean createMetrics) throws IOException {
+        final IOPath outputRoot = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD, "DownsampleSam/downsample/");
+        final IOPath metricsOutputRoot = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD, "DownsampleSam/metrics/");
+
+        final Optional<IOPath> output = outputInCloud ?
+                Optional.of(PicardBucketUtils.getTempFilePath(outputRoot, "", ".bam")) :
                 Optional.empty();
-        final Optional<PicardHtsPath> metricsFile = createMetrics ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD + "metrics", ".txt")) :
+        final Optional<IOPath> metricsFile = createMetrics ?
+                Optional.of(PicardBucketUtils.getTempFilePath(metricsOutputRoot, "", ".txt")) :
                 Optional.empty();
         testDownsampleWorker(inputSAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, metricsFile, Optional.empty());
     }
 
     // Isolate the test case for cram input from the above tests for bams, since the tool is much slower with a
     @Test(groups = "cloud", dataProvider = "testCloudCramDataProvider")
-    public void testCloudCram(final PicardHtsPath inputCRAM, final boolean outputInCloud, final PicardHtsPath reference) throws IOException {
-        final Optional<PicardHtsPath> output = outputInCloud ?
-                Optional.of(PicardBucketUtils.getTempFilePath(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD + "downsample", ".cram")) :
+    public void testCloudCram(final IOPath inputCRAM, final boolean outputInCloud, final IOPath reference) throws IOException {
+        final IOPath outputRoot = PicardHtsPath.resolve(GCloudTestUtils.TEST_OUTPUT_DEFAULT_GCLOUD, "DownsampleSam/output/");
+        final Optional<IOPath> output = outputInCloud ?
+                Optional.of(PicardBucketUtils.getTempFilePath( outputRoot, "", ".cram")) :
                 Optional.empty();
         testDownsampleWorker(inputCRAM, 0.5, ConstantMemory.toString(), DEFAULT_RANDOM_SEED, output, Optional.empty(), Optional.of(reference));
     }
