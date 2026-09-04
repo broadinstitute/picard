@@ -30,12 +30,16 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.SAMException;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
 import picard.util.RExecutor;
@@ -49,7 +53,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -252,6 +259,156 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
                 break;
             }
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // tempSamFileAllChr has reads spread across all three contigs in the chrMNO reference (chrM, chrN,
+    // chrO). Splitting it into a "MO" group (chrM + chrO) and an "N" group (chrN) should produce two
+    // sections in the output whose ALIGNED_READS sum to the ungrouped total, since every read's contig
+    // belongs to exactly one of those groups.
+    /////////////////////////////////////////////////////////////////////////////
+    @Test
+    public void runContigGroupsTest() throws IOException {
+        final File summaryOutfile = File.createTempFile("test", ".gc_bias.summary_metrics");
+        final File detailsOutfile = File.createTempFile("test", ".gc_bias.detail_metrics");
+        summaryOutfile.deleteOnExit();
+        detailsOutfile.deleteOnExit();
+        final File pdf = File.createTempFile("test", ".pdf");
+        pdf.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + tempSamFileAllChr.getAbsolutePath(),
+                "OUTPUT=" + detailsOutfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE_1,
+                "SUMMARY_OUTPUT=" + summaryOutfile.getAbsolutePath(),
+                "CHART_OUTPUT=" + pdf.getAbsolutePath(),
+                "SCAN_WINDOW_SIZE=100",
+                "MINIMUM_GENOME_FRACTION=1.0E-5",
+                "IS_BISULFITE_SEQUENCED=false",
+                "LEVEL=ALL_READS",
+                "ASSUME_SORTED=false",
+                "CONTIG_GROUP=MO:chrM,chrO",
+                "CONTIG_GROUP=N:chrN"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<GcBiasSummaryMetricsWithContigGroup, Comparable<?>> output = new MetricsFile<>();
+        output.read(new FileReader(summaryOutfile));
+
+        long moAligned = 0;
+        long nAligned = 0;
+        long moClusters = 0;
+        long nClusters = 0;
+        boolean sawMO = false;
+        boolean sawN = false;
+        for (final GcBiasSummaryMetricsWithContigGroup metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.ACCUMULATION_LEVEL, ACCUMULATION_LEVEL_ALL_READS);
+            if ("MO".equals(metrics.CONTIG_GROUP)) {
+                sawMO = true;
+                moAligned = metrics.ALIGNED_READS;
+                moClusters = metrics.TOTAL_CLUSTERS;
+            } else if ("N".equals(metrics.CONTIG_GROUP)) {
+                sawN = true;
+                nAligned = metrics.ALIGNED_READS;
+                nClusters = metrics.TOTAL_CLUSTERS;
+            } else {
+                Assert.fail("Unexpected CONTIG_GROUP: " + metrics.CONTIG_GROUP);
+            }
+        }
+        Assert.assertTrue(sawMO);
+        Assert.assertTrue(sawN);
+        Assert.assertTrue(moAligned > 0);
+        Assert.assertTrue(nAligned > 0);
+
+        final File ungroupedSummary = File.createTempFile("test", ".gc_bias.summary_metrics");
+        final File ungroupedDetails = File.createTempFile("test", ".gc_bias.detail_metrics");
+        ungroupedSummary.deleteOnExit();
+        ungroupedDetails.deleteOnExit();
+        runGcBias(tempSamFileAllChr, REFERENCE_FILE_1, ungroupedSummary, ungroupedDetails, false);
+        final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> ungroupedOutput = new MetricsFile<>();
+        ungroupedOutput.read(new FileReader(ungroupedSummary));
+        long totalAligned = 0;
+        long totalClusters = 0;
+        for (final GcBiasSummaryMetrics metrics : ungroupedOutput.getMetrics()) {
+            if (metrics.ACCUMULATION_LEVEL.equals(ACCUMULATION_LEVEL_ALL_READS)) {
+                totalAligned = metrics.ALIGNED_READS;
+                totalClusters = metrics.TOTAL_CLUSTERS;
+                // The ungrouped run never used CONTIG_GROUP, so its output is written as plain
+                // GcBiasSummaryMetrics (no CONTIG_GROUP column at all), unlike the grouped run above.
+                Assert.assertFalse(metrics instanceof GcBiasSummaryMetricsWithContigGroup);
+            }
+        }
+        Assert.assertEquals(moAligned + nAligned, totalAligned);
+        // TOTAL_CLUSTERS is a property of the accumulation level, not of a contig group, so it stays
+        // genome-wide and identical across the groups rather than being split between them.
+        Assert.assertEquals(moClusters, totalClusters);
+        Assert.assertEquals(nClusters, totalClusters);
+
+        // The detail file should carry the CONTIG_GROUP column too, with 101 GC bins per group.
+        final MetricsFile<GcBiasDetailMetricsWithContigGroup, Comparable<?>> outputDetails = new MetricsFile<>();
+        outputDetails.read(new FileReader(detailsOutfile));
+        long moWindowRows = 0;
+        long nWindowRows = 0;
+        for (final GcBiasDetailMetricsWithContigGroup detail : outputDetails.getMetrics()) {
+            if ("MO".equals(detail.CONTIG_GROUP)) moWindowRows++;
+            else if ("N".equals(detail.CONTIG_GROUP)) nWindowRows++;
+        }
+        Assert.assertEquals(moWindowRows, 101);
+        Assert.assertEquals(nWindowRows, 101);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // CONTIG_GROUP specs parse into a contig -> group names map, and a contig may belong to
+    // more than one group.
+    /////////////////////////////////////////////////////////////////////////////
+    @Test
+    public void testParseContigGroups() {
+        final SAMSequenceDictionary dict = new SAMSequenceDictionary();
+        for (final String name : new String[]{"chr1", "chr2", "chrX", "chrY"}) {
+            dict.addSequence(new SAMSequenceRecord(name, 1000));
+        }
+
+        final Map<String, List<String>> contigToGroupNames = GcBiasUtils.parseContigGroups(
+                Arrays.asList("autosomes:chr1, chr2", "sex:chrX,chrY", "everything:chr1,chr2,chrX,chrY"), dict);
+
+        Assert.assertEquals(contigToGroupNames.get("chr1"), Arrays.asList("autosomes", "everything"));
+        Assert.assertEquals(contigToGroupNames.get("chr2"), Arrays.asList("autosomes", "everything"));
+        Assert.assertEquals(contigToGroupNames.get("chrX"), Arrays.asList("sex", "everything"));
+        Assert.assertEquals(contigToGroupNames.get("chrY"), Arrays.asList("sex", "everything"));
+    }
+
+    @DataProvider(name = "badContigGroups")
+    public Object[][] badContigGroups() {
+        return new Object[][]{
+                {"no colon separator", "autosomes chr1"},
+                {"empty group name", ":chr1"},
+                {"no contigs listed", "empty:"},
+                {"contig absent from the sequence dictionary", "bad:chrDoesNotExist"},
+        };
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Malformed CONTIG_GROUP specs, and contigs absent from the sequence dictionary, should be
+    // hard errors rather than being silently ignored.
+    /////////////////////////////////////////////////////////////////////////////
+    @Test(dataProvider = "badContigGroups", expectedExceptions = PicardException.class)
+    public void testBadContigGroupsThrow(final String description, final String spec) {
+        final SAMSequenceDictionary dict = new SAMSequenceDictionary();
+        dict.addSequence(new SAMSequenceRecord("chr1", 1000));
+
+        GcBiasUtils.parseContigGroups(Collections.singletonList(spec), dict);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // The same group name given twice is a user error, not a silent merge.
+    /////////////////////////////////////////////////////////////////////////////
+    @Test(expectedExceptions = PicardException.class)
+    public void testDuplicateContigGroupNameThrows() {
+        final SAMSequenceDictionary dict = new SAMSequenceDictionary();
+        dict.addSequence(new SAMSequenceRecord("chr1", 1000));
+        dict.addSequence(new SAMSequenceRecord("chr2", 1000));
+
+        GcBiasUtils.parseContigGroups(Arrays.asList("dup:chr1", "dup:chr2"), dict);
     }
 
     /////////////////////////////////////////////////////////////////////////////

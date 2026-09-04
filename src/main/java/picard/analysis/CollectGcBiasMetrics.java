@@ -40,7 +40,10 @@ import picard.util.RExecutor;
 
 import java.io.File;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -101,6 +104,13 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "The chart output associated with this data table plots the NORMALIZED_COVERAGE, the distribution of WINDOWs corresponding " +
             "to GC percentages, and base qualities corresponding to each %GC bin."+
             "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
+            "" +
+            "<h4>Contig groups</h4>" +
+            "By default GC bias metrics are computed over the whole reference. The CONTIG_GROUP option allows metrics to be " +
+            "computed separately for named groups of contigs (e.g. autosomes vs. sex chromosomes), producing one output section " +
+            "per group per LEVEL, labeled by an added CONTIG_GROUP column.<br /><br />" +
+            "Note that the CONTIG_GROUP column only appears in the output when the option is used; output from a run that " +
+            "doesn't use it is unchanged, column for column, from before this option existed.<br /><br />" +
             "<h4>Usage Example:</h4>"+
             "<pre>" +
             "java -jar picard.jar CollectGcBiasMetrics \\<br />"+
@@ -140,6 +150,15 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "allows to gain two plots per level at the same time: one is the usual one and the other excludes duplicates.")
     public boolean ALSO_IGNORE_DUPLICATES = false;
 
+    @Argument(shortName = "CG", doc = "A named group of contigs to compute GC bias metrics for separately, given as " +
+            "'group_name:contig1,contig2,...'. May be specified more than once to define several groups, and a contig may " +
+            "appear in more than one group. When this option is used the output contains one section per contig group crossed " +
+            "with each requested LEVEL, and reads aligned to a contig that is not listed in any group are excluded from the " +
+            "group's ALIGNED_READS and per-GC-bin counts. Note that TOTAL_CLUSTERS is reported genome-wide and is identical across contig groups. " +
+            "Example, separating the human autosomes from the contigs of different ploidy.<br />" +
+            "CONTIG_GROUP=autosomes:chr1,chr2,...,chr22 CONTIG_GROUP=x:chrX CONTIG_GROUP=Y:chrY CONTIG_GROUP=mitochondrion:chrM", optional = true)
+    public List<String> CONTIG_GROUP = new ArrayList<>();
+
     // Calculates GcBiasMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private GcBiasMetricsCollector multiCollector;
 
@@ -171,11 +190,21 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
-        //Calculate windowsByGc for the reference sequence
-        final int[] windowsByGc = GcBiasUtils.calculateRefWindowsByGc(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE);
+        //Calculate windowsByGc for the reference sequence, per contig group if any were requested
+        final Map<String, List<String>> contigToGroupNames;
+        final Map<String, int[]> windowsByGcByGroup;
+        if (CONTIG_GROUP.isEmpty()) {
+            contigToGroupNames = null;
+            windowsByGcByGroup = Collections.singletonMap(GcBiasMetricsCollector.NO_CONTIG_GROUP,
+                    GcBiasUtils.calculateRefWindowsByGc(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE));
+        } else {
+            contigToGroupNames = GcBiasUtils.parseContigGroups(CONTIG_GROUP, header.getSequenceDictionary());
+            windowsByGcByGroup = GcBiasUtils.calculateRefWindowsByGcForGroups(BINS, REFERENCE_SEQUENCE, SCAN_WINDOW_SIZE, contigToGroupNames);
+        }
 
         //Delegate actual collection to GcBiasMetricCollector
-        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGc, header.getReadGroups(), SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED, ALSO_IGNORE_DUPLICATES);
+        multiCollector = new GcBiasMetricsCollector(METRIC_ACCUMULATION_LEVEL, windowsByGcByGroup, contigToGroupNames, header.getReadGroups(),
+                SCAN_WINDOW_SIZE, IS_BISULFITE_SEQUENCED, ALSO_IGNORE_DUPLICATES);
     }
 
     ////////////////////////////////////////////////////////////////////////////
