@@ -37,6 +37,8 @@ import picard.metrics.MultiLevelCollector;
 import picard.metrics.PerUnitMetricCollector;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,29 +52,58 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     // at windows of each GC. Need 101 to get from 0-100.
     private final int scanWindowSize;
     private final boolean bisulfite;
-    private int[] windowsByGc = new int[BINS];
     private static final int BINS = 101;
     //Use to calculate additional results without duplicates
     private boolean ignoreDuplicates;
+
+    // The key used in windowsByGcByGroup/GcObject.byContigGroup when no CONTIG_GROUPs were provided,
+    // i.e. metrics are being computed over the whole reference rather than per named contig group.
+    public static final String NO_CONTIG_GROUP = "";
+    private static final List<String> DEFAULT_GROUP_KEYS = Collections.singletonList(NO_CONTIG_GROUP);
+
+    // Per contig-group windows-by-gc histograms. Has a single entry (keyed by NO_CONTIG_GROUP) when
+    // contigToGroupNames is null.
+    private final Map<String, int[]> windowsByGcByGroup;
+    // contig name -> the group names it belongs to (may be more than one, or none). Null means no
+    // CONTIG_GROUPs were given, and is the one and only signal that grouping is switched off.
+    private final Map<String, List<String>> contigToGroupNames;
 
     //will hold the relevant gc information per contig
     private byte [] gc = null;
     private int referenceIndex = -1;
     private byte [] refBases = null;
+    // the contig group(s) (or the single NO_CONTIG_GROUP key) that the current contig belongs to
+    private List<String> currentContigGroupKeys = DEFAULT_GROUP_KEYS;
     private static final Log log = Log.getInstance(GcBiasMetricsCollector.class);
 
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
                                   final boolean bisulfite) {
-        this(accumulationLevels, windowsByGc, samRgRecords, scanWindowSize, bisulfite, false);
+        this(accumulationLevels, Collections.singletonMap(NO_CONTIG_GROUP, windowsByGc), null, samRgRecords, scanWindowSize, bisulfite, false);
     }
 
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
                                   final boolean bisulfite, final boolean ignoreDuplicates) {
+        this(accumulationLevels, Collections.singletonMap(NO_CONTIG_GROUP, windowsByGc), null, samRgRecords, scanWindowSize, bisulfite, ignoreDuplicates);
+    }
+
+    /**
+     * @param windowsByGcByGroup Windows-by-gc histograms, keyed by contig group name. When
+     *                           contigToGroupNames is null this must contain exactly one entry, keyed
+     *                           by NO_CONTIG_GROUP.
+     * @param contigToGroupNames Contig name to the names of the contig groups it belongs to, as
+     *                           returned by {@link GcBiasUtils#parseContigGroups}, or null to compute
+     *                           metrics over the whole reference (the pre-existing behavior).
+     */
+    public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final Map<String, int[]> windowsByGcByGroup,
+                                  final Map<String, List<String>> contigToGroupNames,
+                                  final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize,
+                                  final boolean bisulfite, final boolean ignoreDuplicates) {
         this.scanWindowSize = scanWindowSize;
         this.bisulfite = bisulfite;
-        this.windowsByGc = windowsByGc;
+        this.windowsByGcByGroup = windowsByGcByGroup;
+        this.contigToGroupNames = contigToGroupNames;
         this.ignoreDuplicates = ignoreDuplicates;
         setup(accumulationLevels, samRgRecords);
     }
@@ -83,6 +114,24 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     @Override
     protected GcBiasCollectorArgs makeArg(final SAMRecord rec, final ReferenceSequence ref) {
         return new GcBiasCollectorArgs(rec, ref);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Only uses the *WithContigGroup subclass when CONTIG_GROUP is in use, so runs without it don't
+    // get an always-present, sometimes-empty column.
+    /////////////////////////////////////////////////////////////////////////////
+    private static GcBiasDetailMetrics makeDetailMetrics(final String contigGroupName) {
+        if (NO_CONTIG_GROUP.equals(contigGroupName)) return new GcBiasDetailMetrics();
+        final GcBiasDetailMetricsWithContigGroup detail = new GcBiasDetailMetricsWithContigGroup();
+        detail.CONTIG_GROUP = contigGroupName;
+        return detail;
+    }
+
+    private static GcBiasSummaryMetrics makeSummaryMetrics(final String contigGroupName) {
+        if (NO_CONTIG_GROUP.equals(contigGroupName)) return new GcBiasSummaryMetrics();
+        final GcBiasSummaryMetricsWithContigGroup summary = new GcBiasSummaryMetricsWithContigGroup();
+        summary.CONTIG_GROUP = contigGroupName;
+        return summary;
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -150,6 +199,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     final int lastWindowStart = refLength - scanWindowSize;
                     gc = GcBiasUtils.calculateAllGcs(refBases, lastWindowStart, scanWindowSize);
                     referenceIndex = rec.getReferenceIndex();
+                    currentContigGroupKeys = contigToGroupNames == null
+                            ? DEFAULT_GROUP_KEYS
+                            : contigToGroupNames.getOrDefault(ref.getName(), Collections.emptyList());
                 }
 
                 addReadToGcData(rec, this.gcData);
@@ -218,7 +270,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 type = allReads;
                 group = ACCUMULATION_LEVEL_ALL_READS;
             }
-            addRead(gcData.get(type), rec, group, gc, refBases);
+            addRead(gcData.get(type), rec, group, gc, refBases, currentContigGroupKeys);
         }
 
         /////////////////////////////////////////////////////////////////////////////
@@ -238,79 +290,91 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                                      final boolean includeDuplicates) {
             for (final Map.Entry<String, GcObject> entry : gcData.entrySet()) {
                 final GcObject gcCur = entry.getValue();
-                final String gcType = entry.getKey();
 
-                final int[] readsByGc = gcCur.readsByGc;
-                final long[] errorsByGc = gcCur.errorsByGc;
-                final long[] basesByGc = gcCur.basesByGc;
-                final long totalClusters = gcCur.totalClusters;
-                final long totalAlignedReads = gcCur.totalAlignedReads;
-                final String group = gcCur.group;
+                // group is only null if no mapped read was ever seen for this accumulation unit.
+                if (gcCur.group == null) continue;
 
-                final GcBiasMetrics metrics = new GcBiasMetrics();
-
-                final double totalWindows = sum(windowsByGc);
-                final double totalReads = sum(readsByGc);
-                final double meanReadsPerWindow = totalReads / totalWindows;
-
-                if (totalAlignedReads > 0) {
-                    for (int i = 0; i < windowsByGc.length; ++i) {
-                        final GcBiasDetailMetrics detail = new GcBiasDetailMetrics();
-                        detail.GC = i;
-                        detail.WINDOWS = windowsByGc[i];
-                        detail.READ_STARTS = readsByGc[i];
-                        if (errorsByGc[i] > 0) {
-                            detail.MEAN_BASE_QUALITY = QualityUtil.getPhredScoreFromObsAndErrors(basesByGc[i], errorsByGc[i]);
-                        }
-                        if (windowsByGc[i] != 0) {
-                            detail.NORMALIZED_COVERAGE = (detail.READ_STARTS / (double) detail.WINDOWS) / meanReadsPerWindow;
-                            detail.ERROR_BAR_WIDTH = (Math.sqrt(detail.READ_STARTS) / (double) detail.WINDOWS) / meanReadsPerWindow;
-                        } else {
-                            detail.NORMALIZED_COVERAGE = 0;
-                            detail.ERROR_BAR_WIDTH = 0;
-                        }
-                        detail.ACCUMULATION_LEVEL = group;
-                        if (group.equals(ACCUMULATION_LEVEL_READ_GROUP)) {detail.READ_GROUP = gcType;}
-                        else if (group.equals(ACCUMULATION_LEVEL_SAMPLE)) {detail.SAMPLE = gcType;}
-                        else if (group.equals(ACCUMULATION_LEVEL_LIBRARY)) {detail.LIBRARY = gcType;}
-
-                        detail.READS_USED = includeDuplicates ? READS_USED_ALL : READS_USED_UNIQUE;
-
-                        metrics.DETAILS.addMetric(detail);
-                    }
-
-                    // Synthesize the high level summary metrics
-                    final GcBiasSummaryMetrics summary = new GcBiasSummaryMetrics();
-                    if (group.equals(ACCUMULATION_LEVEL_READ_GROUP)) {summary.READ_GROUP = gcType;}
-                    else if (group.equals(ACCUMULATION_LEVEL_SAMPLE)) {summary.SAMPLE = gcType;}
-                    else if (group.equals(ACCUMULATION_LEVEL_LIBRARY)) {summary.LIBRARY = gcType;}
-
-                    summary.READS_USED = includeDuplicates ? READS_USED_ALL : READS_USED_UNIQUE;
-
-                    summary.ACCUMULATION_LEVEL = group;
-                    summary.WINDOW_SIZE = scanWindowSize;
-                    summary.TOTAL_CLUSTERS = totalClusters;
-                    summary.ALIGNED_READS = totalAlignedReads;
-                    summary.GC_NC_0_19 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 0, 19);
-                    summary.GC_NC_20_39 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 20, 39);
-                    summary.GC_NC_40_59 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 40, 59);
-                    summary.GC_NC_60_79 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 60, 79);
-                    summary.GC_NC_80_100 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 80, 100);
-
-                    calculateDropoutMetrics(metrics.DETAILS.getMetrics(), summary);
-
-                    metrics.SUMMARY = summary;
-
-                    file.addMetric(metrics);
+                for (final Map.Entry<String, GcGroupData> groupEntry : gcCur.byContigGroup.entrySet()) {
+                    if (groupEntry.getValue().totalAlignedReads == 0) continue;
+                    addGcMetricsForContigGroup(file, entry.getKey(), gcCur, groupEntry.getKey(), groupEntry.getValue(), includeDuplicates);
                 }
             }
+        }
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Emits one detail block (101 gc bins) plus its summary metric, for a single
+        // accumulation unit crossed with a single contig group.
+        /////////////////////////////////////////////////////////////////////////////
+        private void addGcMetricsForContigGroup(final MetricsFile<GcBiasMetrics, Integer> file, final String gcType,
+                                                final GcObject gcCur, final String contigGroupName, final GcGroupData data,
+                                                final boolean includeDuplicates) {
+            final String group = gcCur.group;
+            final int[] windowsByGc = windowsByGcByGroup.get(contigGroupName);
+            final int[] readsByGc = data.readsByGc;
+            final long[] errorsByGc = data.errorsByGc;
+            final long[] basesByGc = data.basesByGc;
+
+            final GcBiasMetrics metrics = new GcBiasMetrics();
+
+            final double totalWindows = sum(windowsByGc);
+            final double totalReads = sum(readsByGc);
+            final double meanReadsPerWindow = totalReads / totalWindows;
+
+            for (int i = 0; i < windowsByGc.length; ++i) {
+                final GcBiasDetailMetrics detail = makeDetailMetrics(contigGroupName);
+                detail.GC = i;
+                detail.WINDOWS = windowsByGc[i];
+                detail.READ_STARTS = readsByGc[i];
+                if (errorsByGc[i] > 0) {
+                    detail.MEAN_BASE_QUALITY = QualityUtil.getPhredScoreFromObsAndErrors(basesByGc[i], errorsByGc[i]);
+                }
+                if (windowsByGc[i] != 0) {
+                    detail.NORMALIZED_COVERAGE = (detail.READ_STARTS / (double) detail.WINDOWS) / meanReadsPerWindow;
+                    detail.ERROR_BAR_WIDTH = (Math.sqrt(detail.READ_STARTS) / (double) detail.WINDOWS) / meanReadsPerWindow;
+                } else {
+                    detail.NORMALIZED_COVERAGE = 0;
+                    detail.ERROR_BAR_WIDTH = 0;
+                }
+                detail.ACCUMULATION_LEVEL = group;
+                if (group.equals(ACCUMULATION_LEVEL_READ_GROUP)) {detail.READ_GROUP = gcType;}
+                else if (group.equals(ACCUMULATION_LEVEL_SAMPLE)) {detail.SAMPLE = gcType;}
+                else if (group.equals(ACCUMULATION_LEVEL_LIBRARY)) {detail.LIBRARY = gcType;}
+
+                detail.READS_USED = includeDuplicates ? READS_USED_ALL : READS_USED_UNIQUE;
+
+                metrics.DETAILS.addMetric(detail);
+            }
+
+            // Synthesize the high level summary metrics
+            final GcBiasSummaryMetrics summary = makeSummaryMetrics(contigGroupName);
+            if (group.equals(ACCUMULATION_LEVEL_READ_GROUP)) {summary.READ_GROUP = gcType;}
+            else if (group.equals(ACCUMULATION_LEVEL_SAMPLE)) {summary.SAMPLE = gcType;}
+            else if (group.equals(ACCUMULATION_LEVEL_LIBRARY)) {summary.LIBRARY = gcType;}
+
+            summary.READS_USED = includeDuplicates ? READS_USED_ALL : READS_USED_UNIQUE;
+
+            summary.ACCUMULATION_LEVEL = group;
+            summary.WINDOW_SIZE = scanWindowSize;
+            summary.TOTAL_CLUSTERS = gcCur.totalClusters;
+            summary.ALIGNED_READS = data.totalAlignedReads;
+            summary.GC_NC_0_19 = calculateGcNormCoverage(windowsByGc, meanReadsPerWindow, readsByGc, 0, 19);
+            summary.GC_NC_20_39 = calculateGcNormCoverage(windowsByGc, meanReadsPerWindow, readsByGc, 20, 39);
+            summary.GC_NC_40_59 = calculateGcNormCoverage(windowsByGc, meanReadsPerWindow, readsByGc, 40, 59);
+            summary.GC_NC_60_79 = calculateGcNormCoverage(windowsByGc, meanReadsPerWindow, readsByGc, 60, 79);
+            summary.GC_NC_80_100 = calculateGcNormCoverage(windowsByGc, meanReadsPerWindow, readsByGc, 80, 100);
+
+            calculateDropoutMetrics(metrics.DETAILS.getMetrics(), summary);
+
+            metrics.SUMMARY = summary;
+
+            file.addMetric(metrics);
         }
     }
 
     /////////////////////////////////////////////////////////////////////////////
     // Calculates the normalized coverage over a given gc content region
     /////////////////////////////////////////////////////////////////////////////
-    private double calculateGcNormCoverage(final double meanReadsPerWindow, final int[] readsByGc,
+    private double calculateGcNormCoverage(final int[] windowsByGc, final double meanReadsPerWindow, final int[] readsByGc,
                                            final int start, final int end) {
         int windowsTotal = 0;
         double sum = 0.0;
@@ -361,37 +425,56 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     }
 
     /////////////////////////////////////////////////////////////////////////////
-    //Keeps track of each level of GcCalculation
+    //Keeps track of each level of GcCalculation. totalClusters and group apply to the
+    //whole accumulation unit (e.g. the whole sample) and so are NOT restricted to the
+    //contigs of any one group; everything else is tracked separately per contig group
+    //(see byContigGroup). This is why a summary row's TOTAL_CLUSTERS is identical across
+    //that unit's contig groups while its ALIGNED_READS is not.
     /////////////////////////////////////////////////////////////////////////////
     class GcObject {
         long totalClusters = 0;
+        String group = null;
+        final Map<String, GcGroupData> byContigGroup = new LinkedHashMap<>();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    //Per contig-group counts within a single GcObject.
+    /////////////////////////////////////////////////////////////////////////////
+    class GcGroupData {
         long totalAlignedReads = 0;
         int[] readsByGc = new int[BINS];
         long[] basesByGc = new long[BINS];
         long[] errorsByGc = new long[BINS];
-        String group = null;
     }
 
     /////////////////////////////////////////////////////////////////////////////
-    //Adds each read to the appropriate gcObj which is determined in acceptRecord above
-    //Also calculates values for calculating GC Bias at each level
+    //Adds each read to the appropriate gcObj which is determined in acceptRecord above.
+    //Also calculates values for calculating GC Bias at each level, for every contig
+    //group the read's contig belongs to (contigGroupKeys is empty if the read's contig
+    //isn't listed in any CONTIG_GROUP).
     /////////////////////////////////////////////////////////////////////////////
-     private void addRead(final GcObject gcObj, final SAMRecord rec, final String group, final byte[] gc, final byte[] refBases) {
+     private void addRead(final GcObject gcObj, final SAMRecord rec, final String group, final byte[] gc, final byte[] refBases,
+                          final List<String> contigGroupKeys) {
         if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++gcObj.totalClusters;
-        final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - scanWindowSize : rec.getAlignmentStart();
-        ++gcObj.totalAlignedReads;
-        if (pos > 0) {
-            final int windowGc = gc[pos];
-            if (windowGc >= 0) {
-                ++gcObj.readsByGc[windowGc];
-                gcObj.basesByGc[windowGc] += rec.getReadLength();
-                gcObj.errorsByGc[windowGc] +=
-                        SequenceUtil.countMismatches(rec, refBases, bisulfite) +
-                                SequenceUtil.countInsertedBases(rec) + SequenceUtil.countDeletedBases(rec);
-            }
-        }
         if (gcObj.group == null) {
             gcObj.group = group;
+        }
+        if (contigGroupKeys.isEmpty()) return;
+
+        final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - scanWindowSize : rec.getAlignmentStart();
+        final int windowGc = pos > 0 ? gc[pos] : -1;
+        final long errors = windowGc < 0 ? 0 :
+                SequenceUtil.countMismatches(rec, refBases, bisulfite) +
+                        SequenceUtil.countInsertedBases(rec) + SequenceUtil.countDeletedBases(rec);
+
+        for (final String contigGroupKey : contigGroupKeys) {
+            final GcGroupData data = gcObj.byContigGroup.computeIfAbsent(contigGroupKey, k -> new GcGroupData());
+            ++data.totalAlignedReads;
+            if (windowGc >= 0) {
+                ++data.readsByGc[windowGc];
+                data.basesByGc[windowGc] += rec.getReadLength();
+                data.errorsByGc[windowGc] += errors;
+            }
         }
     }
 }

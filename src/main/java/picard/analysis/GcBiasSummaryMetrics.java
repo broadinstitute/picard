@@ -43,10 +43,12 @@ public class GcBiasSummaryMetrics extends MultilevelMetrics {
     /** The window size on the genome used to calculate the GC of the sequence. */
     public int WINDOW_SIZE;
 
-    /** The total number of clusters that were seen in the gc bias calculation. */
+    /** The total number of clusters that were seen in the gc bias calculation. Unlike ALIGNED_READS
+     * This is a genome-wide count and is not affeced by CONTIG_GROUP settings. */
     public long TOTAL_CLUSTERS;
 
-    /** The total number of aligned reads used to compute the gc bias metrics. */
+    /** The total number of aligned reads used to compute the gc bias metrics. When CONTIG_GROUP is
+     * used this counts only reads aligned to that group's contigs. */
     public long ALIGNED_READS;
 
     /**
