@@ -67,12 +67,6 @@ dependencies {
     api 'com.github.samtools:htsjdk:' + htsjdkVersion
     api 'org.broadinstitute:barclay:5.0.0'
 
-    //gkl and associated native bindings
-    implementation('com.intel.gkl:gkl:0.8.11'){
-        exclude module: 'htsjdk'
-    }
-    implementation 'org.broadinstitute:gatk-native-bindings:1.0.0' //this should be redundant when GKL is updated past 0.8.11
-
     //needed for execuing javascript in filter
     implementation 'org.openjdk.nashorn:nashorn-core:15.4'
 
