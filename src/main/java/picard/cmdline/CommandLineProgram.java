@@ -23,8 +23,6 @@
  */
 package picard.cmdline;
 
-import com.intel.gkl.compression.IntelDeflaterFactory;
-import com.intel.gkl.compression.IntelInflaterFactory;
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -40,6 +38,8 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.BlockGunzipper;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.zip.DeflaterFactory;
+import htsjdk.samtools.util.zip.InflaterFactory;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -67,6 +67,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -138,10 +140,10 @@ public abstract class CommandLineProgram {
             new Object() : // legacy parser does not require these
             new SpecialArgumentsCollection();
 
-    @Argument(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the Intel Deflater for writing compressed output", common = true)
+    @Argument(shortName = "use_jdk_deflater", doc = "Use the JDK Deflater instead of the libdeflate-based Deflater for writing compressed output", common = true)
     public Boolean USE_JDK_DEFLATER = false;
 
-    @Argument(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the Intel Inflater for reading compressed input", common = true)
+    @Argument(shortName = "use_jdk_inflater", doc = "Use the JDK Inflater instead of the libdeflate-based Inflater for reading compressed input", common = true)
     public Boolean USE_JDK_INFLATER = false;
 
     private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
@@ -237,13 +239,10 @@ public abstract class CommandLineProgram {
             SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
         }
 
-        if (!USE_JDK_DEFLATER) {
-            BlockCompressedOutputStream.setDefaultDeflaterFactory(new IntelDeflaterFactory());
-        }
-
-        if (!USE_JDK_INFLATER) {
-            BlockGunzipper.setDefaultInflaterFactory(new IntelInflaterFactory());
-        }
+        // HTSJDK's stock factories use libdeflate when its native library is available and fall back to the JDK
+        // otherwise. The factories are process-wide, so always set them so that a prior tool's choice doesn't leak.
+        BlockCompressedOutputStream.setDefaultDeflaterFactory(USE_JDK_DEFLATER ? new JdkDeflaterFactory() : new DeflaterFactory());
+        BlockGunzipper.setDefaultInflaterFactory(USE_JDK_INFLATER ? new JdkInflaterFactory() : new InflaterFactory());
 
         // This has to happen after the inflater factory is set because it causes a reinitialization of the static
         // default reader factory.  At least until https://github.com/samtools/htsjdk/issues/1666 is resolved
@@ -259,17 +258,12 @@ public abstract class CommandLineProgram {
                                 .map(provider -> String.format("Provider %s is%s available;", provider.name(), provider.isAvailable ? "" : " not"))
                                 .collect(Collectors.joining(" "));
 
-                final boolean usingIntelDeflater = (BlockCompressedOutputStream.getDefaultDeflaterFactory() instanceof IntelDeflaterFactory &&
-                        ((IntelDeflaterFactory)BlockCompressedOutputStream.getDefaultDeflaterFactory()).usingIntelDeflater());
-                final boolean usingIntelInflater = (BlockGunzipper.getDefaultInflaterFactory() instanceof IntelInflaterFactory &&
-                        ((IntelInflaterFactory)BlockGunzipper.getDefaultInflaterFactory()).usingIntelInflater());
                 final String msg = String.format(
-                    "[%s] Executing as %s@%s on %s %s %s; %s %s; Deflater: %s; Inflater: %s; %s Picard version: %s",
+                    "[%s] Executing as %s@%s on %s %s %s; %s %s; %s Picard version: %s",
                     new Date(), System.getProperty("user.name"), InetAddress.getLocalHost().getHostName(),
                     System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
                     System.getProperty("java.vm.name"), System.getProperty("java.runtime.version"),
-                    usingIntelDeflater ? "Intel" : "Jdk", usingIntelInflater ? "Intel" : "Jdk",
-                        pathProvidersMessage,
+                    pathProvidersMessage,
                     getCommandLineParser().getVersion());
                 System.err.println(msg);
             }
@@ -519,4 +513,20 @@ public abstract class CommandLineProgram {
     }
     
         
+
+    /** Factory that always produces the JDK's own deflater, bypassing libdeflate. */
+    private static final class JdkDeflaterFactory extends DeflaterFactory {
+        @Override
+        public Deflater makeDeflater(final int compressionLevel, final boolean nowrap) {
+            return new Deflater(compressionLevel, nowrap);
+        }
+    }
+
+    /** Factory that always produces the JDK's own inflater, bypassing libdeflate. */
+    private static final class JdkInflaterFactory extends InflaterFactory {
+        @Override
+        public Inflater makeInflater(final boolean nowrap) {
+            return new Inflater(nowrap);
+        }
+    }
 }
