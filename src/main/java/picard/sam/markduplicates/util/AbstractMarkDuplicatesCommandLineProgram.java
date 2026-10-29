@@ -24,17 +24,21 @@
 
 package picard.sam.markduplicates.util;
 
+import htsjdk.samtools.DefaultSAMRecordFactory;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordFactory;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.Histogram;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.ArgumentCollection;
@@ -45,14 +49,19 @@ import picard.sam.DuplicationMetrics;
 import picard.sam.DuplicationMetricsFactory;
 import picard.sam.markduplicates.MarkDuplicatesForFlowHelper;
 import picard.sam.util.PGTagArgumentCollection;
+import picard.sam.util.ParallelBAMRecordIterator;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
@@ -235,18 +244,95 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * and checking of the inputs.
      */
     protected SamHeaderAndIterator openInputs(boolean eagerlyDecode) {
+        return openInputs(eagerlyDecode, false);
+    }
+
+    /**
+     * As {@link #openInputs(boolean)}; when useAsyncIo is true the readers read and inflate
+     * BGZF blocks ahead on a background thread (SamReaderFactory.setUseAsyncIo).
+     */
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo) {
+        return openInputs(eagerlyDecode, useAsyncIo, 0);
+    }
+
+    /**
+     * As {@link #openInputs(boolean, boolean)}; when decodeThreads is above 0 and the one input is a local BAM file,
+     * its records are decoded and validated on that many threads by {@link ParallelBAMRecordIterator}, which inflates
+     * on a thread of its own whatever useAsyncIo says.
+     */
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo, int decodeThreads) {
+        return openInputs(eagerlyDecode, useAsyncIo, decodeThreads, null);
+    }
+
+    /**
+     * As {@link #openInputs(boolean, boolean, int)}; when recordFactory is not null, the readers SamReaderFactory opens
+     * make their records with it (SamReaderFactory.samRecordFactory), and so does ParallelBAMRecordIterator.
+     */
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo, int decodeThreads,
+                                              SAMRecordFactory recordFactory) {
+        return openInputs(eagerlyDecode, useAsyncIo, decodeThreads, recordFactory, null);
+    }
+
+    /**
+     * As {@link #openInputs(boolean, boolean, int, SAMRecordFactory)}; when the iterator is a
+     * {@link ParallelBAMRecordIterator}, its decoding threads annotate each record with an annotator from
+     * annotatorFactory (null for none).
+     */
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo, int decodeThreads,
+                                              SAMRecordFactory recordFactory,
+                                              Supplier<Function<SAMRecord, Object>> annotatorFactory) {
+        return openInputs(eagerlyDecode, useAsyncIo, decodeThreads, recordFactory, annotatorFactory, 0);
+    }
+
+    /**
+     * As {@link #openInputs(boolean, boolean, int, SAMRecordFactory, Supplier)}; when the iterator is a
+     * {@link ParallelBAMRecordIterator}, it does not validate the input's first validatedRecords records again, which
+     * an earlier openInputs on the same input, with eagerlyDecode, read and validated without a failure.
+     */
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo, int decodeThreads,
+                                              SAMRecordFactory recordFactory,
+                                              Supplier<Function<SAMRecord, Object>> annotatorFactory,
+                                              long validatedRecords) {
+        return openInputs(eagerlyDecode, useAsyncIo, decodeThreads, recordFactory, annotatorFactory, validatedRecords,
+                null);
+    }
+
+    /**
+     * As {@link #openInputs(boolean, boolean, int, SAMRecordFactory, Supplier, long)}, with the number of records
+     * already validated given by validatedCount while the earlier openInputs is still being read; only a
+     * {@link ParallelBAMRecordIterator} takes it, and for any other iterator this returns null after closing it.
+     */
+    protected SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo, int decodeThreads,
+                                              SAMRecordFactory recordFactory,
+                                              Supplier<Function<SAMRecord, Object>> annotatorFactory,
+                                              ParallelBAMRecordIterator.ValidatedRecords validatedCount) {
+        return openInputs(eagerlyDecode, useAsyncIo, decodeThreads, recordFactory, annotatorFactory, 0,
+                validatedCount);
+    }
+
+    private SamHeaderAndIterator openInputs(boolean eagerlyDecode, boolean useAsyncIo, int decodeThreads,
+                                            SAMRecordFactory recordFactory,
+                                            Supplier<Function<SAMRecord, Object>> annotatorFactory,
+                                            long validatedRecords,
+                                            ParallelBAMRecordIterator.ValidatedRecords validatedCount) {
         final List<SAMFileHeader> headers = new ArrayList<>(INPUT.size());
         final List<SamReader> readers = new ArrayList<>(INPUT.size());
+        ValidationStringency stringency = null;
 
         for (final String input : INPUT) {
-            final SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+            // false keeps the samjdk.use_async_io_read_samtools default rather than forcing it off.
+            final SamReaderFactory readerFactory = useAsyncIo ? SamReaderFactory.makeDefault().setUseAsyncIo(true) : SamReaderFactory.makeDefault();
             if (eagerlyDecode) {
                 readerFactory.enable(SamReaderFactory.Option.EAGERLY_DECODE);
+            }
+            if (recordFactory != null) {
+                readerFactory.samRecordFactory(recordFactory);
             }
             final SamReader reader = readerFactory.referenceSequence(REFERENCE_SEQUENCE).open(SamInputResource.of(input));
             final SAMFileHeader header = reader.getFileHeader();
             headers.add(header);
             readers.add(reader);
+            stringency = readerFactory.validationStringency();
         }
         if (ASSUME_SORT_ORDER != null || ASSUME_SORTED) {
             if (ASSUME_SORT_ORDER == null) {
@@ -259,11 +345,44 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
 
         if (headers.size() == 1) {
+            final File bam = decodeThreads > 0 ? localBamFile(INPUT.get(0), readers.get(0)) : null;
+            if (bam != null) {
+                CloserUtil.close(readers.get(0));
+                final SAMRecordFactory factory = recordFactory != null ? recordFactory : DefaultSAMRecordFactory.getInstance();
+                final String threadName = getClass().getSimpleName() + " decode";
+                return new SamHeaderAndIterator(headers.get(0), validatedCount == null ?
+                        ParallelBAMRecordIterator.open(bam, headers.get(0), stringency, eagerlyDecode, decodeThreads,
+                                threadName, factory, annotatorFactory, validatedRecords) :
+                        ParallelBAMRecordIterator.open(bam, headers.get(0), stringency, eagerlyDecode, decodeThreads,
+                                threadName, factory, annotatorFactory, validatedCount));
+            }
+            if (validatedCount != null) {
+                CloserUtil.close(readers);
+                return null;
+            }
             return new SamHeaderAndIterator(headers.get(0), readers.get(0).iterator());
+        } else if (validatedCount != null) {
+            CloserUtil.close(readers);
+            return null;
         } else {
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(headers.get(0).getSortOrder(), headers, false);
             final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORT_ORDER != null);
             return new SamHeaderAndIterator(headerMerger.getMergedHeader(), iterator);
+        }
+    }
+
+    /** The input as a local file when SamReaderFactory opened it as one and it is a BAM, else null. */
+    private static File localBamFile(final String input, final SamReader reader) {
+        if (reader.type() != SamReader.Type.BAM_TYPE && reader.type() != SamReader.Type.BAM_CSI_TYPE) {
+            return null;
+        }
+        // SamInputResource.of(String) reads anything that parses as a URL as a URL.
+        try {
+            new URL(input);
+            return null;
+        } catch (final MalformedURLException e) {
+            final File file = new File(input);
+            return file.isFile() ? file : null;
         }
     }
 
