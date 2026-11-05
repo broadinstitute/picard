@@ -27,6 +27,15 @@ public class ReadNameParser implements Serializable {
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
+    /**
+     * Opt-in variant of {@link #DEFAULT_READ_NAME_REGEX} for read names that carry a trailing UMI field, e.g.
+     * {@code FC:1:1101:12345:67890:ACGT-TTGC}. The three numeric fields before the optional UMI field are the tile, x and
+     * y values. The UMI field may contain only A, C, G, T, N, + and -. Parsing is done without a regex and gives the same
+     * results as the regex {@code (?:.*:)?([0-9]+):([0-9]+):([0-9]+)(:[ACGTN+-]+)?$}.
+     */
+    public static final String ILLUMINA_UMI_READ_NAME_REGEX =
+            "<optimized capture of last three ':' separated numeric fields, with an optional trailing UMI field>".intern();
+
     private String readNameStored = null;
 
     private PhysicalLocation physicalLocationStored = new PhysicalLocationInt();
@@ -34,6 +43,8 @@ public class ReadNameParser implements Serializable {
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
     private final boolean useOptimizedDefaultParsing; // was the regex default?
+
+    private final boolean useOptimizedUmiParsing; // was the regex ILLUMINA_UMI_READ_NAME_REGEX?
 
     protected final String readNameRegex;
 
@@ -68,6 +79,7 @@ public class ReadNameParser implements Serializable {
      */
     public ReadNameParser(final String readNameRegex, final Log log) {
         this.useOptimizedDefaultParsing = DEFAULT_READ_NAME_REGEX.equals(readNameRegex);
+        this.useOptimizedUmiParsing = ILLUMINA_UMI_READ_NAME_REGEX.equals(readNameRegex);
         this.readNameRegex = readNameRegex;
         this.log = log;
     }
@@ -91,6 +103,20 @@ public class ReadNameParser implements Serializable {
                                         "You may need to specify a READ_NAME_REGEX in order to correctly identify optical duplicates.  " +
                                         "Note that this message will not be emitted again even if other read names do not match the regex.",
                                 this.readNameRegex, readName));
+                        this.warnedAboutRegexNotMatching = true;
+                    }
+                    return false;
+                }
+                loc.setTile((short) tmpLocationFields[0]);
+                loc.setX(tmpLocationFields[1]);
+                loc.setY(tmpLocationFields[2]);
+                return true;
+            } else if (this.useOptimizedUmiParsing) {
+                if (!parseLastThreeNumericFieldsWithOptionalUmi(readName, tmpLocationFields)) {
+                    if (null != log && !this.warnedAboutRegexNotMatching) {
+                        this.log.warn(String.format("READ_NAME_FORMAT ILLUMINA_UMI did not match read name '%s'.  " +
+                                        "Note that this message will not be emitted again even if other read names do not match.",
+                                readName));
                         this.warnedAboutRegexNotMatching = true;
                     }
                     return false;
@@ -183,6 +209,76 @@ public class ReadNameParser implements Serializable {
         else {
             return numFields;
         }
+    }
+
+    /**
+     * Parses {@code ...:tile:x:y} or {@code ...:tile:x:y:UMI} (the UMI optional, A/C/G/T/N/+/- only), storing tile, x and y in
+     * {@code tokens}. Matches the regex {@code (?:.*:)?([0-9]+):([0-9]+):([0-9]+)(:[ACGTN+-]+)?$}.
+     *
+     * @return true if the name matched, false otherwise
+     */
+    private static boolean parseLastThreeNumericFieldsWithOptionalUmi(final String readName, final int[] tokens) {
+        // Strip a trailing UMI field, if present. Its characters never include digits, so the two cases cannot overlap.
+        final int lastColon = readName.lastIndexOf(':');
+        final String head = (lastColon >= 0 && isUmi(readName, lastColon + 1))
+                ? readName.substring(0, lastColon)
+                : readName;
+
+        // The last three fields of head are tile, x and y; their delimiters are the last colon (c2) and the two before it.
+        final int c2 = head.lastIndexOf(':');
+        if (c2 < 0) {
+            return false;
+        }
+        final int c1 = head.lastIndexOf(':', c2 - 1);
+        if (c1 < 0) {
+            return false;
+        }
+        final int c0 = head.lastIndexOf(':', c1 - 1); // -1 when the tile field starts at the beginning of the name
+
+        final String tileField = head.substring(c0 + 1, c1);
+        final String xField = head.substring(c1 + 1, c2);
+        final String yField = head.substring(c2 + 1);
+        if (!isDigits(tileField) || !isDigits(xField) || !isDigits(yField)) {
+            return false;
+        }
+
+        try {
+            final int tile = Integer.parseInt(tileField);
+            final int x = Integer.parseInt(xField);
+            final int y = Integer.parseInt(yField);
+            tokens[0] = tile;
+            tokens[1] = x;
+            tokens[2] = y;
+            return true;
+        } catch (final NumberFormatException nfe) {
+            return false; // out of int range, as the regex path rejects it
+        }
+    }
+
+    /** True if {@code readName} has at least one character from {@code start} on, and all of them are A, C, G, T, N, + or -. */
+    private static boolean isUmi(final String readName, final int start) {
+        if (start >= readName.length()) {
+            return false;
+        }
+        for (int i = start; i < readName.length(); i++) {
+            if ("ACGTN+-".indexOf(readName.charAt(i)) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** True if {@code s} is non-empty and consists only of the ASCII digits 0-9. */
+    private static boolean isDigits(final String s) {
+        if (s.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) < '0' || s.charAt(i) > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
