@@ -38,6 +38,8 @@ import picard.sam.util.PhysicalLocationInt;
 import picard.sam.util.ReadNameParser;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,8 +64,10 @@ import java.util.Map;
  *
  * By default the program expects the read names to have 5 or 7 fields separated by colons (:), and it takes the last two
  * to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See
- * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. The program traverses the {@link #INPUT} twice: first
- * to find out the size of each of the tiles, and next to perform the downsampling.
+ * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX} for more detail. By default the program reads the {@link #INPUT} once,
+ * learning the size of each tile as its reads arrive, and decides each read against its tile's bounds (single-pass mode).
+ * Set {@link #TWO_PASS} to traverse the {@link #INPUT} twice instead: first to find out the size of each of the tiles, and
+ * next to perform the downsampling, which is exact. Single-pass needs {@link #READ_COUNT}.
  *
  * Downsampling invalidates the duplicate flag because duplicate reads before downsampling may not all remain duplicated
  * after downsampling. Thus, the default setting also removes the duplicate information.
@@ -120,8 +124,9 @@ import java.util.Map;
               "for reads near the boundary of the circle) optical duplicates are kept or dropped as a group. " +
               "By default the program expects the read names to have 5 or 7 fields separated by colons (:) and it takes the last two " +
               "to indicate the x and y coordinates of the reads within the tile whence it was sequenced. See " +
-              "DEFAULT_READ_NAME_REGEX for more detail. The program traverses the INPUT twice: first " +
-              "to find out the size of each of the tiles, and next to perform the downsampling. " +
+              "DEFAULT_READ_NAME_REGEX for more detail. By default the program reads the INPUT once, learning the size of each " +
+              "tile as its reads arrive (single-pass mode, which needs READ_COUNT). TWO_PASS=true traverses the INPUT twice " +
+              "instead: first to find out the size of each of the tiles, and next to perform the downsampling, which is exact. " +
               "Downsampling invalidates the duplicate flag because duplicate reads before downsampling " +
               "may not all remain duplicated after downsampling. Thus, the default setting also removes the duplicate information. " +
               "\n\n" +
@@ -181,14 +186,36 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
             "Note that if the default regex is specified, a regex match is not actually done, but instead the read name " +
             "is split on colons (:). " +
             "For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. " +
-            "For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.")
+            "For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values. " +
+            "Must be left at this default when READ_NAME_FORMAT is set.")
     public String READ_NAME_REGEX = ReadNameParser.DEFAULT_READ_NAME_REGEX;
+
+    @Argument(doc = "A fast, regex-free read name format. ILLUMINA_UMI accepts the default 5 or 7 field Illumina names, " +
+            "and also names with one extra trailing UMI field made only of A, C, G, T, N, + and -, e.g. " +
+            "FC:1:1101:12345:67890:ACGT-TTGC. Cannot be combined with a READ_NAME_REGEX other than the default.", optional = true)
+    public ReadNameFormat READ_NAME_FORMAT = null;
+
+    @Argument(doc = "Use the exact two-pass mode: a first pass finds each tile's bounds, then a second pass decides the reads. " +
+            "By default the approximate single-pass mode runs instead, which reads INPUT once and might differ slightly from " +
+            "two-pass. Single-pass needs READ_COUNT; without it, or for CRAM input, two-pass runs anyway.", optional = true)
+    public boolean TWO_PASS = false;
+
+    @Argument(doc = "The number of reads in INPUT (records, both mates counted), for single-pass. Each tile's count is scaled " +
+            "to the whole input with it when widening. Fails if the number of reads seen differs by more than 1%. Required for " +
+            "single-pass input from a pipe.", optional = true)
+    public Long READ_COUNT = null;
 
     @Argument(doc = "Stop after processing N reads, mainly for debugging.", optional = true)
     public Long STOP_AFTER = null;
 
     @Argument(doc = "Allow downsampling again despite this being a bad idea with possibly unexpected results.", optional = true)
     public boolean ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS = false;
+
+    /** Read name formats that {@link #READ_NAME_FORMAT} can select. */
+    public enum ReadNameFormat {
+        /** Illumina names with an optional trailing UMI field. See {@link #READ_NAME_FORMAT}. */
+        ILLUMINA_UMI
+    }
 
     private final Log log = Log.getInstance(PositionBasedDownsampleSam.class);
 
@@ -206,16 +233,20 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
 
     final private Map<Short, Coord> tileCoord = new CollectionUtil.DefaultingMap<>(defaultingMapFactory, true);
 
-
-    final Map<Short, Histogram<Short>> xPositions = new HashMap<>();
-    final Map<Short, Histogram<Short>> yPositions = new HashMap<>();
-
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<>();
 
         if (FRACTION < 0 || FRACTION > 1) {
             errors.add("FRACTION must be a value between 0 and 1, found: " + FRACTION);
+        }
+
+        if (READ_NAME_FORMAT != null && !ReadNameParser.DEFAULT_READ_NAME_REGEX.equals(READ_NAME_REGEX)) {
+            errors.add("READ_NAME_FORMAT and READ_NAME_REGEX cannot both be set.");
+        }
+
+        if (READ_COUNT != null && READ_COUNT < 1) {
+            errors.add("READ_COUNT must be at least 1, found: " + READ_COUNT);
         }
 
         if (!errors.isEmpty())
@@ -230,10 +261,28 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        log.info("Checking to see if input file has been downsampled with this program before.");
-        checkProgramRecords();
+        readNameParser = new ReadNameParser(READ_NAME_FORMAT == ReadNameFormat.ILLUMINA_UMI
+                ? ReadNameParser.ILLUMINA_UMI_READ_NAME_REGEX
+                : READ_NAME_REGEX);
 
-        readNameParser = new ReadNameParser(READ_NAME_REGEX);
+        final boolean isCram = INPUT.getName().toLowerCase().endsWith(".cram");
+        if (!TWO_PASS && READ_COUNT != null && !isCram) {
+            singlePassSamRecords();
+            logFinalStats();
+            return 0;
+        }
+        if (!INPUT.isFile()) {
+            throw new PicardException("Two-pass mode needs INPUT to be a regular file, not a pipe. " +
+                    "Use single-pass with READ_COUNT.");
+        }
+        if (!TWO_PASS) {
+            log.info("Using two-pass mode: " + (isCram ? "single-pass cannot read CRAM." : "READ_COUNT is not given."));
+        }
+
+        log.info("Checking to see if input file has been downsampled with this program before.");
+        final SamReader header = openReader();
+        checkProgramRecords(header.getFileHeader());
+        CloserUtil.close(header);
 
         log.info("Starting first pass. Examining read distribution in tiles.");
         fillTileMinMaxCoord();
@@ -243,30 +292,43 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         outputSamRecords();
         log.info("Second pass done.");
 
+        logFinalStats();
+        return 0;
+    }
+
+    private void logFinalStats() {
         final double finalP = kept / (double) total;
         if (Math.abs(finalP - FRACTION) / (Math.min(finalP, FRACTION) + 1e-10) > ACCEPTABLE_FUDGE_FACTOR) {
             log.warn(String.format("You've requested FRACTION=%g, the resulting downsampling resulted in a rate of %f.", FRACTION, finalP));
         }
         log.info(String.format("Finished! Kept %d out of %d reads (P=%g).", kept, total, finalP));
+    }
 
-        return 0;
+    /** The input header with this program's PG record added, for the output. */
+    private SAMFileHeader outputHeader(final SAMFileHeader inputHeader) {
+        final SAMFileHeader header = inputHeader.clone();
+        final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
+        final SAMProgramRecord programRecord = new SAMProgramRecord(pgIdGenerator.getNonCollidingId(PG_PROGRAM_NAME));
+        programRecord.setProgramName(PG_PROGRAM_NAME);
+        programRecord.setCommandLine(getCommandLine());
+        programRecord.setProgramVersion(getVersion());
+        header.addProgramRecord(programRecord);
+        return header;
+    }
+
+    /** Async writing: BGZF compression and record handling overlap. The queue fits single-pass bursts. */
+    private SAMFileWriter openOutput(final SAMFileHeader inputHeader) {
+        return new SAMFileWriterFactory()
+                .setUseAsyncIo(true)
+                .setAsyncOutputBufferSize(200_000)
+                .makeWriter(outputHeader(inputHeader), true, OUTPUT, REFERENCE_SEQUENCE);
     }
 
     private void outputSamRecords() {
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7);
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-
-        final SAMFileHeader header = in.getFileHeader().clone();
-        final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(header);
-        final SAMProgramRecord programRecord = new SAMProgramRecord(pgIdGenerator.getNonCollidingId(PG_PROGRAM_NAME));
-
-        programRecord.setProgramName(PG_PROGRAM_NAME);
-        programRecord.setCommandLine(getCommandLine());
-        programRecord.setProgramVersion(getVersion());
-        header.addProgramRecord(programRecord);
-
-        final SAMFileWriter out = new SAMFileWriterFactory().makeWriter(header, true, OUTPUT, REFERENCE_SEQUENCE);
+        final SamReader in = openReader();
+        final SAMFileWriter out = openOutput(in.getFileHeader());
 
         final CircleSelector selector = new CircleSelector(FRACTION);
 
@@ -276,14 +338,6 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
             total++;
 
             final PhysicalLocationInt pos = getSamRecordLocation(rec);
-
-            if (!xPositions.containsKey(pos.getTile())) {
-                xPositions.put(pos.getTile(), new Histogram<>(pos.getTile() + "-xpos", "count"));
-            }
-            if (!yPositions.containsKey(pos.getTile())) {
-                yPositions.put(pos.getTile(), new Histogram<>(pos.getTile() + "-ypos", "count"));
-            }
-
             final boolean keepRecord = selector.select(pos, tileCoord.get(pos.getTile()));
 
             if (keepRecord) {
@@ -299,13 +353,8 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         CloserUtil.close(in);
     }
 
-    private void checkProgramRecords() {
-        final SamReader in = SamReaderFactory
-                .makeDefault()
-                .referenceSequence(REFERENCE_SEQUENCE)
-                .open(INPUT);
-
-        for (final SAMProgramRecord pg : in.getFileHeader().getProgramRecords()) {
+    private void checkProgramRecords(final SAMFileHeader header) {
+        for (final SAMProgramRecord pg : header.getProgramRecords()) {
             if (pg.getProgramName() != null && pg.getProgramName().equals(PG_PROGRAM_NAME)) {
 
                 final String outText = "Found previous Program Record that indicates that this file has been downsampled already with this program. Operation not supported! Previous PG: " + pg.toString();
@@ -318,17 +367,16 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
                 }
             }
         }
-        CloserUtil.close(in);
     }
 
-    // scan all the tiles and find the smallest and largest coordinate (x & y) in that tile.
+    // scan all the tiles and find the smallest and largest coordinate (x & y) in that tile. Leaves the bounds unwidened.
     private void fillTileMinMaxCoord() {
 
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final SamReader in = openReader();
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
 
-        int total = 0;
+        long total = 0;
 
         for (final SAMRecord rec : in) {
             if (STOP_AFTER != null && total >= STOP_AFTER) break;
@@ -365,6 +413,137 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         }
 
         CloserUtil.close(in);
+    }
+
+    // Single-pass tuning: a tile's box is stable once no extreme has moved for max(MIN_READS, FRACTION x reads) reads.
+    private static final long SINGLE_PASS_MIN_READS = 20000;
+    private static final double SINGLE_PASS_STABLE_FRACTION = 0.1;
+
+    /** Per-tile state for single-pass: the box learned so far, the reads held until it freezes, and the frozen box. */
+    private class TilePool {
+        final Coord raw = new Coord();   // unwidened, same starting values as pass 1
+        long lastChange = 0;             // raw.count at which an extreme last moved
+        final List<SAMRecord> buffer = new ArrayList<>();
+        final List<PhysicalLocationInt> bufferedPos = new ArrayList<>(); // parsed once, on arrival
+        Coord frozen = null;
+
+        void observe(final PhysicalLocationInt pos) {
+            boolean changed = false;
+            if (pos.getX() > raw.maxX) { raw.maxX = pos.getX(); changed = true; }
+            if (pos.getX() < raw.minX) { raw.minX = pos.getX(); changed = true; }
+            if (pos.getY() > raw.maxY) { raw.maxY = pos.getY(); changed = true; }
+            if (pos.getY() < raw.minY) { raw.minY = pos.getY(); changed = true; }
+            raw.count++;
+            if (changed) {
+                lastChange = raw.count;
+            }
+        }
+
+        boolean isStable() {
+            final double window = Math.max(SINGLE_PASS_MIN_READS, SINGLE_PASS_STABLE_FRACTION * raw.count);
+            return raw.count >= SINGLE_PASS_MIN_READS && raw.count - lastChange >= window;
+        }
+
+        /** Widens the raw box as pass 1 does, with the count scaled up to the whole input by countScale. */
+        void freeze(final double countScale) {
+            final long count = Math.max(raw.count, Math.round(raw.count * countScale));
+            final int diffX = raw.maxX - raw.minX;
+            final int diffY = raw.maxY - raw.minY;
+            final Coord w = new Coord();
+            w.count = count;
+            w.minX = raw.minX - (int) (diffX / count);
+            w.maxX = raw.maxX + (int) (diffX / count);
+            w.minY = raw.minY - (int) (diffY / count);
+            w.maxY = raw.maxY + (int) (diffY / count);
+            frozen = w;
+        }
+    }
+
+    /**
+     * Single-pass: reads INPUT once. Each tile's reads are held until its box is stable, then decided against the widened box;
+     * later reads of the tile are decided on arrival. INPUT is opened once, so it may be a pipe.
+     */
+    private void singlePassSamRecords() {
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e7);
+        final SamReader in;
+        try {
+            // htsjdk sniffs the format from the raw bytes, so pass the stream unwrapped.
+            in = SamReaderFactory.makeDefault()
+                    .referenceSequence(REFERENCE_SEQUENCE)
+                    .setUseAsyncIo(true)
+                    .open(SamInputResource.of(new FileInputStream(INPUT)));
+        } catch (final IOException e) {
+            throw new PicardException("Could not open " + INPUT + ": " + e.getMessage(), e);
+        }
+        checkProgramRecords(in.getFileHeader());
+
+        final SAMFileWriter out = openOutput(in.getFileHeader());
+        final CircleSelector selector = new CircleSelector(FRACTION);
+        final Map<Short, TilePool> pools = new HashMap<>();
+
+        for (final SAMRecord rec : in) {
+            if (STOP_AFTER != null && total >= STOP_AFTER) break;
+            total++;
+
+            final PhysicalLocationInt pos = getSamRecordLocation(rec);
+            final TilePool pool = pools.computeIfAbsent(pos.getTile(), tile -> new TilePool());
+            if (pool.frozen != null) {
+                emitIfKept(rec, pos, pool.frozen, selector, out);
+            } else {
+                pool.observe(pos);
+                pool.buffer.add(rec);
+                pool.bufferedPos.add(pos);
+                if (pool.isStable()) {
+                    freezeAndFlush(pool, selector, out);
+                }
+            }
+            progress.record(rec);
+        }
+
+        // Pools that never became stable are frozen with what they have.
+        for (final TilePool pool : pools.values()) {
+            if (pool.frozen == null) {
+                freezeAndFlush(pool, selector, out);
+            }
+        }
+
+        out.close();
+        CloserUtil.close(in);
+
+        final double readCountError = Math.abs(total - READ_COUNT) / (double) READ_COUNT;
+        if (readCountError > 0.01) {
+            throw new PicardException(String.format("READ_COUNT=%d but %d reads were read. The bounds were scaled with READ_COUNT, " +
+                    "so the output is not usable.", READ_COUNT, total));
+        }
+        if (total != READ_COUNT) {
+            log.warn(String.format("READ_COUNT=%d but %d reads were read.", READ_COUNT, total));
+        }
+    }
+
+    private void freezeAndFlush(final TilePool pool, final CircleSelector selector, final SAMFileWriter out) {
+        // Scale the tile's count by reads of the whole input per read seen so far.
+        pool.freeze(READ_COUNT / (double) Math.max(1L, total));
+        for (int i = 0; i < pool.buffer.size(); i++) {
+            emitIfKept(pool.buffer.get(i), pool.bufferedPos.get(i), pool.frozen, selector, out);
+        }
+        pool.buffer.clear();
+        pool.bufferedPos.clear();
+    }
+
+    private void emitIfKept(final SAMRecord rec, final PhysicalLocationInt pos, final Coord box,
+                            final CircleSelector selector, final SAMFileWriter out) {
+        if (selector.select(pos, box)) {
+            if (REMOVE_DUPLICATE_INFORMATION) rec.setDuplicateReadFlag(false);
+            out.addAlignment(rec);
+            kept++;
+        }
+    }
+
+    private SamReader openReader() {
+        return SamReaderFactory.makeDefault()
+                .referenceSequence(REFERENCE_SEQUENCE)
+                .setUseAsyncIo(true) // background-thread BAM reading (htsjdk); output is unchanged
+                .open(INPUT);
     }
 
     private PhysicalLocationInt getSamRecordLocation(final SAMRecord rec) {
@@ -436,7 +615,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         public int minY;
         public int maxX;
         public int maxY;
-        public int count;
+        public long count;
 
         public Coord() {
             count = 0;
