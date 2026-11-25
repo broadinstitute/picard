@@ -5,7 +5,10 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -138,6 +141,22 @@ public class FingerprintCheckerTest {
         final Map<FingerprintIdDetails, Fingerprint> fp1 = fpChecker.fingerprintVcf(vcfFile.toPath());
 
         Assert.assertFalse(fp1.isEmpty());
+    }
+
+    @Test
+    public void testMixedGtOnlyGenotypeIsSkipped() {
+        final Allele ref = Allele.create("C", true);
+        final Allele alt = Allele.create("A", false);
+        final VariantContext ctx = new VariantContextBuilder("test", "chr1", 75, 75, Arrays.asList(ref, alt))
+                .genotypes(new GenotypeBuilder("Dummy", Arrays.asList(ref, Allele.NO_CALL)).make())
+                .make();
+
+        final FingerprintChecker checker = new FingerprintChecker(new File(TEST_DATA_DIR, "haplotypeMap_small.vcf"));
+        final Map<String, Fingerprint> fingerprints = checker.loadFingerprintsFromVariantContexts(
+                Collections.singletonList(ctx), null, TEST_DATA_DIR.toPath().resolve("mixed.vcf"));
+
+        Assert.assertTrue(fingerprints.containsKey("Dummy"));
+        Assert.assertTrue(fingerprints.get("Dummy").isEmpty());
     }
 
     @Test(dataProvider = "checkFingerprintsVcfDataProvider")
