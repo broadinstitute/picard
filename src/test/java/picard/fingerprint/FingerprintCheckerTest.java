@@ -144,16 +144,19 @@ public class FingerprintCheckerTest {
     }
 
     @Test
-    public void testMixedGtOnlyGenotypeIsSkipped() {
-        final Allele ref = Allele.create("C", true);
-        final Allele alt = Allele.create("A", false);
-        final VariantContext ctx = new VariantContextBuilder("test", "chr1", 75, 75, Arrays.asList(ref, alt))
+    public void testMixedGtOnlyGenotypeIsSkipped() throws IOException {
+        final Allele ref = Allele.create("A", true);
+        final Allele alt = Allele.create("G", false);
+        final VariantContext ctx = new VariantContextBuilder("test", "1", 14804874, 14804874, Arrays.asList(ref, alt))
                 .genotypes(new GenotypeBuilder("Dummy", Arrays.asList(ref, Allele.NO_CALL)).make())
                 .make();
 
-        final FingerprintChecker checker = new FingerprintChecker(new File(TEST_DATA_DIR, "haplotypeMap_small.vcf"));
+        final File source = File.createTempFile("mixed", ".vcf");
+        source.deleteOnExit();
+
+        final FingerprintChecker checker = new FingerprintChecker(SUBSETTED_HAPLOTYPE_DATABASE_FOR_TESTING);
         final Map<String, Fingerprint> fingerprints = checker.loadFingerprintsFromVariantContexts(
-                Collections.singletonList(ctx), null, TEST_DATA_DIR.toPath().resolve("mixed.vcf"));
+                Collections.singletonList(ctx), null, source.toPath());
 
         Assert.assertTrue(fingerprints.containsKey("Dummy"));
         Assert.assertTrue(fingerprints.get("Dummy").isEmpty());
