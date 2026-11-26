@@ -28,7 +28,6 @@ jobs:
           cache: gradle
       - name: "set up R"
         run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
           sudo apt-get -qq update
           sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
       - name: Grant execute permission for gradlew
