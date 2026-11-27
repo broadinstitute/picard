@@ -579,7 +579,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             // NB: this could modify the record.  See noSideEffects.
             final SAMRecord rec;
-            if (clipOverlappingReads) {
+            if (clipOverlappingReads &&
+                    record.getReadPairedFlag() &&
+                    !record.getMateUnmappedFlag() &&
+                    record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
                 final int numOverlappingBasesToClip = SAMUtils.getNumOverlappingAlignedBasesToClip(record);
                 rec = SAMUtils.clipOverlappingAlignedBases(record, numOverlappingBasesToClip, noSideEffects);
                 metrics.PCT_EXC_OVERLAP += numOverlappingBasesToClip;

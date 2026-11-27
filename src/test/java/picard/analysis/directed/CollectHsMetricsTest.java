@@ -3,6 +3,7 @@ package picard.analysis.directed;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
@@ -20,6 +21,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.List;
 
 public class CollectHsMetricsTest extends CommandLineProgramTest {
     private final static File TEST_DIR = new File("testdata/picard/analysis/directed/CollectHsMetrics");
@@ -291,5 +293,59 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_10000X, 1.0);  // 100% of bases covered at 10000X coverage
         Assert.assertEquals(highCoverageWithIndel.PCT_TARGET_BASES_100000X, 0.95);  // 95% of bases covered at 100000X coverage due to deletion
 
+    }
+
+    @Test
+    public void testClipOverlappingReadsIgnoresMateOnDifferentChromosome() throws IOException {
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SortOrder.coordinate);
+        final IntervalList targets = new IntervalList(builder.getHeader());
+        final IntervalList baits = new IntervalList(builder.getHeader());
+        targets.add(new Interval("chr1", 1000, 1099, false, "t1"));
+        targets.add(new Interval("chr2", 1000, 1149, false, "t2"));
+        baits.add(new Interval("chr1", 1000, 1099, false, "b1"));
+        baits.add(new Interval("chr2", 1000, 1149, false, "b2"));
+
+        // Pair 1: R1 on chr1:1000-1099, R2 on chr2:1050-1149 (mate start > read start on a different contig)
+        final List<SAMRecord> diffStartPair = builder.addPair("diffStart", 0, 1, 1000, 1050, false, false, "100M", "100M", false, true, false, false, 60);
+        // Pair 2: R1 on chr1:1000-1099, R2 on chr2:1000-1099 (identical starts on different contigs; R2 would be fully clipped)
+        final List<SAMRecord> sameStartPair = builder.addPair("sameStart", 0, 1, 1000, 1000, false, false, "100M", "100M", false, true, false, false, 60);
+        // Pair 3 (control): overlapping mates on the SAME chromosome chr1:1000-1099 and chr1:1050-1149 (50 overlapping bases)
+        final List<SAMRecord> sameContigPair = builder.addPair("sameContig", 0, 0, 1000, 1050, false, false, "100M", "100M", false, true, false, false, 60);
+
+        // Sanity check that addPair placed mates on the expected contigs
+        Assert.assertEquals(diffStartPair.get(0).getReferenceName(), "chr1");
+        Assert.assertEquals(diffStartPair.get(1).getReferenceName(), "chr2");
+        Assert.assertEquals(sameStartPair.get(0).getReferenceName(), "chr1");
+        Assert.assertEquals(sameStartPair.get(1).getReferenceName(), "chr2");
+        Assert.assertEquals(sameContigPair.get(0).getReferenceName(), "chr1");
+        Assert.assertEquals(sameContigPair.get(1).getReferenceName(), "chr1");
+
+        final File dir = IOUtil.createTempDir("hsmetrics.diffchr.test").toFile();
+        final File bs = new File(dir, "baits.interval_list").getAbsoluteFile();
+        final File ts = new File(dir, "targets.interval_list").getAbsoluteFile();
+        baits.write(bs);
+        targets.write(ts);
+        final File bam = writeBam(builder, new File(dir, "diff_chr.bam"));
+
+        final File out = Files.createTempFile("hsmetrics_diff_chr.", ".txt").toFile();
+        out.deleteOnExit();
+        Assert.assertEquals(runPicardCommandLine(Arrays.asList(
+                "CLIP_OVERLAPPING_READS=true",
+                "SAMPLE_SIZE=0",
+                "MINIMUM_MAPPING_QUALITY=20",
+                "MINIMUM_BASE_QUALITY=20",
+                "TI=" + ts.getPath(),
+                "BI=" + bs.getPath(),
+                "O=" + out.getPath(),
+                "I=" + bam.getAbsolutePath())), 0);
+        final HsMetrics metrics = readMetrics(out);
+
+        IOUtil.deleteDirectoryTree(dir);
+
+        // 6 reads x 100bp = 600 aligned bases; only sameContigPair has 50 truly overlapping bases
+        Assert.assertEquals(metrics.PF_UQ_BASES_ALIGNED, 600L);
+        Assert.assertEquals(metrics.PCT_EXC_OVERLAP, 50.0 / 600.0, 1e-6);
+        // On-target bases: 400 from the two inter-chromosomal pairs + 100 (chr1:1000-1099 from sameContig R1 clipped to 50M + R2 50bp on chr1:1050-1099) = 500
+        Assert.assertEquals(metrics.ON_TARGET_BASES, 500L);
     }
 }
