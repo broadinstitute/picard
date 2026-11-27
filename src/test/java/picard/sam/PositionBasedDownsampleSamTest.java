@@ -225,4 +225,148 @@ public class PositionBasedDownsampleSamTest extends CommandLineProgramTest {
         Assert.assertNotEquals(runPicardCommandLine(args), 0);
     }
 
+    /** Writes a coordinate-agnostic SAM/BAM whose read names are FC:lane:tile:x:y, optionally with a UMI suffix. */
+    private File writeReadNameFixture(final File dir, final String name, final int numReads, final long seed,
+                                      final boolean withUmi, final int lanes, final int tiles) throws IOException {
+        final SAMFileHeader header = new SAMFileHeader();
+        header.addSequence(new htsjdk.samtools.SAMSequenceRecord("chr1", 1000000));
+        header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        final File file = new File(dir, name);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(header, false, file);
+        final Random rg = new Random(seed);
+        final String[] umis = {"ACGT", "TTGCA", "N", "AC+GT", "ACG-T"};
+        for (int i = 0; i < numReads; i++) {
+            final int lane = 1 + rg.nextInt(lanes);
+            final int tile = 1101 + rg.nextInt(tiles);
+            final int x = 1000 + rg.nextInt(30000);
+            final int y = 1000 + rg.nextInt(30000);
+            String readName = "FC123:" + lane + ":" + tile + ":" + x + ":" + y;
+            if (withUmi) {
+                readName += ":" + umis[rg.nextInt(umis.length)];
+            }
+            final SAMRecord rec = new SAMRecord(header);
+            rec.setReadName(readName);
+            rec.setReferenceIndex(0);
+            rec.setAlignmentStart(1 + i % 900000);
+            rec.setCigarString("10M");
+            rec.setReadString("ACGTACGTAC");
+            rec.setBaseQualityString("IIIIIIIIII");
+            rec.setReadUnmappedFlag(false);
+            writer.addAlignment(rec);
+        }
+        writer.close();
+        return file;
+    }
+
+    /** Sorted list of "name/flag" for every record in the file: a strict, order-independent view of the kept reads. */
+    private static List<String> readKeptRecords(final File file) throws IOException {
+        final List<String> kept = new ArrayList<>();
+        try (final htsjdk.samtools.SamReader reader = htsjdk.samtools.SamReaderFactory.makeDefault().open(file)) {
+            for (final SAMRecord rec : reader) {
+                kept.add(rec.getReadName() + "/" + rec.getFlags() + "/" + rec.getAlignmentStart());
+            }
+        }
+        java.util.Collections.sort(kept);
+        return kept;
+    }
+
+    private static final String ILLUMINA_UMI_EQUIVALENT_REGEX = "(?:.*:)?([0-9]+):([0-9]+):([0-9]+)(:[ACGTN+-]+)?$";
+
+    @Test
+    public void testUmiReadNameFormatMatchesEquivalentRegex() throws IOException {
+        final File dir = IOUtil.createTempDir("pds_umi").toFile();
+        try {
+            final File input = writeReadNameFixture(dir, "umi_in.bam", 20000, 11L, true, 2, 3);
+            final File viaRegex = new File(dir, "umi_regex.bam");
+            final File viaFormat = new File(dir, "umi_format.bam");
+
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "INPUT=" + input, "OUTPUT=" + viaRegex, "FRACTION=0.3",
+                    "READ_NAME_REGEX=" + ILLUMINA_UMI_EQUIVALENT_REGEX}), 0);
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "INPUT=" + input, "OUTPUT=" + viaFormat, "FRACTION=0.3",
+                    "READ_NAME_FORMAT=ILLUMINA_UMI"}), 0);
+
+            final List<String> expected = readKeptRecords(viaRegex);
+            Assert.assertFalse(expected.isEmpty());
+            Assert.assertEquals(readKeptRecords(viaFormat), expected);
+        } finally {
+            IOUtil.deleteDirectoryTree(dir);
+        }
+    }
+
+    @Test
+    public void testReadNameFormatAndRegexAreExclusive() {
+        final String[] args = new String[]{
+                "INPUT=" + tempSamFile.getAbsolutePath(),
+                "OUTPUT=" + tempSamFile.getAbsolutePath() + ".unused.bam",
+                "FRACTION=0.5",
+                "READ_NAME_FORMAT=ILLUMINA_UMI",
+                "READ_NAME_REGEX=" + ILLUMINA_UMI_EQUIVALENT_REGEX};
+        Assert.assertNotEquals(runPicardCommandLine(args), 0);
+    }
+
+    /** Single-pass is approximate in general. On this input (few reads per tile, stable extremes) it keeps the same reads. */
+    @Test
+    public void testSinglePassMatchesTwoPassOnSyntheticInput() throws IOException {
+        final File dir = IOUtil.createTempDir("pds_single").toFile();
+        try {
+            final File input = writeReadNameFixture(dir, "in.bam", 20000, 21L, true, 2, 3);
+            final File twoPass = new File(dir, "two.bam");
+            final File singlePass = new File(dir, "single.bam");
+
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "INPUT=" + input, "OUTPUT=" + twoPass, "FRACTION=0.4",
+                    "READ_NAME_FORMAT=ILLUMINA_UMI", "TWO_PASS=true"}), 0);
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "INPUT=" + input, "OUTPUT=" + singlePass, "FRACTION=0.4",
+                    "READ_NAME_FORMAT=ILLUMINA_UMI", "READ_COUNT=20000"}), 0);
+
+            Assert.assertFalse(readKeptRecords(twoPass).isEmpty());
+            Assert.assertEquals(readKeptRecords(singlePass), readKeptRecords(twoPass));
+        } finally {
+            IOUtil.deleteDirectoryTree(dir);
+        }
+    }
+
+    /** Without READ_COUNT, the default (single-pass) run must fall back to the exact two-pass result. */
+    @Test
+    public void testDefaultWithoutReadCountIsTwoPass() throws IOException {
+        final File dir = IOUtil.createTempDir("pds_default").toFile();
+        try {
+            final File input = writeReadNameFixture(dir, "in.bam", 5000, 23L, false, 2, 2);
+            final File defaults = new File(dir, "default.bam");
+            final File twoPass = new File(dir, "two.bam");
+
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "INPUT=" + input, "OUTPUT=" + defaults, "FRACTION=0.4"}), 0);
+            Assert.assertEquals(runPicardCommandLine(new String[]{
+                    "INPUT=" + input, "OUTPUT=" + twoPass, "FRACTION=0.4", "TWO_PASS=true"}), 0);
+
+            Assert.assertEquals(readKeptRecords(defaults), readKeptRecords(twoPass));
+        } finally {
+            IOUtil.deleteDirectoryTree(dir);
+        }
+    }
+
+    /** A READ_COUNT far from the real read count scales the widening wrongly, so single-pass must refuse to finish. */
+    @Test
+    public void testSinglePassRejectsWrongReadCount() throws IOException {
+        final File dir = IOUtil.createTempDir("pds_single_count").toFile();
+        try {
+            final File input = writeReadNameFixture(dir, "in.bam", 20000, 22L, false, 1, 2);
+            final File out = new File(dir, "out.bam");
+            try {
+                final int rc = runPicardCommandLine(new String[]{
+                        "INPUT=" + input, "OUTPUT=" + out, "FRACTION=0.4",
+                        "READ_COUNT=10000"});
+                Assert.assertNotEquals(rc, 0, "a READ_COUNT 50% off must fail");
+            } catch (final PicardException expected) {
+                // acceptable: the failure surfaces as an exception
+            }
+        } finally {
+            IOUtil.deleteDirectoryTree(dir);
+        }
+    }
+
 }
