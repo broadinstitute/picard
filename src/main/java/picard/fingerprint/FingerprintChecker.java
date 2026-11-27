@@ -406,7 +406,7 @@ public class FingerprintChecker {
                 fp.add(hFp);
             } else {
 
-                if (genotype.isNoCall()) {
+                if (!genotype.isHom() && !genotype.isHet()) {
                     continue;
                 }
 
