@@ -132,6 +132,11 @@ public class ReadNameParser implements Serializable {
         }
     }
 
+    /** The read name regex this parser was made with; null when it never parses location information. */
+    public String getReadNameRegex() {
+        return readNameRegex;
+    }
+
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc){
         if (!readName.equals(readNameStored)) {
             if (readLocationInformation(readName, loc)) {
